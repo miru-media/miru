@@ -1,0 +1,104 @@
+/* MAIN BUTTONS */
+
+.miru--button {
+  position: relative;
+  flex-grow: 1;
+  padding: 0.75em !important;
+}
+
+.miru--button__icon {
+  flex-grow: 0;
+  margin: auto;
+  font-size: var(--icon-size);
+}
+
+.miru--button--active::after {
+  position: absolute;
+  top: calc(50% - 1rem);
+  right: calc(50% - 1rem);
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  content: '';
+  border-radius: 50%;
+}
+
+.miru--button--fileselect {
+  max-width: 0;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0;
+}
+
+/* FILTERS */
+
+.miru--filter {
+  position: relative;
+  display: block !important;
+  flex-basis: var(--button-square-size);
+  flex-shrink: 0;
+  height: var(--button-square-size);
+  overflow: hidden !important;
+  border-radius: 0.35rem;
+
+  &:first-child {
+    margin-left: calc(50% - var(--button-square-size) / 2) !important;
+  }
+
+  &:last-child {
+    margin-right: calc(50% - var(--button-square-size) / 2) !important;
+  }
+}
+
+.miru--filter.miru--acc {
+  border: 2px solid;
+}
+
+.miru--filter__canvas-container {
+  width: 100%;
+  height: inherit;
+  overflow: hidden;
+}
+
+.miru--filter canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+}
+
+.miru--filter__amount,
+.miru--filter__name {
+  position: absolute;
+  width: 100%;
+  overflow: hidden;
+  line-height: 1.4em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.miru--filter__amount {
+  top: calc(50% - 0.7rem);
+  right: 0;
+  left: 0;
+}
+
+.miru--filter__name {
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.miru--label {
+  margin: auto;
+}
+
+/* SLIDER */
+
+.miru--slider {
+  flex-grow: 1;
+  margin: 0 1rem;
+}

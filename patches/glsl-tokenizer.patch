@@ -1,0 +1,13 @@
+diff --git a/index.js b/index.js
+index f73f1f6bf1d31522cb6b63502b3d2b133adc20ba..f742748004779d9ea9ee7d06fcf0914bd682dd83 100644
+--- a/index.js
++++ b/index.js
+@@ -57,7 +57,7 @@ function tokenize(opt) {
+   opt = opt || {}
+   var allBuiltins = builtins100
+   var allLiterals = literals100
+-  if (opt.version === '300 es') {
++  if (!opt.version || opt.version === '300 es') {
+     allBuiltins = builtins300es
+     allLiterals = literals300es
+   }

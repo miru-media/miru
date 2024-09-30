@@ -1,0 +1,11 @@
+miru-image-editor,
+:host {
+  /* COLOR SCHEME SETTINGS */
+  color-scheme: light dark;
+
+  /* FONT META SETTINGS */
+  font-synthesis: none;
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

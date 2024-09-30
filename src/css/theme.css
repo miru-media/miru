@@ -1,0 +1,73 @@
+/* ### VARIABLES ### */
+@media (prefers-color-scheme: light) {
+  miru-image-editor,
+  :host {
+    --color-bg-dark: #d9d9d9;
+    --color-bg-alpha: rgb(232 232 232 / 50%);
+    --color-bg-bright: #fff;
+    --color-bg: #f1f1f1;
+    --color-fnt: #52454f;
+    --color-acc: #ff0090;
+  }
+}
+
+@media not (prefers-color-scheme: light) {
+  miru-image-editor,
+  :host {
+    --color-bg-dark: #111;
+    --color-bg-alpha: rgb(17 17 17 / 75%);
+    --color-bg-bright: #313131;
+    --color-bg: #242424;
+    --color-fnt: rgb(255 255 255 / 87%);
+    --color-acc: #ff0090;
+  }
+}
+
+/* ### SETTINGS ### */
+
+miru-image-editor,
+:host {
+  ::-webkit-scrollbar-thumb {
+    background-color: #999;
+  }
+
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+
+  color: var(--color-fnt);
+  scrollbar-color: #999 transparent;
+  background-color: var(--color-bg);
+}
+
+.miru--acc {
+  color: var(--color-acc) !important;
+
+  /* background-color: var(--color-bg-bright) !important; */
+
+  /* border-color: var(--color-acc) !important; */
+}
+
+.miru--center,
+.miru--cropper-container {
+  background-color: var(--color-bg-dark);
+}
+
+.miru--button--active::after {
+  background-color: var(--color-acc);
+}
+
+.miru--filter.miru--acc .miru--filter__canvas-container {
+  opacity: 0.2;
+
+  /* filter: brightness(.2); */
+}
+
+.miru--filter:not(.miru--acc) span {
+  background-color: var(--color-bg-alpha);
+}
+
+.miru--button:hover {
+  background-color: var(--color-bg-bright);
+  transition: background-color 0.15s;
+}

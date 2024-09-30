@@ -1,0 +1,7 @@
+dist
+coverage
+node_modules
+bin
+*-lock.json
+*-lock.yaml
+*.lock
