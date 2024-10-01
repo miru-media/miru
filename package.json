@@ -19,8 +19,10 @@
   "scripts": {
     "dev": "vite",
     "dev:slow": "VITE_DEV_SLOW_DOWN_MS=500 vite",
-    "build": "tsc && NODE_ENV=production rollup --config rollup.config.js",
+    "build": "pnpm check && NODE_ENV=production rollup --config rollup.config.js",
     "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
+    "check": "tsc --incremental",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prepare": "husky"
   },
   "author": "Taye Adeyemi",
@@ -46,6 +48,7 @@
     "@types/throttle-debounce": "^5.0.2",
     "@unocss/preset-icons": "^0.62.3",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "conventional-changelog-cli": "^5.0.0",
     "cssnano": "^7.0.6",
     "esbuild": "^0.23.1",
     "eslint": "^9.11.1",
@@ -59,6 +62,7 @@
     "glslify": "^7.1.1",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
+    "picocolors": "^1.1.0",
     "postcss": "^8.4.47",
     "postcss-hover-media-feature": "^1.0.2",
     "postcss-import": "^16.1.0",

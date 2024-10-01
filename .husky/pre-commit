@@ -1,1 +1,1 @@
-lint-staged
+pnpm lint-staged && pnpm check

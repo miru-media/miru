@@ -36,9 +36,14 @@ export default tseslint.config(
       ],
       'import/no-cycle': 'error'
       */
-      'no-console': 'error',
       'no-undef': 'off',
       'sort-imports': ['error', { ignoreDeclarationSort: true }],
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      'no-console': 'error',
     },
   },
 )
