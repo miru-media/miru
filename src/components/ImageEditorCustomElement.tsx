@@ -55,9 +55,14 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
     super()
 
     this.classList.add('miru-image-editor')
+
     this.setAttribute(
       'color-scheme',
-      window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      this.hasAttribute('color-scheme')
+        ? this.getAttribute('color-scheme')!
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light',
     )
 
     this.#engine = this.#scope.run(
