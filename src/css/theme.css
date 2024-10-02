@@ -68,3 +68,8 @@ miru-image-editor,
   background-color: var(--color-bg-bright);
   transition: background-color 0.15s;
 }
+
+.miru--center:has(canvas:not([width]))::after,
+.miru--filter:has(canvas:not([width]))::after {
+  border-color: var(--color-fnt);
+}

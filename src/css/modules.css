@@ -98,6 +98,34 @@
   left: 0;
 }
 
+/* PRELOADER */
+.miru--center:has(canvas:not([width]))::after,
+.miru--filter:has(canvas:not([width]))::after {
+  position: absolute;
+  top: calc(50% - var(--icon-size) / 2);
+  left: calc(50% - var(--icon-size) / 2);
+  z-index: 999;
+  display: block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  clip-path: polygon(0% 0%, 100% 0%, 0% 100%, 0% 100%);
+  content: '';
+  border: 2px solid;
+  border-radius: 50%;
+  transform-origin: center;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .miru--label {
   margin: auto;
 }

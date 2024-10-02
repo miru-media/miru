@@ -18,7 +18,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:slow": "VITE_DEV_SLOW_DOWN_MS=500 vite",
+    "dev:slow": "VITE_DEV_SLOW_DOWN_MS=5000 vite",
     "build": "pnpm check && NODE_ENV=production rollup --config rollup.config.js",
     "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
     "check": "tsc --incremental",
