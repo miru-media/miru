@@ -1,26 +1,23 @@
 /* ### VARIABLES ### */
-@media (prefers-color-scheme: light) {
-  miru-image-editor,
-  :host {
-    --color-bg-dark: #d9d9d9;
-    --color-bg-alpha: rgb(232 232 232 / 50%);
-    --color-bg-bright: #fff;
-    --color-bg: #f1f1f1;
-    --color-fnt: #52454f;
-    --color-acc: #ff0090;
-  }
+
+miru-image-editor[color-scheme='light'],
+:host[color-scheme='light'] {
+  --color-bg-dark: #d9d9d9;
+  --color-bg-alpha: rgb(232 232 232 / 50%);
+  --color-bg-bright: #fff;
+  --color-bg: #f1f1f1;
+  --color-fnt: #52454f;
+  --color-acc: #ff0090;
 }
 
-@media not (prefers-color-scheme: light) {
-  miru-image-editor,
-  :host {
-    --color-bg-dark: #111;
-    --color-bg-alpha: rgb(17 17 17 / 75%);
-    --color-bg-bright: #313131;
-    --color-bg: #242424;
-    --color-fnt: rgb(255 255 255 / 87%);
-    --color-acc: #ff0090;
-  }
+miru-image-editor[color-scheme='dark'],
+:host[color-scheme='dark'] {
+  --color-bg-dark: #111;
+  --color-bg-alpha: rgb(17 17 17 / 75%);
+  --color-bg-bright: #313131;
+  --color-bg: #242424;
+  --color-fnt: rgb(255 255 255 / 87%);
+  --color-acc: #ff0090;
 }
 
 /* ### SETTINGS ### */
