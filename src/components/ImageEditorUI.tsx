@@ -141,10 +141,12 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
             <p class="miru--menu__row">
               <button class="miru--button miru--acc" type="button">
                 <div class="i-tabler:sun miru--button__icon"></div>
+                <label class="miru--button__label">Brightness</label>
               </button>
 
               <button class="miru--button" type="button">
                 <div class="i-tabler:contrast-filled miru--button__icon"></div>
+                <label class="miru--button__label">Contrast</label>
               </button>
             </p>
           )
@@ -163,13 +165,14 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
                 onClick={resetCrop}
               >
                 <div class="i-tabler:frame-off miru--button__icon"></div>
+                <label class="miru--button__label">No Crop</label>
               </button>
 
               {[
-                { value: 9 / 16, icon: 'i-tabler:crop-portrait' },
-                { value: 1 / 1, icon: 'i-tabler:crop-1-1' },
-                { value: 16 / 9, icon: 'i-tabler:crop-landscape' },
-              ].map(({ value, icon }) => (
+                { value: 9 / 16, icon: 'i-tabler:crop-portrait', label: '9/16' },
+                { value: 1 / 1, icon: 'i-tabler:crop-1-1', label: '1/1' },
+                { value: 16 / 9, icon: 'i-tabler:crop-landscape', label: '16/9' },
+              ].map(({ value, icon, label }) => (
                 <button
                   class={() => [
                     'miru--button',
@@ -179,11 +182,13 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
                   onClick={() => setAspectRatio(value)}
                 >
                   <div class={`${icon} miru--button__icon`}></div>
+                  <label class="miru--button__label">{label}</label>
                 </button>
               ))}
 
               <button class="miru--button" type="button" onClick={() => cropper.value?.rotate(90)}>
                 <div class="i-tabler:rotate-rectangle miru--button__icon"></div>
+                <label class="miru--button__label">Rotate</label>
               </button>
             </p>
           )
@@ -243,15 +248,26 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
         {/* MAIN BUTTONS */}
         <p class="miru--menu__row">
           {[
-            { view: EditorView.Browse, icon: 'i-tabler:photo', active: () => false },
-            { view: EditorView.Crop, icon: 'i-tabler:crop', active: () => !!currentSource.value?.crop.value },
-            { view: EditorView.Adjust, icon: 'i-tabler:filters', active: () => hasAdjustment.value },
+            { view: EditorView.Browse, icon: 'i-tabler:photo', active: () => false, label: 'Browse' },
+            {
+              view: EditorView.Crop,
+              icon: 'i-tabler:crop',
+              active: () => !!currentSource.value?.crop.value,
+              label: 'Crop',
+            },
+            {
+              view: EditorView.Adjust,
+              icon: 'i-tabler:filters',
+              active: () => hasAdjustment.value,
+              label: 'Adjust',
+            },
             {
               view: EditorView.Filter,
               icon: 'i-tabler:sparkles',
               active: () => effectOfCurrentSource.value >= 0,
+              label: 'Filter',
             },
-          ].map(({ view, icon, active }) => (
+          ].map(({ view, icon, active, label }) => (
             <button
               type="button"
               class={() => [
@@ -262,6 +278,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
               onClick={() => (currentView.value = view)}
             >
               <div class={`${icon} miru--button__icon`}></div>
+              <label class="miru--button__label">{label}</label>
             </button>
           ))}
         </p>

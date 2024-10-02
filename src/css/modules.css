@@ -30,6 +30,12 @@
   opacity: 0;
 }
 
+.miru--button__label {
+  font-size: 0.75rem;
+
+  /* display: none; */
+}
+
 /* FILTERS */
 
 .miru--filter {
