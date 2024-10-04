@@ -71,10 +71,6 @@ miru-image-editor,
 
   /* padding: 0.5rem; */
   overflow: auto hidden;
-
-  &:not(:last-child) {
-    _margin-bottom: 1rem;
-  }
 }
 
 .miru--menu__row--scroll {

@@ -5,27 +5,28 @@ import { Component } from '@/framework/jsx-runtime'
 import {
   MaybeRefOrGetter,
   computed,
+  createEffectScope,
   effect,
-  onScopeDispose,
   ref,
+  toRef,
   toValue,
   watch,
 } from '@/framework/reactivity'
-import { getCenter } from '@/utils'
+import { createDisplayContext, getCenter } from '@/utils'
 import { throttle } from 'throttle-debounce'
 import { RowSlider } from './RowSlider'
-import { InputEvent } from '@/types'
+import { DisplayContext, InputEvent } from '@/types'
 import { ImageSourceState } from '@/engine/ImageSourceState'
 import { SourcePreview } from './SourcePreview'
 
 const FilterItem: Component<{
   effect: EffectInternal
   index: number
+  context: DisplayContext | undefined
   isActive: () => boolean
   onClick: () => void
-}> = ({ effect, index, isActive, onClick, children }) => {
-  effect = toValue(effect)
-  const { canvas, name } = effect
+}> = ({ effect: filterEffect, index, context, isActive, onClick, children }) => {
+  filterEffect = toValue(filterEffect)
 
   return (
     <button
@@ -34,9 +35,9 @@ const FilterItem: Component<{
       class={['miru--filter miru--button', () => isActive() && 'miru--acc']}
       onClick={onClick}
     >
-      <div class="miru--filter__canvas-container">{canvas}</div>
+      <div class="miru--filter__canvas-container">{() => toValue(context)?.canvas}</div>
       {() => (isActive() ? <span class="miru--filter__amount">{children}</span> : '')}
-      <span class="miru--filter__name">{name}</span>
+      <span class="miru--filter__name">{filterEffect.name}</span>
     </button>
   )
 }
@@ -44,24 +45,36 @@ const FilterItem: Component<{
 export const FilterView = ({
   engine,
   sourceIndex,
+  showPreviews,
 }: {
   engine: ImageEditorEngine
   sourceIndex: MaybeRefOrGetter<number>
+  showPreviews?: MaybeRefOrGetter<boolean | undefined>
 }) => {
-  const { sources, effectOfCurrentSource } = engine
   const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
+  const effectOfCurrentSource = toRef(() => source.value?.effect.value ?? -1)
 
   const container = ref<HTMLElement>()
   const scrolledEffectIndex = ref(-1)
 
-  const onInputIntensity = (event: InputEvent) => {
-    if (!source.value) return
+  const onInputIntensity = (event: InputEvent) =>
+    source.value && (source.value.intensity.value = event.target.valueAsNumber)
 
-    source.value.intensity.value = event.target.valueAsNumber
-  }
+  const contexts = ref<DisplayContext[]>([])
 
-  // scroll to selected filter on mount
-  watch([container], ([container]) => container && onClickFilter(effectOfCurrentSource.value, 'instant'))
+  watch([engine.effects], ([effects], _prev, onCleanup) => {
+    const newContexts = (contexts.value = contexts.value.slice(0, effects.length))
+    effects.forEach((_, index) => (newContexts[index] ??= createDisplayContext()))
+
+    const watchScope = createEffectScope()
+    watchScope.run(() => {
+      // render effect preview thumbnails
+      watch([source, () => source.value?.thumbnailKey.value, () => engine.isLoadingEffects], ([source]) =>
+        engine.drawThumbnails(source, contexts.value),
+      )
+    })
+    onCleanup(() => watchScope.stop())
+  })
 
   const onScroll = throttle(SCROLL_SELECT_EVENT_THROTTLE_MS, () => {
     const rect = container.value?.getBoundingClientRect()
@@ -75,7 +88,11 @@ export const FilterView = ({
     if (effectElement) scrolledEffectIndex.value = parseInt(effectElement.dataset.index!)
   })
 
-  onScopeDispose(() => onScroll.cancel())
+  // scroll to selected filter on mount and on source change
+  watch([container, source], ([container]) => {
+    if (container) onClickFilter(effectOfCurrentSource.value, 'instant')
+    onScroll.cancel({ upcomingOnly: true })
+  })
 
   effect((onCleanup) => {
     const scrolledIndex = scrolledEffectIndex.value
@@ -105,9 +122,10 @@ export const FilterView = ({
   return (
     // TODO: fragment
     <div class="miru--center">
-      {() => {
-        return sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
-      }}
+      {() =>
+        toValue(showPreviews) &&
+        engine.sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
+      }
       <div class="miru--menu">
         <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
           <button
@@ -125,6 +143,7 @@ export const FilterView = ({
               <FilterItem
                 effect={effect}
                 index={index}
+                context={contexts.value[index]}
                 isActive={() => effectOfCurrentSource.value === index}
                 onClick={() => onClickFilter(index)}
               >

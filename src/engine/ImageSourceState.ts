@@ -1,6 +1,6 @@
 import { DEFAULT_INTENSITY } from '@/constants'
 import { EffectInternal } from '@/Effect'
-import { Ref, computed, getCurrentScope, ref, toValue, watch } from '@/framework/reactivity'
+import { Ref, computed, getCurrentScope, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
 import { Renderer } from '@/engine/Renderer'
 import {
   AdjustmentsState,
@@ -245,6 +245,8 @@ export class ImageSourceState {
       this.#previewContext = this.#thumbnailContext = undefined as never
       this.#texture = this.#thumbnailTexture = this.context = this.onRenderPreview = undefined as never
     })
+
+    onScopeDispose(() => this.janitor.dispose())
   }
 
   getState() {

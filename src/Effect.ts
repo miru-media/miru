@@ -9,8 +9,6 @@ export class EffectInternal {
   renderer: Renderer
   name: string
   ops: RendererEffectOp[]
-  canvas: HTMLCanvasElement
-  context?: ImageBitmapRenderingContext
   isDisposed = false
   images: WebGLTexture[]
   luts: WebGLTexture[]
@@ -63,9 +61,6 @@ export class EffectInternal {
 
     if (resources.length > MAX_EFFECT_TEXTURES)
       throw new Error(`[miru] texture count of ${resources.length} exceeds max of ${MAX_EFFECT_TEXTURES}`)
-
-    this.canvas = document.createElement('canvas')
-    this.context = this.canvas?.getContext('bitmaprenderer') ?? undefined
 
     this.janitor.add(() => {
       this.resources.forEach((r) => r.janitor.dispose())

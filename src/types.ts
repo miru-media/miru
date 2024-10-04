@@ -97,3 +97,5 @@ export const enum EditorView {
 export type MaybeArray<T> = T | T[]
 
 export type InputEvent = Event & { target: HTMLInputElement }
+
+export type DisplayContext = ImageBitmapRenderingContext & { canvas: HTMLCanvasElement }

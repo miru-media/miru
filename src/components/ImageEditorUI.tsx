@@ -1,15 +1,17 @@
-import { Ref, computed, getCurrentScope } from '@/framework/reactivity'
-import { EditorView, InputEvent } from '@/types'
+import { MaybeRefOrGetter, Ref, computed, getCurrentScope, ref, toRef } from '@/framework/reactivity'
+import { EditorView } from '@/types'
 
 import { ImageEditorEngine } from '../engine/ImageEditorEngine'
 
 import { CropView } from './Cropper'
 import { AdjustmentsView } from './Adjustments'
 import { FilterView } from './Filter'
+import { ImageSourceState } from '@/engine/ImageSourceState'
 
 export interface ImageEditorUIProps {
   engine: ImageEditorEngine
   view: Ref<EditorView>
+  sourceIndex?: MaybeRefOrGetter<number>
 }
 
 /**
@@ -20,7 +22,10 @@ export interface ImageEditorUIProps {
 export const ImageEditorUI = (props: ImageEditorUIProps) => {
   const { engine, view: currentView } = props
 
-  const { currentSource, effectOfCurrentSource } = engine
+  const { sources } = engine
+  const currentSourceIndex = toRef(props.sourceIndex ?? ref(0))
+  const currentSource = computed((): ImageSourceState | undefined => sources.value[currentSourceIndex.value])
+  const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? -1)
   const scope = getCurrentScope()
   if (!scope) throw new Error(`[miru] must be run in scope`)
 
@@ -38,9 +43,11 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
   // }
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
-    [EditorView.Crop]: () => <CropView engine={engine} />,
-    [EditorView.Adjust]: () => <AdjustmentsView engine={engine} />,
-    [EditorView.Filter]: () => <FilterView engine={engine} sourceIndex={engine.currentSourceIndex} />,
+    [EditorView.Crop]: () => <CropView engine={engine} sourceIndex={currentSourceIndex} />,
+    [EditorView.Adjust]: () => (
+      <AdjustmentsView engine={engine} sourceIndex={currentSourceIndex} showPreviews />
+    ),
+    [EditorView.Filter]: () => <FilterView engine={engine} sourceIndex={currentSourceIndex} showPreviews />,
   }
 
   return (

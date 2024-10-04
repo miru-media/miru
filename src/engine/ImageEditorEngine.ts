@@ -1,5 +1,5 @@
-import { Ref, computed, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
-import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
+import { Ref, computed, createEffectScope, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
+import { Context2D, DisplayContext, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { ImageSourceState } from './ImageSourceState'
 import { EffectInternal } from '@/Effect'
 import { get2dContext } from '@/utils'
@@ -25,11 +25,6 @@ export class ImageEditorEngine {
   #isLoadingEffects = computed(() => this.effects.value.some((e) => e.isLoading.value))
   #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
   scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
-  currentSourceIndex = ref(0)
-  currentSource = computed(
-    (): ImageSourceState | undefined => this.sources.value[this.currentSourceIndex.value],
-  )
-  effectOfCurrentSource = computed(() => this.currentSource.value?.effect.value ?? -1)
 
   get isLoadingSource() {
     return this.#isLoadingSource.value
@@ -48,9 +43,12 @@ export class ImageEditorEngine {
 
     this.#effectsIn = effects
     watch([this.sourceInputs], ([sourceOptions], _prev, onCleanup) => {
+      const watchScope = createEffectScope()
+
       this.#scope.run(() => {
         const prevSources = this.sources.value
 
+        // TODO: reuse unchanged sources
         this.sources.value = sourceOptions.map(
           (sourceOption, sourceIndex) =>
             new ImageSourceState({
@@ -66,8 +64,7 @@ export class ImageEditorEngine {
         )
       })
 
-      // TODO: reuse unchanged sources
-      onCleanup(() => this.sources.value.forEach((source) => source.janitor.dispose()))
+      onCleanup(() => watchScope.stop())
     })
 
     this.#scope.watch([this.sources, this.editStatesIn], ([sources, states]) => {
@@ -80,37 +77,25 @@ export class ImageEditorEngine {
         // eslint-disable-next-line no-console
         .catch((error) => console.error(`[miru] couldn't load effects`, error))
     })
-
-    // render effect preview thumbnails
-    watch(
-      [
-        this.currentSource,
-        () => this.currentSource.value?.thumbnailKey.value,
-        this.#isLoadingEffects,
-        this.#effectsIn,
-      ],
-      () => this.drawThumbnails(),
-    )
   }
 
   renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
     return this.sources.value[sourceIndex]?.drawPreview(context)
   }
 
-  async drawThumbnails() {
-    if (this.#isLoadingEffects.value || this.currentSource.value?.isLoading !== false) return
+  async drawThumbnails(source: ImageSourceState | undefined, contexts: DisplayContext[]) {
+    if (this.#isLoadingEffects.value || source?.isLoading !== false) return
+    const effects = this.effects.value
 
-    for (const effect of this.effects.value) {
+    for (let index = 0; index < effects.length; index++) {
+      const effect = effects[index]
       if (effect.isDisposed) break
 
-      await this.#drawThumbnail(effect)
+      await this.#drawThumbnail(source, effect, contexts[index])
     }
   }
 
-  async #drawThumbnail(effect: EffectInternal) {
-    if (!effect.context) return
-
-    const source = this.currentSource.value
+  async #drawThumbnail(source: ImageSourceState, effect: EffectInternal, context: DisplayContext) {
     if (source?.isLoading !== false) return
 
     source.sourceThumbnail()
@@ -121,7 +106,7 @@ export class ImageEditorEngine {
     // draw thumbnails at default intensity
     renderer.setIntensity(DEFAULT_INTENSITY)
 
-    await renderer.drawAndTransfer(effect.context)
+    await renderer.drawAndTransfer(context)
   }
 
   async exportToImageBitmap() {

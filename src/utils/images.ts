@@ -5,6 +5,7 @@ import {
   Context2D,
   CropState,
   CrossOrigin,
+  DisplayContext as DisplayContext,
   ImageEditState,
   ImageSource,
   ImageSourceObject,
@@ -52,7 +53,7 @@ export const get2dContext = (canvas?: HTMLCanvasElement | OffscreenCanvas, optio
 
 export const createDisplayContext = () => {
   const canvas = document.createElement('canvas')
-  return canvas.getContext('bitmaprenderer') as ImageBitmapRenderingContext & { canvas: HTMLCanvasElement }
+  return canvas.getContext('bitmaprenderer') as DisplayContext
 }
 
 export const getImageData = (

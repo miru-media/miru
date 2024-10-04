@@ -6,19 +6,17 @@ export const SourcePreview = ({
   engine,
   sourceIndex,
   style,
+  onClick,
 }: {
   engine: MaybeRefOrGetter<ImageEditorEngine>
   sourceIndex: MaybeRefOrGetter<number>
   style?: MaybeRefOrGetter<string>
+  onClick?: (event: Event) => unknown
 }) => {
-  const { sources, currentSourceIndex } = toValue(engine)
+  const { sources } = toValue(engine)
   const source = computed(() => sources.value[toValue(sourceIndex)])
 
-  useEventListener(
-    () => source.value?.context.canvas,
-    'click',
-    () => (currentSourceIndex.value = toValue(sourceIndex)),
-  )
+  if (onClick) useEventListener(() => source.value?.context.canvas, 'click', onClick)
 
   return (
     <div class="miru--preview" style={style}>

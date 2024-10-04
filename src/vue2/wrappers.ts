@@ -62,6 +62,8 @@ export const createEngine = (props: ImageEditorEngineVueProps): ImageEditorEngin
 interface VueInstance {
   engine: ImageEditorEngineVueImpl
   scope: EffectScope
+  sourceIndex: number
+  _sourceIndex: Ref<number>
 
   $el: HTMLElement
   $props: Record<string, unknown>
@@ -69,84 +71,48 @@ interface VueInstance {
   $emit: (type: string, ...args: unknown[]) => void
 }
 
-const base = {
-  props: { engine: { type: ImageEditorEngineVueImpl, required: true } },
-
-  beforeCreate(this: VueInstance) {
-    this.scope = createEffectScope()
-  },
-
-  destroyed(this: VueInstance) {
-    this.scope.stop()
-  },
-  render(h: (...args: unknown[]) => unknown) {
-    return h('div', { class: 'miru-image-editor' })
-  },
+interface WrappedComponentProps {
+  engine: ImageEditorEngine
+  sourceIndex: Ref<number>
+  showAllSources?: boolean | undefined
 }
 
-interface PreviewVueInstance extends VueInstance {
-  sourceIndex: number
-  _sourceIndex: Ref<number>
-}
-
-export const MiruImageEditorPreview = {
-  ...base,
-  name: 'miru-image-editor-preview',
+const wrap = (Component: (props: WrappedComponentProps) => JSX.Element, name: string) => ({
+  name,
   props: {
-    ...base.props,
+    engine: { type: ImageEditorEngineVueImpl, required: true },
     sourceIndex: { type: Number, default: 0 },
   },
-  beforeCreate(this: PreviewVueInstance) {
-    base.beforeCreate.call(this)
+  beforeCreate(this: VueInstance) {
+    this.scope = createEffectScope()
     this._sourceIndex = ref(0)
   },
-  mounted(this: PreviewVueInstance) {
+  mounted(this: VueInstance) {
     this.scope.run(() =>
       renderComponentTo(
-        SourcePreview,
-        { engine: engineMap.get(this.engine)!, sourceIndex: this._sourceIndex },
+        Component,
+        { engine: engineMap.get(this.engine)!, sourceIndex: this._sourceIndex, showAllSources: false },
         this.$el,
       ),
     )
   },
+  render(h: (...args: unknown[]) => unknown) {
+    return h('div', { class: 'miru-image-editor' })
+  },
   watch: {
     sourceIndex: {
-      handler(this: PreviewVueInstance, value: number) {
+      handler(this: VueInstance, value: number) {
         this._sourceIndex.value = value
       },
       immediate: true,
     },
   },
-}
-
-export const MiruImageEditorCropper = {
-  ...base,
-  name: 'miru-image-editor-cropper',
-  mounted(this: VueInstance) {
-    this.scope.run(() => renderComponentTo(CropView, { engine: engineMap.get(this.engine)! }, this.$el))
+  destroyed(this: VueInstance) {
+    this.scope.stop()
   },
-}
+})
 
-export const MiruImageEditorFilterView = {
-  ...base,
-  name: 'miru-image-editor-filter-menu',
-  mounted(this: VueInstance) {
-    this.scope.run(() =>
-      renderComponentTo(
-        FilterView,
-        { engine: engineMap.get(this.engine)!, sourceIndex: this._sourceIndex },
-        this.$el,
-      ),
-    )
-  },
-}
-
-export const MiruImageEditorAdjustmentsView = {
-  ...base,
-  name: 'miru-image-editor-adjustments-menu',
-  mounted(this: VueInstance) {
-    this.scope.run(() =>
-      renderComponentTo(AdjustmentsView, { engine: engineMap.get(this.engine)! }, this.$el),
-    )
-  },
-}
+export const MiruImageEditorPreview = wrap(SourcePreview, 'miru-image-editor-preview')
+export const MiruImageEditorCropper = wrap(CropView, 'miru-image-editor-cropper')
+export const MiruImageEditorFilterMenu = wrap(FilterView, 'miru-image-editor-filter-menu')
+export const MiruImageEditorAdjustmentsMenu = wrap(AdjustmentsView, 'miru-image-editor-adjustments-menu')
