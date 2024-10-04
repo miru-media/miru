@@ -10,7 +10,7 @@ export const CropView = (props: { engine: ImageEditorEngine }) => {
   return (
     <div style="display:contents">
       {container}
-      <div class="miru--bottom">
+      <div class="miru--menu">
         <p class="miru--menu__row">
           <button
             class={['miru--button', () => (aspectRatio.value === -1 ? 'miru--acc' : '')]}

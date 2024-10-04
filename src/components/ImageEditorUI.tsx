@@ -56,7 +56,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
         }
       </div>
 
-      <p class="miru--bottom">
+      <p class="miru--menu">
         {/* ENHANCEMENT MENU */}
         {() => currentView.value === EditorView.Adjust && <AdjustmentsMenu engine={engine} />}
 
