@@ -20,33 +20,49 @@
           <p class="bg-light-9 @dark:bg-dark-7 p-8 h-200px">Menu</p>
         </div>
 
-        <div class="flex flex-col overflow-auto flex-1 min-w-0 min-h-0">
+        <div class="flex flex-col overflow-auto flex-1 min-w-0 min-h-0 gap-12px">
           <miru-image-editor id="imageEditor" class="min-h-0"></miru-image-editor>
-          <textarea class="w-full h-150px bg-light-9 @dark:bg-dark-7 p-0 m-0 b-0 text-inherit text-lg"></textarea>
+
+          <label
+            class="flex flex-grow-0 justify-center items-center mx-auto px-2 py-1 cursor-pointer border-solid rounded-lg"
+          >
+            Change image
+            <div class="i-tabler:photo text-2rem"></div>
+            <!-- Select File -->
+            <input
+              class="miru--button miru--button--fileselect"
+              id="fileInput"
+              type="file"
+              accept="image/*"
+            />
+          </label>
+
+          <textarea
+            class="w-full h-150px bg-light-9 @dark:bg-dark-7 p-0 m-0 b-0 text-inherit text-lg"
+          ></textarea>
         </div>
 
         <div class="flex flex-col gap-1rem w-25% <md:hidden"></div>
       </div>
     </div>
 
-    <label class="flex miru--button miru--browser">
-      <div class="i-tabler:photo-up miru--button__icon"></div>
-      <!-- Select File -->
-      <input
-        class="miru--button miru--button--fileselect"
-        id="fileInput"
-        type="file"
-        accept="image/*"
-        onChange={onFileChange}
-      />
-    </label>
-
     <script type="module">
       import 'uno.css'
       import '/src/index.css'
       import sampleImage from '/src/assets/Splendid_Fairywren_8352_portrait.jpg'
 
-      document.getElementById('imageEditor').sources = [sampleImage]
+      const editor = document.getElementById('imageEditor')
+
+      editor.sources = [sampleImage]
+
+      const fileInput = document.getElementById('fileInput')
+      fileInput.addEventListener('input', function (event) {
+        const file = event.target.files?.[0]
+        if (!file) return
+        editor.sources = [file]
+        event.target.value = null
+      })
+
       window.onerror = (event, ...args) => {
         document.querySelector('textarea').textContent = event.toString() + args[2]?.stack || ''
       }
