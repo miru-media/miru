@@ -36,7 +36,8 @@ export class Renderer {
     const gl = (this.#gl = getWebgl2Context(canvas))
 
     gl.clearColor(0, 0, 0, 1)
-    gl.clear(GL.COLOR_BUFFER_BIT)
+    gl.enable(GL.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
     this.#programInfo = twgl.createProgramInfo(gl, [vs, fs])
     ;[
@@ -175,6 +176,7 @@ export class Renderer {
     gl.useProgram(this.#programInfo.program)
 
     twgl.setUniforms(this.#programInfo, this.#uniforms)
+    gl.clear(GL.COLOR_BUFFER_BIT)
     gl.drawArrays(GL.TRIANGLES, 0, 3)
 
     const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)

@@ -19,7 +19,7 @@ import { devSlowDown } from './general'
 const getCanvasContext = (
   canvas: HTMLCanvasElement | OffscreenCanvas | undefined,
   type: OffscreenRenderingContextId,
-  options?: any,
+  options: unknown,
 ) => {
   if (!canvas) {
     // try offscreen canvas
@@ -41,11 +41,11 @@ const getCanvasContext = (
   return context
 }
 
-export const getWebgl2Context = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: any) => {
+export const getWebgl2Context = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: unknown) => {
   return getCanvasContext(canvas, 'webgl2', options) as WebGL2RenderingContext
 }
 
-export const get2dContext = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: any) => {
+export const get2dContext = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: unknown) => {
   return getCanvasContext(canvas, '2d', options) as
     | CanvasRenderingContext2D
     | OffscreenCanvasRenderingContext2D

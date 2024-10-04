@@ -9,7 +9,7 @@ vec4 contrast(vec4 color, float value) {
 }
 
 vec4 saturation(vec4 color, float value) {
-    return mix(vec4(luma(color)), color, 1.0 + value);
+    return mix(vec4(vec3(luma(color)), color.a), color, 1.0 + value);
 }
 
 vec4 adjustColor(vec4 color, float b, float c, float s, float intensity) {
