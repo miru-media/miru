@@ -14,11 +14,12 @@ import {
   ref,
   toRef,
 } from '@/framework/reactivity'
+import { canvasToBlob } from '@/utils'
 
 interface ImageEditorEngineVueProps {
   effects: MaybeRefOrGetter<Effect[]>
-  onRenderPreview?: (sourceIndex: number) => unknown
-  onEdit: (index: number, state: ImageEditState) => void
+  onRenderPreview?: (sourceIndex: number, previewUrl: string) => unknown
+  onEdit: (index: number, state: ImageEditState) => unknown
 }
 
 export declare interface ImageEditorEngineVue {
@@ -29,6 +30,7 @@ export const engineMap = new WeakMap<ImageEditorEngineVue, ImageEditorEngine>()
 
 class ImageEditorEngineVueImpl implements ImageEditorEngineVue {
   #engine: ImageEditorEngine
+  #thumbnailUrls: string[] = []
 
   constructor(props: ImageEditorEngineVueProps) {
     const noop = () => undefined
@@ -39,7 +41,17 @@ class ImageEditorEngineVueImpl implements ImageEditorEngineVue {
 
       return new ImageEditorEngine({
         effects: toRef(props.effects),
-        onRenderPreview: props.onRenderPreview ?? noop,
+        onRenderPreview: async (sourceIndex) => {
+          const source = this.#engine.sources.value[sourceIndex]
+          if (!source) return
+
+          URL.revokeObjectURL(this.#thumbnailUrls[sourceIndex])
+
+          const url = URL.createObjectURL(await canvasToBlob(source.context.canvas))
+          this.#thumbnailUrls[sourceIndex] = url
+
+          props.onRenderPreview?.(sourceIndex, url)
+        },
         onEdit: props.onEdit ?? noop,
       })
     })

@@ -5,8 +5,8 @@ import { Component } from '@/framework/jsx-runtime'
 import {
   MaybeRefOrGetter,
   computed,
-  createEffectScope,
   effect,
+  getCurrentScope,
   ref,
   toRef,
   toValue,
@@ -61,18 +61,17 @@ export const FilterView = ({
 
   const contexts = ref<DisplayContext[]>([])
 
-  watch([engine.effects], ([effects], _prev, onCleanup) => {
+  watch([engine.effects], ([effects], _prev) => {
     const newContexts = (contexts.value = contexts.value.slice(0, effects.length))
     effects.forEach((_, index) => (newContexts[index] ??= createDisplayContext()))
 
-    const watchScope = createEffectScope()
-    watchScope.run(() => {
-      // render effect preview thumbnails
-      watch([source, () => source.value?.thumbnailKey.value, () => engine.isLoadingEffects], ([source]) =>
-        engine.drawThumbnails(source, contexts.value),
-      )
-    })
-    onCleanup(() => watchScope.stop())
+    if (!import.meta.env.PROD && !getCurrentScope())
+      throw new Error('[miru] expected scope in watch callback')
+
+    // render effect preview thumbnails
+    watch([source, () => source.value?.thumbnailKey.value, () => engine.isLoadingEffects], ([source]) =>
+      engine.drawThumbnails(source, contexts.value),
+    )
   })
 
   const onScroll = throttle(SCROLL_SELECT_EVENT_THROTTLE_MS, () => {

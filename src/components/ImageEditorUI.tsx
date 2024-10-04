@@ -34,14 +34,6 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
     return !!adjustments && !!adjustments.brightness
   })
 
-  // const onFileChange = (event: InputEvent) => {
-  //   const file = event.target.files?.[0]
-  //   if (!file) return
-
-  //   // TODO: file input should be outside this component
-  //   engine.sourceInputs.value = [file]
-  // }
-
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
     [EditorView.Crop]: () => <CropView engine={engine} sourceIndex={currentSourceIndex} />,
     [EditorView.Adjust]: () => (

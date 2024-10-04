@@ -182,7 +182,7 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
     for (let key in props) {
       if (isIgnoredPropKey(key) || key.startsWith('a:')) continue
       if (key.startsWith('on')) key = key.toLowerCase()
-      if (key in element) (element as any)[key] = null
+      if (key in element && key !== 'style') (element as any)[key] = null
       else element.removeAttribute(key)
     }
   })

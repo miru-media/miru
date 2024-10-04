@@ -5,7 +5,7 @@ import { useEventListener } from '@/utils'
 export const SourcePreview = ({
   engine,
   sourceIndex,
-  style,
+  style = '',
   onClick,
 }: {
   engine: MaybeRefOrGetter<ImageEditorEngine>

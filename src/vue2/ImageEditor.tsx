@@ -1,7 +1,6 @@
 import { EffectScope, Ref, createEffectScope, ref } from '@/framework/reactivity'
 import { Context2D, EditorView, Effect, ImageEditState, ImageSource, ImageSourceOption } from '@/types'
 import { getDefaultFilters } from '../effects'
-import { canvasToBlob } from '../utils'
 import { renderComponentTo } from '@/components/renderTo'
 import { ImageEditorUI } from '@/components/ImageEditorUI'
 import { ImageEditorEngineVue, createEngine, engineMap } from './wrappers'
@@ -31,9 +30,6 @@ export default {
   name: 'miru-image-editor',
   props: PROP_KEYS,
   emits: EVENT_TYPES,
-  data(): Partial<VueInstance> {
-    return { thumbnailUrls: [] }
-  },
   beforeCreate(this: VueInstance) {
     this.scope = createEffectScope()
 
@@ -44,18 +40,8 @@ export default {
       createEngine({
         effects: this._effects,
         onEdit: (index, state) => this.$emit('edit', { index, ...state }),
-        onRenderPreview: async (sourceIndex: number) => {
-          const engine = engineMap.get(this.engine)!
-          const source = engine.sources.value[sourceIndex]
-          if (!source) return
-
-          URL.revokeObjectURL(this.thumbnailUrls[sourceIndex])
-
-          this.$set(
-            this.thumbnailUrls,
-            sourceIndex,
-            URL.createObjectURL(await canvasToBlob(source.context.canvas)),
-          )
+        onRenderPreview: (sourceIndex: number, previewUrl) => {
+          this.thumbnailUrls.splice(sourceIndex, 1, previewUrl)
           this.$emit('render', this.thumbnailUrls)
         },
       }),

@@ -49,6 +49,7 @@ export class ImageSourceState {
   #previewSize = ref<Size>({ width: 1, height: 1 })
   #thumbnailSize!: Ref<Size>
   #isLoading = ref(true)
+  #error = ref()
   #effects: Ref<EffectInternal[]>
 
   previewKey = ref(0)
@@ -155,11 +156,19 @@ export class ImageSourceState {
         .then((decoded) => {
           this.#original.value = decoded
         })
-        .catch(() => undefined)
+        .catch((error) => {
+          this.#error.value = error
+        })
     }
 
     // rotate the original image
-    watch([this.#original, () => this.crop.value?.rotate], ([original, rotation]) => {
+    watch([this.#original, () => this.crop.value?.rotate, this.#error], ([original, rotation, error]) => {
+      if (error) {
+        this.#isLoading.value = false
+        this.#original.value = undefined
+        return
+      }
+
       if (!original) this.#isLoading.value = true
 
       if (!original || !rotation) {
