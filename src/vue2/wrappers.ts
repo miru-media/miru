@@ -1,7 +1,7 @@
 import { Effect, ImageEditState, ImageSourceOption } from '@/types'
-import { AdjustmentsMenu } from '@/components/AdjustmentsMenu'
+import { AdjustmentsView } from '@/components/Adjustments'
 import { CropView } from '@/components/Cropper'
-import { FilterMenu } from '@/components/FilterMenu'
+import { FilterView } from '@/components/Filter'
 import { renderComponentTo } from '@/components/renderTo'
 import { SourcePreview } from '@/components/SourcePreview'
 import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
@@ -127,13 +127,13 @@ export const MiruImageEditorCropper = {
   },
 }
 
-export const MiruImageEditorFilterMenu = {
+export const MiruImageEditorFilterView = {
   ...base,
   name: 'miru-image-editor-filter-menu',
   mounted(this: VueInstance) {
     this.scope.run(() =>
       renderComponentTo(
-        FilterMenu,
+        FilterView,
         { engine: engineMap.get(this.engine)!, sourceIndex: this._sourceIndex },
         this.$el,
       ),
@@ -141,12 +141,12 @@ export const MiruImageEditorFilterMenu = {
   },
 }
 
-export const MiruImageEditorAdjustmentsMenu = {
+export const MiruImageEditorAdjustmentsView = {
   ...base,
   name: 'miru-image-editor-adjustments-menu',
   mounted(this: VueInstance) {
     this.scope.run(() =>
-      renderComponentTo(AdjustmentsMenu, { engine: engineMap.get(this.engine)! }, this.$el),
+      renderComponentTo(AdjustmentsView, { engine: engineMap.get(this.engine)! }, this.$el),
     )
   },
 }

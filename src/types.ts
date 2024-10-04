@@ -92,7 +92,6 @@ export const enum EditorView {
   Filter = 'filter',
   Adjust = 'adjust',
   Crop = 'crop',
-  Browse = 'browse',
 }
 
 export type MaybeArray<T> = T | T[]

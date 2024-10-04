@@ -38,7 +38,7 @@ export default {
     this.scope = createEffectScope()
 
     this._effects = ref([])
-    this._view = ref(EditorView.Browse)
+    this._view = ref(EditorView.Crop)
 
     this.engine = this.scope.run(() =>
       createEngine({

@@ -8,7 +8,7 @@ export const CropView = (props: { engine: ImageEditorEngine }) => {
 
   // TODO: fragment
   return (
-    <div style="display:contents">
+    <div class="miru--center">
       {container}
       <div class="miru--menu">
         <p class="miru--menu__row">

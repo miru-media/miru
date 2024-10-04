@@ -2,11 +2,10 @@ import { Ref, computed, getCurrentScope } from '@/framework/reactivity'
 import { EditorView, InputEvent } from '@/types'
 
 import { ImageEditorEngine } from '../engine/ImageEditorEngine'
-import { FilterMenu } from './FilterMenu'
 
-import { SourcePreview } from './SourcePreview'
 import { CropView } from './Cropper'
-import { AdjustmentsMenu } from './AdjustmentsMenu'
+import { AdjustmentsView } from './Adjustments'
+import { FilterView } from './Filter'
 
 export interface ImageEditorUIProps {
   engine: ImageEditorEngine
@@ -21,7 +20,7 @@ export interface ImageEditorUIProps {
 export const ImageEditorUI = (props: ImageEditorUIProps) => {
   const { engine, view: currentView } = props
 
-  const { sources, currentSource, effectOfCurrentSource } = engine
+  const { currentSource, effectOfCurrentSource } = engine
   const scope = getCurrentScope()
   if (!scope) throw new Error(`[miru] must be run in scope`)
 
@@ -30,66 +29,28 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
     return !!adjustments && !!adjustments.brightness
   })
 
-  const onFileChange = (event: InputEvent) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  // const onFileChange = (event: InputEvent) => {
+  //   const file = event.target.files?.[0]
+  //   if (!file) return
 
-    // TODO: file input should be outside this component
-    engine.sourceInputs.value = [file]
+  //   // TODO: file input should be outside this component
+  //   engine.sourceInputs.value = [file]
+  // }
+
+  const views: Partial<Record<EditorView, () => JSX.Element>> = {
+    [EditorView.Crop]: () => <CropView engine={engine} />,
+    [EditorView.Adjust]: () => <AdjustmentsView engine={engine} />,
+    [EditorView.Filter]: () => <FilterView engine={engine} sourceIndex={engine.currentSourceIndex} />,
   }
 
   return (
     <div class="miru--main">
-      <div class="miru--center">
-        {() =>
-          currentView.value === EditorView.Crop ? (
-            <CropView engine={engine} />
-          ) : (
-            sources.value.map((_source, index) => (
-              <SourcePreview
-                engine={engine}
-                sourceIndex={index}
-                style={() => (currentView.value === EditorView.Crop ? 'display:none' : '')}
-              />
-            ))
-          )
-        }
-      </div>
-
+      {/* VIEWS */}
+      {() => views[currentView.value]?.()}
+      {/* MAIN BUTTONS */}
       <p class="miru--menu">
-        {/* ENHANCEMENT MENU */}
-        {() => currentView.value === EditorView.Adjust && <AdjustmentsMenu engine={engine} />}
-
-        {/* FILTER MENU */}
-        {() =>
-          currentView.value === EditorView.Filter && (
-            <FilterMenu engine={engine} sourceIndex={engine.currentSourceIndex} />
-          )
-        }
-
-        {/* FILESELECT BROWSE */}
-        {() =>
-          currentView.value === EditorView.Browse && (
-            <p class="miru--menu__row">
-              <label class="flex miru--button miru--browser">
-                <div class="i-tabler:photo-up miru--button__icon"></div>
-                {/* Select File */}
-                <input
-                  class="miru--button miru--button--fileselect"
-                  id="fileInput"
-                  type="file"
-                  accept="image/*"
-                  onChange={onFileChange}
-                />
-              </label>
-            </p>
-          )
-        }
-
-        {/* MAIN BUTTONS */}
         <p class="miru--menu__row">
           {[
-            { view: EditorView.Browse, icon: 'i-tabler:photo', active: () => false, label: 'Browse' },
             {
               view: EditorView.Crop,
               icon: 'i-tabler:crop',

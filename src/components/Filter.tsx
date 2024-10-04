@@ -16,6 +16,7 @@ import { throttle } from 'throttle-debounce'
 import { RowSlider } from './RowSlider'
 import { InputEvent } from '@/types'
 import { ImageSourceState } from '@/engine/ImageSourceState'
+import { SourcePreview } from './SourcePreview'
 
 const FilterItem: Component<{
   effect: EffectInternal
@@ -40,14 +41,14 @@ const FilterItem: Component<{
   )
 }
 
-export const FilterMenu = ({
+export const FilterView = ({
   engine,
   sourceIndex,
 }: {
   engine: ImageEditorEngine
   sourceIndex: MaybeRefOrGetter<number>
 }) => {
-  const { effectOfCurrentSource } = engine
+  const { sources, effectOfCurrentSource } = engine
   const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
 
   const container = ref<HTMLElement>()
@@ -103,38 +104,47 @@ export const FilterMenu = ({
 
   return (
     // TODO: fragment
-    <div style="display:contents">
-      <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
-        <button
-          type="button"
-          data-index="-1"
-          class={['miru--filter miru--button', () => effectOfCurrentSource.value === -1 && 'miru--acc']}
-          onClick={() => onClickFilter(-1)}
-        >
-          <div class="miru--filter__canvas-container">{source.value?.thumbnailCanvas}</div>
-          <span class="miru--filter__name">Original</span>
-        </button>
+    <div class="miru--center">
+      {() => {
+        return sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
+      }}
+      <div class="miru--menu">
+        <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
+          <button
+            type="button"
+            data-index="-1"
+            class={['miru--filter miru--button', () => effectOfCurrentSource.value === -1 && 'miru--acc']}
+            onClick={() => onClickFilter(-1)}
+          >
+            <div class="miru--filter__canvas-container">{source.value?.thumbnailCanvas}</div>
+            <span class="miru--filter__name">Original</span>
+          </button>
 
-        {() =>
-          engine.effects.value.map((effect, index) => (
-            <FilterItem
-              effect={effect}
-              index={index}
-              isActive={() => effectOfCurrentSource.value === index}
-              onClick={() => onClickFilter(index)}
-            >
-              {() => `${Math.round(source.value!.intensity.value * 100)}%`}
-            </FilterItem>
-          ))
-        }
-      </p>
-      {RowSlider({
-        min: 0,
-        max: 1,
-        value: () => source.value?.intensity.value,
-        onInput: onInputIntensity,
-        style: () => (source.value?.effect.value === -1 ? 'visibility:hidden' : ''),
-      })}
+          {() =>
+            engine.effects.value.map((effect, index) => (
+              <FilterItem
+                effect={effect}
+                index={index}
+                isActive={() => effectOfCurrentSource.value === index}
+                onClick={() => onClickFilter(index)}
+              >
+                {() => `${Math.round(source.value!.intensity.value * 100)}%`}
+              </FilterItem>
+            ))
+          }
+        </p>
+
+        {RowSlider({
+          min: 0,
+          max: 1,
+          value: () => source.value?.intensity.value,
+          onInput: onInputIntensity,
+          style: () => (source.value?.effect.value === -1 ? 'visibility:hidden' : ''),
+        })}
+      </div>
+
+      {/* spacer */}
+      <div />
     </div>
   )
 }

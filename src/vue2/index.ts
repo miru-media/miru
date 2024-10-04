@@ -3,6 +3,6 @@ export {
   createEngine,
   MiruImageEditorPreview,
   MiruImageEditorCropper,
-  MiruImageEditorFilterMenu,
-  MiruImageEditorAdjustmentsMenu,
+  MiruImageEditorFilterView,
+  MiruImageEditorAdjustmentsView,
 } from './wrappers'

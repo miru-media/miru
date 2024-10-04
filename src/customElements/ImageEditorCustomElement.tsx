@@ -17,7 +17,7 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
   #effects = ref<Effect[]>([])
   #unmount: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
-  #view = ref(EditorView.Browse)
+  #view = ref(EditorView.Crop)
 
   get sources(): ImageSourceOption[] {
     return this.#engine.sourceInputs.value
