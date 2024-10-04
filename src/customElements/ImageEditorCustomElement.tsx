@@ -1,9 +1,10 @@
-import { renderUITo } from './ImageEditorUI'
 import { createEffectScope, effect, ref } from '@/framework/reactivity'
 import { Context2D, EditorView, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { downloadBlob, win } from '@/utils'
 import { getDefaultFilters } from '@/effects'
 import { ImageEditorEngine } from '../engine/ImageEditorEngine'
+import { renderComponentTo } from '@/components/renderTo'
+import { ImageEditorUI } from '@/components/ImageEditorUI'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
@@ -56,15 +57,6 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
 
     this.classList.add('miru-image-editor')
 
-    this.setAttribute(
-      'color-scheme',
-      this.hasAttribute('color-scheme')
-        ? this.getAttribute('color-scheme')!
-        : window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light',
-    )
-
     this.#engine = this.#scope.run(
       () =>
         new ImageEditorEngine({
@@ -75,7 +67,9 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
     )
     this.#effects.value = getDefaultFilters(import.meta.env.ASSETS_PATH)
 
-    this.#unmount = this.#scope.run(() => renderUITo(this, { engine: this.#engine, view: this.#view }))
+    this.#unmount = this.#scope.run(() =>
+      renderComponentTo(ImageEditorUI, { engine: this.#engine, view: this.#view }, this),
+    )
   }
 
   connectedCallback() {

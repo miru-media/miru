@@ -45,7 +45,7 @@ miru-image-editor,
   /* border-color: var(--color-acc) !important; */
 }
 
-.miru--center,
+.miru--preview,
 .miru--cropper-container {
   background-color: var(--color-bg-dark);
 }

@@ -1,12 +1,13 @@
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
 import { EffectScope, Ref, createEffectScope, ref } from '@/framework/reactivity'
 import { Context2D, EditorView, Effect, ImageEditState, ImageSource, ImageSourceOption } from '@/types'
-import { renderUITo } from './components/ImageEditorUI'
-import { getDefaultFilters } from './effects'
-import { canvasToBlob } from './utils'
+import { getDefaultFilters } from '../effects'
+import { canvasToBlob } from '../utils'
+import { renderComponentTo } from '@/components/renderTo'
+import { ImageEditorUI } from '@/components/ImageEditorUI'
+import { ImageEditorEngineVue, createEngine, engineMap } from './wrappers'
 
 interface VueInstance {
-  engine: ImageEditorEngine
+  engine: ImageEditorEngineVue
   sources?: ImageSource[]
   view?: EditorView
   _view: Ref<EditorView>
@@ -15,7 +16,6 @@ interface VueInstance {
   assetsPath?: string
   editStates: ImageEditState[]
   scope: EffectScope
-  reEmit: (event: Event) => void
   thumbnailUrls: string[]
 
   $el: HTMLElement
@@ -40,40 +40,34 @@ export default {
     this._effects = ref([])
     this._view = ref(EditorView.Browse)
 
-    this.engine = this.scope.run(
-      () =>
-        new ImageEditorEngine({
-          effects: this._effects,
-          onEdit: (index, state) => {
-            this.$emit('edit', { index, ...state })
-          },
-          onRenderPreview: async (sourceIndex: number) => {
-            const source = this.engine.sources.value[sourceIndex]
-            if (!source) return
+    this.engine = this.scope.run(() =>
+      createEngine({
+        effects: this._effects,
+        onEdit: (index, state) => this.$emit('edit', { index, ...state }),
+        onRenderPreview: async (sourceIndex: number) => {
+          const engine = engineMap.get(this.engine)!
+          const source = engine.sources.value[sourceIndex]
+          if (!source) return
 
-            URL.revokeObjectURL(this.thumbnailUrls[sourceIndex])
+          URL.revokeObjectURL(this.thumbnailUrls[sourceIndex])
 
-            this.$set(
-              this.thumbnailUrls,
-              sourceIndex,
-              URL.createObjectURL(await canvasToBlob(source.context.canvas)),
-            )
-            this.$emit('render', this.thumbnailUrls)
-          },
-        }),
+          this.$set(
+            this.thumbnailUrls,
+            sourceIndex,
+            URL.createObjectURL(await canvasToBlob(source.context.canvas)),
+          )
+          this.$emit('render', this.thumbnailUrls)
+        },
+      }),
     )
   },
   mounted(this: VueInstance) {
-    this.scope.run(() => {
-      renderUITo(this.$el, { engine: this.engine, view: this._view })
-    })
-
-    this.reEmit = function (this: VueInstance, event: Event) {
-      this.$emit(event.type, event)
-    }.bind(this)
+    this.scope.run(() =>
+      renderComponentTo(ImageEditorUI, { engine: engineMap.get(this.engine)!, view: this._view }, this.$el),
+    )
   },
   destroyed(this: VueInstance) {
-    this.engine.dispose()
+    this.scope.stop()
     this.engine = undefined as never
     this.thumbnailUrls.forEach(URL.revokeObjectURL.bind(URL))
   },
@@ -89,21 +83,21 @@ export default {
       sourceIndex: number,
       context: ImageBitmapRenderingContext | Context2D,
     ) {
-      return this.engine.renderPreviewTo(sourceIndex, context)
+      return engineMap.get(this.engine)!.renderPreviewTo(sourceIndex, context)
     },
   },
   watch: {
     sources: {
       handler(this: VueInstance, value: ImageSourceOption[], prev: ImageSourceOption[] | undefined) {
         if (value && prev && (value === prev || value.every((v, i) => prev[i] === v))) return
-        this.engine.sourceInputs.value = value
+        engineMap.get(this.engine)!.sourceInputs.value = value
       },
       immediate: true,
       deep: true,
     },
     editStates: {
       handler(this: VueInstance, value: ImageEditState[]) {
-        this.engine.editStatesIn.value = value
+        engineMap.get(this.engine)!.editStatesIn.value = value
       },
       immediate: true,
     },

@@ -1,4 +1,4 @@
-import { MiruImageEditor } from '@/components/ImageEditorCustomElement'
+import { MiruImageEditor } from '@/customElements/ImageEditorCustomElement'
 export { getDefaultFilters } from '@/effects'
 export { EffectOpType } from '@/constants'
 

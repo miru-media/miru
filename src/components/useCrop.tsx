@@ -1,6 +1,5 @@
 import { CROP_DRAW_DEBOUNCE_MS } from '@/constants'
 import { computed, getCurrentScope, ref } from '@/framework/reactivity'
-import { EditorView } from '@/types'
 import {
   centerTo,
   cropIsEqualTo,
@@ -13,9 +12,11 @@ import {
 } from '@/utils'
 import { debounce } from 'throttle-debounce'
 import Cropper from 'cropperjs'
-import { ImageEditorUIProps } from './ImageEditorUI'
+import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
 
-export const useCrop = ({ engine, view: currentView }: ImageEditorUIProps) => {
+export type CropContext = ReturnType<typeof useCrop>
+
+export const useCrop = ({ engine }: { engine: ImageEditorEngine }) => {
   const { currentSource } = engine
   const cropper = ref<Cropper>()
 
@@ -37,10 +38,10 @@ export const useCrop = ({ engine, view: currentView }: ImageEditorUIProps) => {
   container.className = 'miru--cropper-container'
 
   scope.watch(
-    [currentView, currentSource, () => currentSource.value?.original],
-    async ([view, source, original], _prev, onCleanup) => {
+    [currentSource, () => currentSource.value?.original],
+    async ([source, original], _prev, onCleanup) => {
       container.style.display = 'none'
-      if (view !== EditorView.Crop || !source || !original) return
+      if (!source || !original) return
 
       let cropperImage
 
@@ -119,9 +120,7 @@ export const useCrop = ({ engine, view: currentView }: ImageEditorUIProps) => {
   )
 
   // pause previews while cropping
-  scope.watch([currentView, engine.sources], ([view, sources], _prev, onCleanup) => {
-    if (view !== EditorView.Crop) return
-
+  scope.watch([engine.sources], ([sources], _prev, onCleanup) => {
     sources.forEach((source) => source.pausePreview.value++)
     onCleanup(() => sources.forEach((source) => source.pausePreview.value--))
   })

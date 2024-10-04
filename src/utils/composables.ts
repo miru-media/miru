@@ -1,4 +1,4 @@
-import { MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
+import { MaybeRefOrGetter, effect, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
 import { throttle } from 'throttle-debounce'
 
 export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | undefined>) => {
@@ -69,3 +69,17 @@ export const arrayFlatToValue = <T>(value: T | T[], result: T[] = []): T[] => {
 
   return result
 }
+
+export const useEventListener = (
+  targetRef: MaybeRefOrGetter<EventTarget | undefined>,
+  type: string,
+  listener: EventListener,
+  options?: EventListenerOptions,
+) =>
+  effect((onCleanup) => {
+    const target = toValue(targetRef)
+    if (!target) return
+
+    target.addEventListener(type, listener, options)
+    onCleanup(() => target.removeEventListener(type, listener, options))
+  })

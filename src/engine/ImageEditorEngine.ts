@@ -1,5 +1,5 @@
 import { Ref, computed, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
-import { Context2D, Effect, ImageEditState, ImageSourceOption, Size } from '@/types'
+import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { ImageSourceState } from './ImageSourceState'
 import { EffectInternal } from '@/Effect'
 import { get2dContext } from '@/utils'
@@ -9,7 +9,7 @@ import { Renderer } from '@/engine/Renderer'
 export interface ImageEditorOptions {
   effects: Ref<Effect[]>
   onRenderPreview: (index: number) => unknown
-  onEdit: (index: number, state: ImageEditState) => void
+  onEdit: (index: number, state: ImageEditState) => unknown
 }
 
 export class ImageEditorEngine {
@@ -25,7 +25,6 @@ export class ImageEditorEngine {
   #isLoadingEffects = computed(() => this.effects.value.some((e) => e.isLoading.value))
   #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
   scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
-  previewSize = ref<Size>({ width: 0, height: 0 })
   currentSourceIndex = ref(0)
   currentSource = computed(
     (): ImageSourceState | undefined => this.sources.value[this.currentSourceIndex.value],
@@ -56,7 +55,6 @@ export class ImageEditorEngine {
           (sourceOption, sourceIndex) =>
             new ImageSourceState({
               sourceOption,
-              previewContainerSize: this.previewSize,
               thumbnailSize: ref({ width: 300, height: 300 }),
               // reuse old canvas to avoid a moment of emptiness
               context: prevSources[sourceIndex]?.context,
@@ -84,8 +82,14 @@ export class ImageEditorEngine {
     })
 
     // render effect preview thumbnails
-    watch([() => this.currentSource.value?.thumbnailKey.value, this.#isLoadingEffects, this.#effectsIn], () =>
-      this.drawThumbnails(),
+    watch(
+      [
+        this.currentSource,
+        () => this.currentSource.value?.thumbnailKey.value,
+        this.#isLoadingEffects,
+        this.#effectsIn,
+      ],
+      () => this.drawThumbnails(),
     )
   }
 

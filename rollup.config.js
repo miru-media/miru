@@ -46,7 +46,7 @@ export default defineConfig({
         'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
         'import.meta.env.ASSETS_PATH': '"/assets/"',
         'import.meta.env.NO_SHADOW_ROOT': 'false',
-        'import.meta.env.VITE_SLOW_DOWN_MS': 'undefined',
+        'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
       },
       preventAssignment: true,
     }),
@@ -61,7 +61,7 @@ export default defineConfig({
   ],
   input: {
     miru: 'src/index.ts',
-    vue2: 'src/vue2.tsx',
+    vue2: 'src/vue2/index.ts',
   },
   output: {
     dir: dist,

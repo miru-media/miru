@@ -8,6 +8,7 @@ import {
   Ref,
   createEffectScope,
   effect,
+  getCurrentScope,
   isRef,
   onScopeDispose,
   toValue,
@@ -22,7 +23,7 @@ declare global {
 
     interface Element {
       el: Node
-      scope: EffectScope
+      scope?: EffectScope
       type: Component | string
       [HNODE_MARKER]: true
     }
@@ -75,15 +76,16 @@ const updateChildNode = (cur: MaybeChild, prev: AppendedChild | undefined) => {
   const prevTextNode = prev?.domNode
   const textNode = prevTextNode && isTextNode(prevTextNode) ? prevTextNode : new Text()
 
-  if (!cur) textNode.nodeValue = ''
-  else textNode.nodeValue = typeof cur === 'object' ? JSON.stringify(cur, null, '  ') : String(cur)
+  if (cur === false || cur == null) textNode.nodeValue = ''
+  else if (typeof cur === 'object') textNode.nodeValue = JSON.stringify(cur, null, '  ')
+  else textNode.nodeValue = String(cur)
 
   return textNode
 }
 
 const unAppend = (child: AppendedChild, parent: Node) => {
   const { hNode, domNode } = child
-  if (isHNode(hNode)) hNode.scope.stop()
+  if (isHNode(hNode)) hNode.scope?.stop()
   if (domNode.parentNode === parent) parent.removeChild(domNode)
 }
 
@@ -97,95 +99,92 @@ const toClassName = (value: unknown): string => {
 }
 
 export const h = (type: string | Component, props: ComponentProps): HNode => {
-  const scope = createEffectScope()
+  if (typeof type === 'function') {
+    const scope = createEffectScope()
+    const hNode = scope.run(() => type(props))
 
-  return scope.run((): HNode => {
-    if (typeof type === 'function') {
-      const hNode = type(props)
+    return { ...hNode, type, scope }
+  }
 
-      return { ...hNode, type, scope }
-    }
-
-    return scope.run(() => createElementHNode(type, props, scope))
-  })
+  return createElementHNode(type, props)
 }
 
-const createElementHNode = (type: string, props: ComponentProps, scope: EffectScope): HNode => {
+const createElementHNode = (type: string, props: ComponentProps): HNode => {
   const appendedNodes: AppendedChild[] = []
   const element = document.createElement(type)
 
   const hNode: HNode = {
     el: element,
     type,
-    scope,
+    scope: undefined,
     [HNODE_MARKER]: true,
   }
 
-  scope.run(() => {
-    const { children } = props
+  const parentScope = getCurrentScope()
 
-    if (children) {
-      // TODO: use fragments instead of flattening?
-      watch([() => arrayFlatToValue(children)], ([children]) => {
-        children.forEach((child, childIndex) => {
-          const prevAppended: AppendedChild | undefined = appendedNodes[childIndex]
+  if (!parentScope) throw new Error(`[miru] jsx element must be created within an EffectScope`)
 
-          const domNode = updateChildNode(child, prevAppended)
-          // insert the new child at the position of the previous node (which may be the same)
-          element.insertBefore(domNode, prevAppended?.domNode || null)
+  if (props.children) {
+    // TODO: use fragments instead of flattening?
+    watch([() => parentScope.run(() => arrayFlatToValue(props.children))], ([children]) => {
+      children.forEach((child, childIndex) => {
+        const prevAppended: AppendedChild | undefined = appendedNodes[childIndex]
 
-          if ((isHNode(child) && child !== prevAppended?.hNode) || domNode !== prevAppended?.domNode) {
-            // remove the previous child if it changed
-            if (prevAppended) unAppend(prevAppended, element)
+        const domNode = updateChildNode(child, prevAppended)
+        // insert the new child at the position of the previous node (which may be the same)
+        element.insertBefore(domNode, prevAppended?.domNode || null)
 
-            // update the list of appended children
-            appendedNodes[childIndex] = { hNode: child, domNode }
-          }
-        })
+        if ((isHNode(child) && child !== prevAppended?.hNode) || domNode !== prevAppended?.domNode) {
+          // remove the previous child if it changed
+          if (prevAppended) unAppend(prevAppended, element)
 
-        // if there are fewer children than before, unmount the extra from before
-        for (let i = children.length; i < appendedNodes.length; i++) unAppend(appendedNodes[i], element)
-      })
-
-      onScopeDispose(() => {
-        appendedNodes.length = 0
-        hNode.el = undefined as never
-        if (props.ref) props.ref.value = undefined
-      })
-    }
-
-    effect(() => {
-      for (const key in props) {
-        if (isIgnoredPropKey(key)) continue
-
-        const value = props[key]
-        const first2Chars = key.slice(0, 2)
-
-        if (first2Chars === 'a:') {
-          const attrName = key.slice(2)
-          element.setAttribute(attrName, toValue(value) as string)
-        } else if (first2Chars === 'on') {
-          ;(element as any)[key.toLowerCase()] = isRef(value) ? value.value : value
-        } else if (key === 'class') {
-          element.className = toClassName(value)
-        } else if (key === 'style' || !(key in element)) {
-          element.setAttribute(key, toValue(value) as string)
-        } else {
-          ;(element as any)[key] = toValue(value)
+          // update the list of appended children
+          appendedNodes[childIndex] = { hNode: child, domNode }
         }
-      }
+      })
+
+      // if there are fewer children than before, unmount the extra from before
+      for (let i = children.length; i < appendedNodes.length; i++) unAppend(appendedNodes[i], element)
     })
 
-    // component is to be unmounted
-    // assume a parent component will remove it from the DOM
     onScopeDispose(() => {
-      for (let key in props) {
-        if (isIgnoredPropKey(key) || key.startsWith('a:')) continue
-        if (key.startsWith('on')) key = key.toLowerCase()
-        if (key in element) (element as any)[key] = null
-        else element.removeAttribute(key)
-      }
+      appendedNodes.length = 0
+      hNode.el = undefined as never
+      if (props.ref) props.ref.value = undefined
     })
+  }
+
+  effect(() => {
+    for (const key in props) {
+      if (isIgnoredPropKey(key)) continue
+
+      const value = props[key]
+      const first2Chars = key.slice(0, 2)
+
+      if (first2Chars === 'a:') {
+        const attrName = key.slice(2)
+        element.setAttribute(attrName, toValue(value) as string)
+      } else if (first2Chars === 'on') {
+        ;(element as any)[key.toLowerCase()] = isRef(value) ? value.value : value
+      } else if (key === 'class') {
+        element.className = toClassName(value)
+      } else if (key === 'style' || !(key in element)) {
+        element.setAttribute(key, toValue(value) as string)
+      } else {
+        ;(element as any)[key] = toValue(value)
+      }
+    }
+  })
+
+  // component is to be unmounted
+  // assume a parent component will remove it from the DOM
+  onScopeDispose(() => {
+    for (let key in props) {
+      if (isIgnoredPropKey(key) || key.startsWith('a:')) continue
+      if (key.startsWith('on')) key = key.toLowerCase()
+      if (key in element) (element as any)[key] = null
+      else element.removeAttribute(key)
+    }
   })
 
   if (props.ref) props.ref.value = element
@@ -199,7 +198,7 @@ export const render = (node: HNode, root: ParentNode): Stop => {
   root.appendChild(node.el)
 
   return () => {
-    node.scope.stop()
+    node.scope?.stop()
     root.removeChild(node.el)
   }
 }

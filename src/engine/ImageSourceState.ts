@@ -24,12 +24,12 @@ import {
   isSyncSource,
   normalizeSourceOption,
   resizeImageSync,
+  useElementSize,
   win,
 } from '@/utils'
 
 interface ImageSourceStateOptions {
   sourceOption: ImageSourceOption
-  previewContainerSize: Ref<Size>
   thumbnailSize: Ref<Size>
   context?: ImageSourceState['context']
   renderer: Renderer
@@ -46,7 +46,7 @@ export class ImageSourceState {
   #rotated = ref<SyncImageSource>()
   #previewContext = get2dContext()
   #thumbnailContext = get2dContext(document.createElement('canvas'))
-  #previewSize: Ref<Size>
+  #previewSize = ref<Size>({ width: 1, height: 1 })
   #thumbnailSize!: Ref<Size>
   #isLoading = ref(true)
   #effects: Ref<EffectInternal[]>
@@ -93,7 +93,6 @@ export class ImageSourceState {
 
   constructor({
     sourceOption,
-    previewContainerSize,
     thumbnailSize,
     context,
     renderer,
@@ -113,16 +112,22 @@ export class ImageSourceState {
 
     this.onRenderPreview = onRenderPreview
 
+    const canvasSize = useElementSize(this.context.canvas)
+
     this.#previewSize = computed(() => {
-      const optionValue = toValue(previewContainerSize)
+      const size = canvasSize.value
       const rotated = this.#rotated.value
-      if (!rotated) return optionValue
+
+      // in the case where the container is hidden or not attached, draw at a fixed size
+      const MIN_CONTAINER_SIZE = 200
+
+      if (!rotated) return size
 
       const dpr = win.devicePixelRatio
 
       return fitToWidth(this.crop.value ?? rotated, {
-        width: optionValue.width * dpr,
-        height: optionValue.height * dpr,
+        width: Math.max(size.width, MIN_CONTAINER_SIZE) * dpr,
+        height: Math.max(size.height, MIN_CONTAINER_SIZE) * dpr,
       })
     })
 
