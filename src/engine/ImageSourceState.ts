@@ -199,9 +199,9 @@ export class ImageSourceState {
 
     // crop rotated image and resize if larger than the screen size
     watch(
-      [this.#rotated, this.crop, this.adjustments, this.pausePreview, this.forceResize],
-      ([fullSizeImage, crop, _adjustments, pause, force]) => {
-        if (pause > 0 && !force) return
+      [this.#rotated, this.crop, this.adjustments, this.pausePreview],
+      ([fullSizeImage, crop, _adjustments, pause]) => {
+        if (pause > 0) return
 
         if (!fullSizeImage) {
           this.#isLoading.value = true

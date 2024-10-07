@@ -1,4 +1,3 @@
-import { CROP_DRAW_DEBOUNCE_MS } from '@/constants'
 import { computed, getCurrentScope, ref, toValue } from '@/framework/reactivity'
 import {
   centerTo,
@@ -10,7 +9,6 @@ import {
   offsetBy,
   setObjectSize,
 } from '@/utils'
-import { debounce } from 'throttle-debounce'
 import Cropper from 'cropperjs'
 import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
 import { ImageSourceState } from '@/engine/ImageSourceState'
@@ -103,8 +101,6 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
 
         const canvasData = $cropper.getCanvasData()
         zoom.value = Math.min(canvasData.width / original.width, canvasData.height / original.height)
-
-        drawPreviewDebounced()
       },
     })
 
@@ -120,11 +116,6 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
   scope.watch([engine.sources], ([sources], _prev, onCleanup) => {
     sources.forEach((source) => source.pausePreview.value++)
     onCleanup(() => sources.forEach((source) => source.pausePreview.value--))
-  })
-
-  const drawPreviewDebounced = debounce(CROP_DRAW_DEBOUNCE_MS, () => {
-    const $source = source.value
-    if ($source) $source.forceResize.value = true
   })
 
   scope.watch([cropper, aspectRatio], ([cropper, aspectRatio]) => cropper?.setAspectRatio(aspectRatio))

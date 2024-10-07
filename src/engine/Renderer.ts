@@ -194,8 +194,8 @@ export class Renderer {
     setObjectSize(canvas, this.#gl.canvas)
 
     if (context instanceof ImageBitmapRenderingContext) {
-      const bitmap = await this.toImageBitmap()
-      context.transferFromImageBitmap(bitmap)
+      const bitmapOrPromise = this.toImageBitmap()
+      context.transferFromImageBitmap('then' in bitmapOrPromise ? await bitmapOrPromise : bitmapOrPromise)
     } else {
       context.drawImage(this.#gl.canvas, 0, 0)
     }

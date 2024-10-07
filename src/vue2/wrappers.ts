@@ -63,6 +63,14 @@ class ImageEditorEngineVueImpl implements ImageEditorEngineVue {
     this.#engine.sourceInputs.value = [...sources]
   }
 
+  setEditState(sourceIndex: number, state: ImageEditState) {
+    const source = this.#engine.sources.value[sourceIndex]
+    if (!source) return
+
+    source.setState(state)
+    return source.drawPreview()
+  }
+
   exportToBlob(sourceIndex: number, options?: ImageEncodeOptions) {
     return this.#engine.exportToBlob(sourceIndex, options)
   }
