@@ -22,11 +22,17 @@ declare global {
     type IntrinsicElements = Record<string, unknown>
 
     interface Element {
-      el: Node
+      el: Node | DocumentFragment
+      marker?: Node
       scope?: EffectScope
       type: Component | string
       [HNODE_MARKER]: true
     }
+  }
+
+  export interface DocumentFragment {
+    /** @internal */
+    [HNODE_MARKER]: Comment
   }
 }
 
@@ -66,6 +72,8 @@ const isDomNode = (value: any): value is Node =>
 const isTextNode = (value: any): value is Text => {
   return isDomNode(value) && value.nodeType === 3
 }
+const isDocFrag = (value: Node | DocumentFragment | undefined): value is DocumentFragment =>
+  value?.nodeType === 11
 
 const updateChildNode = (cur: MaybeChild, prev: AppendedChild | undefined) => {
   if (isHNode(cur)) return cur.el
@@ -83,10 +91,15 @@ const updateChildNode = (cur: MaybeChild, prev: AppendedChild | undefined) => {
   return textNode
 }
 
-const unAppend = (child: AppendedChild, parent: Node) => {
-  const { hNode, domNode } = child
-  if (isHNode(hNode)) hNode.scope?.stop()
+const unappend = (child: AppendedChild, parent: Node) => {
+  const { domNode } = child
   if (domNode.parentNode === parent) parent.removeChild(domNode)
+}
+const unappendAndStop = (child: AppendedChild, parent: Node) => {
+  const { hNode } = child
+
+  unappend(child, parent)
+  if (isHNode(hNode)) hNode.scope?.stop()
 }
 
 const isIgnoredPropKey = (key: string) =>
@@ -111,7 +124,18 @@ export const h = (type: string | Component, props: ComponentProps): HNode => {
 
 const createElementHNode = (type: string, props: ComponentProps): HNode => {
   const appendedNodes: AppendedChild[] = []
-  const element = document.createElement(type)
+
+  let element: Element | DocumentFragment
+  let marker: Comment | null = null
+
+  if (type === '#fragment') {
+    element = document.createDocumentFragment()
+    marker = new Comment(import.meta.env.PROD ? '' : 'fragment')
+    element.appendChild(marker)
+    element[HNODE_MARKER] = marker
+  } else {
+    element = document.createElement(type)
+  }
 
   const hNode: HNode = {
     el: element,
@@ -125,18 +149,23 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
   if (!parentScope) throw new Error(`[miru] jsx element must be created within an EffectScope`)
 
   if (props.children) {
-    // TODO: use fragments instead of flattening?
     watch([() => parentScope.run(() => arrayFlatToValue(props.children))], ([children]) => {
+      const appendTo = marker?.parentNode ?? element
+
       children.forEach((child, childIndex) => {
         const prevAppended: AppendedChild | undefined = appendedNodes[childIndex]
+        const prevDomNode = prevAppended?.domNode
 
         const domNode = updateChildNode(child, prevAppended)
         // insert the new child at the position of the previous node (which may be the same)
-        element.insertBefore(domNode, prevAppended?.domNode || null)
+        const beforeNode = isDocFrag(appendTo)
+          ? null
+          : (isDocFrag(prevDomNode) ? prevDomNode[HNODE_MARKER] : prevDomNode) || marker?.nextElementSibling
+        appendTo.insertBefore(domNode, beforeNode)
 
         if ((isHNode(child) && child !== prevAppended?.hNode) || domNode !== prevAppended?.domNode) {
           // remove the previous child if it changed
-          if (prevAppended) unAppend(prevAppended, element)
+          if (prevAppended) unappendAndStop(prevAppended, appendTo)
 
           // update the list of appended children
           appendedNodes[childIndex] = { hNode: child, domNode }
@@ -144,15 +173,23 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
       })
 
       // if there are fewer children than before, unmount the extra from before
-      for (let i = children.length; i < appendedNodes.length; i++) unAppend(appendedNodes[i], element)
+      for (let i = children.length; i < appendedNodes.length; i++) unappendAndStop(appendedNodes[i], appendTo)
     })
 
     onScopeDispose(() => {
+      if (isDocFrag(element)) {
+        const parentNode = marker!.parentNode
+        marker!.remove()
+        if (parentNode) appendedNodes.forEach((node) => unappend(node, parentNode))
+      }
+
       appendedNodes.length = 0
       hNode.el = undefined as never
       if (props.ref) props.ref.value = undefined
     })
   }
+
+  if (isDocFrag(element)) return hNode
 
   effect(() => {
     for (const key in props) {
@@ -191,6 +228,8 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
 
   return hNode
 }
+
+export const Fragment = (props: { children: HNodeChild[] }) => h('#fragment', props)
 
 export const render = (node: HNode, root: ParentNode): Stop => {
   if (!root) throw new Error(`[miru] No root to render into`)

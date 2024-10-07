@@ -118,8 +118,7 @@ export const FilterView = ({
   }
 
   return (
-    // TODO: fragment
-    <div class="miru--center">
+    <>
       {() =>
         toValue(showPreviews) &&
         engine.sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
@@ -163,6 +162,6 @@ export const FilterView = ({
 
       {/* spacer */}
       <div />
-    </div>
+    </>
   )
 }

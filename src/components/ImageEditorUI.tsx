@@ -45,7 +45,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
   return (
     <div class="miru--main">
       {/* VIEWS */}
-      {() => views[currentView.value]?.()}
+      <div class="miru--center">{() => views[currentView.value]?.()}</div>
       {/* MAIN BUTTONS */}
       <p class="miru--menu">
         <p class="miru--menu__row">

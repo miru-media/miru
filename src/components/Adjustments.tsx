@@ -30,8 +30,7 @@ export const AdjustmentsView = ({
   }
 
   return (
-    // TODO: fragment
-    <div class="miru--center">
+    <>
       {() =>
         toValue(showPreviews) &&
         sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
@@ -60,6 +59,6 @@ export const AdjustmentsView = ({
 
       {/* spacer */}
       <div />
-    </div>
+    </>
   )
 }

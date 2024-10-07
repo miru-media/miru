@@ -12,9 +12,8 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
     sourceIndex: toValue(props.sourceIndex),
   })
 
-  // TODO: fragment
   return (
-    <div class="miru--center">
+    <>
       {container}
       <div class="miru--menu">
         <p class="miru--menu__row">
@@ -56,6 +55,6 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
           onInput: (event: InputEvent) => setZoom(event.target.valueAsNumber),
         })}
       </div>
-    </div>
+    </>
   )
 }
