@@ -82,7 +82,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
               class={() => [
                 'miru--button',
                 currentView.value == view && 'miru--acc',
-                active() && 'miru--button--active',
+                active() && 'miru--enabled',
               ]}
               onClick={() => (currentView.value = view)}
             >

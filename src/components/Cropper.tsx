@@ -54,9 +54,6 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
           value: zoom,
           onInput: (event: InputEvent) => setZoom(event.target.valueAsNumber),
         })}
-
-        {/* spacer */}
-        <div />
       </div>
     </div>
   )

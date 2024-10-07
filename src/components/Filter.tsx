@@ -35,7 +35,7 @@ const FilterItem: Component<{
       class={['miru--filter miru--button', () => isActive() && 'miru--acc']}
       onClick={onClick}
     >
-      <div class="miru--filter__canvas-container">{() => toValue(context)?.canvas}</div>
+      {() => toValue(context)?.canvas}
       {() => (isActive() ? <span class="miru--filter__amount">{children}</span> : '')}
       <span class="miru--filter__name">{filterEffect.name}</span>
     </button>
@@ -134,7 +134,7 @@ export const FilterView = ({
             class={['miru--filter miru--button', () => effectOfCurrentSource.value === -1 && 'miru--acc']}
             onClick={() => onClickFilter(-1)}
           >
-            <div class="miru--filter__canvas-container">{source.value?.thumbnailCanvas}</div>
+            {source.value?.thumbnailCanvas}
             <span class="miru--filter__name">Original</span>
           </button>
 

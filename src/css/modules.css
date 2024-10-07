@@ -1,18 +1,24 @@
-/* MAIN BUTTONS */
-
+/* BUTTON */
 .miru--button {
   position: relative;
   flex-grow: 1;
   padding: 0.75em !important;
+
+  /* BUTTON ICON */
+  .miru--button__icon {
+    flex-grow: 0;
+    margin: auto;
+    font-size: var(--size-button-icon);
+  }
+
+  /* BUTTON LABEL */
+  .miru--button__label {
+    font-size: 0.75rem;
+  }
 }
 
-.miru--button__icon {
-  flex-grow: 0;
-  margin: auto;
-  font-size: var(--icon-size);
-}
-
-.miru--button--active::after {
+/* ENABLED MARKER */
+.miru--enabled::after {
   position: absolute;
   top: calc(50% - 1rem);
   right: calc(50% - 1rem);
@@ -23,116 +29,109 @@
   border-radius: 50%;
 }
 
-.miru--button--fileselect {
-  max-width: 0;
-  padding: 0 !important;
-  margin: 0 !important;
-  opacity: 0;
-}
-
-.miru--button__label {
-  font-size: 0.75rem;
-
-  /* display: none; */
-}
-
 /* FILTERS */
-
 .miru--filter {
   position: relative;
   display: block !important;
-  flex-basis: var(--button-square-size);
+  flex-basis: var(--size-button-image);
   flex-shrink: 0;
-  height: var(--button-square-size);
+  height: var(--size-button-image);
   overflow: hidden !important;
-  border-radius: 0.35rem;
 
+  /* SCROLL AREA MARGIN */
   &:first-child {
-    margin-left: calc(50% - var(--button-square-size) / 2) !important;
+    margin-left: calc(50% - var(--size-button-image) / 2) !important;
   }
 
   &:last-child {
-    margin-right: calc(50% - var(--button-square-size) / 2) !important;
+    margin-right: calc(50% - var(--size-button-image) / 2) !important;
   }
-}
 
-.miru--filter.miru--acc {
-  border: 2px solid;
-}
+  /* ACCENT */
+  &.miru--acc {
+    border-radius: 1rem;
+    scale: 1;
+  }
 
-.miru--filter__canvas-container {
-  width: 100%;
-  height: inherit;
-  overflow: hidden;
-}
+  &:not(.miru--acc) {
+    border-radius: 0.5rem;
+    scale: 0.8;
+  }
 
-.miru--filter canvas {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  min-width: 100%;
-  min-height: 100%;
-  object-fit: cover;
-  transform: translate(-50%, -50%);
-}
+  /* PREVIEW */
+  canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+  }
 
-.miru--filter__amount,
-.miru--filter__name {
-  position: absolute;
-  width: 100%;
-  overflow: hidden;
-  line-height: 1.4em;
-  text-align: center;
-  white-space: nowrap;
-}
+  /* LABELS */
+  .miru--filter__amount,
+  .miru--filter__name {
+    position: absolute;
+    width: 100%;
+    overflow: hidden;
+    line-height: 1.4em;
+    text-align: center;
+    white-space: nowrap;
+  }
 
-.miru--filter__amount {
-  top: calc(50% - 0.7rem);
-  right: 0;
-  left: 0;
-}
+  .miru--filter__amount {
+    top: calc(50% - 0.7rem);
+    right: 0;
+    left: 0;
+  }
 
-.miru--filter__name {
-  right: 0;
-  bottom: 0;
-  left: 0;
+  .miru--filter__name {
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
 }
 
 /* PRELOADER */
 .miru--center:has(canvas:not([width]))::after,
 .miru--filter:has(canvas:not([width]))::after {
   position: absolute;
-  top: calc(50% - var(--icon-size) / 2);
-  left: calc(50% - var(--icon-size) / 2);
+  top: calc(50% - var(--size-button-icon) / 2);
+  left: calc(50% - var(--size-button-icon) / 2);
   z-index: 999;
   display: block;
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--size-button-icon);
+  height: var(--size-button-icon);
   clip-path: polygon(0% 0%, 100% 0%, 0% 100%, 0% 100%);
   content: '';
   border: 2px solid;
   border-radius: 50%;
   transform-origin: center;
-  animation: rotate 2s linear infinite;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.miru--label {
-  margin: auto;
 }
 
 /* SLIDER */
-
 .miru--slider {
   flex-grow: 1;
-  margin: 0 1rem;
+
+  /* margin: 0 1rem; */
+
+  appearance: none;
+  border: none;
+  border-radius: 0.25rem;
+
+  /* height: 100%; */
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-webkit-slider-thumb,
+  &::-moz-range-thumb {
+    width: 0.5rem;
+    height: 100%;
+    appearance: none;
+    cursor: pointer;
+    border: none;
+  }
 }

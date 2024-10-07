@@ -1,75 +1,50 @@
-/* ### VARIABLES ### */
-
-miru-image-editor[color-scheme='light'],
-:host[color-scheme='light'] {
-  --color-bg-dark: #d9d9d9;
-  --color-bg-alpha: rgb(232 232 232 / 50%);
-  --color-bg-bright: #fff;
-  --color-bg: #f1f1f1;
-  --color-fnt: #52454f;
-  --color-acc: #ff0090;
-}
-
-miru-image-editor[color-scheme='dark'],
-:host[color-scheme='dark'] {
-  --color-bg-dark: #111;
-  --color-bg-alpha: rgb(17 17 17 / 75%);
-  --color-bg-bright: #313131;
-  --color-bg: #242424;
-  --color-fnt: rgb(255 255 255 / 87%);
-  --color-acc: #ff0090;
-}
-
-/* ### SETTINGS ### */
-
 miru-image-editor,
 :host {
+  /* DEFAULTS */
+  color: var(--color-fnt-default);
+  scrollbar-color: var(--color-thumb) transparent;
+  background-color: var(--color-bg-default);
+
+  /* SCROLLBAR THUMBS */
   ::-webkit-scrollbar-thumb {
-    background-color: #999;
+    background-color: var(--color-thumb);
   }
-
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  font-weight: 400;
-  line-height: 1.5;
-
-  color: var(--color-fnt);
-  scrollbar-color: #999 transparent;
-  background-color: var(--color-bg);
 }
 
+/* ACCENT */
 .miru--acc {
-  color: var(--color-acc) !important;
-
-  /* background-color: var(--color-bg-bright) !important; */
-
-  /* border-color: var(--color-acc) !important; */
+  color: var(--color-fnt-acc) !important;
 }
 
+/* MODE ENABLED */
+.miru--enabled::after {
+  background-color: var(--color-fnt-acc);
+}
+
+/* PREVIEW */
 .miru--preview,
 .miru--cropper-container {
-  background-color: var(--color-bg-dark);
+  background-color: var(--color-bg-preview) !important;
 }
 
-.miru--button--active::after {
-  background-color: var(--color-acc);
+/* FILTER LABEL */
+.miru--filter span {
+  background-color: var(--color-bg-default);
 }
 
-.miru--filter.miru--acc .miru--filter__canvas-container {
-  opacity: 0.2;
-
-  /* filter: brightness(.2); */
-}
-
-.miru--filter:not(.miru--acc) span {
-  background-color: var(--color-bg-alpha);
-}
-
+/* BUTTON HOVER */
 .miru--button:hover {
-  background-color: var(--color-bg-bright);
-  transition: background-color 0.15s;
+  background-color: var(--color-bg-button-hover);
 }
 
-.miru--center:has(canvas:not([width]))::after,
-.miru--filter:has(canvas:not([width]))::after {
-  border-color: var(--color-fnt);
+/* SLIDER */
+.miru--slider {
+  &,
+  &::-webkit-slider-thumb {
+    background-color: var(--color-slider-bar);
+  }
+
+  &::-moz-range-thumb {
+    background: var(--color-slider-thumb);
+  }
 }

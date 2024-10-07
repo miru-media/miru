@@ -1,11 +1,59 @@
 miru-image-editor,
 :host {
-  /* COLOR SCHEME SETTINGS */
-  color-scheme: light dark;
+  /* FONT SETTINGS */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 
-  /* FONT META SETTINGS */
+  /* SCALE */
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+
+  /* COLOR SCHEMES */
+  color-scheme: light dark;
   font-synthesis: none;
   text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* BUTTON SIZE */
+  --size-button-icon: 1.5rem;
+  --size-button-image: 5rem;
+
+  /* LIGHT */
+  &[color-scheme='light'] {
+    /* BACKGROUND-COLOR */
+    --color-bg-default: #f1f1f1;
+    --color-bg-preview: #d9d9d9;
+    --color-bg-button-hover: #fff;
+
+    /* COLOR */
+    --color-fnt-default: #52454f;
+    --color-fnt-acc: #ff0090;
+
+    /* SCROLLBAR COLOR */
+    --color-thumb: #52454f;
+
+    /* SLIDER COLOR */
+    --color-slider-bar: #181418;
+    --color-slider-thumb: #ffffffde;
+  }
+
+  /* DARK */
+  &[color-scheme='dark'] {
+    /* BACKGROUND-COLOR */
+    --color-bg-default: #000;
+    --color-bg-preview: #181418;
+    --color-bg-button-hover: #1e1a1e;
+
+    /* COLOR */
+    --color-fnt-default: #ffffffde;
+    --color-fnt-acc: #ff0090;
+
+    /* SCROLLBAR COLOR */
+    --color-thumb: #ffffffde;
+
+    /* SLIDER COLOR */
+    --color-slider-bar: #181418;
+    --color-slider-thumb: #a38ba3;
+  }
 }
