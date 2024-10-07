@@ -43,7 +43,7 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
           ))}
 
           <button class="miru--button" type="button" onClick={() => cropper.value?.rotate(90)}>
-            <div class="i-tabler:rotate-rectangle miru--button__icon"></div>
+            <div class="i-tabler:rotate-clockwise miru--button__icon"></div>
             <label class="miru--button__label">Rotate</label>
           </button>
         </p>
