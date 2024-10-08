@@ -91,17 +91,13 @@
   /* SLIDER */
   .miru--slider {
     flex-grow: 1;
-
-    height: 100%;
-
-    /* height: var(--height-slider-bar); */
-
-    /* margin: 0 1rem; */
-
+    height: calc(100% - 1rem);
+    margin: 0 1rem;
+    overflow: hidden;
     appearance: none;
     border: none;
-
-    /* border-radius: 0.25rem; */
+    border: 1px solid;
+    border-radius: 0.25rem;
 
     &:focus {
       outline: none;
@@ -110,12 +106,11 @@
     &::-webkit-slider-thumb,
     &::-moz-range-thumb {
       width: 0.2rem;
-      height: 100%;
-
-      /* margin: .2rem; */
+      height: calc(100% - 0.5rem);
       appearance: none;
       cursor: pointer;
       border: none;
+      box-shadow: -15px 0 110px 15px rgb(255 255 255 / 40%);
     }
   }
 

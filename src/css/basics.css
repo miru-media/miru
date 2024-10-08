@@ -44,6 +44,7 @@ miru-image-editor,
     /* SLIDER COLOR */
     --color-slider-bar: #181418;
     --color-slider-thumb: #ffffffde;
+    --color-slider-border: #ffffffde;
   }
 
   /* DARK */
@@ -51,7 +52,7 @@ miru-image-editor,
     /* BACKGROUND-COLOR */
     --color-bg-default: #000;
     --color-bg-preview: #100e10;
-    --color-bg-button-hover: #0c0b0c;
+    --color-bg-button-hover: #362c36;
     --color-bg-acc: #1e1a1e;
 
     /* COLOR */
@@ -64,5 +65,6 @@ miru-image-editor,
     /* SLIDER COLOR */
     --color-slider-bar: #100e10;
     --color-slider-thumb: #413641;
+    --color-slider-border: #413641;
   }
 }
