@@ -33,7 +33,8 @@ miru-image-editor,
 }
 
 /* BUTTON HOVER */
-.miru--button:not(.miru--acc):hover {
+.miru--button:not(.miru--acc):hover,
+.miru--button-hov:not(.miru--acc) {
   background-color: var(--color-bg-button-hover);
 }
 

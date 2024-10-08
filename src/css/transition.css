@@ -4,7 +4,8 @@
 }
 
 /* BUTTON HOVER */
-.miru--button:hover {
+.miru--button:hover,
+.miru--button-hov:not(.miru--acc) {
   transition: background-color 0.15s;
 }
 

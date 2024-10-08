@@ -16,6 +16,7 @@ miru-image-editor,
   -moz-osx-font-smoothing: grayscale;
 
   /* BUTTON SIZE */
+  --heigth-menu-row: 4rem;
   --size-button-icon: 1.5rem;
   --height-button-image: 1.5rem;
   --width-button-image: 5rem;
