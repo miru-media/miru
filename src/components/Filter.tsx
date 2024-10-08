@@ -23,16 +23,17 @@ const FilterItem: Component<{
   effect: EffectInternal
   index: number
   context: DisplayContext | undefined
+  class: unknown
   isActive: () => boolean
   onClick: () => void
-}> = ({ effect: filterEffect, index, context, isActive, onClick }) => {
+}> = ({ effect: filterEffect, index, context, class: className, isActive, onClick }) => {
   filterEffect = toValue(filterEffect)
 
   return (
     <button
       type="button"
       data-index={index}
-      class={['miru--button', () => isActive() && 'miru--acc']}
+      class={['miru--button', () => isActive() && 'miru--acc', className]}
       onClick={onClick}
     >
       {() => toValue(context)?.canvas}
@@ -128,7 +129,11 @@ export const FilterView = ({
           <button
             type="button"
             data-index="-1"
-            class={['miru--button', () => effectOfCurrentSource.value === -1 && 'miru--acc']}
+            class={[
+              'miru--button',
+              () => effectOfCurrentSource.value === -1 && 'miru--acc',
+              () => scrolledEffectIndex.value === -1 && 'miru--hov',
+            ]}
             onClick={() => onClickFilter(-1)}
           >
             {source.value?.thumbnailCanvas}
@@ -143,6 +148,7 @@ export const FilterView = ({
                 context={contexts.value[index]}
                 isActive={() => effectOfCurrentSource.value === index}
                 onClick={() => onClickFilter(index)}
+                class={() => scrolledEffectIndex.value === index && 'miru--hov'}
               >
                 {/* {() => `${Math.round(source.value!.intensity.value * 100)}%`} */}
               </FilterItem>
