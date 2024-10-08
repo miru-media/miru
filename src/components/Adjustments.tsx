@@ -40,12 +40,12 @@ export const AdjustmentsView = ({
         <p class="miru--menu__row">
           <button class="miru--button miru--acc" type="button">
             <div class="i-tabler:sun miru--button__icon"></div>
-            <label class="miru--button__label">Brightness</label>
+            <span class="miru--button__label">Brightness</span>
           </button>
 
           <button class="miru--button" type="button">
             <div class="i-tabler:contrast-filled miru--button__icon"></div>
-            <label class="miru--button__label">Contrast</label>
+            <span class="miru--button__label">Contrast</span>
           </button>
         </p>
 

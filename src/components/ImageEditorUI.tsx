@@ -87,7 +87,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
               onClick={() => (currentView.value = view)}
             >
               <div class={`${icon} miru--button__icon`}></div>
-              <label class="miru--button__label">{label}</label>
+              <span class="miru--button__label">{label}</span>
             </button>
           ))}
         </p>

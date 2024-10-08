@@ -24,7 +24,7 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
             onClick={resetCrop}
           >
             <div class="i-tabler:frame-off miru--button__icon"></div>
-            <label class="miru--button__label">No Crop</label>
+            <span class="miru--button__label">No Crop</span>
           </button>
 
           {[
@@ -38,13 +38,13 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
               onClick={() => setAspectRatio(value)}
             >
               <div class={`${icon} miru--button__icon`}></div>
-              <label class="miru--button__label">{label}</label>
+              <span class="miru--button__label">{label}</span>
             </button>
           ))}
 
           <button class="miru--button" type="button" onClick={() => cropper.value?.rotate(90)}>
             <div class="i-tabler:rotate-clockwise miru--button__icon"></div>
-            <label class="miru--button__label">Rotate</label>
+            <span class="miru--button__label">Rotate</span>
           </button>
         </p>
 
