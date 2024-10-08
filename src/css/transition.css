@@ -1,16 +1,16 @@
+/* BUTTON */
+.miru--button {
+  transition: all 0.5s;
+}
+
 /* BUTTON HOVER */
 .miru--button:hover {
   transition: background-color 0.15s;
 }
 
-/* FILTERS */
-.miru--filter {
-  transition: all 0.5s;
-}
-
 /* PRELOADER */
 .miru--center:has(canvas:not([width]))::after,
-.miru--filter:has(canvas:not([width]))::after {
+.miru--button:has(canvas:not([width]))::after {
   animation: miru-spinner 2s linear infinite;
 }
 

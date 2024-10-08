@@ -72,7 +72,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
             },
             {
               view: EditorView.Filter,
-              icon: 'i-tabler:sparkles',
+              icon: 'i-tabler:wand',
               active: () => effectOfCurrentSource.value >= 0,
               label: 'Filter',
             },

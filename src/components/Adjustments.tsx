@@ -50,6 +50,7 @@ export const AdjustmentsView = ({
         </p>
 
         {RowSlider({
+          label: 'Brightness',
           min: -1,
           max: 1,
           value: () => source.value?.adjustments.value?.brightness,

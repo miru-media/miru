@@ -25,19 +25,18 @@ const FilterItem: Component<{
   context: DisplayContext | undefined
   isActive: () => boolean
   onClick: () => void
-}> = ({ effect: filterEffect, index, context, isActive, onClick, children }) => {
+}> = ({ effect: filterEffect, index, context, isActive, onClick }) => {
   filterEffect = toValue(filterEffect)
 
   return (
     <button
       type="button"
       data-index={index}
-      class={['miru--filter miru--button', () => isActive() && 'miru--acc']}
+      class={['miru--button', () => isActive() && 'miru--acc']}
       onClick={onClick}
     >
       {() => toValue(context)?.canvas}
-      {() => (isActive() ? <span class="miru--filter__amount">{children}</span> : '')}
-      <span class="miru--filter__name">{filterEffect.name}</span>
+      <span class="miru--button__label">{filterEffect.name}</span>
     </button>
   )
 }
@@ -131,11 +130,11 @@ export const FilterView = ({
           <button
             type="button"
             data-index="-1"
-            class={['miru--filter miru--button', () => effectOfCurrentSource.value === -1 && 'miru--acc']}
+            class={['miru--button', () => effectOfCurrentSource.value === -1 && 'miru--acc']}
             onClick={() => onClickFilter(-1)}
           >
             {source.value?.thumbnailCanvas}
-            <span class="miru--filter__name">Original</span>
+            <span class="miru--button__label">Original</span>
           </button>
 
           {() =>
@@ -147,18 +146,19 @@ export const FilterView = ({
                 isActive={() => effectOfCurrentSource.value === index}
                 onClick={() => onClickFilter(index)}
               >
-                {() => `${Math.round(source.value!.intensity.value * 100)}%`}
+                {/* {() => `${Math.round(source.value!.intensity.value * 100)}%`} */}
               </FilterItem>
             ))
           }
         </p>
 
         {RowSlider({
+          label: 'Intensity',
           min: 0,
           max: 1,
           value: () => source.value?.intensity.value,
           onInput: onInputIntensity,
-          style: () => (source.value?.effect.value === -1 ? 'visibility:hidden' : ''),
+          disabled: () => (source.value?.effect.value === -1 ? true : false),
         })}
       </div>
 

@@ -49,6 +49,7 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
         </p>
 
         {RowSlider({
+          label: 'Scale',
           min: 0.1,
           max: 2,
           value: zoom,
