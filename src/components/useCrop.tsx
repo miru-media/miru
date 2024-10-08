@@ -15,12 +15,15 @@ import { ImageSourceState } from '@/engine/ImageSourceState'
 
 export type CropContext = ReturnType<typeof useCrop>
 
+const SIMPLE_CROP = false
+
 export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; sourceIndex: number }) => {
   const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
   const cropper = ref<Cropper>()
 
   const aspectRatio = computed(() => {
     const crop = source.value?.crop.value
+
     return crop ? crop.width / crop.height : NaN
   })
   const zoom = ref(1)
@@ -70,7 +73,7 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
     if (devSlowDown) await devSlowDown()
 
     // https://github.com/fengyuanchen/cropperjs/blob/main/README.md
-    cropper.value = new Cropper(cropperImage as never, {
+    const $cropper = (cropper.value = new Cropper(cropperImage as never, {
       guides: true,
       center: true,
       movable: true,
@@ -78,31 +81,31 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
       scalable: true,
       zoomOnTouch: true,
       zoomOnWheel: true,
-      dragMode: 'move',
-      cropBoxMovable: false,
+      dragMode: SIMPLE_CROP ? 'crop' : 'move',
+      cropBoxMovable: SIMPLE_CROP,
       cropBoxResizable: false,
       background: false,
       viewMode: 1,
       data: cropData,
       minCropBoxWidth: 1,
       minCropBoxHeight: 1,
-      aspectRatio: aspectRatio.value || undefined,
+      aspectRatio: aspectRatio.value,
+      autoCropArea: 0.9,
       responsive: true,
-      ready() {
-        fitCrop()
+      async ready() {
+        await fitCrop()
+        await setAspectRatio(aspectRatio.value)
       },
-      cropend: () => recenterCropBox(),
+      cropend() {
+        if (!SIMPLE_CROP) recenterCropBox().catch(() => undefined)
+      },
       crop() {
-        const $cropper = cropper.value
-        if (!source?.original || !$cropper) return
-
+        const { width, height, naturalWidth, naturalHeight } = $cropper.getCanvasData()
+        zoom.value = Math.min(width / naturalWidth, height / naturalHeight)
         const cropperData = $cropper.getData(true)
         source.crop.value = cropIsEqualTo(cropperData, unmodifiedCrop) ? undefined : cropperData
-
-        const canvasData = $cropper.getCanvasData()
-        zoom.value = Math.min(canvasData.width / original.width, canvasData.height / original.height)
       },
-    })
+    }))
 
     onCleanup(() => {
       cropper.value?.destroy()
@@ -118,41 +121,50 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
     onCleanup(() => sources.forEach((source) => source.pausePreview.value--))
   })
 
-  scope.watch([cropper, aspectRatio], ([cropper, aspectRatio]) => cropper?.setAspectRatio(aspectRatio))
-
-  const setAspectRatio = (value: number) => {
-    cropper.value?.setAspectRatio(value)
-    recenterCropBox()
+  const twice = (fn: () => unknown) => async () => {
+    await fn()
+    await fn()
   }
-  const resetCrop = () => {
+
+  const setAspectRatio = async (value: number) => {
+    await withUnlimitedCropper(async () => {
+      await fitCrop()
+      cropper.value?.setAspectRatio(value)
+      // await recenterCropBox()
+    })
+  }
+
+  const resetCrop = async () => {
     const $cropper = cropper.value
-    const original = source.value?.original
+    const $source = source.value
+    const original = $source?.original
     if (!$cropper || !original) return
 
-    fitCrop()
-    $cropper.setAspectRatio(original.width / original.height)
-    cropper.value?.setData(unmodifiedCrop)
+    await withUnlimitedCropper(() => {
+      $cropper.setAspectRatio(original.width / original.height)
+      $cropper.setData(unmodifiedCrop)
+    })
+    await fitCrop()
+    $source.crop.value = undefined
   }
-  const fitCrop = () => {
+  const fitCrop = twice(async () => {
     const $cropper = cropper.value
-    const original = source.value?.original
-    if (!$cropper || !original) return
+    if (!$cropper) return
+
     const container = $cropper.getContainerData()
+    const { naturalWidth, naturalHeight } = $cropper.getCanvasData()
 
-    const data = source.value?.crop.value ?? unmodifiedCrop
-    const ratio = aspectRatio.value
+    await withUnlimitedCropper(async () => {
+      $cropper.zoomTo(Math.min(container.width / naturalWidth, container.height / naturalHeight))
+      $cropper.setCanvasData(fit({ width: naturalWidth, height: naturalHeight }, container))
+      await Promise.resolve()
+    })
+    if (!SIMPLE_CROP) await recenterCropBox()
+  })
 
-    $cropper.zoomTo(Math.min(container.width / original.width, container.height / original.height))
-    $cropper.setAspectRatio(original.width / original.height)
-    $cropper.setCanvasData(fit(original, container))
-    $cropper.setAspectRatio(ratio)
-    $cropper.setData(data)
-    recenterCropBox()
-  }
-  const recenterCropBox = () => {
+  const recenterCropBox = async () => {
     const $cropper = cropper.value!
-
-    const data = source.value?.crop.value ?? unmodifiedCrop
+    const data = $cropper.getData()
 
     const boxData = $cropper.getCropBoxData()
     const canvasData = $cropper.getCanvasData()
@@ -160,11 +172,15 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
     const containerCenter = getCenter(containerData)
 
     const newBox = centerTo(boxData, containerCenter)
-    $cropper.setCropBoxData(newBox)
-    $cropper.setCanvasData(
-      offsetBy(canvasData, { x: newBox.left - boxData.left, y: newBox.top - boxData.top }),
-    )
-    $cropper.setData(data)
+
+    await withUnlimitedCropper(() => {
+      // debugger
+      $cropper.setCropBoxData(newBox)
+      $cropper.setCanvasData(
+        offsetBy(canvasData, { x: newBox.left - boxData.left, y: newBox.top - boxData.top }),
+      )
+      $cropper.setData(data)
+    })
   }
 
   const setZoom = (value: number) => {
@@ -172,5 +188,38 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
     $cropper?.zoomTo(value, getCenter($cropper.getContainerData()))
   }
 
-  return { container, setAspectRatio, resetCrop, aspectRatio, zoom, setZoom, cropper }
+  const rotate = async () => {
+    await withUnlimitedCropper(async () => {
+      cropper.value?.rotate(90)
+      if (SIMPLE_CROP) return
+
+      await setAspectRatio(aspectRatio.value)
+    })
+  }
+
+  const withUnlimitedCropper = async (fn: () => unknown) => {
+    const $cropper = cropper.value as any
+    if (!$cropper) return
+
+    const cropperOptions = ($cropper as unknown as { options: Cropper.Options }).options
+    const { viewMode } = cropperOptions
+    const { limited } = $cropper
+    cropperOptions.viewMode = 0
+    $cropper.limited = false
+
+    await fn()
+
+    cropperOptions.viewMode = viewMode
+    $cropper.limited = limited
+  }
+
+  return {
+    container,
+    setAspectRatio,
+    resetCrop: () => resetCrop().then(resetCrop),
+    aspectRatio,
+    zoom,
+    setZoom,
+    rotate,
+  }
 }

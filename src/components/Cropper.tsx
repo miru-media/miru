@@ -7,7 +7,7 @@ import { toValue } from '@/framework/reactivity'
 
 export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: number }> = (props) => {
   const engine = toValue(props.engine)
-  const { aspectRatio, resetCrop, setAspectRatio, cropper, container, zoom, setZoom } = useCrop({
+  const { aspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom } = useCrop({
     engine,
     sourceIndex: toValue(props.sourceIndex),
   })
@@ -41,7 +41,7 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
             </button>
           ))}
 
-          <button class="miru--button" type="button" onClick={() => cropper.value?.rotate(90)}>
+          <button class="miru--button" type="button" onClick={rotate}>
             <div class="i-tabler:rotate-clockwise miru--button__icon"></div>
             <span class="miru--button__label">Rotate</span>
           </button>
