@@ -16,6 +16,7 @@ miru-image-editor,
   --size-button-image: 5rem;
 
   /* SLIDER SIZE */
+
   /* --height-slider-bar: 2.5rem; */
 
   /* SCROLLBAR SIZE */
@@ -25,7 +26,7 @@ miru-image-editor,
   color-scheme: light dark;
 
   /* LIGHT */
-  &[color-scheme="light"] {
+  &[color-scheme='light'] {
     /* BACKGROUND-COLOR */
     --color-bg-default: #f1f1f1;
     --color-bg-preview: #d9d9d9;
@@ -46,7 +47,7 @@ miru-image-editor,
   }
 
   /* DARK */
-  &[color-scheme="dark"] {
+  &[color-scheme='dark'] {
     /* BACKGROUND-COLOR */
     --color-bg-default: #000;
     --color-bg-preview: #100e10;
@@ -64,5 +65,10 @@ miru-image-editor,
     --color-slider-bar: #100e10;
     --color-slider-thumb: #413641;
     --color-slider-border: #282128;
+
+    /* CROPPER COLOR */
+    --color-crop-outline: #e3a2e3;
+    --color-crop-dashed: #ffffffde;
+    --color-crop-overlay: #391a2c82;
   }
 }

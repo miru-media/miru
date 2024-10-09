@@ -45,4 +45,19 @@ miru-image-editor,
       background: var(--color-slider-thumb);
     }
   }
+
+  /* CROPPER */
+  .cropper-container {
+    .cropper-view-box {
+      outline-color: var(--color-crop-outline);
+    }
+
+    .cropper-dashed {
+      border-color: var(--color-crop-dashed);
+    }
+
+    .cropper-drag-box {
+      background-color: var(--color-crop-overlay);
+    }
+  }
 }
