@@ -1,114 +1,52 @@
-/*
-1. Use a more-intuitive box-sizing model.
- */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/*
-  2. Remove default margin
-   */
-* {
-  margin: 0;
-}
-
-/*
-  Typographic tweaks!
-  3. Add accessible line-height
-  4. Improve text rendering
-   */
-body {
-  line-height: 1.5;
+/* RESET */
+miru-image-editor,
+:host {
+  /* FONT TWEAKS */
+  font-synthesis: none;
+  text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
-  user-select: none;
-}
+  -moz-osx-font-smoothing: grayscale;
 
-/*
-  5. Improve media defaults
-   */
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-/*
-6. Remove built-in form typography styles
- */
-
-/* a, needed? */
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
-
-/*
-7. Avoid text overflows
- */
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  overflow-wrap: break-word;
-}
-
-/*
-8. Create a root stacking context
- */
-#root
-/* , #__next  throws push error*/ {
+  /* STACKING CONTEXT */
   isolation: isolate;
+
+  [disabled] {
+    pointer-events: none;
+    opacity: 0.2;
+  }
+
+  /* RESETS */
+  &,
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    user-select: none;
+    display: block;
+  }
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+  button {
+    width: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    font: inherit;
+    line-height: normal;
+    color: inherit;
+    background: transparent;
+    border: none;
+  }
 }
-
-/* added
-  9. reset form buttons
-   */
-button {
-  width: auto;
-  padding: 0;
-  margin: 0;
-  overflow: visible;
-  font: inherit;
-
-  /* Normalize `line-height`. Cannot be changed from `normal` in Firefox 4+. */
-  line-height: normal;
-
-  /* inherit font & color from ancestor */
-  color: inherit;
-
-  background: transparent;
-  border: none;
-}
-
-.miru--button,
-.miru--slider {
-  cursor: pointer;
-}
-
-/* Webkit-based browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 8px; /* Adjust scrollbar width */
-  height: 8px; /* Adjust scrollbar height for horizontal scroll */
-}
-
-/* ::-webkit-scrollbar-thumb {
-  border-radius: 4px; Rounded corners 
-  } */
-
-::-webkit-scrollbar-track {
-  background-color: transparent; /* Transparent background */
-}
-
-/* Firefox */
-scrollbar-width: thin; /* Thin scrollbar */
-scrollbar-color: #999 transparent; /* Single color thumb, transparent track */

@@ -8,26 +8,24 @@ miru-image-editor,
   font-weight: 400;
   line-height: 1.5;
 
-  /* COLOR SCHEMES */
-  color-scheme: light dark;
-  font-synthesis: none;
-  text-rendering: optimizelegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
   /* BUTTON SIZE */
   --heigth-menu-row: 4rem;
+  --heigth-menu-row-scroll: 16rem;
   --size-button-icon: 1.5rem;
   --height-button-image: 1.5rem;
-  --width-button-image: 5rem;
+  --size-button-image: 5rem;
 
   /* SLIDER SIZE */
-  --height-slider-bar: 2.5rem;
+  /* --height-slider-bar: 2.5rem; */
 
   /* SCROLLBAR SIZE */
+  --size-scrollbar: 10px;
+
+  /* COLOR SCHEMES */
+  color-scheme: light dark;
 
   /* LIGHT */
-  &[color-scheme='light'] {
+  &[color-scheme="light"] {
     /* BACKGROUND-COLOR */
     --color-bg-default: #f1f1f1;
     --color-bg-preview: #d9d9d9;
@@ -44,11 +42,11 @@ miru-image-editor,
     /* SLIDER COLOR */
     --color-slider-bar: #181418;
     --color-slider-thumb: #ffffffde;
-    --color-slider-border: #ffffffde;
+    --color-slider-border: #232323de;
   }
 
   /* DARK */
-  &[color-scheme='dark'] {
+  &[color-scheme="dark"] {
     /* BACKGROUND-COLOR */
     --color-bg-default: #000;
     --color-bg-preview: #100e10;
@@ -65,6 +63,6 @@ miru-image-editor,
     /* SLIDER COLOR */
     --color-slider-bar: #100e10;
     --color-slider-thumb: #413641;
-    --color-slider-border: #413641;
+    --color-slider-border: #282128;
   }
 }

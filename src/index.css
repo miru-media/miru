@@ -3,6 +3,9 @@
 @import url('cropperjs/dist/cropper.css');
 @import url('css/basics');
 @import url('css/layout');
-@import url('css/modules');
+@import url('css/module_button');
+@import url('css/module_preloader');
+@import url('css/module_scrollbar');
+@import url('css/module_slider');
 @import url('css/theme');
 @import url('css/transition');

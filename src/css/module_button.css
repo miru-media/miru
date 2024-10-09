@@ -1,0 +1,55 @@
+/* MODULE BUTTON */
+miru-image-editor,
+:host {
+    /* BUTTON */
+    .miru--button {
+        cursor: pointer;
+        flex-grow: 1;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+
+        /* BUTTON ICON */
+        .miru--button__icon {
+            margin: auto;
+            font-size: var(--size-button-icon);
+        }
+
+        /* BUTTON WITH CANVAS */
+        &:has(canvas) {
+            /* flex-basis: auto; */
+            max-width: 50%;
+            max-height: 100%;
+
+            canvas {
+                width: 100%;
+                height: calc(100% - 1.5rem);
+                object-fit: contain;
+            }
+        }
+
+        /* BUTTON LABEL */
+        .miru--button__label {
+            line-height: 1em;
+            pointer-events: none;
+        }
+
+        /* ACTIVE BUTTON MARKING */
+        /* &.miru--acc .miru--button__icon,
+        &.miru--acc canvas {
+            scale: 0.86;
+        } */
+
+        /* ENABLED MARKER */
+        &.miru--enabled::after {
+            position: absolute;
+            top: calc(50% - 1.5rem);
+            right: calc(50% - 1.5rem);
+            display: block;
+            width: 0.5rem;
+            height: 0.5rem;
+            content: "";
+            border-radius: 50%;
+        }
+    }
+}
