@@ -12,15 +12,6 @@ miru-image-editor,
   --heigth-menu-row: 4rem;
   --heigth-menu-row-scroll: 16rem;
   --size-button-icon: 1.5rem;
-  --height-button-image: 1.5rem;
-  --size-button-image: 5rem;
-
-  /* SLIDER SIZE */
-
-  /* --height-slider-bar: 2.5rem; */
-
-  /* SCROLLBAR SIZE */
-  --size-scrollbar: 10px;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;
@@ -31,19 +22,26 @@ miru-image-editor,
     --color-bg-default: #f1f1f1;
     --color-bg-preview: #d9d9d9;
     --color-bg-button-hover: #fff;
-    --color-bg-acc: #1e1a1e;
+    --color-bg-acc: #d7bdd7;
 
     /* COLOR */
-    --color-fnt-default: #52454f;
-    --color-fnt-acc: #ff0090;
+    --color-fnt-default: #655361;
+    --color-fnt-acc: #ff35a7;
 
     /* SCROLLBAR COLOR */
-    --color-thumb: #52454f;
+    --color-scrollbar-thumb: #655361;
+    --color-scrollbar-both: #655361 transparent;
 
     /* SLIDER COLOR */
-    --color-slider-bar: #181418;
-    --color-slider-thumb: #ffffffde;
-    --color-slider-border: #232323de;
+    --color-slider-thumb: #a1849b;
+    --color-slider-progress: #d7bdd7;
+    --color-slider-track: #dfdfdf;
+    --color-slider-border: #a1849b;
+
+    /* CROPPER COLOR */
+    --color-crop-outline: #e3a2e3;
+    --color-crop-dashed: #ffffffde;
+    --color-crop-overlay: #391a2c82;
   }
 
   /* DARK */
@@ -59,10 +57,10 @@ miru-image-editor,
     --color-fnt-acc: #ff0090;
 
     /* SCROLLBAR COLOR */
-    --color-thumb: #ffffffde;
+    --color-scrollbar-thumb: #362c36;
+    --color-scrollbar-both: #362c36 transparent;
 
     /* SLIDER COLOR */
-    --color-slider-bar: #100e10;
     --color-slider-thumb: #413641;
     --color-slider-progress: #1e1a1e;
     --color-slider-track: #100e10;

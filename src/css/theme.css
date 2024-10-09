@@ -2,12 +2,17 @@ miru-image-editor,
 :host {
   /* DEFAULTS */
   color: var(--color-fnt-default);
-  scrollbar-color: var(--color-thumb) transparent;
-  background-color: var(--color-bg-default);
 
   /* SCROLLBAR THUMBS */
+  scrollbar-color: var(--color-scrollbar-both);
+  background-color: var(--color-bg-default);
+
   ::-webkit-scrollbar-thumb {
-    background-color: var(--color-thumb);
+    background-color: var(--color-scrollbar-thumb);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   /* ACCENT */

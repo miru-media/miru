@@ -74,7 +74,7 @@ miru-image-editor,
       height: var(--heigth-menu-row-scroll);
       padding-top: 0.5rem !important;
       padding-bottom: 0.75rem !important;
-      overflow: auto hidden;
+      overflow: scroll hidden !important;
       scroll-snap-type: x proximity;
       scroll-behavior: smooth;
 

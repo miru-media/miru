@@ -11,8 +11,11 @@ miru-image-editor,
   isolation: isolate;
 
   [disabled] {
-    pointer-events: none;
-    opacity: 0.2;
+    &,
+    * {
+      pointer-events: none;
+      opacity: 0.5;
+    }
   }
 
   /* RESETS */
@@ -54,9 +57,7 @@ miru-image-editor,
   }
 
   .miru--slider {
-
     overflow: hidden; /* for chrome */
-    appearance: none;
     appearance: none;
     cursor: pointer;
     background: transparent;
