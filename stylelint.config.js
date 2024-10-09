@@ -6,6 +6,7 @@ export default {
     'stylelint-config-standard',
   ],
   rules: {
+    'no-descending-specificity': null,
     'declaration-empty-line-before': null,
     'selector-class-pattern': null,
     'at-rule-no-unknown': [true, { ignoreAtRules: ['unocss'] }],

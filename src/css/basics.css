@@ -64,6 +64,8 @@ miru-image-editor,
     /* SLIDER COLOR */
     --color-slider-bar: #100e10;
     --color-slider-thumb: #413641;
+    --color-slider-progress: #1e1a1e;
+    --color-slider-track: #100e10;
     --color-slider-border: #282128;
 
     /* CROPPER COLOR */

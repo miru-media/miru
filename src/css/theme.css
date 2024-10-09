@@ -35,15 +35,21 @@ miru-image-editor,
   /* SLIDER */
   .miru--slider {
     color: var(--color-slider-border);
-
-    &,
-    &::-webkit-slider-thumb {
-      background-color: var(--color-slider-bar);
-    }
+    background-color: var(--color-slider-track);
 
     &::-moz-range-thumb {
-      background: var(--color-slider-thumb);
+      background-color: var(--color-slider-thumb);
     }
+
+    &::-moz-range-progress {
+      background-color: var(--color-slider-progress);
+    }
+  }
+
+  .miru--slider::-webkit-slider-thumb {
+    width: 0.35rem;
+    background-color: var(--color-slider-thumb);
+    box-shadow: -4000px 0 0 4000px var(--color-slider-progress);
   }
 
   /* CROPPER */

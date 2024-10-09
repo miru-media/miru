@@ -21,10 +21,11 @@ miru-image-editor,
   *::before,
   *::after {
     box-sizing: border-box;
+    display: block;
     margin: 0;
     user-select: none;
-    display: block;
   }
+
   img,
   picture,
   video,
@@ -32,12 +33,14 @@ miru-image-editor,
   svg {
     max-width: 100%;
   }
+
   input,
   button,
   textarea,
   select {
     font: inherit;
   }
+
   button {
     width: auto;
     padding: 0;
@@ -48,5 +51,39 @@ miru-image-editor,
     color: inherit;
     background: transparent;
     border: none;
+  }
+
+  .miru--slider {
+
+    overflow: hidden; /* for chrome */
+    appearance: none;
+    appearance: none;
+    cursor: pointer;
+    background: transparent;
+
+    &:focus {
+      outline: none;
+    }
+
+    &::-moz-range-track {
+      height: 100%;
+    }
+
+    &::-moz-range-thumb {
+      height: 100%;
+      border: none;
+      border-radius: 0;
+    }
+
+    &::-moz-range-progress {
+      height: 100%;
+    }
+  }
+
+  /* has issues with & nesting */
+  .miru--slider::-webkit-slider-thumb {
+    height: 200px;
+    margin-top: -80px;
+    appearance: none;
   }
 }
