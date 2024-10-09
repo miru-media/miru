@@ -12,7 +12,7 @@ import {
   toValue,
   watch,
 } from '@/framework/reactivity'
-import { createDisplayContext, getCenter } from '@/utils'
+import { createDisplayContext, getCenter, useElementSize } from '@/utils'
 import { throttle } from 'throttle-debounce'
 import { RowSlider } from './RowSlider'
 import { DisplayContext, InputEvent } from '@/types'
@@ -87,8 +87,8 @@ export const FilterView = ({
     if (effectElement) scrolledEffectIndex.value = parseInt(effectElement.dataset.index!)
   })
 
-  // scroll to selected filter on mount and on source change
-  watch([container, source], ([container]) => {
+  // scroll to selected filter on mount, on container size change and on source change
+  watch([container, useElementSize(container), source], ([container]) => {
     if (container) onClickFilter(effectOfCurrentSource.value, 'instant')
     onScroll.cancel({ upcomingOnly: true })
   })
