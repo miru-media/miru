@@ -1,8 +1,8 @@
 import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
-import { InputEvent } from '@/types'
+import { AdjustmentsState, InputEvent } from '@/types'
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
-import { MaybeRefOrGetter, computed, toValue } from '@/framework/reactivity'
+import { MaybeRefOrGetter, computed, ref, toValue } from '@/framework/reactivity'
 import { ImageSourceState } from '@/engine/ImageSourceState'
 
 export const AdjustmentsView = ({
@@ -17,15 +17,23 @@ export const AdjustmentsView = ({
   const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
   const { sources } = engine
 
-  const onAdjustmentIntensity = (event: InputEvent) => {
+  const currentType = ref<keyof AdjustmentsState>('brightness')
+  const labels = {
+    brightness: 'Brightness',
+    contrast: 'Contrast',
+    saturation: 'Saturation',
+  }
+
+  const onInputSlider = (event: InputEvent) => {
     const $source = source.value!
     if (!$source) return
 
     $source.adjustments.value = {
+      brightness: 0,
       contrast: 0,
       saturation: 0,
       ...$source.adjustments.value,
-      brightness: event.target.valueAsNumber,
+      [currentType.value]: event.target.valueAsNumber,
     }
   }
 
@@ -37,23 +45,32 @@ export const AdjustmentsView = ({
       }
       <div class="miru--menu">
         <p class="miru--menu__row">
-          <button class="miru--button miru--acc" type="button">
-            <div class="i-tabler:sun miru--button__icon"></div>
-            <span class="miru--button__label">Brightness</span>
-          </button>
-
-          <button class="miru--button" type="button">
-            <div class="i-tabler:contrast-filled miru--button__icon"></div>
-            <span class="miru--button__label">Contrast</span>
-          </button>
+          {() =>
+            (
+              [
+                { type: 'brightness', icon: 'i-tabler:sun' },
+                { type: 'contrast', icon: 'i-tabler:contrast-filled' },
+                { type: 'saturation', icon: 'i-tabler:droplet-half-filled' },
+              ] as const
+            ).map(({ type, icon }) => (
+              <button
+                type="button"
+                class={['miru--button', () => currentType.value === type && 'miru--acc']}
+                onClick={() => (currentType.value = type)}
+              >
+                <div class={`${icon} miru--button__icon`}></div>
+                <span class="miru--button__label">{labels[type]}</span>
+              </button>
+            ))
+          }
         </p>
 
         {RowSlider({
-          label: 'Brightness',
+          label: () => labels[currentType.value],
           min: -1,
           max: 1,
-          value: () => source.value?.adjustments.value?.brightness,
-          oninput: onAdjustmentIntensity,
+          value: () => source.value?.adjustments.value?.[currentType.value],
+          oninput: onInputSlider,
         })}
       </div>
 
