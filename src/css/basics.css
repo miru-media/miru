@@ -71,4 +71,79 @@ miru-image-editor,
     --color-crop-dashed: #ffffffde;
     --color-crop-overlay: #391a2c82;
   }
+
+  /* PIXELFED */
+  &[color-scheme='pixelfed'] {
+    /* BACKGROUND-COLOR */
+    --color-bg-default: var(--light);
+    --color-bg-preview: var(--light-gray);
+    --color-bg-button-hover: var(--light-gray);
+    --color-bg-acc: var(--card-bg);
+
+    /* COLOR */
+    --color-fnt-default: var(--body-color);
+    --color-fnt-acc: var(--text-lighter);
+
+    /* SCROLLBAR COLOR */
+    --color-scrollbar-thumb: var(--light-gray);
+    --color-scrollbar-both: var(--light-gray) transparent;
+
+    /* SLIDER COLOR */
+    --color-slider-thumb: var(--light-gray);
+    --color-slider-progress: var(--card-bg);
+    --color-slider-track: var(--light);
+    --color-slider-border: var(--light-gray);
+
+    /* CROPPER COLOR */
+    --color-crop-outline: var(--light-gray);
+    --color-crop-dashed: #ffffffde;
+    --color-crop-overlay: #00000082;
+  }
 }
+
+/* PIXELFED VARS */
+
+/* :root {
+  --light: #000;
+  --dark: #fff;
+  --body-bg: #000;
+  --body-color: #9ca3af;
+  --nav-bg: #000;
+  --bg-light: #212124;
+  --light-gray: #212124;
+  --text-lighter: #818181;
+  --card-bg: #161618;
+  --light-hover-bg: #212124;
+  --btn-light-border: #161618;
+  --input-border: #161618;
+  --comment-bg: #212124;
+  --border-color: #212124;
+  --card-header-accent: #212124;
+  --dropdown-item-hover-bg: #000;
+  --dropdown-item-hover-color: #818181;
+  --dropdown-item-color: #64748b;
+  --dropdown-item-active-color: #fff;
+} */
+
+/* :root {
+--light: #fff;
+--dark: #000;
+--body-bg: #f3f4f6;
+--body-color: #212529;
+--nav-bg: #fff;
+--bg-light: #f8f9fa;
+--primary: #3b82f6;
+--light-gray: #f8f9fa;
+--text-lighter: #94a3b8;
+--card-bg: #fff;
+--light-hover-bg: #f9fafb;
+--btn-light-border: #fff;
+--input-border: #e2e8f0;
+--comment-bg: #eff2f5;
+--border-color: #dee2e6;
+--card-header-accent: #f9fafb;
+--dropdown-item-hover-bg: #e9ecef;
+--dropdown-item-hover-color: #16181b;
+--dropdown-item-color: #64748b;
+--dropdown-item-active-color: #334155;
+} */
