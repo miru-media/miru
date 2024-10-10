@@ -154,7 +154,8 @@ export const FilterView = ({
                 onClick={() => onClickFilter(index)}
                 class={[
                   () => scrolledEffectIndex.value === index && 'miru--hov',
-                  () => effect.isLoading.value && 'miru--loading',
+                  () => ((source.value?.isLoading ?? true) || effect.isLoading.value) && 'miru--loading',
+                  // () => effect.isLoading.value && 'miru--loading',
                 ]}
               ></FilterItem>
             ))

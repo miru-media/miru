@@ -14,10 +14,6 @@
   animation: miru-spinner 2s linear infinite;
 }
 
-.miru--button:not(.miru--loading):has(canvas:not([width]))::after {
-  animation: miru-spinner 5s linear infinite reverse;
-}
-
 @keyframes miru-spinner {
   from {
     transform: rotate(0deg);

@@ -25,6 +25,7 @@ miru-image-editor,
 
       /* BUTTON HOVER */
       border: 2px solid transparent;
+      border-radius: 0.15rem;
 
       canvas {
         width: 100%;
