@@ -12,6 +12,7 @@ miru-image-editor,
   --heigth-menu-row: 4rem;
   --heigth-menu-row-scroll: 12rem;
   --size-button-icon: 1.5rem;
+  --width-button-canvas: 10rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;

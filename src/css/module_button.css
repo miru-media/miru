@@ -20,7 +20,7 @@ miru-image-editor,
       box-sizing: border-box;
 
       /* flex-basis: auto; */
-      max-width: 50%;
+      width: var(--width-button-canvas);
       max-height: 100%;
 
       /* BUTTON HOVER */
@@ -28,8 +28,8 @@ miru-image-editor,
 
       canvas {
         width: 100%;
-        height: calc(100% - 1.5rem);
-        object-fit: contain;
+        height: calc(100% - 1.8rem);
+        object-fit: cover;
       }
 
       &.miru--acc {
@@ -45,7 +45,12 @@ miru-image-editor,
 
     /* BUTTON LABEL */
     .miru--button__label {
+      padding: 0.4em 0;
+      overflow: hidden;
       line-height: 1em;
+      text-overflow: ellipsis;
+
+      white-space: nowrap;
       pointer-events: none;
     }
 
