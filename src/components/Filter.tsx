@@ -19,7 +19,7 @@ const FilterItem = ({
   isActive,
   onClick,
 }: {
-  source: Ref<ImageSourceState>
+  source: Ref<ImageSourceState | undefined>
   effect: EffectInternal
   engine: ImageEditorEngine
   index: number
@@ -30,7 +30,7 @@ const FilterItem = ({
 }) => {
   // render effect preview thumbnails
   watch(
-    [effect.isLoading, toRef(source), toRef(context), () => toValue(source)?.thumbnailKey.value],
+    [effect.isLoading, source, toRef(context), () => source.value?.thumbnailKey.value],
     ([isLoading, source, context]) => {
       if (!isLoading && source && context)
         engine.drawThumbnail(source, effect, context).catch(() => undefined)
