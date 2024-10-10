@@ -83,19 +83,7 @@ export class ImageEditorEngine {
     return this.sources.value[sourceIndex]?.drawPreview(context)
   }
 
-  async drawThumbnails(source: ImageSourceState | undefined, contexts: DisplayContext[]) {
-    if (this.#isLoadingEffects.value || source?.isLoading !== false) return
-    const effects = this.effects.value
-
-    for (let index = 0; index < effects.length; index++) {
-      const effect = effects[index]
-      if (effect.isDisposed) break
-
-      await this.#drawThumbnail(source, effect, contexts[index])
-    }
-  }
-
-  async #drawThumbnail(source: ImageSourceState, effect: EffectInternal, context: DisplayContext) {
+  async drawThumbnail(source: ImageSourceState, effect: EffectInternal, context: DisplayContext) {
     if (source?.isLoading !== false) return
 
     source.sourceThumbnail()

@@ -1,17 +1,7 @@
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '@/constants'
 import { EffectInternal } from '@/Effect'
 import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
-import { Component } from '@/framework/jsx-runtime'
-import {
-  MaybeRefOrGetter,
-  computed,
-  effect,
-  getCurrentScope,
-  ref,
-  toRef,
-  toValue,
-  watch,
-} from '@/framework/reactivity'
+import { MaybeRefOrGetter, Ref, computed, effect, ref, toRef, toValue, watch } from '@/framework/reactivity'
 import { createDisplayContext, getCenter, useElementSize } from '@/utils'
 import { throttle } from 'throttle-debounce'
 import { RowSlider } from './RowSlider'
@@ -19,15 +9,33 @@ import { DisplayContext, InputEvent } from '@/types'
 import { ImageSourceState } from '@/engine/ImageSourceState'
 import { SourcePreview } from './SourcePreview'
 
-const FilterItem: Component<{
+const FilterItem = ({
+  source,
+  effect,
+  engine,
+  index,
+  context,
+  class: className,
+  isActive,
+  onClick,
+}: {
+  source: Ref<ImageSourceState>
   effect: EffectInternal
+  engine: ImageEditorEngine
   index: number
-  context: DisplayContext | undefined
+  context: MaybeRefOrGetter<DisplayContext | undefined>
   class: unknown
   isActive: () => boolean
   onClick: () => void
-}> = ({ effect: filterEffect, index, context, class: className, isActive, onClick }) => {
-  filterEffect = toValue(filterEffect)
+}) => {
+  // render effect preview thumbnails
+  watch(
+    [effect.isLoading, toRef(source), toRef(context), () => toValue(source)?.thumbnailKey.value],
+    ([isLoading, source, context]) => {
+      if (!isLoading && source && context)
+        engine.drawThumbnail(source, effect, context).catch(() => undefined)
+    },
+  )
 
   return (
     <button
@@ -37,7 +45,7 @@ const FilterItem: Component<{
       onClick={onClick}
     >
       {() => toValue(context)?.canvas}
-      <span class="miru--button__label">{filterEffect.name}</span>
+      <span class="miru--button__label">{effect.name}</span>
     </button>
   )
 }
@@ -65,15 +73,8 @@ export const FilterView = ({
   watch([engine.effects], ([effects], _prev) => {
     const newContexts = (contexts.value = contexts.value.slice(0, effects.length))
     effects.forEach((_, index) => (newContexts[index] ??= createDisplayContext()))
-
-    if (!import.meta.env.PROD && !getCurrentScope())
-      throw new Error('[miru] expected scope in watch callback')
-
-    // render effect preview thumbnails
-    watch([source, () => source.value?.thumbnailKey.value, () => engine.isLoadingEffects], ([source]) =>
-      engine.drawThumbnails(source, contexts.value),
-    )
   })
+  watch([contexts], ([contexts], _prev, onCleanup) => onCleanup(() => (contexts.length = 0)))
 
   const onScroll = throttle(SCROLL_SELECT_EVENT_THROTTLE_MS, () => {
     const rect = container.value?.getBoundingClientRect()
@@ -144,9 +145,11 @@ export const FilterView = ({
           {() =>
             engine.effects.value.map((effect, index) => (
               <FilterItem
+                engine={engine}
+                source={source}
                 effect={effect}
                 index={index}
-                context={contexts.value[index]}
+                context={() => contexts.value[index]}
                 isActive={() => effectOfCurrentSource.value === index}
                 onClick={() => onClickFilter(index)}
                 class={[
