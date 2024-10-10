@@ -1,20 +1,27 @@
 /* MODULE PRELOADER */
 miru-image-editor,
 :host {
-    /* PRELOADER */
-    .miru--center:has(canvas:not([width]))::after,
-    .miru--button:has(canvas:not([width]))::after {
-        position: absolute;
-        top: calc(50% - var(--size-button-icon) / 2);
-        left: calc(50% - var(--size-button-icon) / 2);
-        z-index: 999;
-        display: block;
-        width: var(--size-button-icon);
-        height: var(--size-button-icon);
-        clip-path: polygon(0% 0%, 100% 0%, 0% 100%, 0% 100%);
-        content: "";
-        border: 2px solid;
-        border-radius: 50%;
-        transform-origin: center;
+  /* PRELOADER */
+  .miru--loading,
+  .miru--button:has(canvas:not([width])) {
+    position: relative;
+    width: 5rem;
+    max-height: 5rem;
+    margin: auto;
+
+    &::after {
+      position: absolute;
+      top: calc(50% - var(--size-button-icon) / 2);
+      left: calc(50% - var(--size-button-icon) / 2);
+      z-index: 999;
+      display: block;
+      width: var(--size-button-icon);
+      height: var(--size-button-icon);
+      clip-path: polygon(0% 0%, 100% 0%, 0% 100%, 0% 100%);
+      content: '';
+      border: 2px solid;
+      border-radius: 50%;
+      transform-origin: center;
     }
+  }
 }

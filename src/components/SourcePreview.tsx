@@ -19,7 +19,7 @@ export const SourcePreview = ({
   if (onClick) useEventListener(() => source.value?.context.canvas, 'click', onClick)
 
   return (
-    <div class="miru--preview" style={style}>
+    <div class={() => ['miru--preview', source.value.isLoading && 'miru--loading']} style={style}>
       {source.value?.context.canvas}
     </div>
   )

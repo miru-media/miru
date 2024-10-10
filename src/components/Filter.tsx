@@ -133,6 +133,7 @@ export const FilterView = ({
               'miru--button',
               () => effectOfCurrentSource.value === -1 && 'miru--acc',
               () => scrolledEffectIndex.value === -1 && 'miru--hov',
+              () => source.value?.isLoading && 'miru--loading',
             ]}
             onClick={() => onClickFilter(-1)}
           >
@@ -148,10 +149,11 @@ export const FilterView = ({
                 context={contexts.value[index]}
                 isActive={() => effectOfCurrentSource.value === index}
                 onClick={() => onClickFilter(index)}
-                class={() => scrolledEffectIndex.value === index && 'miru--hov'}
-              >
-                {/* {() => `${Math.round(source.value!.intensity.value * 100)}%`} */}
-              </FilterItem>
+                class={[
+                  () => scrolledEffectIndex.value === index && 'miru--hov',
+                  () => effect.isLoading.value && 'miru--loading',
+                ]}
+              ></FilterItem>
             ))
           }
         </p>

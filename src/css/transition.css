@@ -10,9 +10,12 @@
 }
 
 /* PRELOADER */
-.miru--center:has(canvas:not([width]))::after,
-.miru--button:has(canvas:not([width]))::after {
+.miru--loading::after {
   animation: miru-spinner 2s linear infinite;
+}
+
+.miru--button:not(.miru--loading):has(canvas:not([width]))::after {
+  animation: miru-spinner 5s linear infinite reverse;
 }
 
 @keyframes miru-spinner {
