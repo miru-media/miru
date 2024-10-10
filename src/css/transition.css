@@ -6,7 +6,7 @@
 /* BUTTON HOVER */
 .miru--button:hover,
 .miru--hov:not(.miru--acc) {
-  transition: background-color 0.015s;
+  transition: all 0.015s;
 }
 
 /* PRELOADER */

@@ -1,55 +1,71 @@
 /* MODULE BUTTON */
 miru-image-editor,
 :host {
-    /* BUTTON */
-    .miru--button {
-        cursor: pointer;
-        flex-grow: 1;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
+  /* BUTTON */
+  .miru--button {
+    position: relative;
+    flex-grow: 1;
+    height: 100%;
+    overflow: hidden;
+    cursor: pointer;
 
-        /* BUTTON ICON */
-        .miru--button__icon {
-            margin: auto;
-            font-size: var(--size-button-icon);
-        }
+    /* BUTTON ICON */
+    .miru--button__icon {
+      margin: auto;
+      font-size: var(--size-button-icon);
+    }
 
-        /* BUTTON WITH CANVAS */
-        &:has(canvas) {
-            /* flex-basis: auto; */
-            max-width: 50%;
-            max-height: 100%;
+    /* BUTTON WITH CANVAS */
+    &:has(canvas) {
+      box-sizing: border-box;
 
-            canvas {
-                width: 100%;
-                height: calc(100% - 1.5rem);
-                object-fit: contain;
-            }
-        }
+      /* flex-basis: auto; */
+      max-width: 50%;
+      max-height: 100%;
 
-        /* BUTTON LABEL */
-        .miru--button__label {
-            line-height: 1em;
-            pointer-events: none;
-        }
+      /* BUTTON HOVER */
+      border: 2px solid transparent;
 
-        /* ACTIVE BUTTON MARKING */
-        /* &.miru--acc .miru--button__icon,
+      canvas {
+        width: 100%;
+        height: calc(100% - 1.5rem);
+        object-fit: contain;
+      }
+
+      &.miru--acc {
+        border: 2px solid;
+      }
+
+      &:not(.miru--acc):hover,
+      &.miru--hov:not(.miru--acc) {
+        /* border-top: 4px solid; */
+        border: 2px solid;
+      }
+    }
+
+    /* BUTTON LABEL */
+    .miru--button__label {
+      line-height: 1em;
+      pointer-events: none;
+    }
+
+    /* ACTIVE BUTTON MARKING */
+
+    /* &.miru--acc .miru--button__icon,
         &.miru--acc canvas {
             scale: 0.86;
         } */
 
-        /* ENABLED MARKER */
-        &.miru--enabled::after {
-            position: absolute;
-            top: calc(50% - 1.5rem);
-            right: calc(50% - 1.5rem);
-            display: block;
-            width: 0.5rem;
-            height: 0.5rem;
-            content: "";
-            border-radius: 50%;
-        }
+    /* ENABLED MARKER */
+    &.miru--enabled::after {
+      position: absolute;
+      top: calc(50% - 1.5rem);
+      right: calc(50% - 1.5rem);
+      display: block;
+      width: 0.5rem;
+      height: 0.5rem;
+      content: '';
+      border-radius: 50%;
     }
+  }
 }
