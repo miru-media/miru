@@ -41,7 +41,7 @@ miru-image-editor,
 
   /* SLIDER */
   .miru--slider {
-    color: var(--color-slider-border);
+    /* color: var(--color-slider-border); */
     background-color: var(--color-slider-track);
 
     &::-moz-range-thumb {

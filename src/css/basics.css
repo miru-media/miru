@@ -37,7 +37,8 @@ miru-image-editor,
     --color-slider-thumb: #a1849b;
     --color-slider-progress: #d7bdd7;
     --color-slider-track: #dfdfdf;
-    --color-slider-border: #a1849b;
+
+    /* --color-slider-border: #a1849b; */
 
     /* CROPPER COLOR */
     --color-crop-outline: #e3a2e3;
@@ -62,10 +63,11 @@ miru-image-editor,
     --color-scrollbar-both: #362c36 transparent;
 
     /* SLIDER COLOR */
-    --color-slider-thumb: #413641;
-    --color-slider-progress: #1e1a1e;
-    --color-slider-track: #100e10;
-    --color-slider-border: #282128;
+    --color-slider-thumb: #ff0090;
+    --color-slider-progress: #792253;
+    --color-slider-track: #3f363f;
+
+    /* --color-slider-border: transparent; */
 
     /* CROPPER COLOR */
     --color-crop-outline: #e3a2e3;
@@ -93,7 +95,8 @@ miru-image-editor,
     --color-slider-thumb: var(--text-lighter);
     --color-slider-progress: var(--card-bg);
     --color-slider-track: var(--light);
-    --color-slider-border: var(--text-lighter);
+
+    /* --color-slider-border: var(--text-lighter); */
 
     /* CROPPER COLOR */
     --color-crop-outline: var(--light-gray);

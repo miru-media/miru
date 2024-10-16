@@ -27,6 +27,8 @@ miru-image-editor,
     display: block;
     margin: 0;
     user-select: none;
+
+    -webkit-tap-highlight-color: transparent;
   }
 
   img,
@@ -57,10 +59,9 @@ miru-image-editor,
   }
 
   .miru--slider {
-    overflow: hidden; /* for chrome */
+    overflow: hidden;
     appearance: none;
     cursor: pointer;
-    background: transparent;
 
     &:focus {
       outline: none;
@@ -81,7 +82,6 @@ miru-image-editor,
     }
   }
 
-  /* has issues with & nesting */
   .miru--slider::-webkit-slider-thumb {
     height: 200px;
     margin-top: -80px;
