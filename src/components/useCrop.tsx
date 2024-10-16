@@ -40,7 +40,6 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
   container.className = 'miru--cropper-container'
 
   scope.watch([source, () => source.value?.original], async ([source, original], _prev, onCleanup) => {
-    container.style.display = 'none'
     if (!source || !original) return
 
     let cropperImage
@@ -65,7 +64,6 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
 
     cropperImage.setAttribute('style', 'visibility:hidden;width:100%')
     container.appendChild(cropperImage)
-    container.style.display = ''
 
     setObjectSize(unmodifiedCrop, original)
     const cropData = source.crop.value ?? unmodifiedCrop
