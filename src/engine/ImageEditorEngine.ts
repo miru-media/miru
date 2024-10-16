@@ -83,20 +83,6 @@ export class ImageEditorEngine {
     return this.sources.value[sourceIndex]?.drawPreview(context)
   }
 
-  async drawThumbnail(source: ImageSourceState, effect: EffectInternal, context: DisplayContext) {
-    if (source?.isLoading !== false) return
-
-    source.sourceThumbnail()
-
-    const renderer = this.renderer
-
-    renderer.setEffect(effect)
-    // draw thumbnails at default intensity
-    renderer.setIntensity(DEFAULT_INTENSITY)
-
-    await renderer.drawAndTransfer(context)
-  }
-
   async exportToImageBitmap() {
     return this.renderer.toImageBitmap()
   }

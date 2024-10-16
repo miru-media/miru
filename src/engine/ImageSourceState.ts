@@ -6,6 +6,7 @@ import {
   AdjustmentsState,
   Context2D,
   CropState,
+  DisplayContext,
   ImageEditState,
   ImageSourceOption,
   Size,
@@ -315,12 +316,17 @@ export class ImageSourceState {
     this.onRenderPreview?.()
   }
 
-  sourceThumbnail() {
-    const renderer = this.#renderer
+  async drawThumbnail(effect: EffectInternal, context: DisplayContext) {
     const rotated = this.#rotated.value
+    if (this.isLoading || !rotated) return
 
-    if (!rotated) return
+    const renderer = this.#renderer
 
     renderer.setSourceTexture(this.#thumbnailTexture, this.#thumbnailSize.value, this.crop.value ?? rotated)
+    renderer.setEffect(effect)
+    // draw thumbnails at default intensity
+    renderer.setIntensity(DEFAULT_INTENSITY)
+
+    await renderer.drawAndTransfer(context)
   }
 }

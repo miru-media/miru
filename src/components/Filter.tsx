@@ -12,7 +12,6 @@ import { SourcePreview } from './SourcePreview'
 const FilterItem = ({
   source,
   effect,
-  engine,
   index,
   context,
   class: className,
@@ -21,7 +20,6 @@ const FilterItem = ({
 }: {
   source: Ref<ImageSourceState | undefined>
   effect: EffectInternal
-  engine: ImageEditorEngine
   index: number
   context: MaybeRefOrGetter<DisplayContext | undefined>
   class: unknown
@@ -33,7 +31,7 @@ const FilterItem = ({
     [effect.isLoading, source, toRef(context), () => source.value?.thumbnailKey.value],
     ([isLoading, source, context]) => {
       if (!isLoading && source && context)
-        engine.drawThumbnail(source, effect, context).catch(() => undefined)
+        source.drawThumbnail(effect, context).catch(() => undefined)
     },
   )
 
@@ -153,7 +151,6 @@ export const FilterView = ({
           {() =>
             engine.effects.value.map((effect, index) => (
               <FilterItem
-                engine={engine}
                 source={source}
                 effect={effect}
                 index={index}
