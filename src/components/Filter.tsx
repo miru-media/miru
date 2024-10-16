@@ -64,6 +64,7 @@ export const FilterView = ({
 
   const container = ref<HTMLElement>()
   const scrolledEffectIndex = ref(-1)
+  const hasPendingScrollTarget = computed(() => scrolledEffectIndex.value !== effectOfCurrentSource.value)
 
   const onInputIntensity = (event: InputEvent) =>
     source.value && (source.value.intensity.value = event.target.valueAsNumber)
@@ -126,7 +127,14 @@ export const FilterView = ({
         engine.sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
       }
       <div class="miru--menu">
-        <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
+        <p
+          ref={container}
+          class={() => [
+            'miru--menu__row miru--menu__row--scroll',
+            hasPendingScrollTarget.value && 'miru--menu__scroll-pending',
+          ]}
+          onScroll={onScroll}
+        >
           <button
             type="button"
             data-index="-1"
@@ -155,7 +163,6 @@ export const FilterView = ({
                 class={[
                   () => scrolledEffectIndex.value === index && 'miru--hov',
                   () => ((source.value?.isLoading ?? true) || effect.isLoading.value) && 'miru--loading',
-                  // () => effect.isLoading.value && 'miru--loading',
                 ]}
               ></FilterItem>
             ))
