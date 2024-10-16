@@ -8,11 +8,19 @@ const cssnano = require('cssnano')
 const hoverMedia = require('postcss-hover-media-feature')
 
 const isProd = process.env.NODE_ENV === 'production'
+const noShadowRoot = process.env.VITE_NO_SHADOW_ROOT
 
 /** @type {import('postcss-load-config').Config} */
 const config = {
   plugins: [
     postcssImport(),
+    !noShadowRoot && {
+      postcssPlugin: 'miru :host selector',
+      Rule(rule) {
+        if (rule.selector !== 'miru-image-editor') return
+        rule.selector = ':host'
+      },
+    },
     unoCss({ configOrPath: 'uno.postcss.config.ts' }),
     hoverMedia(),
     url(),

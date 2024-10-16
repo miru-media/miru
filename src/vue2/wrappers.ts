@@ -117,7 +117,7 @@ const wrap = (Component: (props: WrappedComponentProps) => JSX.Element, name: st
     )
   },
   render(h: (...args: unknown[]) => unknown) {
-    return h('div', { class: 'miru-image-editor' })
+    return h('div')
   },
   watch: {
     sourceIndex: {

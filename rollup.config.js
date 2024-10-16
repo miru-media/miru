@@ -45,7 +45,7 @@ export default defineConfig({
         'import.meta.env.PROD': JSON.stringify(isProd),
         'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
         'import.meta.env.ASSETS_PATH': '"/assets/"',
-        'import.meta.env.NO_SHADOW_ROOT': 'false',
+        'import.meta.env.VITE_NO_SHADOW_ROOT': 'false',
         'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
       },
       preventAssignment: true,

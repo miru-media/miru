@@ -1,6 +1,5 @@
 /* MODULE BUTTON */
-miru-image-editor,
-:host {
+miru-image-editor {
   /* BUTTON */
   .miru--button {
     position: relative;

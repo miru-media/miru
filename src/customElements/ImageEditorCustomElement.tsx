@@ -55,8 +55,6 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
   constructor() {
     super()
 
-    this.classList.add('miru-image-editor')
-
     this.#engine = this.#scope.run(
       () =>
         new ImageEditorEngine({

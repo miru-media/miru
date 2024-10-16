@@ -9,6 +9,8 @@ export const renderComponentTo = <C extends (props: P) => JSX.Element, P extends
 ) => {
   let root
 
+  node.classList.add('miru-image-editor')
+
   node.setAttribute(
     'color-scheme',
     node.hasAttribute('color-scheme')
@@ -18,13 +20,14 @@ export const renderComponentTo = <C extends (props: P) => JSX.Element, P extends
         : 'light',
   )
 
-  if (import.meta.env.NO_SHADOW_ROOT) {
+  if (import.meta.env.VITE_NO_SHADOW_ROOT) {
     root = node
   } else {
     root = node.attachShadow({ mode: 'open' })
 
     const style = document.createElement('style')
-    style.textContent = `${css}`
+    style.style.display = 'none'
+    style.textContent = css
     root.appendChild(style)
   }
 

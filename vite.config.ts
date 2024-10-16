@@ -22,7 +22,6 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-  define: { 'import.meta.env.NO_SHADOW_ROOT': true },
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: '@/framework',

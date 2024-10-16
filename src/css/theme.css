@@ -1,5 +1,4 @@
-miru-image-editor,
-:host {
+miru-image-editor {
   /* DEFAULTS */
   color: var(--color-fnt-default);
 

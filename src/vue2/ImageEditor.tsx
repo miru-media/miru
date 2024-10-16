@@ -58,7 +58,7 @@ export default {
     this.thumbnailUrls.forEach(URL.revokeObjectURL.bind(URL))
   },
   render(h: (...args: unknown[]) => unknown) {
-    return h('div', { class: 'miru-image-editor' })
+    return h('div')
   },
   methods: {
     exportToBlob(this: VueInstance, sourceIndex: number, options?: { type: string; quality?: number }) {

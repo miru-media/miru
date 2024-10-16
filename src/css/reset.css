@@ -1,6 +1,5 @@
 /* RESET */
-miru-image-editor,
-:host {
+miru-image-editor {
   /* FONT TWEAKS */
   font-synthesis: none;
   text-rendering: optimizelegibility;
