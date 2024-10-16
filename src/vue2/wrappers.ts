@@ -84,6 +84,7 @@ interface VueInstance {
   scope: EffectScope
   sourceIndex: number
   _sourceIndex: Ref<number>
+  _extraProps: Record<string, Ref<unknown>>
 
   $el: HTMLElement
   $props: Record<string, unknown>
@@ -97,21 +98,37 @@ interface WrappedComponentProps {
   showAllSources?: boolean | undefined
 }
 
-const wrap = (Component: (props: WrappedComponentProps) => JSX.Element, name: string) => ({
+const wrap = (
+  Component: (props: WrappedComponentProps) => JSX.Element,
+  name: string,
+  extraProps?: Record<string, { type: unknown; required?: boolean; default?: unknown }>,
+) => ({
   name,
   props: {
     engine: { type: ImageEditorEngineVueImpl, required: true },
     sourceIndex: { type: Number, default: 0 },
+    ...extraProps,
   },
   beforeCreate(this: VueInstance) {
     this.scope = createEffectScope()
     this._sourceIndex = ref(0)
+
+    if (extraProps) {
+      this._extraProps = Object.fromEntries(
+        Object.entries(extraProps).map(([key, info]) => [key, ref(info.default)]),
+      )
+    }
   },
   mounted(this: VueInstance) {
     this.scope.run(() =>
       renderComponentTo(
         Component,
-        { engine: engineMap.get(this.engine)!, sourceIndex: this._sourceIndex, showAllSources: false },
+        {
+          engine: engineMap.get(this.engine)!,
+          sourceIndex: this._sourceIndex,
+          showAllSources: false,
+          ...this._extraProps,
+        },
         this.$el,
       ),
     )
@@ -126,6 +143,15 @@ const wrap = (Component: (props: WrappedComponentProps) => JSX.Element, name: st
       },
       immediate: true,
     },
+    ...(extraProps &&
+      Object.fromEntries(
+        Object.entries(extraProps).map(([key]) => [
+          key,
+          function (this: VueInstance, value: unknown) {
+            this._extraProps[key].value = value
+          },
+        ]),
+      )),
   },
   destroyed(this: VueInstance) {
     this.scope.stop()
