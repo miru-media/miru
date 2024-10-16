@@ -146,7 +146,7 @@ export const FilterView = ({
             ]}
             onClick={() => onClickFilter(-1)}
           >
-            {source.value?.thumbnailCanvas}
+            {() => source.value?.thumbnailCanvas}
             <span class="miru--button__label">Original</span>
           </button>
 
