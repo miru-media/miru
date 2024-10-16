@@ -31,7 +31,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
 
   const hasAdjustment = computed(() => {
     const adjustments = currentSource.value?.adjustments.value
-    return !!adjustments && !!adjustments.brightness
+    return !!adjustments && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {

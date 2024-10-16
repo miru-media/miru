@@ -32,6 +32,12 @@ export class Renderer {
   readonly emptyTexture3D: WebGLTexture
   isDisposed = false
 
+  #emptyAdjustments: AdjustmentsState = {
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+  }
+
   constructor(canvas?: HTMLCanvasElement | OffscreenCanvas) {
     const gl = (this.#gl = getWebgl2Context(canvas))
 
@@ -164,8 +170,8 @@ export class Renderer {
     this.#uniforms.u_intensity = value
   }
 
-  setAdjustments(value: AdjustmentsState | undefined) {
-    this.#uniforms.u_adjustments = value ?? null
+  setAdjustments(value = this.#emptyAdjustments) {
+    this.#uniforms.u_adjustments = value
   }
 
   draw() {
