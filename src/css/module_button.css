@@ -9,6 +9,10 @@ miru-image-editor,
     overflow: hidden;
     cursor: pointer;
 
+    & > *:not(:last-child) {
+      margin-bottom: calc(var(--heigth-menu-row) - var(--size-button-icon) - 1.85em) !important;
+    }
+
     /* BUTTON ICON */
     .miru--button__icon {
       margin: auto;
@@ -57,10 +61,14 @@ miru-image-editor,
 
     /* ACTIVE BUTTON MARKING */
 
-    /* &.miru--acc .miru--button__icon,
-        &.miru--acc canvas {
-            scale: 0.86;
-        } */
+    /* &.miru--acc canvas, */
+
+    /* &.miru--acc .miru--button__icon{
+      scale: 1.2;
+    }
+    &.miru--acc .miru--button__label{
+      scale: .75;
+    } */
 
     /* ENABLED MARKER */
     &.miru--enabled::after {
