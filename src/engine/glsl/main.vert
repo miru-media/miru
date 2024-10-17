@@ -2,13 +2,20 @@
 
 precision mediump float;
 
-in vec4 a_position;
-in vec2 a_texcoord;
+layout(location = 0) in vec4 a_position;
+layout(location = 1) in vec4 a_texcoord;
 
+uniform vec2 u_resolution;
+uniform vec2 u_size;
+
+uniform mat4 u_matrix;
+uniform mat4 u_textureMatrix;
+
+out vec2 v_unitPosition;
 out vec2 v_texcoord;
 
 void main() {
-  v_texcoord = a_texcoord;
-  v_texcoord.y = 1.0 - v_texcoord.y;
-  gl_Position = a_position;
+  v_texcoord = (u_textureMatrix * a_texcoord).xy;
+  v_unitPosition = a_position.xy;
+  gl_Position = u_matrix * a_position;
 }

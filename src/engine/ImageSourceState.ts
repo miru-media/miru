@@ -42,11 +42,8 @@ interface ImageSourceStateOptions {
 export class ImageSourceState {
   #renderer: Renderer
   #texture: WebGLTexture
-  #thumbnailTexture: WebGLTexture
   #original = ref<SyncImageSource>()
   #rotated = ref<SyncImageSource>()
-  #previewContext = get2dContext()
-  #thumbnailContext = get2dContext(document.createElement('canvas'))
   #previewSize = ref<Size>({ width: 1, height: 1 })
   #thumbnailSize!: Ref<Size>
   #isLoading = ref(true)
@@ -85,14 +82,6 @@ export class ImageSourceState {
     return this.#original.value
   }
 
-  get previewSize() {
-    return this.#previewSize.value
-  }
-
-  get thumbnailCanvas() {
-    return this.#thumbnailContext.canvas
-  }
-
   constructor({
     sourceOption,
     thumbnailSize,
@@ -107,7 +96,6 @@ export class ImageSourceState {
 
     this.#renderer = renderer
     this.#texture = renderer.createTexture()!
-    this.#thumbnailTexture = renderer.createTexture()!
     this.#effects = effects
 
     this.context = context ?? createDisplayContext()
@@ -163,86 +151,65 @@ export class ImageSourceState {
     }
 
     // rotate the original image
-    watch([this.#original, () => this.crop.value?.rotate, this.#error], ([original, rotation, error]) => {
-      if (error) {
-        this.#isLoading.value = false
-        this.#original.value = undefined
-        return
-      }
-
-      if (!original) this.#isLoading.value = true
-
-      if (!original || !rotation) {
-        this.#rotated.value = original
-        return
-      }
-
-      const context = get2dContext()
-      const { canvas } = context
-
-      if ((rotation / 90) % 2 === 0) {
-        canvas.width = original.width
-        canvas.height = original.height
-      } else {
-        canvas.width = original.height
-        canvas.height = original.width
-      }
-
-      context.save()
-
-      context.translate(canvas.width / 2, canvas.height / 2)
-      context.rotate((rotation * Math.PI) / 180)
-      drawImage(context, original, -original.width / 2, -original.height / 2)
-      context.restore()
-
-      this.#rotated.value = canvas
-    })
-
-    // crop rotated image and resize if larger than the screen size
     watch(
-      [this.#rotated, this.crop, this.adjustments, this.pausePreview],
-      ([fullSizeImage, crop, _adjustments, pause]) => {
-        if (pause > 0) return
+      [this.#original, () => this.crop.value?.rotate ?? 0, this.#error, this.pausePreview],
+      ([original, rotation, error, paused]) => {
+        if (paused > 0) return
 
-        if (!fullSizeImage) {
-          this.#isLoading.value = true
+        if (error) {
+          this.#isLoading.value = false
+          this.#original.value = this.#rotated.value = undefined
           return
         }
 
-        const { canvas } = this.#previewContext
-        let previewTextureSize: Size = crop ?? fullSizeImage
-        const dpr = win.devicePixelRatio
-        const screenSize = {
-          width: screen.width * dpr,
-          height: screen.width * dpr,
+        const load = (image: SyncImageSource) => {
+          this.#renderer.loadImage(this.#texture, image)
+          this.#isLoading.value = false
+          this.previewKey.value++
         }
 
-        if (previewTextureSize.width > screenSize.width || previewTextureSize.height > screenSize.height)
-          previewTextureSize = fit(previewTextureSize, screenSize)
+        this.#isLoading.value = true
 
-        resizeImageSync(fullSizeImage, crop, previewTextureSize, this.#previewContext)
+        if (!original || !rotation) {
+          this.#rotated.value = original
+          if (original) load(original)
 
-        this.#renderer.loadImage(this.#texture, canvas)
-        this.#isLoading.value = false
-        this.previewKey.value++
+          return
+        }
+
+        const context = get2dContext()
+        const { canvas } = context
+
+        if ((rotation / 90) % 2 === 0) {
+          canvas.width = original.width
+          canvas.height = original.height
+        } else {
+          canvas.width = original.height
+          canvas.height = original.width
+        }
+
+        context.save()
+
+        context.translate(canvas.width / 2, canvas.height / 2)
+        context.rotate((rotation * Math.PI) / 180)
+        drawImage(context, original, -original.width / 2, -original.height / 2)
+        context.restore()
+
+        this.#rotated.value = canvas
+        load(canvas)
       },
     )
 
-    // resize preview image to thumbnail size
-    watch([this.#thumbnailSize, this.previewKey, this.crop], ([size]) => {
-      if (this.#isLoading.value) return
-
-      const { canvas } = this.#thumbnailContext
-      resizeImageSync(this.#previewContext.canvas, undefined, size, this.#thumbnailContext)
-
-      this.#renderer.loadImage(this.#thumbnailTexture, canvas)
-      this.thumbnailKey.value++
-    })
-
-    // draw preview on effect change
     watch(
-      [this.previewKey, this.intensity, this.effect, this.adjustments, this.#previewSize, this.#isLoading],
-      () => this.drawPreview(),
+      [this.intensity, this.effect, this.adjustments, this.#previewSize, this.#isLoading, this.pausePreview],
+      () => this.previewKey.value++,
+    )
+
+    watch([this.previewKey], () => this.drawPreview())
+
+    watch(
+      [this.#rotated, this.#thumbnailSize, this.adjustments, this.crop, this.#isLoading, this.pausePreview],
+      () => this.thumbnailKey.value++,
     )
 
     // emit edit on state change
@@ -252,8 +219,7 @@ export class ImageSourceState {
       renderer.deleteTexture(this.#texture)
       this.#renderer = undefined as never
       this.#original.value = this.#rotated.value = undefined
-      this.#previewContext = this.#thumbnailContext = undefined as never
-      this.#texture = this.#thumbnailTexture = this.context = this.onRenderPreview = undefined as never
+      this.#texture = this.context = this.onRenderPreview = undefined as never
     })
 
     onScopeDispose(() => this.janitor.dispose())
@@ -309,7 +275,7 @@ export class ImageSourceState {
     if (this.isLoading || !rotated) return
 
     const renderer = this.#renderer
-    renderer.setSourceTexture(this.#texture, this.#previewSize.value, this.crop.value ?? rotated)
+    renderer.setSourceTexture(this.#texture, this.#previewSize.value, rotated, this.crop.value)
     this.#applyEditValuesToRenderer()
 
     await renderer.drawAndTransfer(context)
@@ -322,7 +288,7 @@ export class ImageSourceState {
 
     const renderer = this.#renderer
 
-    renderer.setSourceTexture(this.#thumbnailTexture, this.#thumbnailSize.value, this.crop.value ?? rotated)
+    renderer.setSourceTexture(this.#texture, this.#thumbnailSize.value, rotated, this.crop.value)
     renderer.setEffect(effect)
     // draw thumbnails at default intensity
     renderer.setIntensity(DEFAULT_INTENSITY)

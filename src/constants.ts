@@ -24,7 +24,7 @@ export const SOURCE_TEX_OPTIONS = {
   wrap: GL.CLAMP_TO_EDGE,
   min: GL.LINEAR,
   mag: GL.LINEAR,
-  auto: false,
+  auto: true,
 } satisfies twgl.TextureOptions
 
 export const LUT_TEX_OPTIONS = {

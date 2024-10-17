@@ -14,6 +14,7 @@
 precision mediump float;
 precision mediump sampler3D;
 
+in vec2 v_unitPosition;
 in vec2 v_texcoord;
 
 uniform sampler2D u_source;
@@ -65,9 +66,9 @@ vec4 applyOperation(EffectOp op, vec4 color, vec2 coord, float effectIntensity) 
 
   switch (op.type) {
     case OP_LUT: return lookupWithIndex(color, op.lut, intensity);
-    case OP_VIGNETTE: return color * vignette(v_texcoord, 1.0 - intensity, 0.25);
+    case OP_VIGNETTE: return color * vignette(v_unitPosition, 1.0 - intensity, 0.25);
     case OP_ADJUST_COLOR: return adjustColor(color, op.args[0], op.args[1], op.args[2], intensity);
-    case OP_FILM_GRAIN: return vec4(filmGrain(color.rgb, v_texcoord, vec2(textureSize(u_source, 0)), intensity), color.a);
+    case OP_FILM_GRAIN: return vec4(filmGrain(color.rgb, v_texcoord, u_size, intensity), color.a);
     case OP_SEPIA: return sepia(color, intensity);
     case OP_HUE_ROTATE: return mix(color, hueRotate(color, op.args[0]), intensity);
     default: return color;

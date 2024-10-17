@@ -30,8 +30,7 @@ const FilterItem = ({
   watch(
     [effect.isLoading, source, toRef(context), () => source.value?.thumbnailKey.value],
     ([isLoading, source, context]) => {
-      if (!isLoading && source && context)
-        source.drawThumbnail(effect, context).catch(() => undefined)
+      if (!isLoading && source && context) source.drawThumbnail(effect, context).catch(() => undefined)
     },
   )
 
@@ -64,14 +63,23 @@ export const FilterView = ({
   const scrolledEffectIndex = ref(-1)
   const hasPendingScrollTarget = computed(() => scrolledEffectIndex.value !== effectOfCurrentSource.value)
 
+  const ORIGINAL_EFFECT: EffectInternal = new EffectInternal(
+    { name: 'Original', ops: [] },
+    engine.renderer,
+    engine.scratchPad2d,
+  )
+
   const onInputIntensity = (event: InputEvent) =>
     source.value && (source.value.intensity.value = event.target.valueAsNumber)
 
-  const contexts = ref<DisplayContext[]>([])
+  const contexts = ref<DisplayContext[]>([
+    // context for "Original"
+    createDisplayContext(),
+  ])
 
   watch([engine.effects], ([effects], _prev) => {
-    const newContexts = (contexts.value = contexts.value.slice(0, effects.length))
-    effects.forEach((_, index) => (newContexts[index] ??= createDisplayContext()))
+    const newContexts = (contexts.value = contexts.value.slice(0, effects.length + 1))
+    effects.forEach((_, index) => (newContexts[index + 1] ??= createDisplayContext()))
   })
   watch([contexts], ([contexts], _prev, onCleanup) => onCleanup(() => (contexts.length = 0)))
 
@@ -133,36 +141,25 @@ export const FilterView = ({
           ]}
           onScroll={onScroll}
         >
-          <button
-            type="button"
-            data-index="-1"
-            class={[
-              'miru--button',
-              () => effectOfCurrentSource.value === -1 && 'miru--acc',
-              () => scrolledEffectIndex.value === -1 && 'miru--hov',
-              () => source.value?.isLoading && 'miru--loading',
-            ]}
-            onClick={() => onClickFilter(-1)}
-          >
-            {() => source.value?.thumbnailCanvas}
-            <span class="miru--button__label">Original</span>
-          </button>
-
           {() =>
-            engine.effects.value.map((effect, index) => (
-              <FilterItem
-                source={source}
-                effect={effect}
-                index={index}
-                context={() => contexts.value[index]}
-                isActive={() => effectOfCurrentSource.value === index}
-                onClick={() => onClickFilter(index)}
-                class={[
-                  () => scrolledEffectIndex.value === index && 'miru--hov',
-                  () => ((source.value?.isLoading ?? true) || effect.isLoading.value) && 'miru--loading',
-                ]}
-              ></FilterItem>
-            ))
+            [ORIGINAL_EFFECT, ...engine.effects.value].map((effect, listIndex) => {
+              const effectIndex = listIndex - 1
+
+              return (
+                <FilterItem
+                  source={source}
+                  effect={effect}
+                  index={effectIndex}
+                  context={() => contexts.value[listIndex]}
+                  isActive={() => effectOfCurrentSource.value === effectIndex}
+                  onClick={() => onClickFilter(effectIndex)}
+                  class={[
+                    () => scrolledEffectIndex.value === effectIndex && 'miru--hov',
+                    () => ((source.value?.isLoading ?? true) || effect.isLoading.value) && 'miru--loading',
+                  ]}
+                ></FilterItem>
+              )
+            })
           }
         </p>
 

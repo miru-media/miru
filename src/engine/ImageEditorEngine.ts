@@ -1,9 +1,8 @@
 import { Ref, computed, createEffectScope, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
-import { Context2D, DisplayContext, Effect, ImageEditState, ImageSourceOption } from '@/types'
+import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { ImageSourceState } from './ImageSourceState'
 import { EffectInternal } from '@/Effect'
 import { get2dContext } from '@/utils'
-import { DEFAULT_INTENSITY } from '@/constants'
 import { Renderer } from '@/engine/Renderer'
 
 export interface ImageEditorOptions {
@@ -45,7 +44,7 @@ export class ImageEditorEngine {
     watch([this.sourceInputs], ([sourceOptions], _prev, onCleanup) => {
       const watchScope = createEffectScope()
 
-      this.#scope.run(() => {
+      watchScope.run(() => {
         const prevSources = this.sources.value
 
         // TODO: reuse unchanged sources

@@ -68,7 +68,7 @@ class ImageEditorEngineVueImpl implements ImageEditorEngineVue {
     if (!source) return
 
     source.setState(state)
-    return source.drawPreview()
+    source.drawPreview().catch(() => undefined)
   }
 
   exportToBlob(sourceIndex: number, options?: ImageEncodeOptions) {

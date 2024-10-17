@@ -19,6 +19,24 @@ importers:
       cropperjs:
         specifier: ^1.6.2
         version: 1.6.2
+      gl-matrix:
+        specifier: ^3.4.3
+        version: 3.4.3
+      glsl-blend:
+        specifier: ^1.0.3
+        version: 1.0.3
+      glsl-film-grain:
+        specifier: ^1.0.4
+        version: 1.0.4
+      glsl-luma:
+        specifier: ^1.0.1
+        version: 1.0.1
+      glsl-noise:
+        specifier: ^0.0.0
+        version: 0.0.0
+      glsl-vignette:
+        specifier: ^1.1.0
+        version: 1.1.0
       throttle-debounce:
         specifier: ^5.0.2
         version: 5.0.2
@@ -86,21 +104,6 @@ importers:
       eslint-plugin-import:
         specifier: ^2.30.0
         version: 2.30.0(@typescript-eslint/parser@8.5.0(eslint@9.11.1(jiti@1.21.6))(typescript@5.5.3))(eslint-import-resolver-typescript@3.6.3)(eslint@9.11.1(jiti@1.21.6))
-      glsl-blend:
-        specifier: ^1.0.3
-        version: 1.0.3
-      glsl-film-grain:
-        specifier: ^1.0.4
-        version: 1.0.4
-      glsl-luma:
-        specifier: ^1.0.1
-        version: 1.0.1
-      glsl-noise:
-        specifier: ^0.0.0
-        version: 0.0.0
-      glsl-vignette:
-        specifier: ^1.1.0
-        version: 1.1.0
       glslify:
         specifier: ^7.1.1
         version: 7.1.1
@@ -2409,6 +2412,9 @@ packages:
     resolution: {integrity: sha512-N7YRIklvPH3wYWAR2vysaqGLPRcpwQ0GKdlqTiVN5w1UmCdaeY3K8s6DMKRCh54DDdzyt/OAB6C8jgVtb7Y2Fg==}
     engines: {node: '>=18'}
     hasBin: true
+
+  gl-matrix@3.4.3:
+    resolution: {integrity: sha512-wcCp8vu8FT22BnvKVPjXa/ICBWRq/zjFfdofZy1WSpQZpphblv12/bOQLBC1rMM7SGOFS9ltVmKOHil5+Ml7gA==}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -7221,6 +7227,8 @@ snapshots:
     transitivePeerDependencies:
       - conventional-commits-filter
       - conventional-commits-parser
+
+  gl-matrix@3.4.3: {}
 
   glob-parent@5.1.2:
     dependencies:

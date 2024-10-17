@@ -30,6 +30,7 @@
   "dependencies": {
     "@reactively/core": "^0.0.8",
     "cropperjs": "^1.6.2",
+    "gl-matrix": "^3.4.3",
     "glsl-blend": "^1.0.3",
     "glsl-film-grain": "^1.0.4",
     "glsl-luma": "^1.0.1",
