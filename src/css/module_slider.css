@@ -4,6 +4,11 @@ miru-image-editor {
     width: 0.35rem;
   }
 
+  .miru--menu__row:has(.miru--slider[disabled]) {
+    /* display: none; */
+    opacity: 0;
+  }
+
   /* SLIDER */
   .miru--slider {
     flex-grow: 1;
