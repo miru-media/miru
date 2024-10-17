@@ -8,7 +8,7 @@ miru-image-editor {
     overflow: hidden;
     cursor: pointer;
 
-    & > *:not(:last-child) {
+    & > *:not(:last-child, canvas) {
       margin-bottom: calc(var(--heigth-menu-row) - var(--size-button-icon) - 1.85em) !important;
     }
 
@@ -22,11 +22,9 @@ miru-image-editor {
     &:has(canvas) {
       box-sizing: border-box;
 
-      /* flex-basis: auto; */
       width: var(--width-button-canvas);
       max-height: 100%;
 
-      /* BUTTON HOVER */
       border: 2px solid transparent;
       border-radius: 0.15rem;
 
@@ -36,13 +34,13 @@ miru-image-editor {
         object-fit: cover;
       }
 
+      /* BUTTON ACTIVE AND HOVER */
       &.miru--acc {
         border: 2px solid;
       }
 
       &:not(.miru--acc):hover,
       &.miru--hov:not(.miru--acc) {
-        /* border-top: 4px solid; */
         border: 2px solid;
       }
     }
@@ -57,17 +55,6 @@ miru-image-editor {
       white-space: nowrap;
       pointer-events: none;
     }
-
-    /* ACTIVE BUTTON MARKING */
-
-    /* &.miru--acc canvas, */
-
-    /* &.miru--acc .miru--button__icon{
-      scale: 1.2;
-    }
-    &.miru--acc .miru--button__label{
-      scale: .75;
-    } */
 
     /* ENABLED MARKER */
     &.miru--enabled::after {
