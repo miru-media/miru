@@ -1,5 +1,5 @@
 /* MAIN CONTAINERS */
-miru-image-editor {
+:host {
   /* SIZE */
   max-height: 90vh;
 

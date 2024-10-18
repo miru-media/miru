@@ -14,11 +14,13 @@ const noShadowRoot = process.env.VITE_NO_SHADOW_ROOT
 const config = {
   plugins: [
     postcssImport(),
-    !noShadowRoot && {
+    noShadowRoot && {
       postcssPlugin: 'miru :host selector',
       Rule(rule) {
-        if (rule.selector !== 'miru-image-editor') return
-        rule.selector = ':host'
+        rule.selector = rule.selector.replace(
+          /:host(\(.*\))?/,
+          (_match, params) => `miru-image-editor${params ? `:is${params}` : ''}`,
+        )
       },
     },
     unoCss({ configOrPath: 'uno.postcss.config.ts' }),

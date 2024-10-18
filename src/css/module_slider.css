@@ -1,5 +1,5 @@
 /* MODULE SLIDER */
-miru-image-editor {
+:host {
   .miru--slider::-webkit-slider-thumb {
     width: 0.35rem;
   }

@@ -1,4 +1,4 @@
-miru-image-editor {
+:host {
   /* FONT SETTINGS */
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 
@@ -16,95 +16,95 @@ miru-image-editor {
 
   /* COLOR SCHEMES */
   color-scheme: light dark;
+}
 
-  /* LIGHT */
-  &[color-scheme='light'] {
-    --theme-hue: 204;
-    --theme-hue-acc: 326;
+/* LIGHT */
+:host([color-scheme='light']) {
+  --theme-hue: 204;
+  --theme-hue-acc: 326;
 
-    /* BACKGROUND-COLOR */
-    --color-bg-preview: hsl(var(--theme-hue) 40% 80%);
-    --color-bg-button: hsl(var(--theme-hue) 40% 94%);
-    --color-bg-button-hover: hsl(var(--theme-hue) 90% 97%);
-    --color-bg-acc: hsl(var(--theme-hue) 90% 99%);
+  /* BACKGROUND-COLOR */
+  --color-bg-preview: hsl(var(--theme-hue) 40% 80%);
+  --color-bg-button: hsl(var(--theme-hue) 40% 94%);
+  --color-bg-button-hover: hsl(var(--theme-hue) 90% 97%);
+  --color-bg-acc: hsl(var(--theme-hue) 90% 99%);
 
-    /* COLOR */
-    --color-fnt-default: hsl(var(--theme-hue) 5% 30%);
-    --color-fnt-acc: hsl(var(--theme-hue-acc) 60% 50%);
+  /* COLOR */
+  --color-fnt-default: hsl(var(--theme-hue) 5% 30%);
+  --color-fnt-acc: hsl(var(--theme-hue-acc) 60% 50%);
 
-    /* SCROLLBAR COLOR */
-    --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
-    --color-scrollbar-both: hsl(var(--theme-hue) 10% 50%) transparent;
+  /* SCROLLBAR COLOR */
+  --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
+  --color-scrollbar-both: hsl(var(--theme-hue) 10% 50%) transparent;
 
-    /* SLIDER COLOR */
-    --color-slider-thumb: hsl(var(--theme-hue-acc) 60% 50%);
-    --color-slider-progress: hsl(var(--theme-hue-acc) 20% 75%);
-    --color-slider-track: hsl(var(--theme-hue) 5% 80%);
+  /* SLIDER COLOR */
+  --color-slider-thumb: hsl(var(--theme-hue-acc) 60% 50%);
+  --color-slider-progress: hsl(var(--theme-hue-acc) 20% 75%);
+  --color-slider-track: hsl(var(--theme-hue) 5% 80%);
 
-    /* CROPPER COLOR */
-    --color-crop-outline: hsl(var(--theme-hue) 100% 90%);
-    --color-crop-dashed: hsl(var(--theme-hue) 50% 90% / 87.1%);
-    --color-crop-overlay: hsl(var(--theme-hue) 40% 80% / 51%);
-  }
+  /* CROPPER COLOR */
+  --color-crop-outline: hsl(var(--theme-hue) 100% 90%);
+  --color-crop-dashed: hsl(var(--theme-hue) 50% 90% / 87.1%);
+  --color-crop-overlay: hsl(var(--theme-hue) 40% 80% / 51%);
+}
 
-  /* DARK */
-  &[color-scheme='dark'] {
-    --theme-hue: 204;
-    --theme-hue-acc: 326;
+/* DARK */
+:host([color-scheme='dark']) {
+  --theme-hue: 204;
+  --theme-hue-acc: 326;
 
-    /* BACKGROUND-COLOR */
-    --color-bg-preview: hsl(var(--theme-hue) 20% 10%);
-    --color-bg-button: hsl(var(--theme-hue) 100% 3%);
-    --color-bg-button-hover: hsl(var(--theme-hue) 10% 17%);
-    --color-bg-acc: hsl(var(--theme-hue) 10% 12%);
+  /* BACKGROUND-COLOR */
+  --color-bg-preview: hsl(var(--theme-hue) 20% 10%);
+  --color-bg-button: hsl(var(--theme-hue) 100% 3%);
+  --color-bg-button-hover: hsl(var(--theme-hue) 10% 17%);
+  --color-bg-acc: hsl(var(--theme-hue) 10% 12%);
 
-    /* COLOR */
-    --color-fnt-default: hsl(var(--theme-hue) 5% 60%);
-    --color-fnt-acc: hsl(var(--theme-hue-acc) 80% 40%);
+  /* COLOR */
+  --color-fnt-default: hsl(var(--theme-hue) 5% 60%);
+  --color-fnt-acc: hsl(var(--theme-hue-acc) 80% 40%);
 
-    /* SCROLLBAR COLOR */
-    --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
-    --color-scrollbar-both: hsl(var(--theme-hue) 10% 50%) transparent;
+  /* SCROLLBAR COLOR */
+  --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
+  --color-scrollbar-both: hsl(var(--theme-hue) 10% 50%) transparent;
 
-    /* SLIDER COLOR */
-    --color-slider-thumb: hsl(var(--theme-hue-acc) 80% 40%);
-    --color-slider-progress: hsl(var(--theme-hue-acc) 40% 20%);
-    --color-slider-track: hsl(var(--theme-hue) 10% 15%);
+  /* SLIDER COLOR */
+  --color-slider-thumb: hsl(var(--theme-hue-acc) 80% 40%);
+  --color-slider-progress: hsl(var(--theme-hue-acc) 40% 20%);
+  --color-slider-track: hsl(var(--theme-hue) 10% 15%);
 
-    /* CROPPER COLOR */
-    --color-crop-outline: hsl(var(--theme-hue) 100% 90%);
-    --color-crop-dashed: hsl(var(--theme-hue) 50% 90% / 87.1%);
-    --color-crop-overlay: hsl(var(--theme-hue) 20% 10% / 51%);
-  }
+  /* CROPPER COLOR */
+  --color-crop-outline: hsl(var(--theme-hue) 100% 90%);
+  --color-crop-dashed: hsl(var(--theme-hue) 50% 90% / 87.1%);
+  --color-crop-overlay: hsl(var(--theme-hue) 20% 10% / 51%);
+}
 
-  /* PIXELFED */
-  &[color-scheme='pixelfed'] {
-    /* BACKGROUND-COLOR */
-    --color-bg-button: var(--light);
-    --color-bg-preview: var(--light-gray);
-    --color-bg-button-hover: var(--light-gray);
-    --color-bg-acc: var(--card-bg);
+/* PIXELFED */
+:host([color-scheme='pixelfed']) {
+  /* BACKGROUND-COLOR */
+  --color-bg-button: var(--light);
+  --color-bg-preview: var(--light-gray);
+  --color-bg-button-hover: var(--light-gray);
+  --color-bg-acc: var(--card-bg);
 
-    /* COLOR */
-    --color-fnt-default: var(--body-color);
-    --color-fnt-acc: var(--text-lighter);
+  /* COLOR */
+  --color-fnt-default: var(--body-color);
+  --color-fnt-acc: var(--text-lighter);
 
-    /* SCROLLBAR COLOR */
-    --color-scrollbar-thumb: var(--light-gray);
-    --color-scrollbar-both: var(--light-gray) transparent;
+  /* SCROLLBAR COLOR */
+  --color-scrollbar-thumb: var(--light-gray);
+  --color-scrollbar-both: var(--light-gray) transparent;
 
-    /* SLIDER COLOR */
-    --color-slider-thumb: var(--text-lighter);
-    --color-slider-progress: var(--card-bg);
-    --color-slider-track: var(--light);
+  /* SLIDER COLOR */
+  --color-slider-thumb: var(--text-lighter);
+  --color-slider-progress: var(--card-bg);
+  --color-slider-track: var(--light);
 
-    /* --color-slider-border: var(--text-lighter); */
+  /* --color-slider-border: var(--text-lighter); */
 
-    /* CROPPER COLOR */
-    --color-crop-outline: var(--light-gray);
-    --color-crop-dashed: #ffffffde;
-    --color-crop-overlay: #00000082;
-  }
+  /* CROPPER COLOR */
+  --color-crop-outline: var(--light-gray);
+  --color-crop-dashed: #ffffffde;
+  --color-crop-overlay: #00000082;
 }
 
 /* PIXELFED VARS */

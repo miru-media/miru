@@ -1,5 +1,5 @@
 /* MODULE PRELOADER */
-miru-image-editor {
+:host {
   /* PRELOADER */
   .miru--loading {
     position: relative;

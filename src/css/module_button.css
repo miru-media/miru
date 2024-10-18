@@ -1,5 +1,5 @@
 /* MODULE BUTTON */
-miru-image-editor {
+:host {
   &[show-labels='false'] .miru--button:has(.miru--button__icon) {
     .miru--button__label {
       display: none;
