@@ -22,7 +22,7 @@ export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: numbe
             type="button"
             onClick={resetCrop}
           >
-            <div class="i-tabler:frame-off miru--button__icon"></div>
+            <div class="i-tabler:circle-off miru--button__icon"></div>
             <span class="miru--button__label">Original</span>
           </button>
 

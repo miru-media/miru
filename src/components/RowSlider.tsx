@@ -11,9 +11,7 @@ export const RowSlider: Component<Record<string, unknown>> = (props) => {
         class="miru--button miru--small"
         onClick={() => alert('onClick function is missing!')}
       >
-        {props.default_value !== undefined && (
-          <div class="i-tabler:keyframe-align-center miru--button__icon"></div>
-        )}
+        {props.default_value !== undefined && <div class="i-tabler:circle-off miru--button__icon"></div>}
         <label class="miru--button__label">{props.label}</label>
       </button>
 
