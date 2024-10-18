@@ -161,7 +161,8 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
         const beforeNode = isDocFrag(appendTo)
           ? null
           : (isDocFrag(prevDomNode) ? prevDomNode[HNODE_MARKER] : prevDomNode) || marker?.nextElementSibling
-        appendTo.insertBefore(domNode, beforeNode)
+        if (beforeNode?.parentNode === appendTo) appendTo.insertBefore(domNode, beforeNode)
+        else appendTo.appendChild(domNode)
 
         if ((isHNode(child) && child !== prevAppended?.hNode) || domNode !== prevAppended?.domNode) {
           // remove the previous child if it changed
