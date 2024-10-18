@@ -114,11 +114,23 @@ export class ImageSourceState {
       if (!rotated) return size
 
       const dpr = win.devicePixelRatio
-
-      return fitToWidth(this.crop.value ?? rotated, {
+      const containerSize = {
         width: Math.max(size.width, MIN_CONTAINER_SIZE) * dpr,
         height: Math.max(size.height, MIN_CONTAINER_SIZE) * dpr,
-      })
+      }
+
+      const cropSize = this.crop.value ?? rotated
+
+      return fit(
+        // fit to just the containerSize can cause an infinite layout loop
+        // so instead fit to the width of the contianer
+        fitToWidth(cropSize, containerSize),
+        // then limit to the minimum of the image size and window size
+        {
+          width: Math.min(cropSize.width, window.innerWidth * dpr),
+          height: Math.min(cropSize.height, window.innerHeight * dpr),
+        },
+      )
     })
 
     this.#thumbnailSize = computed(() => {
