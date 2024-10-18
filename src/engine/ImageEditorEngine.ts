@@ -1,4 +1,4 @@
-import { Ref, computed, createEffectScope, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
+import { Ref, computed, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
 import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { ImageSourceState } from './ImageSourceState'
 import { EffectInternal } from '@/Effect'
@@ -41,29 +41,39 @@ export class ImageEditorEngine {
     if (!this.#scope) throw new Error(`[miru] must be run in an EffectScope`)
 
     this.#effectsIn = effects
-    watch([this.sourceInputs], ([sourceOptions], _prev, onCleanup) => {
-      const watchScope = createEffectScope()
+    watch([this.sourceInputs], ([sourceOptions], prev) => {
+      const prevSourceOptions = prev?.[0]
+      const prevSources = this.sources.value
+      const prevSourcesByOption = (prevSourceOptions ?? []).reduce((acc, so, i) => {
+        if (!acc.has(so)) acc.set(so, [])
+        const list = acc.get(so)!
+        list.push(prevSources[i])
+        return acc
+      }, new Map<ImageSourceOption, ImageSourceState[]>())
 
-      watchScope.run(() => {
-        const prevSources = this.sources.value
+      const newSources = new Set<ImageSourceState>()
 
-        // TODO: reuse unchanged sources
-        this.sources.value = sourceOptions.map(
-          (sourceOption, sourceIndex) =>
-            new ImageSourceState({
-              sourceOption,
-              thumbnailSize: ref({ width: 300, height: 300 }),
-              // reuse old canvas to avoid a moment of emptiness
-              context: prevSources[sourceIndex]?.context,
-              renderer: this.renderer,
-              effects: this.effects,
-              onRenderPreview: () => onRenderPreview(sourceIndex),
-              onEdit: (state) => onEdit(sourceIndex, state),
-            }),
-        )
+      this.#scope.run(() => {
+        sourceOptions.forEach((sourceOption, sourceIndex) => {
+          newSources.add(
+            prevSourcesByOption.get(sourceOption)?.shift() ??
+              new ImageSourceState({
+                sourceOption,
+                thumbnailSize: ref({ width: 300, height: 300 }),
+                renderer: this.renderer,
+                effects: this.effects,
+                onRenderPreview: () => onRenderPreview(sourceIndex),
+                onEdit: (state) => onEdit(sourceIndex, state),
+              }),
+          )
+        })
       })
 
-      onCleanup(() => watchScope.stop())
+      this.sources.value = Array.from(newSources)
+
+      prevSources.forEach((s) => !newSources.has(s) && s.dispose())
+      prevSources.length = 0
+      prevSourcesByOption.clear()
     })
 
     this.#scope.watch([this.sources, this.editStatesIn], ([sources, states]) => {

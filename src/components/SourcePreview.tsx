@@ -20,7 +20,7 @@ export const SourcePreview = ({
 
   return (
     <div class={() => ['miru--preview', source.value.isLoading && 'miru--loading']} style={style}>
-      {source.value?.context.canvas}
+      {() => source.value?.context.canvas}
     </div>
   )
 }

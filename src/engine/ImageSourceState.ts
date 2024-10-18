@@ -1,6 +1,15 @@
 import { DEFAULT_INTENSITY } from '@/constants'
 import { EffectInternal } from '@/Effect'
-import { Ref, computed, getCurrentScope, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
+import {
+  Ref,
+  computed,
+  createEffectScope,
+  getCurrentScope,
+  onScopeDispose,
+  ref,
+  toValue,
+  watch,
+} from '@/framework/reactivity'
 import { Renderer } from '@/engine/Renderer'
 import {
   AdjustmentsState,
@@ -13,7 +22,6 @@ import {
   SyncImageSource,
 } from '@/types'
 import {
-  Janitor,
   createDisplayContext,
   decodeAsyncImageSource,
   devSlowDown,
@@ -32,7 +40,6 @@ import {
 interface ImageSourceStateOptions {
   sourceOption: ImageSourceOption
   thumbnailSize: Ref<Size>
-  context?: ImageSourceState['context']
   renderer: Renderer
   effects: Ref<EffectInternal[]>
   onRenderPreview: () => void
@@ -72,7 +79,7 @@ export class ImageSourceState {
   onRenderPreview?
   forceResize = ref(false)
 
-  janitor = new Janitor()
+  #scope = createEffectScope()
 
   get isLoading() {
     return this.#isLoading.value
@@ -85,7 +92,6 @@ export class ImageSourceState {
   constructor({
     sourceOption,
     thumbnailSize,
-    context,
     renderer,
     effects,
     onRenderPreview,
@@ -98,10 +104,9 @@ export class ImageSourceState {
     this.#texture = renderer.createTexture()!
     this.#effects = effects
 
-    this.context = context ?? createDisplayContext()
-
     this.onRenderPreview = onRenderPreview
 
+    this.context = createDisplayContext()
     const canvasSize = useElementSize(this.context.canvas)
 
     this.#previewSize = computed(() => {
@@ -162,79 +167,86 @@ export class ImageSourceState {
         })
     }
 
-    // rotate the original image
-    watch(
-      [this.#original, () => this.crop.value?.rotate ?? 0, this.#error, this.pausePreview],
-      ([original, rotation, error, paused]) => {
-        if (paused > 0) return
+    this.#scope.run(() => {
+      // rotate the original image
+      watch(
+        [this.#original, () => this.crop.value?.rotate ?? 0, this.#error, this.pausePreview],
+        ([original, rotation, error, paused]) => {
+          if (paused > 0) return
 
-        if (error) {
-          this.#isLoading.value = false
-          this.#original.value = this.#rotated.value = undefined
-          return
-        }
+          if (error) {
+            this.#isLoading.value = false
+            this.#original.value = this.#rotated.value = undefined
+            return
+          }
 
-        const load = (image: SyncImageSource) => {
-          this.#renderer.loadImage(this.#texture, image)
-          this.#isLoading.value = false
-          this.previewKey.value++
-        }
+          const load = (image: SyncImageSource) => {
+            this.#renderer.loadImage(this.#texture, image)
+            this.#isLoading.value = false
+            this.previewKey.value++
+          }
 
-        this.#isLoading.value = true
+          this.#isLoading.value = true
 
-        if (!original || !rotation) {
-          this.#rotated.value = original
-          if (original) load(original)
+          if (!original || !rotation) {
+            this.#rotated.value = original
+            if (original) load(original)
 
-          return
-        }
+            return
+          }
 
-        const context = get2dContext()
-        const { canvas } = context
+          const context = get2dContext()
+          const { canvas } = context
 
-        if ((rotation / 90) % 2 === 0) {
-          canvas.width = original.width
-          canvas.height = original.height
-        } else {
-          canvas.width = original.height
-          canvas.height = original.width
-        }
+          if ((rotation / 90) % 2 === 0) {
+            canvas.width = original.width
+            canvas.height = original.height
+          } else {
+            canvas.width = original.height
+            canvas.height = original.width
+          }
 
-        context.save()
+          context.save()
 
-        context.translate(canvas.width / 2, canvas.height / 2)
-        context.rotate((rotation * Math.PI) / 180)
-        drawImage(context, original, -original.width / 2, -original.height / 2)
-        context.restore()
+          context.translate(canvas.width / 2, canvas.height / 2)
+          context.rotate((rotation * Math.PI) / 180)
+          drawImage(context, original, -original.width / 2, -original.height / 2)
+          context.restore()
 
-        this.#rotated.value = canvas
-        load(canvas)
-      },
-    )
+          this.#rotated.value = canvas
+          load(canvas)
+        },
+      )
 
-    watch(
-      [this.intensity, this.effect, this.adjustments, this.#previewSize, this.#isLoading, this.pausePreview],
-      () => this.previewKey.value++,
-    )
+      watch(
+        [
+          this.intensity,
+          this.effect,
+          this.adjustments,
+          this.#previewSize,
+          this.#isLoading,
+          this.pausePreview,
+        ],
+        () => this.previewKey.value++,
+      )
 
-    watch([this.previewKey], () => this.drawPreview())
+      watch([this.previewKey], () => this.drawPreview())
 
-    watch(
-      [this.#rotated, this.#thumbnailSize, this.adjustments, this.crop, this.#isLoading, this.pausePreview],
-      () => this.thumbnailKey.value++,
-    )
+      watch(
+        [this.#rotated, this.#thumbnailSize, this.adjustments, this.crop, this.#isLoading, this.pausePreview],
+        () => this.thumbnailKey.value++,
+      )
 
-    // emit edit on state change
-    watch([this.#state], ([newState]) => onEdit(newState))
+      // emit edit on state change
+      watch([this.#state], ([newState]) => onEdit(newState))
 
-    this.janitor.add(() => {
-      renderer.deleteTexture(this.#texture)
-      this.#renderer = undefined as never
-      this.#original.value = this.#rotated.value = undefined
-      this.#texture = this.context = this.onRenderPreview = undefined as never
+      onScopeDispose(() => {
+        renderer.deleteTexture(this.#texture)
+        this.#renderer = undefined as never
+        this.#original.value = this.#rotated.value = undefined
+        this.#texture = this.context = this.onRenderPreview = undefined as never
+      })
     })
-
-    onScopeDispose(() => this.janitor.dispose())
   }
 
   getState() {
@@ -306,5 +318,9 @@ export class ImageSourceState {
     renderer.setIntensity(DEFAULT_INTENSITY)
 
     await renderer.drawAndTransfer(context)
+  }
+
+  dispose() {
+    this.#scope.stop()
   }
 }
