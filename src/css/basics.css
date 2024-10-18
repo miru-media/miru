@@ -55,7 +55,7 @@ miru-image-editor {
     /* BACKGROUND-COLOR */
     --color-bg-preview: hsl(var(--theme-hue) 20% 10%);
     --color-bg-button: hsl(var(--theme-hue) 100% 3%);
-    --color-bg-button-hover: hsl(var(--theme-hue) 10% 9%);
+    --color-bg-button-hover: hsl(var(--theme-hue) 10% 17%);
     --color-bg-acc: hsl(var(--theme-hue) 10% 12%);
 
     /* COLOR */

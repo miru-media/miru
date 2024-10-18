@@ -63,13 +63,20 @@ miru-image-editor {
       &.miru--hov:not(.miru--acc) {
         border: 2px solid;
       }
+
+      /* &:not(.miru--hov):not(.miru--acc) canvas{
+        height: calc(100% - 1.75rem) ;
+        flex-grow: 0;
+      } */
     }
 
     /* BUTTON LABEL */
     .miru--button__label {
       flex-basis: calc(1em + var(--gap-default));
+      width: 100%;
       overflow: hidden;
-      line-height: calc(0.9em + var(--gap-default));
+      line-height: calc(1em + var(--gap-default));
+      text-align: center;
       text-overflow: ellipsis;
 
       white-space: nowrap;
