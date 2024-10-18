@@ -83,11 +83,11 @@ miru-image-editor {
 
     /* MENU BUTTON ROW SCROLLABLE */
     .miru--menu__row--scroll {
-      gap: 1rem;
+      gap: var(--gap-default);
       justify-content: unset;
       height: var(--heigth-menu-row-scroll);
-      padding-top: 0.5rem !important;
-      padding-bottom: 1rem !important;
+      padding-top: var(--gap-default);
+      padding-bottom: calc(0.5rem + var(--gap-default)) !important;
       overflow: scroll hidden !important;
       scroll-snap-type: x proximity;
       scroll-behavior: smooth;

@@ -67,10 +67,9 @@ miru-image-editor {
 
     /* BUTTON LABEL */
     .miru--button__label {
-      flex-basis: 2em;
-      padding: 0.4em 0;
+      flex-basis: calc(1em + var(--gap-default));
       overflow: hidden;
-      line-height: 1em;
+      line-height: calc(0.9em + var(--gap-default));
       text-overflow: ellipsis;
 
       white-space: nowrap;

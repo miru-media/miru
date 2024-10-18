@@ -3,15 +3,16 @@ miru-image-editor {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 
   /* SCALE */
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
 
   /* BUTTON SIZE */
   --heigth-menu-row: 4rem;
   --heigth-menu-row-scroll: 8rem;
-  --size-button-icon: 1.5rem;
+  --size-button-icon: 1.25rem;
   --roundness-button: 0.25rem;
+  --gap-default: 0.5rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;

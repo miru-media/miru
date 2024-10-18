@@ -15,7 +15,7 @@ miru-image-editor {
   .miru--slider {
     flex-grow: 1;
     height: calc(100% - 1.5rem);
-    margin: 0 1rem;
+    margin: 0 var(--gap-default);
     background-clip: padding-box;
     border-top: 1rem solid transparent;
     border-bottom: 1rem solid transparent;
