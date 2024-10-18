@@ -26,7 +26,7 @@ const config = {
     unoCss({ configOrPath: 'uno.postcss.config.ts' }),
     hoverMedia(),
     url(),
-    isProd && presetEnv(),
+    presetEnv(),
     isProd && cssnano({ preset: 'default' }),
   ],
 }
