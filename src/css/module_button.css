@@ -1,5 +1,15 @@
 /* MODULE BUTTON */
 miru-image-editor {
+  &[show-labels='false'] .miru--button:has(.miru--button__icon) {
+    .miru--button__label {
+      display: none;
+    }
+
+    .miru--button__icon {
+      margin-bottom: 0 !important;
+    }
+  }
+
   /* BUTTON */
   .miru--button {
     position: relative;
@@ -19,12 +29,13 @@ miru-image-editor {
     }
 
     & > *:not(:last-child, canvas) {
-      margin-bottom: calc(var(--heigth-menu-row) - var(--size-button-icon) - 1.85em) !important;
+      margin-bottom: calc(var(--heigth-menu-row) - var(--size-button-icon) - 1.85em);
     }
 
     /* BUTTON ICON */
     .miru--button__icon {
-      margin: auto;
+      margin-right: auto;
+      margin-left: auto;
       font-size: var(--size-button-icon);
     }
 
