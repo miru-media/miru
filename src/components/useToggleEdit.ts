@@ -28,5 +28,10 @@ export const useTogleEdit = <T extends keyof ImageEditState>(
     savedValue.value = undefined
   }
 
-  return { toggle, clearSavedValue, hasSavedValue: toRef(() => !!savedValue.value) }
+  return {
+    toggle,
+    clearSavedValue,
+    isToggledOff: toRef(() => savedValue.value !== undefined),
+    hasValue: toRef(() => toValue(source)?.[key].value !== undefined),
+  }
 }

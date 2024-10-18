@@ -167,7 +167,7 @@ export const FilterView = ({
           label: 'Intensity',
           min: 0,
           max: 1,
-          value: () => source.value?.intensity.value,
+          value: toRef(() => source.value?.intensity.value ?? 0),
           onInput: onInputIntensity,
           disabled: () => (source.value?.effect.value === -1 ? true : false),
         })}
