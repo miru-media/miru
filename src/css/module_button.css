@@ -49,7 +49,6 @@ miru-image-editor {
         border: 2px solid;
       }
 
-      &:not(.miru--acc):hover,
       &.miru--hov:not(.miru--acc) {
         border: 2px solid;
       }

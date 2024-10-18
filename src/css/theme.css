@@ -17,14 +17,14 @@ miru-image-editor {
   /* ACCENT */
   .miru--acc {
     background-color: var(--color-bg-acc);
-    border-color: var(--color-fnt-default) !important;
+    border-color: var(--color-fnt-acc) !important;
   }
 
   /* BUTTON HOVER */
-  .miru--button:not(.miru--acc):hover,
+  .miru--button:not(.miru--acc, :has(canvas)):hover,
   .miru--hov:not(.miru--acc) {
     background-color: var(--color-bg-button-hover);
-    border-color: var(--color-fnt-default) !important;
+    border-color: transparent !important;
   }
 
   /* MODE ENABLED */

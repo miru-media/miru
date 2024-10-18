@@ -83,6 +83,10 @@ miru-image-editor {
       scroll-snap-type: x proximity;
       scroll-behavior: smooth;
 
+      /* &.miru--menu__scroll-pending{
+        pointer-events: none;
+      } */
+
       .miru--button {
         flex-shrink: 0;
         scroll-snap-align: center;
