@@ -70,6 +70,15 @@ miru-image-editor {
       justify-content: space-around;
       height: var(--heigth-menu-row);
       overflow-y: hidden;
+
+      /* &:first-child .miru--button{
+        border-top-left-radius: 0% !important;
+        border-top-right-radius: 0% !important;
+      }
+      &:last-child .miru--button{
+        border-bottom-left-radius: 0% !important;
+        border-bottom-right-radius: 0% !important;
+      } */
     }
 
     /* MENU BUTTON ROW SCROLLABLE */
@@ -78,7 +87,7 @@ miru-image-editor {
       justify-content: unset;
       height: var(--heigth-menu-row-scroll);
       padding-top: 0.5rem !important;
-      padding-bottom: 0.75rem !important;
+      padding-bottom: 1rem !important;
       overflow: scroll hidden !important;
       scroll-snap-type: x proximity;
       scroll-behavior: smooth;

@@ -1,6 +1,6 @@
 /* BUTTON */
 .miru--button {
-  transition: all 0.5s;
+  transition: all 0.25s;
 }
 
 /* BUTTON HOVER */
@@ -22,4 +22,8 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.miru--menu__row {
+  transition: all 1s;
 }

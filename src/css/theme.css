@@ -4,7 +4,7 @@ miru-image-editor {
 
   /* SCROLLBAR THUMBS */
   scrollbar-color: var(--color-scrollbar-both);
-  background-color: var(--color-bg-default);
+  background-color: var(--color-bg-button);
 
   ::-webkit-scrollbar-thumb {
     background-color: var(--color-scrollbar-thumb);
