@@ -88,7 +88,7 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
       minCropBoxWidth: 1,
       minCropBoxHeight: 1,
       aspectRatio: aspectRatio.value,
-      autoCropArea: 0.9,
+      autoCropArea: 1,
       responsive: true,
       async ready() {
         await fitCrop()
