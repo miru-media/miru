@@ -61,7 +61,6 @@ export const FilterView = ({
 
   const container = ref<HTMLElement>()
   const scrolledEffectIndex = ref(-1)
-  const hasPendingScrollTarget = computed(() => scrolledEffectIndex.value !== effectOfCurrentSource.value)
 
   const ORIGINAL_EFFECT: EffectInternal = new EffectInternal(
     { name: 'Original', ops: [] },
@@ -133,14 +132,7 @@ export const FilterView = ({
         engine.sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
       }
       <div class="miru--menu">
-        <p
-          ref={container}
-          class={() => [
-            'miru--menu__row miru--menu__row--scroll',
-            hasPendingScrollTarget.value && 'miru--menu__scroll-pending',
-          ]}
-          onScroll={onScroll}
-        >
+        <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
           {() =>
             [ORIGINAL_EFFECT, ...engine.effects.value].map((effect, listIndex) => {
               const effectIndex = listIndex - 1
