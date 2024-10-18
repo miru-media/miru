@@ -19,7 +19,7 @@ miru-image-editor {
 
   /* LIGHT */
   &[color-scheme='light'] {
-    --theme-hue: 564;
+    --theme-hue: 204;
     --theme-hue-acc: 326;
 
     /* BACKGROUND-COLOR */
@@ -49,7 +49,7 @@ miru-image-editor {
 
   /* DARK */
   &[color-scheme='dark'] {
-    --theme-hue: 564;
+    --theme-hue: 204;
     --theme-hue-acc: 326;
 
     /* BACKGROUND-COLOR */
