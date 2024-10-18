@@ -5,10 +5,23 @@ export const RowSlider: Component<Record<string, unknown>> = (props) => {
     <p class="miru--menu__row">
       {/* {props.effect} */}
       {/* i-tabler:arrow-badge-down-filled */}
-      <div class="miru--slider-reset"></div>
-      <span class="miru--slider-label">{props.label}:</span>
+
+      <button
+        disabled={props.default_value === undefined}
+        class="miru--button miru--small"
+        onClick={() => alert('onClick function is missing!')}
+      >
+        {props.default_value !== undefined && (
+          <div class="i-tabler:keyframe-align-center miru--button__icon"></div>
+        )}
+        <label class="miru--button__label">{props.label}</label>
+      </button>
+
       <input type="range" step="0.01" class="miru--slider" {...props} />
-      <span class="miru--slider-label">{props.value}</span>
+
+      <button class="miru--button miru--small" disabled>
+        <label class="miru--button__label">{props.value}</label>
+      </button>
     </p>
   )
 }

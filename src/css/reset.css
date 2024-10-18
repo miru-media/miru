@@ -9,14 +9,6 @@ miru-image-editor {
   /* STACKING CONTEXT */
   isolation: isolate;
 
-  [disabled] {
-    &,
-    * {
-      pointer-events: none;
-      opacity: 0.5;
-    }
-  }
-
   /* RESETS */
   &,
   *,

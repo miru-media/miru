@@ -61,7 +61,11 @@ export const AdjustmentsView = ({
             ).map(({ type, icon }) => (
               <button
                 type="button"
-                class={['miru--button', () => currentType.value === type && 'miru--acc']}
+                class={[
+                  'miru--button',
+                  () => currentType.value === type && 'miru--acc',
+                  () => (source.value?.adjustments.value?.[type] ? 'miru--enabled' : ''),
+                ]}
                 onClick={() => (currentType.value = type)}
               >
                 <div class={`${icon} miru--button__icon`}></div>
@@ -72,11 +76,16 @@ export const AdjustmentsView = ({
         </p>
 
         {RowSlider({
-          label: () => labels[currentType.value],
+          // label: () => labels[currentType.value],
+          label: 'Reset',
           min: -1,
           max: 1,
-          value: () => source.value?.adjustments.value?.[currentType.value],
+          value: () =>
+            source.value?.adjustments.value?.[currentType.value]
+              ? source.value?.adjustments.value?.[currentType.value]
+              : 0,
           oninput: onInputSlider,
+          default_value: 0,
         })}
       </div>
     </>

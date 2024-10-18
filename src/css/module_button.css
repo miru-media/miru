@@ -8,6 +8,16 @@ miru-image-editor {
     overflow: hidden;
     cursor: pointer;
 
+    &[disabled] {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    &.miru--small {
+      flex-basis: var(--heigth-menu-row);
+      flex-grow: 0;
+    }
+
     & > *:not(:last-child, canvas) {
       margin-bottom: calc(var(--heigth-menu-row) - var(--size-button-icon) - 1.85em) !important;
     }

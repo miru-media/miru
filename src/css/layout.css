@@ -3,6 +3,11 @@ miru-image-editor {
   /* SIZE */
   max-height: 90vh;
 
+  /* UNUSED ELEMENTS */
+  .miru--unused {
+    display: none;
+  }
+
   /* MAIN FLEX CONTAINERS */
   &,
   .miru--main {
