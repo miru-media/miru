@@ -49,11 +49,9 @@ export class EffectInternal {
         luts.push(resource.texture)
       }
 
-      const intensity = op.intensity ?? [0, 1]
-
       return {
         ...op,
-        intensity,
+        intensity: op.intensity ?? 1,
         image: imageIndex,
         lut: lutIndex,
       }

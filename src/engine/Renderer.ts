@@ -131,7 +131,7 @@ export class Renderer {
       type: EffectOpType.NOOP,
       image: 0,
       lut: 0,
-      intensity: [0, 0],
+      intensity: 0,
     }
 
     for (let i = 0; i < MAX_EFFECT_OPS; i++) paddedOps[i] = ops[i] || noop

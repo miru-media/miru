@@ -74,7 +74,7 @@ export interface RendererEffectOp {
   image: number
   lut: number
   args?: number[]
-  intensity: [from: number, to: number]
+  intensity: number
 }
 
 export interface Effect {
@@ -84,7 +84,7 @@ export interface Effect {
     image?: ImageSourceOption
     lut?: ImageSourceOption
     args?: number[]
-    intensity?: [from: number, to: number]
+    intensity?: number
   }[]
 }
 

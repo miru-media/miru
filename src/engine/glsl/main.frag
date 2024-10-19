@@ -36,7 +36,7 @@ struct EffectOp {
   int image;
   int lut;
   float args[4];
-  float intensity[2];
+  float intensity;
 };
 uniform EffectOp u_operations[MAX_EFFECT_OPS];
 
@@ -62,7 +62,7 @@ vec4 lookupWithIndex(vec4 color, int lutIndex, float intensity) {
 }
 
 vec4 applyOperation(EffectOp op, vec4 color, vec2 coord, float effectIntensity) {
-  float intensity = mix(op.intensity[0], op.intensity[1], effectIntensity);
+  float intensity = op.intensity * effectIntensity;
 
   switch (op.type) {
     case OP_LUT: return lookupWithIndex(color, op.lut, intensity);
