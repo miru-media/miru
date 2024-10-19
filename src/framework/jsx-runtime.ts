@@ -1,5 +1,5 @@
 import { MaybeArray } from '@/types'
-import { arrayFlatToValue } from '@/utils'
+import { arrayFlatToValue, toKebabCase } from '@/utils'
 
 import {
   EffectScope,
@@ -14,6 +14,7 @@ import {
   toValue,
   watch,
 } from './reactivity'
+import { SVG_TYPES } from './svgTypes'
 
 declare global {
   /** @internal */
@@ -125,6 +126,7 @@ export const h = (type: string | Component, props: ComponentProps): HNode => {
 const createElementHNode = (type: string, props: ComponentProps): HNode => {
   const appendedNodes: AppendedChild[] = []
 
+  const isSvg = SVG_TYPES.has(type)
   let element: Element | DocumentFragment
   let marker: Comment | null = null
 
@@ -134,7 +136,9 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
     element.appendChild(marker)
     element[HNODE_MARKER] = marker
   } else {
-    element = document.createElement(type)
+    element = isSvg
+      ? document.createElementNS('http://www.w3.org/2000/svg', type)
+      : document.createElement(type)
   }
 
   const hNode: HNode = {
@@ -199,13 +203,13 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
       const value = props[key]
       const first2Chars = key.slice(0, 2)
 
-      if (first2Chars === 'a:') {
-        const attrName = key.slice(2)
-        element.setAttribute(attrName, toValue(value) as string)
-      } else if (first2Chars === 'on') {
+      if (first2Chars === 'on') {
         ;(element as any)[key.toLowerCase()] = isRef(value) ? value.value : value
       } else if (key === 'class') {
-        element.className = toClassName(value)
+        element.setAttribute('class', toClassName(value))
+      } else if (isSvg) {
+        const svgKey = key === 'viewBox' ? key : toKebabCase(key)
+        element.setAttribute(svgKey, String(toValue(value)))
       } else if (key === 'style' || !(key in element)) {
         element.setAttribute(key, toValue(value) as string)
       } else {
@@ -217,9 +221,20 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
   // component is to be unmounted
   // assume a parent component will remove it from the DOM
   onScopeDispose(() => {
-    for (let key in props) {
-      if (isIgnoredPropKey(key) || key.startsWith('a:')) continue
-      if (key.startsWith('on')) key = key.toLowerCase()
+    for (const key in props) {
+      if (isIgnoredPropKey(key)) continue
+
+      if (key.startsWith('on')) {
+        ;(element as any)[key.toLowerCase()] = null
+        continue
+      }
+
+      if (isSvg) {
+        const svgKey = key === 'viewBox' ? key : toKebabCase(key)
+        element.removeAttribute(svgKey)
+        continue
+      }
+
       if (key in element && key !== 'style') (element as any)[key] = null
       else element.removeAttribute(key)
     }

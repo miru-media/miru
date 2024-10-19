@@ -39,3 +39,7 @@ export const devSlowDown: DevSlowDown | undefined = VITE_DEV_SLOW_DOWN_MS
       return value
     }
   : undefined
+
+// https://stackoverflow.com/a/63116134
+export const toKebabCase = (str: string) =>
+  str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
