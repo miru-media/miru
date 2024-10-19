@@ -54,11 +54,11 @@ export const AdjustmentsView = ({
           {() =>
             (
               [
-                { type: 'brightness', icon: 'i-tabler:sun' },
-                { type: 'contrast', icon: 'i-tabler:contrast-filled' },
-                { type: 'saturation', icon: 'i-tabler:droplet-half-filled' },
+                { type: 'brightness', Icon: IconTablerSun },
+                { type: 'contrast', Icon: IconTablerContrastFilled },
+                { type: 'saturation', Icon: IconTablerDropletHalfFilled },
               ] as const
-            ).map(({ type, icon }) => (
+            ).map(({ type, Icon }) => (
               <button
                 type="button"
                 class={[
@@ -68,7 +68,7 @@ export const AdjustmentsView = ({
                 ]}
                 onClick={() => (currentType.value = type)}
               >
-                <div class={`${icon} miru--button__icon`}></div>
+                <Icon class="miru--button__icon" />
                 <span class="miru--button__label">{labels[type]}</span>
               </button>
             ))

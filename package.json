@@ -17,7 +17,7 @@
     "./miru.css": "./dist/miru.css"
   },
   "scripts": {
-    "dev": "VITE_NO_SHADOW_ROOT=1 vite",
+    "dev": "vite",
     "dev:slow": "VITE_DEV_SLOW_DOWN_MS=5000 pnpm run dev",
     "build": "pnpm check && NODE_ENV=production rollup --config rollup.config.js",
     "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
@@ -48,6 +48,8 @@
     "@rollup/plugin-replace": "^5.0.7",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-url": "^8.0.2",
+    "@svgr/core": "^8.1.0",
+    "@svgr/plugin-jsx": "^8.1.0",
     "@types/debug": "^4.1.12",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.5.0",
@@ -88,6 +90,8 @@
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.5.0",
     "unocss": "^0.62.3",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-icons": "^0.19.3",
     "vite": "5.4.5",
     "vite-bundle-analyzer": "^0.10.6"
   },

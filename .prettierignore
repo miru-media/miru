@@ -5,3 +5,5 @@ bin
 *-lock.json
 *-lock.yaml
 *.lock
+auto-imports.d.ts
+.eslintrc-auto-import.json

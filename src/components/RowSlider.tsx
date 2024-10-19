@@ -13,11 +13,8 @@ export const RowSlider: Component<{
 
   return (
     <p class="miru--menu__row">
-      {/* {props.effect} */}
-      {/* i-tabler:arrow-badge-down-filled */}
-
       <button disabled={!hasToggle} class="miru--button miru--small" onClick={toggleContext?.toggle}>
-        {() => toggleContext?.hasValue.value && <div class="i-tabler:circle-off miru--button__icon"></div>}
+        {() => toggleContext?.hasValue.value && <IconTablerCircleOff class="miru--button__icon" />}
         <label class="miru--button__label">{label}</label>
       </button>
 

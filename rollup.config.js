@@ -11,6 +11,9 @@ import url from '@rollup/plugin-url'
 import { defineConfig } from 'rollup'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
 import filesize from 'rollup-plugin-filesize'
+import autoImport from 'unplugin-auto-import/rollup'
+import icons from 'unplugin-icons/rollup'
+import { autoImportOptions } from './tools/autoImportOptions.js'
 
 const NODE_ENV = process.env.NODE_ENV
 const isProd = NODE_ENV === 'production'
@@ -45,13 +48,14 @@ export default defineConfig({
         'import.meta.env.PROD': JSON.stringify(isProd),
         'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
         'import.meta.env.ASSETS_PATH': '"/assets/"',
-        'import.meta.env.VITE_NO_SHADOW_ROOT': 'false',
         'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
       },
       preventAssignment: true,
     }),
     postcss({ inject: false }),
-    glslOptimize({ optimize: !isProd, glslify: true }),
+    autoImport(autoImportOptions),
+    icons({ compiler: 'jsx', jsx: 'preact' }),
+    glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
     url({
       limit: 0,
       destDir: resolve(dist, 'assets'),

@@ -52,23 +52,23 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
           {[
             {
               view: EditorView.Crop,
-              icon: 'i-tabler:crop',
+              Icon: IconTablerCrop,
               active: () => !!currentSource.value?.crop.value,
               label: 'Crop',
             },
             {
               view: EditorView.Adjust,
-              icon: 'i-tabler:filters',
+              Icon: IconTablerFilters,
               active: () => hasAdjustment.value,
               label: 'Adjust',
             },
             {
               view: EditorView.Filter,
-              icon: 'i-tabler:wand',
+              Icon: IconTablerWand,
               active: () => effectOfCurrentSource.value >= 0,
               label: 'Filter',
             },
-          ].map(({ view, icon, active, label }) => (
+          ].map(({ view, Icon, active, label }) => (
             <button
               type="button"
               class={() => [
@@ -78,7 +78,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
               ]}
               onClick={() => (currentView.value = view)}
             >
-              <div class={`${icon} miru--button__icon`}></div>
+              <Icon class="miru--button__icon" />
               <span class="miru--button__label">{label}</span>
             </button>
           ))}
