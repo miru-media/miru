@@ -156,7 +156,11 @@ export class ImageSourceState {
           .catch(() => undefined)
       } else this.#original.value = fullSizeImage
     } else {
-      const { promise } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin)
+      const { promise } = decodeAsyncImageSource(
+        sourceOption.source,
+        sourceOption.crossOrigin,
+        sourceOption.isVideo,
+      )
 
       ;(devSlowDown ? devSlowDown(promise) : promise)
         .then((decoded) => {

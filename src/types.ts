@@ -7,6 +7,7 @@ export type SyncImageSource =
   | OffscreenCanvas
   | ImageData
   | ImageBitmap
+export type VideoSource = HTMLVideoElement | AsyncImageSource
 export type AsyncImageSource = Blob | string
 export type ImageSource = SyncImageSource | AsyncImageSource
 export type CrossOrigin = 'anonymous' | 'use-credentials' | null
@@ -58,8 +59,18 @@ export interface ImageSourceObject {
   crossOrigin?: CrossOrigin
   isLut?: boolean
   isHald?: boolean
+  isVideo?: boolean
 }
 export type ImageSourceOption = ImageSource | ImageSourceObject
+
+export interface VideoSourceObject {
+  source: VideoSource | AsyncImageSource
+  crossOrigin?: CrossOrigin
+  isLut?: boolean
+  isHald?: boolean
+  isVideo?: boolean
+}
+export type VideoSourceOption = VideoSource | VideoSourceObject
 
 export type EffectOpType = number
 

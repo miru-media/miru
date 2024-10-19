@@ -14,7 +14,7 @@ export class TextureResource {
   texture: WebGLTexture
 
   constructor(
-    { source, isLut, isHald }: ImageSourceObject,
+    { source, isLut, isHald, isVideo, crossOrigin }: ImageSourceObject,
     renderer: Renderer,
     scratchpad: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   ) {
@@ -42,7 +42,7 @@ export class TextureResource {
     } else {
       this.isLoading.value = true
 
-      const decode = decodeAsyncImageSource(source)
+      const decode = decodeAsyncImageSource(source, crossOrigin, isVideo)
 
       decode.promise
         .then(onDecoded)

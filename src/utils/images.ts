@@ -145,7 +145,11 @@ export const isOffscreenCanvas = (canvas: HTMLCanvasElement | OffscreenCanvas): 
 
 const isCrossOrigin = (url: string) => new URL(url, location.href).origin !== location.origin
 
-export const decodeAsyncImageSource = (source: AsyncImageSource, crossOrigin?: CrossOrigin) => {
+export const decodeAsyncImageSource = <IsVideo extends boolean>(
+  source: AsyncImageSource,
+  crossOrigin: CrossOrigin | undefined,
+  isVideo: IsVideo | undefined,
+) => {
   let isClosed = false
   let toRevoke: string | undefined
 
@@ -153,27 +157,64 @@ export const decodeAsyncImageSource = (source: AsyncImageSource, crossOrigin?: C
     source = toRevoke = URL.createObjectURL(source)
   }
 
-  const img = new Image()
+  const { decodePromise, media } = isVideo
+    ? decodeVideoUrl(source, crossOrigin)
+    : decodeImageUrl(source, crossOrigin)
 
-  // set crossOrigin value if provided
-  if (crossOrigin !== undefined) img.crossOrigin = crossOrigin
-  // otherwise set anonymous if needed
-  else if (isCrossOrigin(source)) img.crossOrigin = 'anonymous'
-
-  img.src = source
-  const decodePromise = img.decode().then(() => img)
-
-  const promise = (devSlowDown ? devSlowDown(decodePromise) : decodePromise)
+  const promise = (devSlowDown ? devSlowDown(Promise.resolve(decodePromise)) : decodePromise)
     // reject if already closed
-    .then((result) => (isClosed ? Promise.reject(new Error('[miry] decode source was closed')) : result))
+    .then((result) => (isClosed ? Promise.reject(new Error('[miru] decode source was closed')) : result))
 
   const close = () => {
     isClosed = true
-    img.src = ''
+    media.src = ''
+    media.remove()
     if (toRevoke) URL.revokeObjectURL(toRevoke)
   }
 
-  return { promise, close }
+  return { promise, media: media as IsVideo extends true ? HTMLVideoElement : HTMLImageElement, close }
+}
+
+const decodeImageUrl = (url: string, crossOrigin?: CrossOrigin) => {
+  const img = new Image()
+
+  setMediaSrc(img, url, crossOrigin)
+  const decodePromise = img.decode().then(() => img)
+  return { decodePromise, media: img }
+}
+
+const decodeVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
+  const video = document.createElement('video')
+  video.preload = 'metadata'
+  video.playsInline = true
+  video.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
+  document.body.appendChild(video)
+  setMediaSrc(video, url, crossOrigin)
+
+  const decodePromise = new Promise<HTMLVideoElement>((resolve, reject) => {
+    const onLoadedMetadata = () => {
+      resolve(video)
+      video.removeEventListener('abort', onAbort)
+    }
+    const onAbort = () => {
+      reject(new Error('aborted'))
+      video.removeEventListener('loadedmetadata', onLoadedMetadata)
+    }
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true })
+    video.addEventListener('abort', onAbort, { once: true })
+  })
+
+  return { decodePromise, media: video }
+}
+
+const setMediaSrc = (media: HTMLImageElement | HTMLMediaElement, url: string, crossOrigin?: CrossOrigin) => {
+  // set crossOrigin value if provided
+  if (crossOrigin !== undefined) media.crossOrigin = crossOrigin
+  // otherwise set anonymous if needed
+  else if (isCrossOrigin(url)) media.crossOrigin = 'anonymous'
+
+  media.src = url
 }
 
 export const resizeImageSync = (
