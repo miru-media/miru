@@ -1,14 +1,15 @@
-import { InputEvent } from '@/types'
-import { RowSlider } from './RowSlider'
-import { useCrop } from './useCrop'
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
+import { ImageEditor } from '@/editor/ImageEditor'
 import { Component } from '@/framework/jsx-runtime'
 import { toValue } from '@/framework/reactivity'
+import { InputEvent } from '@/types'
 
-export const CropView: Component<{ engine: ImageEditorEngine; sourceIndex: number }> = (props) => {
-  const engine = toValue(props.engine)
+import { RowSlider } from './RowSlider'
+import { useCrop } from './useCrop'
+
+export const CropView: Component<{ editor: ImageEditor; sourceIndex: number }> = (props) => {
+  const editor = toValue(props.editor)
   const { aspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom } = useCrop({
-    engine,
+    editor,
     sourceIndex: toValue(props.sourceIndex),
   })
 

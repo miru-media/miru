@@ -1,12 +1,14 @@
-import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '@/constants'
-import { EffectInternal } from '@/Effect'
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
-import { MaybeRefOrGetter, Ref, computed, effect, ref, toRef, toValue, watch } from '@/framework/reactivity'
-import { createDisplayContext, getCenter, useElementSize } from '@/utils'
 import { throttle } from 'throttle-debounce'
-import { RowSlider } from './RowSlider'
+
+import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '@/constants'
+import { ImageEditor } from '@/editor/ImageEditor'
+import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { EffectInternal } from '@/Effect'
+import { computed, effect, MaybeRefOrGetter, ref, Ref, toRef, toValue, watch } from '@/framework/reactivity'
 import { DisplayContext, InputEvent } from '@/types'
-import { ImageSourceState } from '@/engine/ImageSourceState'
+import { createDisplayContext, getCenter, useElementSize } from '@/utils'
+
+import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
 
 const FilterItem = ({
@@ -18,7 +20,7 @@ const FilterItem = ({
   isActive,
   onClick,
 }: {
-  source: Ref<ImageSourceState | undefined>
+  source: Ref<ImageSourceInternal | undefined>
   effect: EffectInternal
   index: number
   context: MaybeRefOrGetter<DisplayContext | undefined>
@@ -48,15 +50,15 @@ const FilterItem = ({
 }
 
 export const FilterView = ({
-  engine,
+  editor,
   sourceIndex,
   showPreviews,
 }: {
-  engine: ImageEditorEngine
+  editor: ImageEditor
   sourceIndex: MaybeRefOrGetter<number>
   showPreviews?: MaybeRefOrGetter<boolean | undefined>
 }) => {
-  const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
+  const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
   const effectOfCurrentSource = toRef(() => source.value?.effect.value ?? -1)
 
   const container = ref<HTMLElement>()
@@ -64,8 +66,8 @@ export const FilterView = ({
 
   const ORIGINAL_EFFECT: EffectInternal = new EffectInternal(
     { name: 'Original', ops: [] },
-    engine.renderer,
-    engine.scratchPad2d,
+    editor.renderer,
+    editor.scratchPad2d,
   )
 
   const onInputIntensity = (event: InputEvent) =>
@@ -76,7 +78,7 @@ export const FilterView = ({
     createDisplayContext(),
   ])
 
-  watch([engine.effects], ([effects], _prev) => {
+  watch([editor.effects], ([effects], _prev) => {
     const newContexts = (contexts.value = contexts.value.slice(0, effects.length + 1))
     effects.forEach((_, index) => (newContexts[index + 1] ??= createDisplayContext()))
   })
@@ -129,12 +131,12 @@ export const FilterView = ({
     <>
       {() =>
         toValue(showPreviews) &&
-        engine.sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
+        editor.sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
       <div class="miru--menu">
         <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
           {() =>
-            [ORIGINAL_EFFECT, ...engine.effects.value].map((effect, listIndex) => {
+            [ORIGINAL_EFFECT, ...editor.effects.value].map((effect, listIndex) => {
               const effectIndex = listIndex - 1
 
               return (

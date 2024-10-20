@@ -1,13 +1,14 @@
 import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+
 import basicSsl from '@vitejs/plugin-basic-ssl'
-import unocss from 'unocss/vite'
+import glslOptimize from 'rollup-plugin-glsl-optimize'
 import { presetIcons, presetUno } from 'unocss'
+import unocss from 'unocss/vite'
 import autoImport from 'unplugin-auto-import/vite'
 import icons from 'unplugin-icons/vite'
-
+import { defineConfig } from 'vite'
 import analyzer from 'vite-bundle-analyzer'
-import glslOptimize from 'rollup-plugin-glsl-optimize'
+
 import { autoImportOptions } from './tools/autoImportOptions'
 
 const isProd = process.env.NODE_ENV === 'production'

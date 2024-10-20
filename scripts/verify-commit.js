@@ -1,8 +1,9 @@
 // Borrowed from https://github.com/vuejs/core/blob/29de6f8/scripts/verify-commit.js
 
-import pico from 'picocolors'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+
+import pico from 'picocolors'
 
 const msgPath = path.resolve('.git/COMMIT_EDITMSG')
 const msg = readFileSync(msgPath, 'utf-8').trim()
@@ -18,7 +19,7 @@ if (!commitRE.test(msg)) {
         `  Proper commit message format is required for automated changelog generation. Examples:\n\n`,
       ) +
       `    ${pico.green(`fix(ui): correct light mode colors`)}\n` +
-      `    ${pico.green(`feat(engine): transform image in shader`)}\n` +
+      `    ${pico.green(`feat(renderer): transform image in shader`)}\n` +
       `    ${pico.green(`chore: update dependencies`)}\n\n` +
       pico.red(`  See .github/commit-convention.md for more details.\n`),
   )

@@ -1,12 +1,11 @@
 import type * as twgl from 'twgl.js'
 
 import * as GL from '@/GL'
-
 import { win } from '@/utils/window'
 
-export * as EffectOpType from '@/engine/EffectOpType'
+export * as EffectOpType from '@/editor/EffectOpType'
 
-const { userAgent = '' } = win.navigator || {}
+const { userAgent = '' } = (win.navigator as Navigator | undefined) ?? {}
 export const IS_SAFARI_16 = userAgent.includes('AppleWebKit/') && userAgent.includes('Version/16.')
 export const IS_FIREFOX = userAgent.includes('Gecko/')
 

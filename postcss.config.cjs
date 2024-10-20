@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unsafe-call */
 // @ts-nocheck
-const url = require('postcss-url')
-const postcssImport = require('postcss-import')
-const presetEnv = require('postcss-preset-env')
 const cssnano = require('cssnano')
 const hoverMedia = require('postcss-hover-media-feature')
+const postcssImport = require('postcss-import')
+const presetEnv = require('postcss-preset-env')
+const url = require('postcss-url')
 
 const isProd = process.env.NODE_ENV === 'production'
 

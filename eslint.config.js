@@ -1,16 +1,19 @@
 import eslint from '@eslint/js'
-import tseslint from 'typescript-eslint'
+import importPlugin from 'eslint-plugin-import'
+import * as tseslint from 'typescript-eslint'
+// @ts-expect-error missing types
 
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
-  // importPlugin.flatConfigs.recommended,
-  // importPlugin.flatConfigs.warnings,
-  // importPlugin.flatConfigs.typescript,
+  ...tseslint.configs.strictTypeChecked,
+  importPlugin.flatConfigs.recommended,
+  importPlugin.flatConfigs.warnings,
+  importPlugin.flatConfigs.typescript,
   {
     settings: {
-      'import/resolver': { typescript: null },
+      'import/resolver': { typescript: { project: '.' } },
     },
     languageOptions: {
       parserOptions: {
@@ -25,19 +28,26 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'warn',
       '@typescript-eslint/no-unsafe-return': 'warn',
       '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_' }],
-      /*
+      '@typescript-eslint/no-confusing-void-expression': [
+        'error',
+        { ignoreArrowShorthand: true, ignoreVoidOperator: true },
+      ],
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        { allowBoolean: true, allowNumber: true },
+      ],
       'import/order': [
         'error',
         {
           alphabetize: { order: 'asc', caseInsensitive: true },
           'newlines-between': 'always',
-          groups: ['builtin', 'external', 'internal', 'parent', 'index', 'sibling'],
+          groups: ['builtin', 'external', 'internal', 'parent', 'index'],
         },
       ],
-      'import/no-cycle': 'error'
-      */
+      'import/no-cycle': 'error',
       'no-undef': 'off',
-      'sort-imports': ['error', { ignoreDeclarationSort: true }],
+      'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
     },
   },
   {

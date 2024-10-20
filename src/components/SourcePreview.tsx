@@ -1,25 +1,26 @@
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
-import { MaybeRefOrGetter, computed, toValue } from '@/framework/reactivity'
+import { ImageEditor } from '@/editor/ImageEditor'
+import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { computed, MaybeRefOrGetter, toValue } from '@/framework/reactivity'
 import { useEventListener } from '@/utils'
 
 export const SourcePreview = ({
-  engine,
+  editor,
   sourceIndex,
   style = '',
   onClick,
 }: {
-  engine: MaybeRefOrGetter<ImageEditorEngine>
+  editor: MaybeRefOrGetter<ImageEditor>
   sourceIndex: MaybeRefOrGetter<number>
   style?: MaybeRefOrGetter<string>
   onClick?: (event: Event) => unknown
 }) => {
-  const { sources } = toValue(engine)
-  const source = computed(() => sources.value[toValue(sourceIndex)])
+  const { sources } = toValue(editor)
+  const source = computed((): ImageSourceInternal | undefined => sources.value[toValue(sourceIndex)])
 
   if (onClick) useEventListener(() => source.value?.context.canvas, 'click', onClick)
 
   return (
-    <div class={() => ['miru--preview', source.value.isLoading && 'miru--loading']} style={style}>
+    <div class={() => ['miru--preview', source.value?.isLoading !== false && 'miru--loading']} style={style}>
       {() => source.value?.context.canvas}
     </div>
   )

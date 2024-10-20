@@ -1,22 +1,23 @@
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
+import { ImageEditor } from '@/editor/ImageEditor'
+import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { computed, MaybeRefOrGetter, ref, toRef, toValue } from '@/framework/reactivity'
 import { AdjustmentsState, InputEvent } from '@/types'
+
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
-import { MaybeRefOrGetter, computed, ref, toRef, toValue } from '@/framework/reactivity'
-import { ImageSourceState } from '@/engine/ImageSourceState'
 import { useTogleEdit } from './useToggleEdit'
 
 export const AdjustmentsView = ({
-  engine,
+  editor,
   sourceIndex,
   showPreviews,
 }: {
-  engine: ImageEditorEngine
+  editor: ImageEditor
   sourceIndex: MaybeRefOrGetter<number>
   showPreviews?: MaybeRefOrGetter<boolean | undefined>
 }) => {
-  const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
-  const { sources } = engine
+  const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
+  const { sources } = editor
 
   const currentType = ref<keyof AdjustmentsState>('brightness')
   const labels = {
@@ -47,7 +48,7 @@ export const AdjustmentsView = ({
     <>
       {() =>
         toValue(showPreviews) &&
-        sources.value.map((_source, index) => <SourcePreview engine={engine} sourceIndex={index} />)
+        sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
       <div class="miru--menu">
         <p class="miru--menu__row">
@@ -82,7 +83,7 @@ export const AdjustmentsView = ({
           max: 1,
           value: toRef(() =>
             source.value?.adjustments.value?.[currentType.value]
-              ? source.value?.adjustments.value?.[currentType.value]
+              ? source.value.adjustments.value[currentType.value]
               : 0,
           ),
           onInput: onInputSlider,

@@ -1,16 +1,16 @@
 import { DEFAULT_INTENSITY } from '@/constants'
 import { EffectInternal } from '@/Effect'
 import {
-  Ref,
   computed,
   createEffectScope,
   getCurrentScope,
   onScopeDispose,
   ref,
+  Ref,
   toValue,
   watch,
 } from '@/framework/reactivity'
-import { Renderer } from '@/engine/Renderer'
+import { Renderer } from '@/renderer/Renderer'
 import {
   AdjustmentsState,
   Context2D,
@@ -37,7 +37,7 @@ import {
   win,
 } from '@/utils'
 
-interface ImageSourceStateOptions {
+interface ImageSourceInternalOptions {
   sourceOption: ImageSourceOption
   thumbnailSize: Ref<Size>
   renderer: Renderer
@@ -46,7 +46,7 @@ interface ImageSourceStateOptions {
   onEdit: (state: ImageEditState) => void
 }
 
-export class ImageSourceState {
+export class ImageSourceInternal {
   #renderer: Renderer
   #texture: WebGLTexture
   #original = ref<SyncImageSource>()
@@ -96,7 +96,7 @@ export class ImageSourceState {
     effects,
     onRenderPreview,
     onEdit,
-  }: ImageSourceStateOptions) {
+  }: ImageSourceInternalOptions) {
     const currentScope = getCurrentScope()
     if (!currentScope) throw new Error(`[miru] ImageSource must be created within an EffectScope`)
 
@@ -166,7 +166,7 @@ export class ImageSourceState {
         .then((decoded) => {
           this.#original.value = decoded
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           this.#error.value = error
         })
     }

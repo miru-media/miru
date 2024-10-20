@@ -14,6 +14,7 @@ import {
   Tlwh,
   Xywh,
 } from '../types'
+
 import { devSlowDown } from './general'
 
 const getCanvasContext = (

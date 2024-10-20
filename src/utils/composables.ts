@@ -1,5 +1,6 @@
-import { MaybeRefOrGetter, effect, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
 import { throttle } from 'throttle-debounce'
+
+import { effect, MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
 
 export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | undefined>) => {
   const initialElement = toValue(element)
@@ -9,10 +10,12 @@ export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | un
   })
 
   const observer = new ResizeObserver(([entry]) => {
-    const { contentBoxSize } = entry
+    if ('contentBoxSize' in (entry as never)) {
+      const { contentBoxSize } = entry
 
-    if (contentBoxSize) {
-      const sizeItem = Array.isArray(contentBoxSize) ? contentBoxSize[0] : contentBoxSize
+      const sizeItem = (
+        Array.isArray(contentBoxSize) ? contentBoxSize[0] : contentBoxSize
+      ) as ResizeObserverSize
       size.value = { width: sizeItem.inlineSize, height: sizeItem.blockSize }
     } else {
       size.value = { width: entry.contentRect.width, height: entry.contentRect.height }

@@ -1,12 +1,14 @@
-import { EffectScope, Ref, createEffectScope, ref } from '@/framework/reactivity'
-import { Context2D, EditorView, Effect, ImageEditState, ImageSource, ImageSourceOption } from '@/types'
-import { getDefaultFilters } from '../effects'
-import { renderComponentTo } from '@/components/renderTo'
 import { ImageEditorUI } from '@/components/ImageEditorUI'
-import { ImageEditorEngineVue, createEngine, engineMap } from './wrappers'
+import { renderComponentTo } from '@/components/renderTo'
+import { createEffectScope, EffectScope, ref, Ref } from '@/framework/reactivity'
+import { Context2D, EditorView, Effect, ImageEditState, ImageSource, ImageSourceOption } from '@/types'
+
+import { getDefaultFilters } from '../effects'
+
+import { createEditor, editorMap, ImageEditorVue } from './wrappers'
 
 interface VueInstance {
-  engine: ImageEditorEngineVue
+  editor: ImageEditorVue
   sources?: ImageSource[]
   view?: EditorView
   _view: Ref<EditorView>
@@ -36,8 +38,8 @@ export default {
     this._effects = ref([])
     this._view = ref(EditorView.Crop)
 
-    this.engine = this.scope.run(() =>
-      createEngine({
+    this.editor = this.scope.run(() =>
+      createEditor({
         effects: this._effects,
         onEdit: (index, state) => this.$emit('edit', { index, ...state }),
         onRenderPreview: (sourceIndex: number, previewUrl) => {
@@ -49,12 +51,12 @@ export default {
   },
   mounted(this: VueInstance) {
     this.scope.run(() =>
-      renderComponentTo(ImageEditorUI, { engine: engineMap.get(this.engine)!, view: this._view }, this.$el),
+      renderComponentTo(ImageEditorUI, { editor: editorMap.get(this.editor)!, view: this._view }, this.$el),
     )
   },
   destroyed(this: VueInstance) {
     this.scope.stop()
-    this.engine = undefined as never
+    this.editor = undefined as never
     this.thumbnailUrls.forEach(URL.revokeObjectURL.bind(URL))
   },
   render(h: (...args: unknown[]) => unknown) {
@@ -62,34 +64,34 @@ export default {
   },
   methods: {
     exportToBlob(this: VueInstance, sourceIndex: number, options?: { type: string; quality?: number }) {
-      return this.engine.exportToBlob(sourceIndex, options ?? {})
+      return this.editor.exportToBlob(sourceIndex, options ?? {})
     },
     renderPreviewTo(
       this: VueInstance,
       sourceIndex: number,
       context: ImageBitmapRenderingContext | Context2D,
     ) {
-      return engineMap.get(this.engine)!.renderPreviewTo(sourceIndex, context)
+      return editorMap.get(this.editor)!.renderPreviewTo(sourceIndex, context)
     },
   },
   watch: {
     sources: {
-      handler(this: VueInstance, value: ImageSourceOption[], prev: ImageSourceOption[] | undefined) {
+      handler(this: VueInstance, value?: ImageSourceOption[], prev?: ImageSourceOption[]) {
         if (value && prev && (value === prev || value.every((v, i) => prev[i] === v))) return
-        engineMap.get(this.engine)!.sourceInputs.value = value
+        editorMap.get(this.editor)!.sourceInputs.value = value ?? []
       },
       immediate: true,
       deep: true,
     },
     editStates: {
       handler(this: VueInstance, value: ImageEditState[]) {
-        engineMap.get(this.engine)!.editStatesIn.value = value
+        editorMap.get(this.editor)!.editStatesIn.value = value
       },
       immediate: true,
     },
     effects: {
-      handler(this: VueInstance, value: Effect[]) {
-        this._effects.value = value || getDefaultFilters(this.assetsPath)
+      handler(this: VueInstance, value?: Effect[]) {
+        this._effects.value = value ?? getDefaultFilters(this.assetsPath)
       },
       immediate: true,
     },

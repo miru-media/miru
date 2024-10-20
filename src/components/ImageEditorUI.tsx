@@ -1,30 +1,32 @@
-import { MaybeRefOrGetter, Ref, computed, getCurrentScope, ref, toRef } from '@/framework/reactivity'
+import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { computed, getCurrentScope, MaybeRefOrGetter, ref, Ref, toRef } from '@/framework/reactivity'
 import { EditorView } from '@/types'
 
-import { ImageEditorEngine } from '../engine/ImageEditorEngine'
+import { ImageEditor } from '../editor/ImageEditor'
 
-import { CropView } from './Cropper'
 import { AdjustmentsView } from './Adjustments'
+import { CropView } from './Cropper'
 import { FilterView } from './Filter'
-import { ImageSourceState } from '@/engine/ImageSourceState'
 
 export interface ImageEditorUIProps {
-  engine: ImageEditorEngine
+  editor: ImageEditor
   view: Ref<EditorView>
   sourceIndex?: MaybeRefOrGetter<number>
 }
 
 /**
- * The UI for an editor engine instance with filter cropping, filter selection, etc.
+ * The UI for an editor instance with filter cropping, filter selection, etc.
  *
  * Used by the Custom Element and Vue component.
  */
 export const ImageEditorUI = (props: ImageEditorUIProps) => {
-  const { engine, view: currentView } = props
+  const { editor, view: currentView } = props
 
-  const { sources } = engine
+  const { sources } = editor
   const currentSourceIndex = toRef(props.sourceIndex ?? ref(0))
-  const currentSource = computed((): ImageSourceState | undefined => sources.value[currentSourceIndex.value])
+  const currentSource = computed(
+    (): ImageSourceInternal | undefined => sources.value[currentSourceIndex.value],
+  )
   const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? -1)
   const scope = getCurrentScope()
   if (!scope) throw new Error(`[miru] must be run in scope`)
@@ -35,11 +37,11 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
-    [EditorView.Crop]: () => <CropView engine={engine} sourceIndex={currentSourceIndex} />,
+    [EditorView.Crop]: () => <CropView editor={editor} sourceIndex={currentSourceIndex} />,
     [EditorView.Adjust]: () => (
-      <AdjustmentsView engine={engine} sourceIndex={currentSourceIndex} showPreviews />
+      <AdjustmentsView editor={editor} sourceIndex={currentSourceIndex} showPreviews />
     ),
-    [EditorView.Filter]: () => <FilterView engine={engine} sourceIndex={currentSourceIndex} showPreviews />,
+    [EditorView.Filter]: () => <FilterView editor={editor} sourceIndex={currentSourceIndex} showPreviews />,
   }
 
   return (

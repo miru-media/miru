@@ -1,7 +1,6 @@
 #pragma glslify: grain = require(glsl-film-grain)
 #pragma glslify: luma = require(glsl-luma)
 
-// #pragma glslify: blend = require(./blend)
 #pragma glslify: blendSoftLight = require(glsl-blend/soft-light)
 
 // https://github.com/mattdesl/glsl-film-grain?tab=readme-ov-file#blending-tips

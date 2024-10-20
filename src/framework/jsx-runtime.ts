@@ -2,15 +2,15 @@ import { MaybeArray } from '@/types'
 import { arrayFlatToValue, toKebabCase } from '@/utils'
 
 import {
-  EffectScope,
-  MaybeRef,
-  MaybeRefOrGetter,
-  Ref,
   createEffectScope,
   effect,
+  EffectScope,
   getCurrentScope,
   isRef,
+  MaybeRef,
+  MaybeRefOrGetter,
   onScopeDispose,
+  Ref,
   toValue,
   watch,
 } from './reactivity'
@@ -112,7 +112,7 @@ const toClassName = (value: unknown): string => {
   return value === false ? '' : String(value ?? '')
 }
 
-export const h = (type: string | Component, props: ComponentProps): HNode => {
+export const h = (type: string | Component, props: ComponentProps): JSX.Element => {
   if (typeof type === 'function') {
     const scope = createEffectScope()
     const hNode = scope.run(() => type(props))
@@ -157,14 +157,14 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
       const appendTo = marker?.parentNode ?? element
 
       children.forEach((child, childIndex) => {
-        const prevAppended: AppendedChild | undefined = appendedNodes[childIndex]
+        const prevAppended = appendedNodes[childIndex] as AppendedChild | undefined
         const prevDomNode = prevAppended?.domNode
 
         const domNode = updateChildNode(child, prevAppended)
         // insert the new child at the position of the previous node (which may be the same)
         const beforeNode = isDocFrag(appendTo)
           ? null
-          : (isDocFrag(prevDomNode) ? prevDomNode[HNODE_MARKER] : prevDomNode) || marker?.nextElementSibling
+          : ((isDocFrag(prevDomNode) ? prevDomNode[HNODE_MARKER] : prevDomNode) ?? marker?.nextElementSibling)
         if (beforeNode?.parentNode === appendTo) appendTo.insertBefore(domNode, beforeNode)
         else appendTo.appendChild(domNode)
 
@@ -247,8 +247,8 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
 
 export const Fragment = (props: { children: HNodeChild[] }) => h('#fragment', props)
 
-export const render = (node: HNode, root: ParentNode): Stop => {
-  if (!root) throw new Error(`[miru] No root to render into`)
+export const render = (node: JSX.Element, root: ParentNode): Stop => {
+  if (!(root as ParentNode | undefined)) throw new Error(`[miru] No root to render into`)
 
   root.appendChild(node.el)
 

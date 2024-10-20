@@ -1,49 +1,50 @@
-import { Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { AdjustmentsView } from '@/components/Adjustments'
 import { CropView } from '@/components/Cropper'
 import { FilterView } from '@/components/Filter'
 import { renderComponentTo } from '@/components/renderTo'
 import { SourcePreview } from '@/components/SourcePreview'
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
+import { ImageEditor } from '@/editor/ImageEditor'
 import {
+  createEffectScope,
   EffectScope,
   MaybeRefOrGetter,
-  Ref,
-  createEffectScope,
   onScopeDispose,
   ref,
+  Ref,
   toRef,
 } from '@/framework/reactivity'
+import { Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { canvasToBlob } from '@/utils'
 
-interface ImageEditorEngineVueProps {
+interface ImageEditorVueProps {
   effects: MaybeRefOrGetter<Effect[]>
   onRenderPreview?: (sourceIndex: number, previewUrl: string) => unknown
-  onEdit: (index: number, state: ImageEditState) => unknown
+  onEdit?: (index: number, state: ImageEditState) => unknown
 }
 
-export declare interface ImageEditorEngineVue {
+export declare interface ImageEditorVue {
+  setSources(sources: ImageSourceOption[]): void
+  setEditState(sourceIndex: number, state: ImageEditState): void
   exportToBlob(sourceIndex: number, options?: ImageEncodeOptions): Promise<Blob>
 }
 
-export const engineMap = new WeakMap<ImageEditorEngineVue, ImageEditorEngine>()
+export const editorMap = new WeakMap<ImageEditorVue, ImageEditor>()
 
-class ImageEditorEngineVueImpl implements ImageEditorEngineVue {
-  #engine: ImageEditorEngine
+class ImageEditorVueImpl implements ImageEditorVue {
+  #editor: ImageEditor
   #thumbnailUrls: string[] = []
 
-  constructor(props: ImageEditorEngineVueProps) {
+  constructor(props: ImageEditorVueProps) {
     const noop = () => undefined
     const scope = createEffectScope()
 
-    this.#engine = scope.run(() => {
-      onScopeDispose(() => (this.#engine = undefined as never))
+    this.#editor = scope.run(() => {
+      onScopeDispose(() => (this.#editor = undefined as never))
 
-      return new ImageEditorEngine({
+      return new ImageEditor({
         effects: toRef(props.effects),
         onRenderPreview: async (sourceIndex) => {
-          const source = this.#engine.sources.value[sourceIndex]
-          if (!source) return
+          const source = this.#editor.sources.value[sourceIndex]
 
           URL.revokeObjectURL(this.#thumbnailUrls[sourceIndex])
 
@@ -56,35 +57,33 @@ class ImageEditorEngineVueImpl implements ImageEditorEngineVue {
       })
     })
 
-    engineMap.set(this, this.#engine)
+    editorMap.set(this, this.#editor)
   }
 
   setSources(sources: ImageSourceOption[]) {
-    this.#engine.sourceInputs.value = [...sources]
+    this.#editor.sourceInputs.value = [...sources]
   }
 
   setEditState(sourceIndex: number, state: ImageEditState) {
-    const source = this.#engine.sources.value[sourceIndex]
-    if (!source) return
+    const source = this.#editor.sources.value[sourceIndex]
 
     source.setState(state)
     source.drawPreview().catch(() => undefined)
   }
 
   exportToBlob(sourceIndex: number, options?: ImageEncodeOptions) {
-    return this.#engine.exportToBlob(sourceIndex, options)
+    return this.#editor.exportToBlob(sourceIndex, options)
   }
 }
 
-export const createEngine = (props: ImageEditorEngineVueProps): ImageEditorEngineVue =>
-  new ImageEditorEngineVueImpl(props)
+export const createEditor = (props: ImageEditorVueProps): ImageEditorVue => new ImageEditorVueImpl(props)
 
 interface VueInstance {
-  engine: ImageEditorEngineVueImpl
+  editor: ImageEditorVueImpl
   scope: EffectScope
   sourceIndex: number
   _sourceIndex: Ref<number>
-  _extraProps: Record<string, Ref<unknown>>
+  _extraProps: Record<string, Ref>
 
   $el: HTMLElement
   $props: Record<string, unknown>
@@ -93,7 +92,7 @@ interface VueInstance {
 }
 
 interface WrappedComponentProps {
-  engine: ImageEditorEngine
+  editor: ImageEditor
   sourceIndex: Ref<number>
   showAllSources?: boolean | undefined
 }
@@ -105,7 +104,7 @@ const wrap = (
 ) => ({
   name,
   props: {
-    engine: { type: ImageEditorEngineVueImpl, required: true },
+    editor: { type: ImageEditorVueImpl, required: true },
     sourceIndex: { type: Number, default: 0 },
     ...extraProps,
   },
@@ -124,7 +123,7 @@ const wrap = (
       renderComponentTo(
         Component,
         {
-          engine: engineMap.get(this.engine)!,
+          editor: editorMap.get(this.editor)!,
           sourceIndex: this._sourceIndex,
           showAllSources: false,
           ...this._extraProps,

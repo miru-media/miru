@@ -1,8 +1,9 @@
 import { ref } from '@/framework/reactivity'
-import { ImageSourceObject, SyncImageSource } from './types'
-import { Janitor, decodeAsyncImageSource, devSlowDown, getImageData, isSyncSource } from './utils'
-import { Renderer } from './engine/Renderer'
+
 import { SOURCE_TEX_OPTIONS } from './constants'
+import { Renderer } from './renderer/Renderer'
+import { ImageSourceObject, SyncImageSource } from './types'
+import { decodeAsyncImageSource, devSlowDown, getImageData, isSyncSource, Janitor } from './utils'
 
 export class TextureResource {
   canvas?: HTMLCanvasElement
@@ -19,7 +20,7 @@ export class TextureResource {
     scratchpad: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   ) {
     this.canvas = document.createElement('canvas')
-    this.context = this.canvas?.getContext('bitmaprenderer') ?? undefined
+    this.context = this.canvas.getContext('bitmaprenderer') ?? undefined
     this.texture = renderer.createTexture()!
     this.isLoading = ref(false)
     this.error = ref()
@@ -46,7 +47,7 @@ export class TextureResource {
 
       decode.promise
         .then(onDecoded)
-        .catch((e) => (this.error.value = e))
+        .catch((e: unknown) => (this.error.value = e))
         .finally(() => (this.isLoading.value = false))
 
       this.janitor.add(decode.close)

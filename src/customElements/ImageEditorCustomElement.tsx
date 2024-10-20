@@ -1,36 +1,39 @@
+import { ImageEditorUI } from '@/components/ImageEditorUI'
+import { renderComponentTo } from '@/components/renderTo'
+import { getDefaultFilters } from '@/effects'
 import { createEffectScope, effect, ref } from '@/framework/reactivity'
 import { Context2D, EditorView, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { downloadBlob, win } from '@/utils'
-import { getDefaultFilters } from '@/effects'
-import { ImageEditorEngine } from '../engine/ImageEditorEngine'
-import { renderComponentTo } from '@/components/renderTo'
-import { ImageEditorUI } from '@/components/ImageEditorUI'
+
+import { ImageEditor } from '../editor/ImageEditor'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
 
-export class MiruImageEditor extends (win.HTMLElement || Object) {
+const HTMLElement = ((win.HTMLElement as unknown) || Object) as typeof window.HTMLElement
+
+export class MiruImageEditor extends HTMLElement {
   static observedAttributes = OBSERVED_ATTRS
 
   #scope = createEffectScope()
-  #engine: ImageEditorEngine
+  #editor: ImageEditor
   #effects = ref<Effect[]>([])
   #unmount: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   #view = ref(EditorView.Crop)
 
   get sources(): ImageSourceOption[] {
-    return this.#engine.sourceInputs.value
+    return this.#editor.sourceInputs.value
   }
   set sources(value: ImageSourceOption[] | undefined) {
-    this.#engine.sourceInputs.value = value ?? []
+    this.#editor.sourceInputs.value = value ?? []
   }
 
   get editStates() {
-    return this.#engine.sources.value.map((source) => source.getState())
+    return this.#editor.sources.value.map((source) => source.getState())
   }
   set editStates(states: ImageEditState[]) {
-    this.#engine.editStatesIn.value = states
+    this.#editor.editStatesIn.value = states
   }
 
   get effects() {
@@ -49,15 +52,15 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
   }
 
   get isLoading() {
-    return !!this.#engine.isLoading
+    return !!this.#editor.isLoading
   }
 
   constructor() {
     super()
 
-    this.#engine = this.#scope.run(
+    this.#editor = this.#scope.run(
       () =>
-        new ImageEditorEngine({
+        new ImageEditor({
           effects: this.#effects,
           onEdit: (index, state) => this.#dispatchEvent('miruedit', { index, ...state }),
           onRenderPreview: () => undefined,
@@ -66,7 +69,7 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
     this.#effects.value = getDefaultFilters(import.meta.env.ASSETS_PATH)
 
     this.#unmount = this.#scope.run(() =>
-      renderComponentTo(ImageEditorUI, { engine: this.#engine, view: this.#view }, this),
+      renderComponentTo(ImageEditorUI, { editor: this.#editor, view: this.#view }, this),
     )
   }
 
@@ -101,7 +104,7 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
     return new Promise<void>((resolve) => {
       this.#scope.run(() => {
         const stop = effect(() => {
-          if (!this.#engine.isLoading) {
+          if (!this.#editor.isLoading) {
             resolve()
             stop()
           }
@@ -111,23 +114,22 @@ export class MiruImageEditor extends (win.HTMLElement || Object) {
   }
 
   async exportToBlob(sourceIndex: number, options?: ImageEncodeOptions) {
-    return this.#engine.exportToBlob(sourceIndex, options ?? {})
+    return this.#editor.exportToBlob(sourceIndex, options ?? {})
   }
   renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
-    return this.#engine.renderPreviewTo(sourceIndex, context)
+    return this.#editor.renderPreviewTo(sourceIndex, context)
   }
 
   async download(sourceIndex: number, { filename = 'edited.jpeg', type = 'image/jpeg', quality = 0.9 } = {}) {
-    const engine = this.#engine
-    if (!engine) return false
+    const editor = this.#editor
 
-    const blob = await engine.exportToBlob(sourceIndex, { type, quality })
+    const blob = await editor.exportToBlob(sourceIndex, { type, quality })
     downloadBlob(blob, filename)
     return true
   }
 
   dispose() {
-    this.#engine?.dispose()
+    this.#editor.dispose()
     this.#unmount()
   }
 }

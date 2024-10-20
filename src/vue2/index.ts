@@ -1,6 +1,6 @@
 export { default as MiruImageEditor } from './ImageEditor'
 export {
-  createEngine,
+  createEditor,
   MiruImageEditorPreview,
   MiruImageEditorCropper,
   MiruImageEditorFilterMenu,

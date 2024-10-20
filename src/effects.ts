@@ -1,7 +1,7 @@
-import swapGreenToRed from '@/assets/luts/green-to-red.png'
 import swapBlueToYellow from '@/assets/luts/blue-to-yellow.png'
-import { Effect } from '@/types'
+import swapGreenToRed from '@/assets/luts/green-to-red.png'
 import { EffectOpType } from '@/constants'
+import { Effect } from '@/types'
 
 export const getDefaultFilters = (assetsPath?: string): Effect[] => {
   const rebaseAssetUrl = (path: string) =>

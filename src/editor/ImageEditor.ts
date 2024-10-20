@@ -1,9 +1,10 @@
-import { Ref, computed, effect, getCurrentScope, ref, watch } from '@/framework/reactivity'
-import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
-import { ImageSourceState } from './ImageSourceState'
 import { EffectInternal } from '@/Effect'
+import { computed, effect, EffectScope, getCurrentScope, ref, Ref, watch } from '@/framework/reactivity'
+import { Renderer } from '@/renderer/Renderer'
+import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { get2dContext } from '@/utils'
-import { Renderer } from '@/engine/Renderer'
+
+import { ImageSourceInternal } from './ImageSourceState'
 
 export interface ImageEditorOptions {
   effects: Ref<Effect[]>
@@ -11,12 +12,12 @@ export interface ImageEditorOptions {
   onEdit: (index: number, state: ImageEditState) => unknown
 }
 
-export class ImageEditorEngine {
-  #scope = getCurrentScope()!
+export class ImageEditor {
+  #scope: EffectScope
   renderer = new Renderer()
 
   sourceInputs = ref<ImageSourceOption[]>([])
-  sources = ref<ImageSourceState[]>([])
+  sources = ref<ImageSourceInternal[]>([])
   editStatesIn = ref<(ImageEditState | undefined)[]>()
   #effectsIn: Ref<Effect[]>
   readonly effects = ref<EffectInternal[]>([])
@@ -38,7 +39,9 @@ export class ImageEditorEngine {
   }
 
   constructor({ effects, onRenderPreview, onEdit }: ImageEditorOptions) {
-    if (!this.#scope) throw new Error(`[miru] must be run in an EffectScope`)
+    const scope = getCurrentScope()
+    if (!scope) throw new Error(`[miru] must be run in an EffectScope`)
+    this.#scope = scope
 
     this.#effectsIn = effects
     watch([this.sourceInputs], ([sourceOptions], prev) => {
@@ -49,15 +52,15 @@ export class ImageEditorEngine {
         const list = acc.get(so)!
         list.push(prevSources[i])
         return acc
-      }, new Map<ImageSourceOption, ImageSourceState[]>())
+      }, new Map<ImageSourceOption, ImageSourceInternal[]>())
 
-      const newSources = new Set<ImageSourceState>()
+      const newSources = new Set<ImageSourceInternal>()
 
       this.#scope.run(() => {
         sourceOptions.forEach((sourceOption, sourceIndex) => {
           newSources.add(
             prevSourcesByOption.get(sourceOption)?.shift() ??
-              new ImageSourceState({
+              new ImageSourceInternal({
                 sourceOption,
                 thumbnailSize: ref({ width: 300, height: 300 }),
                 renderer: this.renderer,
@@ -82,9 +85,9 @@ export class ImageEditorEngine {
 
     watch([this.#effectsIn], ([effects]) => {
       this.#scope
-        .run(() => this.#loadEffects(effects || []))
+        .run(() => this.#loadEffects((effects as Effect[] | undefined) ?? []))
         // eslint-disable-next-line no-console
-        .catch((error) => console.error(`[miru] couldn't load effects`, error))
+        .catch((error: unknown) => console.error(`[miru] couldn't load effects`, error))
     })
   }
 
@@ -97,8 +100,10 @@ export class ImageEditorEngine {
   }
 
   async exportToBlob(sourceIndex: number, { type = 'image/jpeg', quality = 0.9 }: ImageEncodeOptions = {}) {
+    if (sourceIndex < 0 || sourceIndex >= this.sources.value.length)
+      throw new Error(`[miru] No image at index ${sourceIndex}`)
+
     const source = this.sources.value[sourceIndex]
-    if (!source) throw new Error(`[miru] No image at index ${sourceIndex}`)
 
     source.drawFullSize()
 

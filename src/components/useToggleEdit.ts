@@ -1,9 +1,10 @@
-import { ImageSourceState } from '@/engine/ImageSourceState'
+import { ImageSourceInternal } from '@/editor/ImageSourceState'
 import { MaybeRefOrGetter, ref, toRef, toValue, watch } from '@/framework/reactivity'
 import { ImageEditState } from '@/types'
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- use in function body
 export const useTogleEdit = <T extends keyof ImageEditState>(
-  source: MaybeRefOrGetter<ImageSourceState | undefined>,
+  source: MaybeRefOrGetter<ImageSourceInternal | undefined>,
   key: T,
 ) => {
   const savedValue = ref<ImageEditState[T]>()

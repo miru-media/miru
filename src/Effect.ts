@@ -1,9 +1,10 @@
-import { Renderer } from '@/engine/Renderer'
+import { Renderer } from '@/renderer/Renderer'
 import { Context2D, Effect, RendererEffectOp } from '@/types'
+
+import { MAX_EFFECT_TEXTURES } from './constants'
+import { computed, Ref } from './framework/reactivity'
 import { TextureResource } from './TextureResource'
 import { Janitor, normalizeSourceOption } from './utils'
-import { Ref, computed } from './framework/reactivity'
-import { MAX_EFFECT_TEXTURES } from './constants'
 
 export class EffectInternal {
   renderer: Renderer

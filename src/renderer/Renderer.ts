@@ -1,7 +1,8 @@
-import * as twgl from 'twgl.js'
 import { mat4 } from 'gl-matrix'
+import * as twgl from 'twgl.js'
 
-import { canvasToBlob, getWebgl2Context, isOffscreenCanvas, setObjectSize } from '../utils'
+import { EffectOpType, LUT_TEX_OPTIONS, MAX_EFFECT_OPS, SOURCE_TEX_OPTIONS } from '@/constants'
+import * as GL from '@/GL'
 import {
   AdjustmentsState,
   Context2D,
@@ -10,12 +11,16 @@ import {
   RendererEffectOp,
   Size,
   SyncImageSource,
-} from '../types'
+} from '@/types'
+import { canvasToBlob, getWebgl2Context, isOffscreenCanvas, setObjectSize } from '@/utils'
 
-import * as GL from '@/GL'
-import vs from './glsl/main.vert'
 import fs from './glsl/main.frag'
-import { EffectOpType, LUT_TEX_OPTIONS, MAX_EFFECT_OPS, SOURCE_TEX_OPTIONS } from '@/constants'
+import vs from './glsl/main.vert'
+
+export interface RendererOptions {
+  gl?: WebGL2RenderingContext
+  canvas?: HTMLCanvasElement | OffscreenCanvas
+}
 
 export class Renderer {
   #gl: WebGL2RenderingContext
@@ -47,12 +52,8 @@ export class Renderer {
     return this.#gl.canvas
   }
 
-  constructor() {
-    const canvas = document.createElement('canvas')
-    // document.body.appendChild(canvas)
-    canvas.setAttribute('style', 'position: fixed;left:0;top:0;z-index:100')
-
-    const gl = (this.#gl = getWebgl2Context(canvas))
+  constructor({ gl = getWebgl2Context() } = {}) {
+    this.#gl = gl
 
     gl.clearColor(0, 0, 0, 1)
     gl.enable(GL.BLEND)
@@ -60,15 +61,7 @@ export class Renderer {
 
     this.#programInfo = twgl.createProgramInfo(gl, [vs, fs])
 
-    const unitQuad = [
-      [0, 0],
-      [0, 1],
-      [1, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-      [0, 1],
-    ].flat()
+    const unitQuad = [0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1]
 
     ;[
       // u_position

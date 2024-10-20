@@ -1,3 +1,7 @@
+import Cropper from 'cropperjs'
+
+import { ImageEditor } from '@/editor/ImageEditor'
+import { ImageSourceInternal } from '@/editor/ImageSourceState'
 import { computed, getCurrentScope, ref, toValue } from '@/framework/reactivity'
 import {
   centerTo,
@@ -9,16 +13,13 @@ import {
   offsetBy,
   setObjectSize,
 } from '@/utils'
-import Cropper from 'cropperjs'
-import { ImageEditorEngine } from '@/engine/ImageEditorEngine'
-import { ImageSourceState } from '@/engine/ImageSourceState'
 
 export type CropContext = ReturnType<typeof useCrop>
 
-const SIMPLE_CROP = false
+const SIMPLE_CROP = false as boolean
 
-export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; sourceIndex: number }) => {
-  const source = computed((): ImageSourceState | undefined => engine.sources.value[toValue(sourceIndex)])
+export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIndex: number }) => {
+  const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
   const cropper = ref<Cropper>()
 
   const aspectRatio = computed(() => {
@@ -114,7 +115,7 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
   })
 
   // pause previews while cropping
-  scope.watch([engine.sources], ([sources], _prev, onCleanup) => {
+  scope.watch([editor.sources], ([sources], _prev, onCleanup) => {
     sources.forEach((source) => source.pausePreview.value++)
     onCleanup(() => sources.forEach((source) => source.pausePreview.value--))
   })
@@ -128,7 +129,6 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
     await withUnlimitedCropper(async () => {
       await fitCrop()
       cropper.value?.setAspectRatio(value)
-      // await recenterCropBox()
     })
   }
 
@@ -172,7 +172,6 @@ export const useCrop = ({ engine, sourceIndex }: { engine: ImageEditorEngine; so
     const newBox = centerTo(boxData, containerCenter)
 
     await withUnlimitedCropper(() => {
-      // debugger
       $cropper.setCropBoxData(newBox)
       $cropper.setCanvasData(
         offsetBy(canvasData, { x: newBox.left - boxData.left, y: newBox.top - boxData.top }),

@@ -1,18 +1,19 @@
 import { resolve } from 'node:path'
 
 import alias from '@rollup/plugin-alias'
-import replace from '@rollup/plugin-replace'
-import esbuild from 'rollup-plugin-esbuild-transform'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import postcss from 'rollup-plugin-postcss'
-import del from 'rollup-plugin-delete'
+import replace from '@rollup/plugin-replace'
 import terser from '@rollup/plugin-terser'
 import url from '@rollup/plugin-url'
 import { defineConfig } from 'rollup'
-import glslOptimize from 'rollup-plugin-glsl-optimize'
+import del from 'rollup-plugin-delete'
+import esbuild from 'rollup-plugin-esbuild-transform'
 import filesize from 'rollup-plugin-filesize'
+import glslOptimize from 'rollup-plugin-glsl-optimize'
+import postcss from 'rollup-plugin-postcss'
 import autoImport from 'unplugin-auto-import/rollup'
 import icons from 'unplugin-icons/rollup'
+
 import { autoImportOptions } from './tools/autoImportOptions.js'
 
 const NODE_ENV = process.env.NODE_ENV

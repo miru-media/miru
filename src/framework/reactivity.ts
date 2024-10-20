@@ -1,4 +1,5 @@
-import { Reactive, autoStabilize, reactive as reactive_ } from '@reactively/core'
+import { autoStabilize, Reactive, reactive as reactive_ } from '@reactively/core'
+
 import { isFunction } from '../utils/general'
 
 // https://github.com/milomg/reactively/issues/15
@@ -50,7 +51,7 @@ export class EffectScope {
     cleanups.clear()
     this.active = false
   }
-  watch<Sources extends readonly WatchSource<unknown>[]>(
+  watch<Sources extends readonly WatchSource[]>(
     sources: [...Sources],
     callback: (
       current: MapSources<Sources>,
@@ -75,6 +76,8 @@ export class Ref<T = unknown> {
   private _f!: boolean
   /** is from computed reactive value */
   private _r!: boolean
+
+  private __m_isRef = true
 
   get value(): T {
     const value = this._v.value
@@ -102,9 +105,6 @@ export class Ref<T = unknown> {
       this._v.value = value
     }
   }
-
-  /** @internal */
-  __m_isRef = true
 }
 
 export function ref<T>(): Ref<T | undefined>
@@ -166,7 +166,7 @@ const ON_STOP = Symbol('miru-on-stop')
  *   ...
  * })
  */
-export const watch = <Sources extends readonly WatchSource<unknown>[]>(
+export const watch = <Sources extends readonly WatchSource[]>(
   sources: [...Sources],
   callback: (
     current: MapSources<Sources>,
@@ -204,7 +204,10 @@ export const watch = <Sources extends readonly WatchSource<unknown>[]>(
   )
 }
 
-const effectInternal = (callback: (onCleanup: OnCleanup) => void, hooks: Record<symbol, () => void>) => {
+const effectInternal = (
+  callback: (onCleanup: OnCleanup) => void,
+  hooks: Record<symbol, (() => void) | undefined>,
+) => {
   const scope = currentScope
   if (scope && !scope.active) throw new Error(`[miru] Scope is already disposed`)
 
