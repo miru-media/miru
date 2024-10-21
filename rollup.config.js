@@ -45,6 +45,7 @@ export default defineConfig({
     ]),
     replace({
       values: {
+        'import.meta.hot': 'undefined',
         'import.meta.env.DEV': JSON.stringify(!isProd),
         'import.meta.env.PROD': JSON.stringify(isProd),
         'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
