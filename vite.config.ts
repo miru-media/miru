@@ -31,7 +31,6 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: '@/framework',
-    jsxDev: false,
   },
   base: './',
   build: {
