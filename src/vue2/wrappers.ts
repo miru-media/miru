@@ -1,8 +1,4 @@
-import { AdjustmentsView } from '@/components/Adjustments'
-import { CropView } from '@/components/Cropper'
-import { FilterView } from '@/components/Filter'
 import { renderComponentTo } from '@/components/renderTo'
-import { SourcePreview } from '@/components/SourcePreview'
 import { ImageEditor } from '@/editor/ImageEditor'
 import {
   createEffectScope,
@@ -22,15 +18,9 @@ interface ImageEditorVueProps {
   onEdit?: (index: number, state: ImageEditState) => unknown
 }
 
-export declare interface ImageEditorVue {
-  setSources(sources: ImageSourceOption[]): void
-  setEditState(sourceIndex: number, state: ImageEditState): void
-  exportToBlob(sourceIndex: number, options?: ImageEncodeOptions): Promise<Blob>
-}
-
 export const editorMap = new WeakMap<ImageEditorVue, ImageEditor>()
 
-class ImageEditorVueImpl implements ImageEditorVue {
+export class ImageEditorVue {
   #editor: ImageEditor
   #thumbnailUrls: string[] = []
 
@@ -76,10 +66,8 @@ class ImageEditorVueImpl implements ImageEditorVue {
   }
 }
 
-export const createEditor = (props: ImageEditorVueProps): ImageEditorVue => new ImageEditorVueImpl(props)
-
 interface VueInstance {
-  editor: ImageEditorVueImpl
+  editor: ImageEditorVue
   scope: EffectScope
   sourceIndex: number
   _sourceIndex: Ref<number>
@@ -97,14 +85,14 @@ interface WrappedComponentProps {
   showAllSources?: boolean | undefined
 }
 
-const wrap = (
+export const wrap = (
   Component: (props: WrappedComponentProps) => JSX.Element,
   name: string,
   extraProps?: Record<string, { type: unknown; required?: boolean; default?: unknown }>,
 ) => ({
   name,
   props: {
-    editor: { type: ImageEditorVueImpl, required: true },
+    editor: { type: ImageEditorVue, required: true },
     sourceIndex: { type: Number, default: 0 },
     ...extraProps,
   },
@@ -156,8 +144,3 @@ const wrap = (
     this.scope.stop()
   },
 })
-
-export const MiruImageEditorPreview = wrap(SourcePreview, 'miru-image-editor-preview')
-export const MiruImageEditorCropper = wrap(CropView, 'miru-image-editor-cropper')
-export const MiruImageEditorFilterMenu = wrap(FilterView, 'miru-image-editor-filter-menu')
-export const MiruImageEditorAdjustmentsMenu = wrap(AdjustmentsView, 'miru-image-editor-adjustments-menu')

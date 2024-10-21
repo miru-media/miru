@@ -1,11 +1,10 @@
 import { ImageEditorUI } from '@/components/ImageEditorUI'
 import { renderComponentTo } from '@/components/renderTo'
+import { getDefaultFilters } from '@/effects'
 import { createEffectScope, EffectScope, ref, Ref } from '@/framework/reactivity'
 import { Context2D, EditorView, Effect, ImageEditState, ImageSource, ImageSourceOption } from '@/types'
 
-import { getDefaultFilters } from '../effects'
-
-import { createEditor, editorMap, ImageEditorVue } from './wrappers'
+import { editorMap, ImageEditorVue } from './wrappers'
 
 interface VueInstance {
   editor: ImageEditorVue
@@ -29,7 +28,7 @@ const PROP_KEYS = ['sources', 'effects', 'view', 'assetsPath', 'editStates'] as 
 const EVENT_TYPES = ['edit', 'render'] as const
 
 export default {
-  name: 'miru-image-editor',
+  name: 'miru-image-editor-complete',
   props: PROP_KEYS,
   emits: EVENT_TYPES,
   beforeCreate(this: VueInstance) {
@@ -38,15 +37,16 @@ export default {
     this._effects = ref([])
     this._view = ref(EditorView.Crop)
 
-    this.editor = this.scope.run(() =>
-      createEditor({
-        effects: this._effects,
-        onEdit: (index, state) => this.$emit('edit', { index, ...state }),
-        onRenderPreview: (sourceIndex: number, previewUrl) => {
-          this.thumbnailUrls.splice(sourceIndex, 1, previewUrl)
-          this.$emit('render', this.thumbnailUrls)
-        },
-      }),
+    this.editor = this.scope.run(
+      () =>
+        new ImageEditorVue({
+          effects: this._effects,
+          onEdit: (index, state) => this.$emit('edit', { index, ...state }),
+          onRenderPreview: (sourceIndex: number, previewUrl) => {
+            this.thumbnailUrls.splice(sourceIndex, 1, previewUrl)
+            this.$emit('render', this.thumbnailUrls)
+          },
+        }),
     )
   },
   mounted(this: VueInstance) {

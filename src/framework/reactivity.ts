@@ -70,14 +70,18 @@ export class EffectScope {
 /**
  * More or less Vue's ref()
  */
-export class Ref<T = unknown> {
-  private _v = reactive_<any>(undefined)
-  /** is function value */
-  private _f!: boolean
-  /** is from computed reactive value */
-  private _r!: boolean
+export interface Ref<T = unknown> {
+  value: T
+}
 
-  private __m_isRef = true
+class RefImpl<T = unknown> implements Ref {
+  _v = reactive_<any>(undefined)
+  /** is function value */
+  _f!: boolean
+  /** is from computed reactive value */
+  _r!: boolean
+
+  __m_isRef = true
 
   get value(): T {
     const value = this._v.value
@@ -110,35 +114,35 @@ export class Ref<T = unknown> {
 export function ref<T>(): Ref<T | undefined>
 export function ref<T>(initialValue: T): Ref<T>
 export function ref<T>(initialValue?: T) {
-  return new Ref(initialValue)
+  return new RefImpl(initialValue)
 }
 
 export const computed = <T>(getter: () => T, equals?: (a: T, b: T | undefined) => boolean) => {
   const reactive = reactive_(getter, { equals })
 
-  currentScope?._cleanups.add(() => ((reactive as any).fn = undefined))
+  currentScope?._cleanups.add(() => ((reactive as unknown as { fn?: typeof getter }).fn = undefined))
 
-  return new Ref(reactive)
+  return new RefImpl(reactive)
 }
 
 export type MaybeRef<T = unknown> = Ref<T> | T
 export type MaybeRefOrGetter<T = unknown> = MaybeRef<T> | Reactive<T> | (() => T)
 
 export const isRef = <T>(source: Ref<T> | T | object): source is Ref<T> => {
-  return (source && (source as any).__m_isRef) === true
+  return source && (source as RefImpl).__m_isRef
 }
 
 export const toValue = <T>(source: MaybeRefOrGetter<T>): T => {
   if (isRef(source)) return source.value
   if (isFunction(source)) return source()
-  if (source instanceof Reactive) return source.value
+  if (source instanceof Reactive) return source.value as T
   return source
 }
 
-export const toRef = <T>(value: MaybeRefOrGetter<T>) => {
-  if (value instanceof Ref) return value
+export const toRef = <T>(value: MaybeRefOrGetter<T>): Ref<T> => {
+  if (isRef(value)) return value
   if (isFunction(value)) return computed(value)
-  if (value instanceof Reactive) return new Ref(value)
+  if (value instanceof Reactive) return new RefImpl(value)
   return ref(value)
 }
 
