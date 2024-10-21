@@ -1,21 +1,21 @@
 /// <reference types="vite/client" />
 
 declare module 'virtual:shadow.css' {
-  const x: string
-  export default x
+  const src: string
+  export default src
 }
 
 declare module '*.vert' {
-  const x: string
-  export default x
+  const src: string
+  export default src
 }
 declare module '*.frag' {
-  const x: string
-  export default x
+  const src: string
+  export default src
 }
 declare module '*.glsl' {
-  const x: string
-  export default x
+  const src: string
+  export default src
 }
 
 declare module 'postcss-url' {}
