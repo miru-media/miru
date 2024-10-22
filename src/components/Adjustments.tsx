@@ -37,7 +37,7 @@ export const AdjustmentsView = ({
     const $source = source.value
     if ($source == undefined) return
 
-    const saved_value = $source.adjustments.value ? $source.adjustments.value[currentType.value] : 0
+    const saved_value = $source.adjustments.value?.[currentType.value] ?? 0
     const direction = event.target.valueAsNumber > saved_value ? 1 : -1
     const should_snap =
       (direction == 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= 0.1) ||
@@ -51,12 +51,12 @@ export const AdjustmentsView = ({
         contrast: 0,
         saturation: 0,
       }),
-      [currentType.value]: should_snap? 0 : event.target.valueAsNumber,
+      [currentType.value]: should_snap ? 0 : event.target.valueAsNumber,
     }
   }
 
   const onChangeSlider = (event: InputEvent) => {
-    event.target.value = source.value!.adjustments.value?.brightness
+    event.target.valueAsNumber = source.value?.adjustments.value?.brightness ?? 0
   }
 
   return (
@@ -96,9 +96,7 @@ export const AdjustmentsView = ({
           // label: 'Reset',
           min: -1,
           max: 1,
-          value: toRef(() =>
-            source.value?.adjustments.value?.[currentType.value] ?? 0
-          ),
+          value: toRef(() => source.value?.adjustments.value?.[currentType.value] ?? 0),
           onInput: onInputSlider,
           onChange: onChangeSlider,
           toggleContext,
