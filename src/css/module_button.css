@@ -77,13 +77,17 @@
   .miru--button__label {
     flex-basis: calc(1em + var(--gap-default));
     width: 100%;
+    margin-top: 0.2em;
     overflow: hidden;
-    line-height: calc(1em + var(--gap-default));
     text-align: center;
     text-overflow: ellipsis;
-
     white-space: nowrap;
     pointer-events: none;
+  }
+
+  &:has(canvas) .miru--button__label {
+    margin-top: 0;
+    line-height: calc(1em + var(--gap-default));
   }
 
   /* ENABLED MARKER */
