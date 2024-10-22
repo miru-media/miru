@@ -15,7 +15,7 @@ export const CropView: Component<{ editor: ImageEditor; sourceIndex: number }> =
 
   return (
     <>
-      {container}
+      <div class="miru--preview">{container}</div>
       <div class="miru--menu">
         <p class="miru--menu__row">
           <button

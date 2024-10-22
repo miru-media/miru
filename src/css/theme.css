@@ -13,8 +13,7 @@
   }
 
   /* PREVIEW */
-  .miru--preview,
-  .miru--cropper-container {
+  .miru--preview {
     background-color: var(--color-bg-preview);
   }
 
