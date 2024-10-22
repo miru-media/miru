@@ -80,8 +80,11 @@
   /* BUTTON LABEL */
   .miru--button__label {
     flex-basis: calc(1em + var(--gap-default));
-    width: 100%;
+    width: calc(100% - 1em);
+    margin: auto;
     margin-top: 0.2em;
+    /* margin-left: .2em;
+    margin-right: .2em; */
     overflow: hidden;
     text-align: center;
     text-overflow: ellipsis;
