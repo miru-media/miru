@@ -12,7 +12,8 @@
   --height-menu-row-scroll: 8rem;
   --size-button-icon: 1.25rem;
   --roundness-button: 0.25rem;
-  --gap-default: 0.5rem;
+  --height-slider: .5rem;
+  --gap-default: 1rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;

@@ -6,7 +6,6 @@
 
 .miru--menu__row:has(.miru--slider[disabled]) {
   pointer-events: none;
-
   /* display: none; */
   opacity: 0;
 }
@@ -14,14 +13,12 @@
 /* SLIDER */
 .miru--slider {
   flex-grow: 1;
-  height: calc(100% - 1.5rem);
-  margin: 0 var(--gap-default);
+  height: 100%;
   background-clip: padding-box;
-  border-top: 1rem solid transparent;
-  border-bottom: 1rem solid transparent;
-  border-radius: 1rem; /* does not really work */
-
-  /* overflow: visible; */
+  border-top: calc(var(--height-menu-row)/2 - var(--height-slider)/2) solid transparent;
+  border-bottom: calc(var(--height-menu-row)/2 - var(--height-slider)/2) solid transparent;
+  border-left: var(--gap-default) solid transparent;
+  border-right: var(--gap-default) solid transparent;
 
   &::-moz-range-thumb {
     width: 2rem;
