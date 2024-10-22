@@ -30,6 +30,7 @@
   "dependencies": {
     "@reactively/core": "^0.0.8",
     "cropperjs": "^1.6.2",
+    "etro": "^0.12.1",
     "gl-matrix": "^3.4.3",
     "glsl-blend": "^1.0.3",
     "glsl-film-grain": "^1.0.4",
@@ -52,6 +53,7 @@
     "@types/debug": "^4.1.12",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.7.7",
+    "@types/stats.js": "^0.17.3",
     "@types/throttle-debounce": "^5.0.2",
     "@unocss/preset-icons": "^0.63.4",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
@@ -80,6 +82,7 @@
     "rollup-plugin-filesize": "^10.0.0",
     "rollup-plugin-glsl-optimize": "^1.0.4",
     "rollup-plugin-postcss": "^4.0.2",
+    "stats.js": "^0.17.0",
     "stylelint": "^16.10.0",
     "stylelint-config-css-modules": "^4.4.0",
     "stylelint-config-html": "^1.1.0",
@@ -92,7 +95,8 @@
     "unplugin-auto-import": "^0.18.3",
     "unplugin-icons": "^0.19.3",
     "vite": "5.4.9",
-    "vite-bundle-analyzer": "^0.12.1"
+    "vite-bundle-analyzer": "^0.12.1",
+    "vite-plugin-remote-assets": "^0.5.0"
   },
   "lint-staged": {
     "**/*.((ts|js|cjs)?(x)|vue|md)": [

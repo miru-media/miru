@@ -7,7 +7,6 @@ export type SyncImageSource =
   | OffscreenCanvas
   | ImageData
   | ImageBitmap
-export type VideoSource = HTMLVideoElement | AsyncImageSource
 export type AsyncImageSource = Blob | string
 export type ImageSource = SyncImageSource | AsyncImageSource
 export type CrossOrigin = 'anonymous' | 'use-credentials' | null
@@ -54,23 +53,19 @@ export interface ImageEditState {
   adjustments?: AdjustmentsState
 }
 
+export enum AssetType {
+  Image = 'image',
+  Video = 'video',
+  Lut = 'lut',
+  HaldLut = 'hald-lut',
+}
+
 export interface ImageSourceObject {
   source: ImageSource
   crossOrigin?: CrossOrigin
-  isLut?: boolean
-  isHald?: boolean
-  isVideo?: boolean
+  type: AssetType.Image | AssetType.Video | AssetType.Lut | AssetType.HaldLut
 }
 export type ImageSourceOption = ImageSource | ImageSourceObject
-
-export interface VideoSourceObject {
-  source: VideoSource | AsyncImageSource
-  crossOrigin?: CrossOrigin
-  isLut?: boolean
-  isHald?: boolean
-  isVideo?: boolean
-}
-export type VideoSourceOption = VideoSource | VideoSourceObject
 
 export type EffectOpType = number
 

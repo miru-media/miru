@@ -13,6 +13,7 @@ import {
 import { Renderer } from '@/renderer/Renderer'
 import {
   AdjustmentsState,
+  AssetType,
   Context2D,
   CropState,
   DisplayContext,
@@ -159,7 +160,7 @@ export class ImageSourceInternal {
       const { promise } = decodeAsyncImageSource(
         sourceOption.source,
         sourceOption.crossOrigin,
-        sourceOption.isVideo,
+        sourceOption.type === AssetType.Video,
       )
 
       ;(devSlowDown ? devSlowDown(promise) : promise)
@@ -275,7 +276,7 @@ export class ImageSourceInternal {
     if (this.isLoading || !rotated) return
 
     const renderer = this.#renderer
-    const tempTexture = renderer.createTexture()!
+    const tempTexture = renderer.createTexture()
 
     const crop = this.crop.value
     let cropped = rotated
@@ -292,6 +293,7 @@ export class ImageSourceInternal {
       renderer.loadImage(tempTexture, cropped)
       this.#applyEditValuesToRenderer()
 
+      renderer.clear()
       renderer.draw()
     } finally {
       renderer.deleteTexture(tempTexture)
@@ -306,6 +308,7 @@ export class ImageSourceInternal {
     renderer.setSourceTexture(this.#texture, this.#previewSize.value, rotated, this.crop.value)
     this.#applyEditValuesToRenderer()
 
+    renderer.clear()
     await renderer.drawAndTransfer(context)
     this.onRenderPreview?.()
   }
@@ -321,6 +324,7 @@ export class ImageSourceInternal {
     // draw thumbnails at default intensity
     renderer.setIntensity(DEFAULT_INTENSITY)
 
+    renderer.clear()
     await renderer.drawAndTransfer(context)
   }
 

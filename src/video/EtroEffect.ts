@@ -1,0 +1,43 @@
+import etro from 'etro'
+
+import { EffectInternal } from '@/Effect'
+import { Ref, ref } from '@/framework/reactivity'
+import { Renderer } from '@/renderer/Renderer'
+import { AdjustmentsState } from '@/types'
+
+import { type EtroVideo } from './EtroVideo'
+
+export class EtroEffect extends etro.effect.Visual {
+  #renderer: Renderer
+  effect: Ref<EffectInternal | undefined>
+  intensity = ref(1)
+  adjustments = ref<AdjustmentsState>({ brightness: 0, contrast: 0, saturation: 0 })
+
+  // TODO: dispose
+
+  constructor({ effect, renderer }: { effect: EffectInternal; renderer: Renderer }) {
+    super()
+    this.#renderer = renderer
+    this.effect = ref(effect)
+  }
+
+  apply(target: etro.layer.VisualSource & Partial<EtroVideo>, _reltime: number) {
+    if (!this.effect.value || !target.__m_isEtroVideo) return
+
+    const renderer = this.#renderer
+
+    // WIP: render.setSourceTexture(framebufferTextureOrSomething)
+    renderer.setEffect(this.effect.value)
+    renderer.setIntensity(this.intensity.value)
+    renderer.setAdjustments(this.adjustments.value)
+    renderer.draw()
+  }
+
+  get ready() {
+    return !this.effect.value?.isLoading.value
+  }
+
+  async whenReady() {
+    await Promise.resolve(this.effect.value?.promise)
+  }
+}

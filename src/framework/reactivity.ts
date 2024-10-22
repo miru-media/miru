@@ -117,7 +117,7 @@ export function ref<T>(initialValue?: T) {
   return new RefImpl(initialValue)
 }
 
-export const computed = <T>(getter: () => T, equals?: (a: T, b: T | undefined) => boolean) => {
+export const computed = <T>(getter: () => T, equals?: (a: T, b: T | undefined) => boolean): Ref<T> => {
   const reactive = reactive_(getter, { equals })
 
   currentScope?._cleanups.add(() => ((reactive as unknown as { fn?: typeof getter }).fn = undefined))
@@ -154,8 +154,8 @@ export const onScopeDispose = (fn: () => void) => {
 
 type WatchSource<T = unknown> = Ref<T> | Reactive<T> | (() => T)
 
-type MapSources<T> = {
-  [K in keyof T]: T[K] extends WatchSource<infer V> ? V : never
+type MapSources<T, IsPrev extends boolean = false> = {
+  [K in keyof T]: T[K] extends WatchSource<infer V> ? V | (IsPrev extends true ? undefined : never) : never
 }
 
 type OnCleanup = (callback: () => void) => void
@@ -174,14 +174,14 @@ export const watch = <Sources extends readonly WatchSource[]>(
   sources: [...Sources],
   callback: (
     current: MapSources<Sources>,
-    previous: MapSources<Sources> | undefined,
+    previous: MapSources<Sources, true>,
     onCleanup: OnCleanup,
   ) => unknown,
 ) => {
   let cleanup: (() => void) | undefined
   const onCleanup: OnCleanup = (callback) => (cleanup = callback)
 
-  let prev: MapSources<Sources> | undefined
+  let prev: MapSources<Sources, true> | undefined
 
   return effectInternal(
     () => {
@@ -197,6 +197,8 @@ export const watch = <Sources extends readonly WatchSource[]>(
         }
 
         if (!changed) return
+      } else {
+        prev = Array.from({ length: cur.length }) as MapSources<Sources, true>
       }
 
       cleanup?.()

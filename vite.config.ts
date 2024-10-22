@@ -8,6 +8,7 @@ import autoImport from 'unplugin-auto-import/vite'
 import icons from 'unplugin-icons/vite'
 import { defineConfig } from 'vite'
 import analyzer from 'vite-bundle-analyzer'
+import remoteAssets from 'vite-plugin-remote-assets'
 
 import { autoImportOptions } from './tools/autoImportOptions'
 
@@ -16,6 +17,14 @@ const isProd = process.env.NODE_ENV === 'production'
 export default defineConfig({
   plugins: [
     autoImport(autoImportOptions),
+    remoteAssets({
+      awaitDownload: true,
+      rules: [
+        {
+          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4))(?=[`'")\]])/gi,
+        },
+      ],
+    }),
     icons({ compiler: 'jsx', jsx: 'preact' }),
     unocss({ presets: [presetUno(), presetIcons()] }),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),

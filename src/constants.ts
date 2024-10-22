@@ -19,6 +19,7 @@ export const MAX_EFFECT_TEXTURES = 7
 export const DEFAULT_INTENSITY = 1
 
 export const SOURCE_TEX_OPTIONS = {
+  target: GL.TEXTURE_2D,
   flipY: 0,
   wrap: GL.CLAMP_TO_EDGE,
   min: GL.LINEAR,

@@ -1,6 +1,7 @@
 import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../constants'
 import {
   AdjustmentsState,
+  AssetType,
   AsyncImageSource,
   Context2D,
   CropState,
@@ -191,6 +192,7 @@ const decodeVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
   video.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
   document.body.appendChild(video)
   setMediaSrc(video, url, crossOrigin)
+  video.load()
 
   const decodePromise = new Promise<HTMLVideoElement>((resolve, reject) => {
     const onLoadedMetadata = () => {
@@ -300,11 +302,13 @@ export const isObjectWithSource = (source: ImageSourceOption): source is ImageSo
   return typeof source !== 'string' && 'source' in source && !!source.source
 }
 
-export const normalizeSourceOption = <T extends ImageSourceObject>(
-  source: ImageSource | T,
-  isLut?: boolean,
+export const normalizeSourceOption = <T extends ImageSource>(
+  source: T | ImageSourceObject,
+  type?: AssetType,
 ) =>
-  isObjectWithSource(source) ? source : ({ source: source, isLut } as { source: ImageSource } & Partial<T>)
+  (isObjectWithSource(source) ? source : { source: source, type }) as T extends ImageSource
+    ? { source: T } & ImageSourceObject
+    : ImageSourceObject
 
 export const editIsEqualTo = (a: ImageEditState | undefined, b: ImageEditState | undefined) => {
   if (a === b) return true

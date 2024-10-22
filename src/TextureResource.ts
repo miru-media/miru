@@ -1,8 +1,8 @@
 import { ref } from '@/framework/reactivity'
 
-import { SOURCE_TEX_OPTIONS } from './constants'
+import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import { Renderer } from './renderer/Renderer'
-import { ImageSourceObject, SyncImageSource } from './types'
+import { AssetType, ImageSourceObject, SyncImageSource } from './types'
 import { decodeAsyncImageSource, devSlowDown, getImageData, isSyncSource, Janitor } from './utils'
 
 export class TextureResource {
@@ -15,20 +15,22 @@ export class TextureResource {
   texture: WebGLTexture
 
   constructor(
-    { source, isLut, isHald, isVideo, crossOrigin }: ImageSourceObject,
+    { source, type, crossOrigin }: ImageSourceObject,
     renderer: Renderer,
     scratchpad: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   ) {
     this.canvas = document.createElement('canvas')
     this.context = this.canvas.getContext('bitmaprenderer') ?? undefined
-    this.texture = renderer.createTexture()!
+    this.texture = renderer.createTexture(
+      type === AssetType.Lut || type === AssetType.HaldLut ? LUT_TEX_OPTIONS : SOURCE_TEX_OPTIONS,
+    )
     this.isLoading = ref(false)
     this.error = ref()
 
     const onDecoded = (decodedImage: SyncImageSource) => {
-      if (isLut) {
+      if (type === AssetType.Lut || type === AssetType.HaldLut) {
         const imageData = getImageData(decodedImage, scratchpad)
-        renderer.loadLut(this.texture, imageData, isHald)
+        renderer.loadLut(this.texture, imageData, type)
       } else {
         renderer.loadImage(this.texture, decodedImage, SOURCE_TEX_OPTIONS)
       }
@@ -43,7 +45,7 @@ export class TextureResource {
     } else {
       this.isLoading.value = true
 
-      const decode = decodeAsyncImageSource(source, crossOrigin, isVideo)
+      const decode = decodeAsyncImageSource(source, crossOrigin, type === AssetType.Video)
 
       decode.promise
         .then(onDecoded)

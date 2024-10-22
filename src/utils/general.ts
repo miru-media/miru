@@ -17,6 +17,9 @@ export const asArray = <T>(value: T | T[]) => (Array.isArray(value) ? value : [v
 
 export const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+export const isElement = (value: unknown): value is Element =>
+  !!value && typeof value === 'object' && 'nodeType' in value && value.nodeType === 1
+
 interface DevSlowDown {
   (): Promise<undefined>
   <T>(value: T | PromiseLike<T>): Promise<T>

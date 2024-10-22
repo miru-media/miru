@@ -5,6 +5,7 @@ import { EffectOpType, LUT_TEX_OPTIONS, MAX_EFFECT_OPS, SOURCE_TEX_OPTIONS } fro
 import * as GL from '@/GL'
 import {
   AdjustmentsState,
+  AssetType,
   Context2D,
   CropState,
   RendererEffect,
@@ -134,11 +135,12 @@ export class Renderer {
     this.#uniforms.u_operations = paddedOps
   }
 
-  loadLut(texture: WebGLTexture, imageData: ImageData, isHald?: boolean) {
+  loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut) {
+    const isHald = type === AssetType.HaldLut
     this.#loadLut(texture, imageData, isHald)
   }
 
-  #loadLut(texture: WebGLTexture, imageData?: ImageData, isHald?: boolean) {
+  #loadLut(texture: WebGLTexture, imageData: ImageData | undefined, isHald: boolean) {
     const gl = this.#gl
 
     if (!imageData) return
@@ -157,7 +159,7 @@ export class Renderer {
       return
     }
 
-    const pixelBuffer = gl.createBuffer()!
+    const pixelBuffer = gl.createBuffer()
     gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
     gl.pixelStorei(GL.UNPACK_ROW_LENGTH, width)
     gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, height)
@@ -185,8 +187,27 @@ export class Renderer {
     gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, null)
   }
 
-  createTexture() {
-    return this.#gl.createTexture()
+  createTexture(textureOptions: twgl.TextureOptions = SOURCE_TEX_OPTIONS) {
+    const gl = this.#gl
+    const {
+      target = GL.TEXTURE_2D,
+      internalFormat = GL.RGBA8,
+      format = GL.RGBA,
+      type = GL.UNSIGNED_BYTE,
+      width = 1,
+      height = 1,
+    } = textureOptions
+
+    const texture = gl.createTexture()
+    if (!texture) throw new Error(`[miru] gl.createTexture() failed`)
+
+    gl.bindTexture(target, texture)
+
+    if (target === GL.TEXTURE_2D)
+      gl.texImage2D(target, 0, internalFormat, width, height, 0, format, type, null)
+    else gl.texImage3D(target, 0, internalFormat, width, height, 0, 0, format, type, null)
+
+    return texture
   }
 
   loadImage(
@@ -213,15 +234,17 @@ export class Renderer {
     this.#uniforms.u_adjustments = value
   }
 
+  clear() {
+    this.#gl.clear(GL.COLOR_BUFFER_BIT)
+  }
+
   draw() {
     const gl = this.#gl
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
-
     gl.useProgram(this.#programInfo.program)
-
     twgl.setUniforms(this.#programInfo, this.#uniforms)
-    gl.clear(GL.COLOR_BUFFER_BIT)
+
     gl.drawArrays(GL.TRIANGLES, 0, 6)
 
     const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
