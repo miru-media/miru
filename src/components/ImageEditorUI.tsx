@@ -67,7 +67,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
             {
               view: EditorView.Filter,
               Icon: IconTablerWand,
-              active: () => effectOfCurrentSource.value >= 0,
+              active: () => effectOfCurrentSource.value !== -1  && currentSource.value?.intensity.value,
               label: 'Filter',
             },
           ].map(({ view, Icon, active, label }) => (
