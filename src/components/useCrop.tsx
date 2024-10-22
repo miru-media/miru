@@ -1,8 +1,8 @@
 import Cropper from 'cropperjs'
 
 import { ImageEditor } from '@/editor/ImageEditor'
-import { ImageSourceInternal } from '@/editor/ImageSourceState'
-import { computed, getCurrentScope, ref, toValue } from '@/framework/reactivity'
+import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
+import { computed, ref, toValue, watch } from '@/framework/reactivity'
 import {
   centerTo,
   cropIsEqualTo,
@@ -25,7 +25,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
   const aspectRatio = computed(() => {
     const crop = source.value?.crop.value
 
-    return crop ? crop.width / crop.height : NaN
+    return crop != null ? crop.width / crop.height : NaN
   })
   const zoom = ref(1)
   const unmodifiedCrop = {
@@ -36,12 +36,11 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
     rotate: 0,
   }
 
-  const scope = getCurrentScope()!
   const container = document.createElement('div')
   container.className = 'miru--cropper-container'
 
-  scope.watch([source, () => source.value?.original], async ([source, original], _prev, onCleanup) => {
-    if (!source || !original) return
+  watch([source, () => source.value?.original], async ([source, original], _prev, onCleanup) => {
+    if (source == undefined || original == undefined) return
 
     let cropperImage
 
@@ -69,7 +68,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
     setObjectSize(unmodifiedCrop, original)
     const cropData = source.crop.value ?? unmodifiedCrop
 
-    if (devSlowDown) await devSlowDown()
+    if (devSlowDown != null) await devSlowDown()
 
     // https://github.com/fengyuanchen/cropperjs/blob/main/README.md
     const $cropper = (cropper.value = new Cropper(cropperImage as never, {
@@ -115,7 +114,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
   })
 
   // pause previews while cropping
-  scope.watch([editor.sources], ([sources], _prev, onCleanup) => {
+  watch([editor.sources], ([sources], _prev, onCleanup) => {
     sources.forEach((source) => source.pausePreview.value++)
     onCleanup(() => sources.forEach((source) => source.pausePreview.value--))
   })
@@ -136,7 +135,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
     const $cropper = cropper.value
     const $source = source.value
     const original = $source?.original
-    if (!$cropper || !original) return
+    if ($source == undefined || $cropper == undefined || original == undefined) return
 
     await withUnlimitedCropper(() => {
       $cropper.setAspectRatio(original.width / original.height)
@@ -147,7 +146,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
   }
   const fitCrop = twice(async () => {
     const $cropper = cropper.value
-    if (!$cropper) return
+    if ($cropper == undefined) return
 
     const container = $cropper.getContainerData()
     const { naturalWidth, naturalHeight } = $cropper.getCanvasData()
@@ -196,7 +195,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
 
   const withUnlimitedCropper = async (fn: () => unknown) => {
     const $cropper = cropper.value as any
-    if (!$cropper) return
+    if ($cropper == undefined) return
 
     const cropperOptions = ($cropper as unknown as { options: Cropper.Options }).options
     const { viewMode } = cropperOptions

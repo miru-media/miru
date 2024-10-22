@@ -56,7 +56,7 @@ const Demo = () => {
               recordedBlob.value = undefined
               try {
                 const blob = await movie.record()
-                if (!blob) throw new Error('no blob')
+                if (blob == undefined) throw new Error('no blob')
 
                 recordedBlob.value = blob
               } catch (error: unknown) {
@@ -68,7 +68,7 @@ const Demo = () => {
           </button>
           {() => {
             const blob = recordedBlob.value
-            if (!blob) return
+            if (blob == undefined) return
 
             return (
               <button type="button" onClick={() => window.open(URL.createObjectURL(blob))}>

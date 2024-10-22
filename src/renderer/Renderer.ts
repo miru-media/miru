@@ -128,7 +128,7 @@ export class Renderer {
       intensity: 0,
     }
 
-    for (let i = 0; i < MAX_EFFECT_OPS; i++) paddedOps[i] = ops[i] || noop
+    for (let i = 0; i < MAX_EFFECT_OPS; i++) paddedOps[i] = ops[i] ?? noop
 
     this.#uniforms.u_images = images
     this.#uniforms.u_luts = luts
@@ -143,7 +143,7 @@ export class Renderer {
   #loadLut(texture: WebGLTexture, imageData: ImageData | undefined, isHald: boolean) {
     const gl = this.#gl
 
-    if (!imageData) return
+    if (imageData == undefined) return
 
     const format = GL.RGBA
     const type = GL.UNSIGNED_BYTE
@@ -199,7 +199,7 @@ export class Renderer {
     } = textureOptions
 
     const texture = gl.createTexture()
-    if (!texture) throw new Error(`[miru] gl.createTexture() failed`)
+    if (texture == undefined) throw new Error(`[miru] gl.createTexture() failed`)
 
     gl.bindTexture(target, texture)
 
@@ -219,7 +219,7 @@ export class Renderer {
 
     twgl.setTextureParameters(this.#gl, texture, textureOptions)
     this.#gl.texImage2D(GL.TEXTURE_2D, 0, internalFormat, format, type, source)
-    if (textureOptions.auto) this.#gl.generateMipmap(GL.TEXTURE_2D)
+    if (textureOptions.auto === true) this.#gl.generateMipmap(GL.TEXTURE_2D)
   }
 
   deleteTexture(texture: WebGLTexture) {
@@ -248,10 +248,9 @@ export class Renderer {
     gl.drawArrays(GL.TRIANGLES, 0, 6)
 
     const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
-    if (!sync) return
 
+    if (sync == null) return
     if (gl.getSyncParameter(sync, GL.SYNC_STATUS) !== GL.SIGNALED) gl.clientWaitSync(sync, 0, 0)
-
     gl.deleteSync(sync)
   }
 

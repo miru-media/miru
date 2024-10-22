@@ -23,13 +23,13 @@ const getCanvasContext = (
   type: OffscreenRenderingContextId,
   options: unknown,
 ) => {
-  if (!canvas) {
+  if (canvas == undefined) {
     // try offscreen canvas
     if (FULLY_SUPPORTS_OFFSCREEN_CANVAS) {
       canvas = new OffscreenCanvas(1, 1)
       const context = canvas.getContext(type, options)
 
-      if (context) return context
+      if (context != null) return context
     }
 
     // try canvas element
@@ -38,7 +38,7 @@ const getCanvasContext = (
 
   const context = canvas?.getContext(type, options)
 
-  if (!context) throw new Error(`[miru] Couldn't create WebGL2 context`)
+  if (context == undefined) throw new Error(`[miru] Couldn't create WebGL2 context`)
 
   return context
 }
@@ -83,7 +83,7 @@ export const canvasToBlob = async (
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
-        if (blob) resolve(blob)
+        if (blob != null) resolve(blob)
         else reject(new Error(`[miru] Couldn't get Blob from canvas`))
       },
       options?.type,
@@ -159,11 +159,10 @@ export const decodeAsyncImageSource = <IsVideo extends boolean>(
     source = toRevoke = URL.createObjectURL(source)
   }
 
-  const { decodePromise, media } = isVideo
-    ? decodeVideoUrl(source, crossOrigin)
-    : decodeImageUrl(source, crossOrigin)
+  const { decodePromise, media } =
+    isVideo === true ? decodeVideoUrl(source, crossOrigin) : decodeImageUrl(source, crossOrigin)
 
-  const promise = (devSlowDown ? devSlowDown(Promise.resolve(decodePromise)) : decodePromise)
+  const promise = (devSlowDown != undefined ? devSlowDown(Promise.resolve(decodePromise)) : decodePromise)
     // reject if already closed
     .then((result) => (isClosed ? Promise.reject(new Error('[miru] decode source was closed')) : result))
 
@@ -232,11 +231,11 @@ export const resizeImageSync = (
   if ('data' in source) {
     context.save()
     context.scale(size.width / source.width, size.height / source.height)
-    if (crop) context.putImageData(source, 0, 0, crop.x, crop.y, crop.width, crop.height)
+    if (crop != undefined) context.putImageData(source, 0, 0, crop.x, crop.y, crop.width, crop.height)
     else context.putImageData(source, 0, 0)
     context.restore()
   } else {
-    if (crop)
+    if (crop != undefined)
       context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, size.width, size.height)
     else context.drawImage(source, 0, 0, source.width, source.height, 0, 0, size.width, size.height)
   }
@@ -254,7 +253,7 @@ export const resizeImage = async (
     resizeQuality: 'high',
   } as const
 
-  if (!crop) return createImageBitmap(source, resizeOptions)
+  if (crop == undefined) return createImageBitmap(source, resizeOptions)
 
   // using createImageBitmap with `sx, sy, sw, sh` options in firefox 130 doesn't work correctly
   if (IS_FIREFOX) {
@@ -299,7 +298,7 @@ export const isSyncSource = (source: ImageSource): source is SyncImageSource => 
 }
 
 export const isObjectWithSource = (source: ImageSourceOption): source is ImageSourceObject => {
-  return typeof source !== 'string' && 'source' in source && !!source.source
+  return typeof source !== 'string' && 'source' in source && Boolean(source.source)
 }
 
 export const normalizeSourceOption = <T extends ImageSource>(
@@ -312,6 +311,7 @@ export const normalizeSourceOption = <T extends ImageSource>(
 
 export const editIsEqualTo = (a: ImageEditState | undefined, b: ImageEditState | undefined) => {
   if (a === b) return true
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!a || !b) return false
 
   if (a.effect !== b.effect || a.intensity !== b.intensity) return false
@@ -324,6 +324,7 @@ export const editIsEqualTo = (a: ImageEditState | undefined, b: ImageEditState |
 
 export const adjustmentIsEqualTo = (a: AdjustmentsState | undefined, b: AdjustmentsState | undefined) => {
   if (a === b) return true
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!a || !b) return false
 
   return a.brightness === b.brightness && a.contrast === b.contrast && a.saturation === b.saturation
@@ -331,6 +332,7 @@ export const adjustmentIsEqualTo = (a: AdjustmentsState | undefined, b: Adjustme
 
 export const cropIsEqualTo = (a: CropState | undefined, b: CropState | undefined) => {
   if (a === b) return true
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!a || !b) return false
 
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height && a.rotate === b.rotate

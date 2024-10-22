@@ -140,7 +140,7 @@ class EtroMovie {
   constructor(renderer: Renderer) {
     this.#renderer = renderer
 
-    if (stats) {
+    if (stats != undefined) {
       stats.showPanel(0)
       document.body.appendChild(stats.dom)
     }

@@ -99,7 +99,7 @@ export class ImageSourceInternal {
     onEdit,
   }: ImageSourceInternalOptions) {
     const currentScope = getCurrentScope()
-    if (!currentScope) throw new Error(`[miru] ImageSource must be created within an EffectScope`)
+    if (currentScope == undefined) throw new Error(`[miru] ImageSource must be created within an EffectScope`)
 
     this.#renderer = renderer
     this.#texture = renderer.createTexture()!
@@ -117,7 +117,7 @@ export class ImageSourceInternal {
       // in the case where the container is hidden or not attached, draw at a fixed size
       const MIN_CONTAINER_SIZE = 200
 
-      if (!rotated) return size
+      if (rotated == undefined) return size
 
       const dpr = win.devicePixelRatio
       const containerSize = {
@@ -143,7 +143,7 @@ export class ImageSourceInternal {
       const optionValue = toValue(thumbnailSize)
       const fullSize = this.crop.value ?? this.#rotated.value
 
-      return fullSize ? fit(fullSize, optionValue, 'contain') : optionValue
+      return fullSize != undefined ? fit(fullSize, optionValue, 'contain') : optionValue
     })
 
     sourceOption = normalizeSourceOption(sourceOption)
@@ -151,7 +151,7 @@ export class ImageSourceInternal {
     if (isSyncSource(sourceOption.source)) {
       const fullSizeImage = sourceOption.source
 
-      if (devSlowDown) {
+      if (devSlowDown != undefined) {
         devSlowDown()
           .then(() => (this.#original.value = fullSizeImage))
           .catch(() => undefined)
@@ -163,7 +163,7 @@ export class ImageSourceInternal {
         sourceOption.type === AssetType.Video,
       )
 
-      ;(devSlowDown ? devSlowDown(promise) : promise)
+      ;(devSlowDown != undefined ? devSlowDown(promise) : promise)
         .then((decoded) => {
           this.#original.value = decoded
         })
@@ -179,7 +179,7 @@ export class ImageSourceInternal {
         ([original, rotation, error, paused]) => {
           if (paused > 0) return
 
-          if (error) {
+          if (error != undefined) {
             this.#isLoading.value = false
             this.#original.value = this.#rotated.value = undefined
             return
@@ -193,9 +193,9 @@ export class ImageSourceInternal {
 
           this.#isLoading.value = true
 
-          if (!original || !rotation) {
+          if (original == undefined || !rotation) {
             this.#rotated.value = original
-            if (original) load(original)
+            if (original != undefined) load(original)
 
             return
           }
@@ -273,7 +273,7 @@ export class ImageSourceInternal {
 
   drawFullSize() {
     const rotated = this.#rotated.value
-    if (this.isLoading || !rotated) return
+    if (this.isLoading || rotated == undefined) return
 
     const renderer = this.#renderer
     const tempTexture = renderer.createTexture()
@@ -281,7 +281,7 @@ export class ImageSourceInternal {
     const crop = this.crop.value
     let cropped = rotated
 
-    if (crop) {
+    if (crop != undefined) {
       const context = get2dContext()
       resizeImageSync(rotated, crop, crop, context)
       cropped = context.canvas
@@ -302,7 +302,7 @@ export class ImageSourceInternal {
 
   async drawPreview(context: ImageBitmapRenderingContext | Context2D = this.context) {
     const rotated = this.#rotated.value
-    if (this.isLoading || !rotated) return
+    if (this.isLoading || rotated == undefined) return
 
     const renderer = this.#renderer
     renderer.setSourceTexture(this.#texture, this.#previewSize.value, rotated, this.crop.value)
@@ -315,7 +315,7 @@ export class ImageSourceInternal {
 
   async drawThumbnail(effect: EffectInternal, context: DisplayContext) {
     const rotated = this.#rotated.value
-    if (this.isLoading || !rotated) return
+    if (this.isLoading || rotated == undefined) return
 
     const renderer = this.#renderer
 

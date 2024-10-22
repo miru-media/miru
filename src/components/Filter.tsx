@@ -2,7 +2,7 @@ import { throttle } from 'throttle-debounce'
 
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '@/constants'
 import { ImageEditor } from '@/editor/ImageEditor'
-import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
 import { EffectInternal } from '@/Effect'
 import { computed, effect, MaybeRefOrGetter, ref, Ref, toRef, toValue, watch } from '@/framework/reactivity'
 import { DisplayContext, InputEvent } from '@/types'
@@ -33,7 +33,8 @@ const FilterItem = ({
   watch(
     [effect.isLoading, source, toRef(context), () => source.value?.thumbnailKey.value],
     ([isLoading, source, context]) => {
-      if (!isLoading && source && context) source.drawThumbnail(effect, context).catch(() => undefined)
+      if (!isLoading && source != undefined && context != undefined)
+        source.drawThumbnail(effect, context).catch(() => undefined)
     },
   )
 
@@ -74,7 +75,7 @@ export const FilterView = ({
   const toggleContext = useTogleEdit(source, 'intensity')
 
   const onInputIntensity = (event: InputEvent) => {
-    if (!source.value) return
+    if (source.value == null) return
 
     toggleContext.clearSavedValue()
     source.value.intensity.value = event.target.valueAsNumber
@@ -93,19 +94,19 @@ export const FilterView = ({
 
   const onScroll = throttle(SCROLL_SELECT_EVENT_THROTTLE_MS, () => {
     const rect = container.value?.getBoundingClientRect()
-    if (!rect) return
+    if (rect == null) return
 
     const center = getCenter(rect)
     const effectElement = (container.value!.getRootNode() as ShadowRoot | Document)
       .elementFromPoint(center.x, center.y)
       ?.closest<HTMLElement>('[data-index]')
 
-    if (effectElement) scrolledEffectIndex.value = parseInt(effectElement.dataset.index!)
+    if (effectElement != undefined) scrolledEffectIndex.value = parseInt(effectElement.dataset.index!)
   })
 
   // scroll to selected filter on mount, on container size change and on source change
   watch([container, useElementSize(container), source], ([container]) => {
-    if (container) onClickFilter(effectOfCurrentSource.value, 'instant')
+    if (container != undefined) onClickFilter(effectOfCurrentSource.value, 'instant')
     onScroll.cancel({ upcomingOnly: true })
   })
 
@@ -126,7 +127,7 @@ export const FilterView = ({
 
   const selectFilter = (filterIndex: number) => {
     const $source = source.value
-    if (!$source) return
+    if ($source == undefined) return
 
     $source.effect.value = filterIndex
     $source.intensity.value = DEFAULT_INTENSITY
@@ -137,7 +138,7 @@ export const FilterView = ({
   return (
     <>
       {() =>
-        toValue(showPreviews) &&
+        toValue(showPreviews) === true &&
         editor.sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
       <div class="miru--menu">
@@ -171,7 +172,7 @@ export const FilterView = ({
           value: toRef(() => source.value?.intensity.value ?? 0),
           onInput: onInputIntensity,
           disabled: () => (source.value?.effect.value === -1 ? true : false),
-          toggleContext
+          toggleContext,
         })}
       </div>
 

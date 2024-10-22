@@ -1,7 +1,6 @@
 import eslint from '@eslint/js'
 import importPlugin from 'eslint-plugin-import'
 import * as tseslint from 'typescript-eslint'
-// @ts-expect-error missing types
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -33,6 +32,10 @@ export default tseslint.config(
         { ignoreArrowShorthand: true, ignoreVoidOperator: true },
       ],
       '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/strict-boolean-expressions': [
+        'error',
+        { allowNullableNumber: true, allowNullableObject: false, allowNullableString: true },
+      ],
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         { allowBoolean: true, allowNumber: true },

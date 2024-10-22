@@ -1,4 +1,4 @@
-import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
 import { MaybeRefOrGetter, ref, toRef, toValue, watch } from '@/framework/reactivity'
 import { ImageEditState } from '@/types'
 
@@ -14,9 +14,9 @@ export const useTogleEdit = <T extends keyof ImageEditState>(
 
   const toggle = () => {
     const $source = toValue(source)
-    if (!$source) return
+    if ($source == undefined) return
 
-    if (savedValue.value) {
+    if (savedValue.value != undefined) {
       $source[key].value = savedValue.value
       clearSavedValue()
     } else {

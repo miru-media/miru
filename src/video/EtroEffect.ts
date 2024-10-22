@@ -22,7 +22,7 @@ export class EtroEffect extends etro.effect.Visual {
   }
 
   apply(target: etro.layer.VisualSource & Partial<EtroVideo>, _reltime: number) {
-    if (!this.effect.value || !target.__m_isEtroVideo) return
+    if (this.effect.value == undefined || target.__m_isEtroVideo !== true) return
 
     const renderer = this.#renderer
 
@@ -34,7 +34,7 @@ export class EtroEffect extends etro.effect.Visual {
   }
 
   get ready() {
-    return !this.effect.value?.isLoading.value
+    return this.effect.value?.isLoading.value === false
   }
 
   async whenReady() {

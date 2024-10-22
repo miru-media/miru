@@ -4,7 +4,7 @@ import css from 'virtual:shadow.css'
 let styleSheet_: CSSStyleSheet | HTMLStyleElement | undefined
 
 const getStyleSheet = () => {
-  if (!styleSheet_) {
+  if (styleSheet_ == undefined) {
     try {
       styleSheet_ = new CSSStyleSheet()
       styleSheet_.replaceSync(css)
@@ -28,10 +28,10 @@ export const setShadowStyles = (shadow: ShadowRoot) => {
   }
 }
 
-if (import.meta.hot && 'CSSStyleSheet' in window) {
+if (import.meta.hot != null && 'CSSStyleSheet' in window) {
   import.meta.hot.accept('../index.css?inline', (mod) => {
-    if (!mod) import.meta.hot?.invalidate()
-    if (!styleSheet_) return
+    if (mod == null) import.meta.hot?.invalidate()
+    if (styleSheet_ == null) return
     else if (styleSheet_ instanceof HTMLStyleElement) return
     else styleSheet_.replaceSync((mod as unknown as { default: string }).default)
   })

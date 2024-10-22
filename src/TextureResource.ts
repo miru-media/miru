@@ -37,7 +37,7 @@ export class TextureResource {
     }
 
     if (isSyncSource(source)) {
-      if (devSlowDown)
+      if (devSlowDown != undefined)
         devSlowDown()
           .then(() => onDecoded(source))
           .catch(() => undefined)

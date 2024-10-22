@@ -1,5 +1,5 @@
 import { ImageEditor } from '@/editor/ImageEditor'
-import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
 import { computed, MaybeRefOrGetter, ref, toRef, toValue } from '@/framework/reactivity'
 import { AdjustmentsState, InputEvent } from '@/types'
 
@@ -30,7 +30,7 @@ export const AdjustmentsView = ({
 
   const onInputSlider = (event: InputEvent) => {
     const $source = source.value
-    if (!$source) return
+    if ($source == undefined) return
 
     toggleContext.clearSavedValue()
 
@@ -47,7 +47,7 @@ export const AdjustmentsView = ({
   return (
     <>
       {() =>
-        toValue(showPreviews) &&
+        toValue(showPreviews) == true &&
         sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
       <div class="miru--menu">
@@ -77,7 +77,7 @@ export const AdjustmentsView = ({
         </p>
 
         {RowSlider({
-          label: () => labels[currentType.value],
+          label: computed(() => labels[currentType.value]),
           // label: 'Reset',
           min: -1,
           max: 1,

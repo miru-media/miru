@@ -1,4 +1,4 @@
-import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
 import { computed, getCurrentScope, MaybeRefOrGetter, ref, Ref, toRef } from '@/framework/reactivity'
 import { EditorView } from '@/types'
 
@@ -29,11 +29,13 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
   )
   const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? -1)
   const scope = getCurrentScope()
-  if (!scope) throw new Error(`[miru] must be run in scope`)
+  if (scope == undefined) throw new Error(`[miru] must be run in scope`)
 
   const hasAdjustment = computed(() => {
     const adjustments = currentSource.value?.adjustments.value
-    return !!adjustments && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
+    return (
+      adjustments != undefined && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
+    )
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
@@ -55,7 +57,7 @@ export const ImageEditorUI = (props: ImageEditorUIProps) => {
             {
               view: EditorView.Crop,
               Icon: IconTablerCrop,
-              active: () => !!currentSource.value?.crop.value,
+              active: () => currentSource.value?.crop.value != undefined,
               label: 'Crop',
             },
             {

@@ -65,9 +65,9 @@ export type Component<Props extends Record<string, unknown> = {}, R = unknown> =
 
 const HNODE_MARKER = Symbol()
 
-const isHNode = (value: any): value is HNode => !!value?.[HNODE_MARKER]
+const isHNode = (value: any): value is HNode => value?.[HNODE_MARKER] != null
 const isDomNode = (value: any): value is Node =>
-  !!value &&
+  value != null &&
   typeof value.nodeType === 'number' &&
   Object.prototype.toString.call(value) !== '[opbject Object]'
 const isTextNode = (value: any): value is Text => {
@@ -83,7 +83,7 @@ const updateChildNode = (cur: MaybeChild, prev: AppendedChild | undefined) => {
   if (isDomNode(cur)) return cur
 
   const prevTextNode = prev?.domNode
-  const textNode = prevTextNode && isTextNode(prevTextNode) ? prevTextNode : new Text()
+  const textNode = prevTextNode != undefined && isTextNode(prevTextNode) ? prevTextNode : new Text()
 
   if (cur === false || cur == null) textNode.nodeValue = ''
   else if (typeof cur === 'object') textNode.nodeValue = JSON.stringify(cur, null, '  ')
@@ -150,9 +150,9 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
 
   const parentScope = getCurrentScope()
 
-  if (!parentScope) throw new Error(`[miru] jsx element must be created within an EffectScope`)
+  if (parentScope == undefined) throw new Error(`[miru] jsx element must be created within an EffectScope`)
 
-  if (props.children) {
+  if (props.children != null) {
     watch([() => parentScope.run(() => arrayFlatToValue(props.children))], ([children]) => {
       const appendTo = marker?.parentNode ?? element
 
@@ -170,7 +170,7 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
 
         if ((isHNode(child) && child !== prevAppended?.hNode) || domNode !== prevAppended?.domNode) {
           // remove the previous child if it changed
-          if (prevAppended) unappendAndStop(prevAppended, appendTo)
+          if (prevAppended != undefined) unappendAndStop(prevAppended, appendTo)
 
           // update the list of appended children
           appendedNodes[childIndex] = { hNode: child, domNode }
@@ -185,12 +185,12 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
       if (isDocFrag(element)) {
         const parentNode = marker!.parentNode
         marker!.remove()
-        if (parentNode) appendedNodes.forEach((node) => unappend(node, parentNode))
+        if (parentNode != null) appendedNodes.forEach((node) => unappend(node, parentNode))
       }
 
       appendedNodes.length = 0
       hNode.el = undefined as never
-      if (props.ref) props.ref.value = undefined
+      if (props.ref != undefined) props.ref.value = undefined
     })
   }
 
@@ -240,7 +240,7 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
     }
   })
 
-  if (props.ref) props.ref.value = element
+  if (props.ref != undefined) props.ref.value = element
 
   return hNode
 }
@@ -248,7 +248,7 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
 export const Fragment = (props: { children: HNodeChild[] }) => h('#fragment', props)
 
 export const render = (node: JSX.Element, root: ParentNode): Stop => {
-  if (!(root as ParentNode | undefined)) throw new Error(`[miru] No root to render into`)
+  if ((root as ParentNode | null) == null) throw new Error(`[miru] No root to render into`)
 
   root.appendChild(node.el)
 

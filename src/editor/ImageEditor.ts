@@ -4,7 +4,7 @@ import { Renderer } from '@/renderer/Renderer'
 import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
 import { get2dContext } from '@/utils'
 
-import { ImageSourceInternal } from './ImageSourceState'
+import { ImageSourceInternal } from './ImageSourceInternal'
 
 export interface ImageEditorOptions {
   effects: Ref<Effect[]>
@@ -40,12 +40,11 @@ export class ImageEditor {
 
   constructor({ effects, onRenderPreview, onEdit }: ImageEditorOptions) {
     const scope = getCurrentScope()
-    if (!scope) throw new Error(`[miru] must be run in an EffectScope`)
+    if (scope == undefined) throw new Error(`[miru] must be run in an EffectScope`)
     this.#scope = scope
 
     this.#effectsIn = effects
-    watch([this.sourceInputs], ([sourceOptions], prev) => {
-      const prevSourceOptions = prev?.[0]
+    watch([this.sourceInputs], ([sourceOptions], [prevSourceOptions]) => {
       const prevSources = this.sources.value
       const prevSourcesByOption = (prevSourceOptions ?? []).reduce((acc, so, i) => {
         if (!acc.has(so)) acc.set(so, [])
@@ -79,8 +78,8 @@ export class ImageEditor {
       prevSourcesByOption.clear()
     })
 
-    this.#scope.watch([this.sources, this.editStatesIn], ([sources, states]) => {
-      states?.forEach((state, index) => state && sources[index]?.setState(state))
+    watch([this.sources, this.editStatesIn], ([sources, states]) => {
+      states?.forEach((state, index) => state != undefined && sources[index]?.setState(state))
     })
 
     watch([this.#effectsIn], ([effects]) => {

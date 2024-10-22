@@ -10,7 +10,7 @@ import { ImageEditor } from '../editor/ImageEditor'
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
 
-const HTMLElement = ((win.HTMLElement as unknown) || Object) as typeof window.HTMLElement
+const HTMLElement = ((win.HTMLElement as unknown) ?? Object) as typeof window.HTMLElement
 
 export class MiruImageEditor extends HTMLElement {
   static observedAttributes = OBSERVED_ATTRS
@@ -78,8 +78,10 @@ export class MiruImageEditor extends HTMLElement {
   }
 
   attributeChangedCallback(name: ObservedAttr, _oldValue: string | null, newValue: string | null) {
+    newValue ??= ''
+
     if (name === 'sources') {
-      if (!!newValue && newValue.trimStart().startsWith('[')) {
+      if (newValue.trimStart().startsWith('[')) {
         try {
           this.sources = JSON.parse(newValue)
           return
@@ -89,8 +91,8 @@ export class MiruImageEditor extends HTMLElement {
       }
 
       this.sources = newValue ? [newValue] : []
-    } else if (name === 'effects') this.#effects.value = (newValue && JSON.parse(newValue)) || undefined
-    else if (name === 'assetsPath') this.#effects.value = getDefaultFilters(newValue ?? undefined)
+    } else if (name === 'effects') this.#effects.value = newValue && JSON.parse(newValue)
+    else if (name === 'assetsPath') this.#effects.value = getDefaultFilters(newValue || undefined)
     else this[name] = newValue as any
   }
 

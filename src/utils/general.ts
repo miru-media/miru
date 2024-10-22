@@ -18,7 +18,7 @@ export const asArray = <T>(value: T | T[]) => (Array.isArray(value) ? value : [v
 export const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export const isElement = (value: unknown): value is Element =>
-  !!value && typeof value === 'object' && 'nodeType' in value && value.nodeType === 1
+  value != null && typeof value === 'object' && 'nodeType' in value && value.nodeType === 1
 
 interface DevSlowDown {
   (): Promise<undefined>
@@ -26,7 +26,7 @@ interface DevSlowDown {
 }
 
 const VITE_DEV_SLOW_DOWN_MS =
-  (!!import.meta.env.VITE_DEV_SLOW_DOWN_MS && parseInt(import.meta.env.VITE_DEV_SLOW_DOWN_MS)) || 0
+  (import.meta.env.VITE_DEV_SLOW_DOWN_MS != null && parseInt(import.meta.env.VITE_DEV_SLOW_DOWN_MS)) || 0
 const slowResolveQueue: (() => void)[] = /* @__PURE__ */ []
 const setResolveTimeout = () =>
   setTimeout(() => {
@@ -45,4 +45,5 @@ export const devSlowDown: DevSlowDown | undefined = VITE_DEV_SLOW_DOWN_MS
 
 // https://stackoverflow.com/a/63116134
 export const toKebabCase = (str: string) =>
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())

@@ -9,7 +9,8 @@ const { userAgent = '' } = (win.navigator as Navigator | undefined) ?? {}
 export const IS_SAFARI_16 = userAgent.includes('AppleWebKit/') && userAgent.includes('Version/16.')
 export const IS_FIREFOX = userAgent.includes('Gecko/')
 
-export const SUPPORTS_2D_OFFSCREEN_CANVAS = typeof OffscreenCanvas !== 'undefined' && !!OffscreenCanvas
+export const SUPPORTS_2D_OFFSCREEN_CANVAS =
+  typeof OffscreenCanvas !== 'undefined' && (OffscreenCanvas as unknown) != null
 // safari 16 only supports 2D offscreen canvas
 export const FULLY_SUPPORTS_OFFSCREEN_CANVAS = !IS_SAFARI_16 && SUPPORTS_2D_OFFSCREEN_CANVAS
 

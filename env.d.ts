@@ -21,3 +21,7 @@ declare module '*.glsl' {
 declare module 'postcss-url' {}
 declare module 'postcss-import' {}
 declare module 'postcss-hover-media-feature' {}
+declare module 'eslint-plugin-import' {
+  const val: any
+  export = val
+}

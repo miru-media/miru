@@ -34,7 +34,7 @@ export class EffectInternal {
       let lutIndex = -1
       let imageIndex = -1
 
-      if (op.image) {
+      if (op.image != undefined) {
         const type = AssetType.Image
         const resource = new TextureResource(normalizeSourceOption(op.image, type), renderer, scratchpad)
         resources.push(resource)
@@ -43,7 +43,7 @@ export class EffectInternal {
         images.push(resource.texture)
       }
 
-      if (op.lut) {
+      if (op.lut != undefined) {
         const type = AssetType.Lut
         const resource = new TextureResource(normalizeSourceOption(op.lut, type), renderer, scratchpad)
         resources.push(resource)

@@ -1,5 +1,5 @@
 import { ImageEditor } from '@/editor/ImageEditor'
-import { ImageSourceInternal } from '@/editor/ImageSourceState'
+import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
 import { computed, MaybeRefOrGetter, toValue } from '@/framework/reactivity'
 import { useEventListener } from '@/utils'
 
@@ -17,7 +17,7 @@ export const SourcePreview = ({
   const { sources } = toValue(editor)
   const source = computed((): ImageSourceInternal | undefined => sources.value[toValue(sourceIndex)])
 
-  if (onClick) useEventListener(() => source.value?.context.canvas, 'click', onClick)
+  if (onClick != undefined) useEventListener(() => source.value?.context.canvas, 'click', onClick)
 
   return (
     <div class={() => ['miru--preview', source.value?.isLoading !== false && 'miru--loading']} style={style}>

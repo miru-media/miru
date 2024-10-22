@@ -13,8 +13,8 @@ export class EffectScope {
   _cleanups = new Set<() => void>()
   active = true
 
-  constructor(detached?: boolean) {
-    if (detached || !currentScope) return
+  constructor(detached = false) {
+    if (detached || currentScope == undefined) return
 
     const parent = currentScope
 
@@ -50,20 +50,6 @@ export class EffectScope {
     })
     cleanups.clear()
     this.active = false
-  }
-  watch<Sources extends readonly WatchSource[]>(
-    sources: [...Sources],
-    callback: (
-      current: MapSources<Sources>,
-      previous: MapSources<Sources> | undefined,
-      onCleanup: OnCleanup,
-    ) => unknown,
-  ) {
-    return this.run(() => watch(sources, callback))
-  }
-
-  effect(callback: (onCleanup: OnCleanup) => unknown) {
-    return this.run(() => effect(callback))
   }
 }
 
@@ -129,7 +115,7 @@ export type MaybeRef<T = unknown> = Ref<T> | T
 export type MaybeRefOrGetter<T = unknown> = MaybeRef<T> | Reactive<T> | (() => T)
 
 export const isRef = <T>(source: Ref<T> | T | object): source is Ref<T> => {
-  return source && (source as RefImpl).__m_isRef
+  return source != undefined && (source as RefImpl).__m_isRef
 }
 
 export const toValue = <T>(source: MaybeRefOrGetter<T>): T => {
@@ -187,7 +173,7 @@ export const watch = <Sources extends readonly WatchSource[]>(
     () => {
       const cur = sources.map(toValue) as MapSources<Sources>
 
-      if (prev) {
+      if (prev != undefined) {
         let changed = false
 
         for (let i = 0; i < cur.length; i++) {
@@ -215,7 +201,7 @@ const effectInternal = (
   hooks: Record<symbol, (() => void) | undefined>,
 ) => {
   const scope = currentScope
-  if (scope && !scope.active) throw new Error(`[miru] Scope is already disposed`)
+  if (scope != undefined && !scope.active) throw new Error(`[miru] Scope is already disposed`)
 
   let cleanup: (() => void) | undefined
   const onCleanup: OnCleanup = (callback) => (cleanup = callback)

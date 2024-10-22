@@ -23,7 +23,7 @@ export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | un
   })
 
   watch([() => toValue(element)], ([el], _prev, onCleanup) => {
-    if (!el) return
+    if (el == undefined) return
 
     observer.observe(el)
     onCleanup(() => observer.unobserve(el))
@@ -45,7 +45,7 @@ export const useAppendChild = (
   }
 
   watch([getContainer, () => toValue(child)], ([container, child], _prev, onCleanup) => {
-    if (!child || !container) return
+    if (child == null || container == null) return
 
     container.appendChild(child)
     onCleanup(child.remove.bind(child))
@@ -81,7 +81,7 @@ export const useEventListener = (
 ) =>
   effect((onCleanup) => {
     const target = toValue(targetRef)
-    if (!target) return
+    if (target == undefined) return
 
     target.addEventListener(type, listener, options)
     onCleanup(() => target.removeEventListener(type, listener, options))
