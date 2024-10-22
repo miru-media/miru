@@ -10,7 +10,7 @@
 }
 
 /* MAIN FLEX CONTAINERS */
-&,
+:host,
 .miru--main {
   display: flex;
   flex: 1 1 0%;
