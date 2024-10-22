@@ -1,9 +1,5 @@
 /* MODULE SLIDER */
 
-.miru--slider::-webkit-slider-thumb {
-  width: 0.35rem;
-}
-
 .miru--menu__row:has(.miru--slider[disabled]) {
   pointer-events: none;
   /* display: none; */
@@ -15,13 +11,13 @@
   flex-grow: 1;
   height: 100%;
   background-clip: padding-box;
-  border-top: calc(var(--height-menu-row)/2 - var(--height-slider)/2) solid transparent;
-  border-bottom: calc(var(--height-menu-row)/2 - var(--height-slider)/2) solid transparent;
+  border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2) solid transparent;
+  border-bottom: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2) solid transparent;
   border-left: var(--gap-default) solid transparent;
   border-right: var(--gap-default) solid transparent;
 
   &::-moz-range-thumb {
-    width: 2rem;
+    width: var(--width-slider-thumb);
   }
 }
 

@@ -13,6 +13,7 @@
   --size-button-icon: 1.25rem;
   --roundness-button: 0.25rem;
   --height-slider: .5rem;
+  --width-slider-thumb: 2.5rem; /* moz only */
   --gap-default: 1rem;
 
   /* COLOR SCHEMES */
