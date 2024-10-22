@@ -77,8 +77,8 @@ export const AdjustmentsView = ({
         </p>
 
         {RowSlider({
-          // label: () => labels[currentType.value],
-          label: 'Reset',
+          label: () => labels[currentType.value],
+          // label: 'Reset',
           min: -1,
           max: 1,
           value: toRef(() =>

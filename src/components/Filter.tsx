@@ -10,6 +10,7 @@ import { createDisplayContext, getCenter, useElementSize } from '@/utils'
 
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
+import { useTogleEdit } from './useToggleEdit'
 
 const FilterItem = ({
   source,
@@ -70,8 +71,14 @@ export const FilterView = ({
     editor.scratchPad2d,
   )
 
-  const onInputIntensity = (event: InputEvent) =>
-    source.value && (source.value.intensity.value = event.target.valueAsNumber)
+  const toggleContext = useTogleEdit(source, 'intensity')
+
+  const onInputIntensity = (event: InputEvent) => {
+    if (!source.value) return
+
+    toggleContext.clearSavedValue()
+    source.value.intensity.value = event.target.valueAsNumber
+  }
 
   const contexts = ref<DisplayContext[]>([
     // context for "Original"
@@ -164,6 +171,7 @@ export const FilterView = ({
           value: toRef(() => source.value?.intensity.value ?? 0),
           onInput: onInputIntensity,
           disabled: () => (source.value?.effect.value === -1 ? true : false),
+          toggleContext
         })}
       </div>
 
