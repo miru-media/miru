@@ -26,6 +26,10 @@
     opacity: 0.8;
   }
 
+  &.miru--mark-disabled{
+    text-decoration: line-through;
+  }
+
   &.miru--small {
     flex-grow: 0;
 
