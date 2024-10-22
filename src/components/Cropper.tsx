@@ -8,10 +8,12 @@ import { useCrop } from './useCrop'
 
 export const CropView: Component<{ editor: ImageEditor; sourceIndex: number }> = (props) => {
   const editor = toValue(props.editor)
-  const { aspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom } = useCrop({
-    editor,
-    sourceIndex: toValue(props.sourceIndex),
-  })
+  const { aspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom, toggleContext } = useCrop(
+    {
+      editor,
+      sourceIndex: toValue(props.sourceIndex),
+    },
+  )
 
   return (
     <>
@@ -21,7 +23,10 @@ export const CropView: Component<{ editor: ImageEditor; sourceIndex: number }> =
           <button
             class={['miru--button', () => (aspectRatio.value === -1 ? 'miru--acc' : '')]}
             type="button"
-            onClick={resetCrop}
+            onClick={async () => {
+              toggleContext.clearSavedValue()
+              await resetCrop()
+            }}
           >
             <IconTablerCircleOff class="miru--button__icon" />
             <span class="miru--button__label">Original</span>
@@ -53,7 +58,11 @@ export const CropView: Component<{ editor: ImageEditor; sourceIndex: number }> =
           min: 0.1,
           max: 2,
           value: zoom,
-          onInput: (event: InputEvent) => setZoom(event.target.valueAsNumber),
+          toggleContext,
+          onInput: (event: InputEvent) => {
+            setZoom(event.target.valueAsNumber)
+            toggleContext.clearSavedValue()
+          },
         })}
       </div>
     </>

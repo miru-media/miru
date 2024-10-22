@@ -1,13 +1,13 @@
 import { Component } from '@/framework/jsx-runtime'
 import { toValue } from '@/framework/reactivity'
 
-import { useTogleEdit } from './useToggleEdit'
+import { useToggleEdit } from './useToggleEdit'
 
 export const RowSlider: Component<{
   [key: string]: unknown
   value: number
   label: string
-  toggleContext?: ReturnType<typeof useTogleEdit>
+  toggleContext?: ReturnType<typeof useToggleEdit>
 }> = ({ toggleContext, label, value, ...inputProps }) => {
   toggleContext = toValue(toggleContext)
   // const hasToggle = !!toggleContext
@@ -22,7 +22,11 @@ export const RowSlider: Component<{
       <input type="range" step="0.01" class="miru--slider" {...inputProps} value={value} />
 
       <button
-        class={() => ['miru--button', 'miru--small', toggleContext?.isToggledOff.value && 'miru--mark-disabled']}
+        class={() => [
+          'miru--button',
+          'miru--small',
+          toggleContext?.isToggledOff.value == true && 'miru--mark-disabled',
+        ]}
         onClick={toggleContext?.toggle}
       >
         <label class="miru--button__label">{value}</label>

@@ -10,7 +10,7 @@ import { createDisplayContext, getCenter, useElementSize } from '@/utils'
 
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
-import { useTogleEdit } from './useToggleEdit'
+import { useToggleEdit } from './useToggleEdit'
 
 const FilterItem = ({
   source,
@@ -72,7 +72,12 @@ export const FilterView = ({
     editor.scratchPad2d,
   )
 
-  const toggleContext = useTogleEdit(source, 'intensity')
+  const toggleContext = useToggleEdit(
+    source,
+    (source) => source?.intensity.value ?? 0,
+    (source, newValue) => (source.intensity.value = newValue),
+    () => 0,
+  )
 
   const onInputIntensity = (event: InputEvent) => {
     if (source.value == null) return
@@ -105,8 +110,8 @@ export const FilterView = ({
   })
 
   // scroll to selected filter on mount, on container size change and on source change
-  watch([container, useElementSize(container), source], ([container]) => {
-    if (container != undefined) onClickFilter(effectOfCurrentSource.value, 'instant')
+  watch([container, source, useElementSize(container)], ([container, source]) => {
+    if (container != undefined) onClickFilter(effectOfCurrentSource.value, source?.intensity.value, 'instant')
     onScroll.cancel({ upcomingOnly: true })
   })
 
@@ -114,23 +119,27 @@ export const FilterView = ({
     const scrolledIndex = scrolledEffectIndex.value
     if (scrolledIndex === effectOfCurrentSource.value) return
 
-    const handle = setTimeout(() => selectFilter(scrolledIndex), SCROLL_SELECT_TIMEOUT_MS)
+    const handle = setTimeout(() => selectFilter(scrolledIndex, DEFAULT_INTENSITY), SCROLL_SELECT_TIMEOUT_MS)
     onCleanup(() => clearTimeout(handle))
   })
 
-  const onClickFilter = (filterIndex: number, scrollBehaviour: ScrollBehavior = 'smooth') => {
-    selectFilter(filterIndex)
+  const onClickFilter = (
+    filterIndex: number,
+    intensity = DEFAULT_INTENSITY,
+    scrollBehaviour: ScrollBehavior = 'smooth',
+  ) => {
+    selectFilter(filterIndex, intensity)
     container.value
       ?.querySelector(`[data-index="${filterIndex}"]`)
       ?.scrollIntoView({ behavior: scrollBehaviour, inline: 'center', block: 'nearest' })
   }
 
-  const selectFilter = (filterIndex: number) => {
+  const selectFilter = (filterIndex: number, intensity: number) => {
     const $source = source.value
     if ($source == undefined) return
 
     $source.effect.value = filterIndex
-    $source.intensity.value = DEFAULT_INTENSITY
+    $source.intensity.value = intensity
 
     scrolledEffectIndex.value = filterIndex
   }

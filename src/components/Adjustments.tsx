@@ -5,7 +5,7 @@ import { AdjustmentsState, InputEvent } from '@/types'
 
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
-import { useTogleEdit } from './useToggleEdit'
+import { useToggleEdit } from './useToggleEdit'
 
 export const AdjustmentsView = ({
   editor,
@@ -26,7 +26,12 @@ export const AdjustmentsView = ({
     saturation: 'Saturation',
   }
 
-  const toggleContext = useTogleEdit(source, 'adjustments')
+  const toggleContext = useToggleEdit(
+    source,
+    (source) => source?.adjustments.value,
+    (source, newValue) => (source.adjustments.value = newValue),
+    () => undefined,
+  )
 
   const onInputSlider = (event: InputEvent) => {
     const $source = source.value

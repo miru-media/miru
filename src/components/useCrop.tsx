@@ -3,6 +3,7 @@ import Cropper from 'cropperjs'
 import { ImageEditor } from '@/editor/ImageEditor'
 import { ImageSourceInternal } from '@/editor/ImageSourceInternal'
 import { computed, ref, toValue, watch } from '@/framework/reactivity'
+import { CropState } from '@/types'
 import {
   centerTo,
   cropIsEqualTo,
@@ -19,11 +20,13 @@ export type CropContext = ReturnType<typeof useCrop>
 const SIMPLE_CROP = false as boolean
 
 export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIndex: number }) => {
-  const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
+  const sourceRef = computed(
+    (): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)],
+  )
   const cropper = ref<Cropper>()
 
   const aspectRatio = computed(() => {
-    const crop = source.value?.crop.value
+    const crop = sourceRef.value?.crop.value
 
     return crop != null ? crop.width / crop.height : NaN
   })
@@ -39,7 +42,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
   const container = document.createElement('div')
   container.className = 'miru--cropper-container'
 
-  watch([source, () => source.value?.original], async ([source, original], _prev, onCleanup) => {
+  watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {
     if (source == undefined || original == undefined) return
 
     let cropperImage
@@ -133,16 +136,16 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
 
   const resetCrop = async () => {
     const $cropper = cropper.value
-    const $source = source.value
-    const original = $source?.original
-    if ($source == undefined || $cropper == undefined || original == undefined) return
+    const source = sourceRef.value
+    const original = source?.original
+    if (source == undefined || $cropper == undefined || original == undefined) return
 
     await withUnlimitedCropper(() => {
       $cropper.setAspectRatio(original.width / original.height)
       $cropper.setData(unmodifiedCrop)
     })
     await fitCrop()
-    $source.crop.value = undefined
+    source.crop.value = undefined
   }
   const fitCrop = twice(async () => {
     const $cropper = cropper.value
@@ -209,6 +212,40 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
     $cropper.limited = limited
   }
 
+  // use a crop-specific toggle
+  const savedValue = ref<CropState>()
+  const clearSavedValue = () => (savedValue.value = undefined)
+  // the zoom value that should reset and compared to
+  const defaultZoom = computed(() => {
+    const source = sourceRef.value
+    const original = source?.original
+    if (source == undefined || original == undefined) return 1
+
+    const crop = (savedValue.value = source.crop.value)
+    const { width, height } = crop ?? original
+
+    return Math.min(width / height, height / width)
+  })
+  const isToggledOff = computed(() => zoom.value == defaultZoom.value)
+  const toggle = () => {
+    const source = sourceRef.value
+    const original = source?.original
+    if (source == undefined || original == undefined) return
+
+    if (savedValue.value == undefined) {
+      savedValue.value = source.crop.value
+      setZoom(defaultZoom.value)
+    } else {
+      source.crop.value = savedValue.value
+    }
+  }
+
+  const toggleContext = {
+    toggle,
+    clearSavedValue,
+    isToggledOff,
+  }
+
   return {
     container,
     setAspectRatio,
@@ -217,5 +254,6 @@ export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIn
     zoom,
     setZoom,
     rotate,
+    toggleContext,
   }
 }
