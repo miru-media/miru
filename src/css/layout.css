@@ -70,7 +70,7 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: space-around;
-    height: var(--heigth-menu-row);
+    height: var(--height-menu-row);
     overflow-y: hidden;
 
     /* &:first-child .miru--button{
@@ -87,7 +87,7 @@
   .miru--menu__row--scroll {
     gap: var(--gap-default);
     justify-content: unset;
-    height: var(--heigth-menu-row-scroll);
+    height: var(--height-menu-row-scroll);
     padding-top: var(--gap-default);
     padding-bottom: calc(0.5rem + var(--gap-default)) !important;
     overflow: scroll hidden !important;
