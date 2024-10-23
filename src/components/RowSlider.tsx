@@ -1,4 +1,5 @@
 import { Component } from '@/framework/jsx-runtime'
+import { toValue } from '@/framework/reactivity'
 
 export const RowSlider: Component<{
   [key: string]: unknown
@@ -21,7 +22,9 @@ export const RowSlider: Component<{
       />
 
       <button class="miru--button miru--small" disabled>
-        <label class="miru--button__label">{value}</label>
+        <label class="miru--button__label">
+          {() => (toValue(value) != 0 ? toValue(value).toFixed(2) : 0)}
+        </label>
       </button>
     </p>
   )
