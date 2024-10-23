@@ -48,7 +48,7 @@
   width: 100%;
   min-height: 0;
   max-height: 100%;
-  padding: 1rem;
+  padding: var(--gap-default);
 
   & > canvas {
     width: 100%;
