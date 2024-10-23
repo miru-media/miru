@@ -15,6 +15,7 @@
 .miru--button {
   position: relative;
   flex-grow: 1;
+  flex-basis: 10%;
   height: 100%;
   overflow: hidden;
   cursor: pointer;
@@ -26,7 +27,7 @@
     opacity: 0.8;
   }
 
-  &.miru--mark-disabled{
+  &.miru--mark-disabled {
     text-decoration: line-through;
   }
 
@@ -48,8 +49,8 @@
   &:has(canvas) {
     box-sizing: border-box;
     display: flex;
+    flex-basis: calc(var(--height-menu-row-scroll) - 1rem);
     flex-direction: column;
-
     width: calc(var(--height-menu-row-scroll) - 1rem);
     height: 100%;
 
@@ -83,6 +84,7 @@
     width: calc(100% - 1em);
     margin: auto;
     margin-top: 0.2em;
+
     /* margin-left: .2em;
     margin-right: .2em; */
     overflow: hidden;
