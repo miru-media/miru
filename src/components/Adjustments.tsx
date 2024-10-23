@@ -40,8 +40,8 @@ export const AdjustmentsView = ({
     const saved_value = $source.adjustments.value?.[currentType.value] ?? 0
     const direction = event.target.valueAsNumber > saved_value ? 1 : -1
     const should_snap =
-      (direction == 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= 0.1) ||
-      (direction == -1 && event.target.valueAsNumber < 0 && event.target.valueAsNumber >= -0.1)
+      (direction == 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= 0.15) ||
+      (direction == -1 && event.target.valueAsNumber < 0 && event.target.valueAsNumber >= -0.15)
 
     toggleContext.clearSavedValue()
 
@@ -56,7 +56,7 @@ export const AdjustmentsView = ({
   }
 
   const onChangeSlider = (event: InputEvent) => {
-    event.target.valueAsNumber = source.value?.adjustments.value?.brightness ?? 0
+    event.target.valueAsNumber = source.value?.adjustments.value?.[currentType.value] ?? 0
   }
 
   return (
@@ -99,7 +99,7 @@ export const AdjustmentsView = ({
           value: toRef(() => source.value?.adjustments.value?.[currentType.value] ?? 0),
           onInput: onInputSlider,
           onChange: onChangeSlider,
-          toggleContext,
+          // toggleContext,
         })}
       </div>
     </>
