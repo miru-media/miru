@@ -14,7 +14,7 @@ export const RowSlider: Component<{
 
   return (
     <p class="miru--menu__row">
-      <button class="miru--button miru--small">
+      <button class="miru--button miru--small" disabled>
         <label class="miru--button__label">{label}</label>
       </button>
 
@@ -27,7 +27,7 @@ export const RowSlider: Component<{
         value_current={value}
       />
 
-      <button class="miru--button miru--small">
+      <button class="miru--button miru--small" disabled>
         <label class="miru--button__label">{value}</label>
       </button>
     </p>
