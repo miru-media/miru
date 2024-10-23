@@ -1,17 +1,10 @@
 import { Component } from '@/framework/jsx-runtime'
-// import { toValue } from '@/framework/reactivity'
-
-// import { useToggleEdit } from './useToggleEdit'
 
 export const RowSlider: Component<{
   [key: string]: unknown
   value: number
   label: string
-  // toggleContext?: ReturnType<typeof useToggleEdit>
 }> = ({ label, value, ...inputProps }) => {
-  // toggleContext = toValue(toggleContext)
-  // const hasToggle = !!toggleContext
-
   return (
     <p class="miru--menu__row">
       <button class="miru--button miru--small" disabled>

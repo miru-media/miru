@@ -5,7 +5,6 @@ import { AdjustmentsState, InputEvent } from '@/types'
 
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
-import { useToggleEdit } from './useToggleEdit'
 
 export const AdjustmentsView = ({
   editor,
@@ -26,13 +25,6 @@ export const AdjustmentsView = ({
     saturation: 'Saturation',
   }
 
-  const toggleContext = useToggleEdit(
-    source,
-    (source) => source?.adjustments.value,
-    (source, newValue) => (source.adjustments.value = newValue),
-    () => undefined,
-  )
-
   const onInputSlider = (event: InputEvent) => {
     const $source = source.value
     if ($source == undefined) return
@@ -42,8 +34,6 @@ export const AdjustmentsView = ({
     const should_snap =
       (direction == 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= 0.15) ||
       (direction == -1 && event.target.valueAsNumber < 0 && event.target.valueAsNumber >= -0.15)
-
-    toggleContext.clearSavedValue()
 
     $source.adjustments.value = {
       ...($source.adjustments.value ?? {
@@ -99,7 +89,6 @@ export const AdjustmentsView = ({
           value: toRef(() => source.value?.adjustments.value?.[currentType.value] ?? 0),
           onInput: onInputSlider,
           onChange: onChangeSlider,
-          // toggleContext,
         })}
       </div>
     </>
