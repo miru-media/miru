@@ -1,4 +1,18 @@
-## Setup
+Miru is a new set of modular, extensible Web platform tools and components for still image and multi-track video editing and state-of-the-art, real-time AR. Using WebGL, WebAssembly, and open source, mobile-optimized machine learning models, Miru will give people on the social web the tools to edit images and apply interactive effects to recorded video without compromising on privacy and transparency. Miru aims to provide intuitive and user-friendly UIs which developers can easily integrate into their Web apps regardless of the frontend frameworks they use.
+
+You can try out the image editing features at https://demo.miru.media
+
+## Roadmap
+
+This project is still in its early stages. We're working on:
+
+- [x] Still iamge editor with WebGL filters
+- [ ] Mobile-friendly video editor
+- [ ] WebGL video effects
+- [ ] Documentation
+- [ ] Real-time AR effects using [MediaPipe](https://github.com/google-ai-edge/mediapipe)
+
+## Development Setup
 
 This repo uses the [`pnpm`](https://pnpm.io/) package manager. It can be installed with regular `npm`
 
