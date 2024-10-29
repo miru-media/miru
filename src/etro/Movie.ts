@@ -75,12 +75,17 @@ export class Movie {
       return await (this.etro as unknown as etro.Movie).record({
         frameRate: 60,
         type,
+        onStart: () => {
+          this.isPaused.value = false
+        },
         mediaRecorderOptions: {
           videoBitsPerSecond: 5_000_000,
         },
       })
     } catch (error: unknown) {
       alert(error)
+    } finally {
+      this.isPaused.value = true
     }
   }
 }

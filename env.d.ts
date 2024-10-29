@@ -1,5 +1,15 @@
 /// <reference types="vite/client" />
 
+// remote assets
+declare module 'https://*.webm' {
+  const src: string
+  export default src
+}
+declare module 'https://*.mp4' {
+  const src: string
+  export default src
+}
+
 declare module 'virtual:shadow.css' {
   const src: string
   export default src

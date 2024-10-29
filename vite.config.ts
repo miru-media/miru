@@ -44,5 +44,12 @@ export default defineConfig({
   base: './',
   build: {
     minify: true,
+
+    rollupOptions: {
+      input: {
+        index: resolve(import.meta.dirname, 'index.html'),
+        video: resolve(import.meta.dirname, 'video.html'),
+      },
+    },
   },
 })

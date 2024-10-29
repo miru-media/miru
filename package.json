@@ -63,6 +63,7 @@
     "eslint": "^9.13.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
+    "filesize": "^10.1.6",
     "glslify": "^7.1.1",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",

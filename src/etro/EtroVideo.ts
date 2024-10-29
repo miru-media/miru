@@ -14,7 +14,7 @@ export class EtroVideo extends etro.layer.Video {
   #renderer: Renderer
   readyState: Ref<number>
   error: Ref<MediaError | undefined>
-  latestEvent = ref('')
+  latestEvent = ref<Event>()
 
   __m_isEtroVideo = true
 
@@ -79,7 +79,7 @@ export class EtroVideo extends etro.layer.Video {
       'waiting',
     ]
     allEventTypes.forEach((type) =>
-      useEventListener(this.source, type, (event) => (this.latestEvent.value = event.type)),
+      useEventListener(this.source, type, (event) => (this.latestEvent.value = event)),
     )
   }
 
