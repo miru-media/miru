@@ -5,19 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Miru image editor demo</title>
     <script type="module" src="/src/index.ts"></script>
+    <style>
+      :root {
+        font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+      }
+    </style>
   </head>
-  <body class="m-0 @dark:bg-black @dark:text-#9ca3af bg-white text-black font-sans">
+  <body class="m-0 @dark:bg-black @dark:text-#9ca3af bg-white text-black">
     <div class="flex flex-col w-full h-100vh overflow-hidden max-w-1440px m-auto">
       <div class="flex justify-between px-4 py-2">
         <div></div>
         <div></div>
-        <div class="i-tabler-user-circle-bold text-2rem"></div>
+        <div></div>
       </div>
 
       <div class="flex flex-1 px-4 gap-2rem min-h-0">
         <div class="flex flex-col gap-1rem w-25% min-h-0 <md:hidden">
-          <p class="bg-light-9 @dark:bg-dark-7 p-8">Card</p>
-          <p class="bg-light-9 @dark:bg-dark-7 p-8 h-200px">Menu</p>
+          <pre id="errors" class="p-8 whitespace-pre-wrap"></pre>
         </div>
 
         <div class="flex flex-col overflow-auto flex-1 min-w-0 min-h-0 gap-12px">
@@ -29,18 +33,8 @@
             Change image
             <div class="i-tabler:photo text-2rem"></div>
             <!-- Select File -->
-            <input
-              style="max-width: 0;"
-              id="fileInput"
-              type="file"
-              accept="image/*"
-            />
+            <input style="max-width: 0" id="fileInput" type="file" accept="image/*" />
           </label>
-
-          <textarea
-            style='height:2em'
-            class="w-full h-150px bg-light-9 @dark:bg-dark-7 p-0 m-0 b-0 text-inherit text-lg"
-          ></textarea>
         </div>
 
         <div class="flex flex-col gap-1rem w-25% <md:hidden"></div>
@@ -53,8 +47,6 @@
 
       const editor = document.getElementById('imageEditor')
 
-      // editor.setAttribute("show-labels", false)
-
       editor.sources = [sampleImage]
 
       const fileInput = document.getElementById('fileInput')
@@ -66,7 +58,9 @@
       })
 
       window.onerror = (event, ...args) => {
-        document.querySelector('textarea').textContent = event.toString() + args[2]?.stack || ''
+        document.getElementById('errors').textContent = [event.toString(), args[2]?.stack]
+          .filter(Boolean)
+          .join('\n')
       }
     </script>
   </body>
