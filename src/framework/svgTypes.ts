@@ -1,5 +1,4 @@
 export const SVG_TYPES = new Set([
-  'a',
   'animate',
   'animatemotion',
   'animatetransform',
