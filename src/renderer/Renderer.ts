@@ -65,9 +65,9 @@ export class Renderer {
     const unitQuad = [0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1]
 
     ;[
-      // u_position
+      // a_position
       unitQuad,
-      // u_texcoord
+      // a_texcoord
       unitQuad,
     ].forEach((data, index) => {
       const buffer = gl.createBuffer()!

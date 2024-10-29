@@ -15,7 +15,7 @@ precision mediump float;
 precision mediump sampler3D;
 
 in vec2 v_unitPosition;
-in vec2 v_texcoord;
+in vec2 v_texCoord;
 
 uniform sampler2D u_source;
 uniform vec2 u_size;
@@ -68,7 +68,7 @@ vec4 applyOperation(EffectOp op, vec4 color, vec2 coord, float effectIntensity) 
     case OP_LUT: return lookupWithIndex(color, op.lut, intensity);
     case OP_VIGNETTE: return vec4(color.rgb * vignette(v_unitPosition, 1.0 - intensity, 0.35), color.a);
     case OP_ADJUST_COLOR: return adjustColor(color, op.args[0], op.args[1], op.args[2], intensity);
-    case OP_FILM_GRAIN: return vec4(filmGrain(color.rgb, v_texcoord, u_size, intensity), color.a);
+    case OP_FILM_GRAIN: return vec4(filmGrain(color.rgb, v_texCoord, u_size, intensity), color.a);
     case OP_SEPIA: return sepia(color, intensity);
     case OP_HUE_ROTATE: return mix(color, hueRotate(color, op.args[0]), intensity);
     default: return color;
@@ -80,12 +80,12 @@ vec4 applyAdjustments(Adjustments values, vec4 color) {
 }
 
 void main() {
-  vec4 color = texture(u_source, v_texcoord);
+  vec4 color = texture(u_source, v_texCoord);
 
   color = applyAdjustments(u_adjustments, color);
 
   for (int i = 0; i < MAX_EFFECT_OPS; i++) {
-    color = applyOperation(u_operations[i], color, v_texcoord, u_intensity);
+    color = applyOperation(u_operations[i], color, v_texCoord, u_intensity);
   }
 
   fragColor = color;
