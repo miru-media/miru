@@ -48,7 +48,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(import.meta.dirname, 'index.html'),
-        video: resolve(import.meta.dirname, 'video.html'),
+        etro: resolve(import.meta.dirname, 'etro.html'),
+        videocontext: resolve(import.meta.dirname, 'videocontext.html'),
       },
     },
   },

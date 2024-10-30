@@ -46,6 +46,9 @@ importers:
       twgl.js:
         specifier: ^5.5.4
         version: 5.5.4
+      videocontext:
+        specifier: ^0.54.0
+        version: 0.54.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.13.0
@@ -4391,6 +4394,9 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
 
+  regenerator-runtime@0.11.1:
+    resolution: {integrity: sha512-MguG95oij0fC3QV3URf4V2SDYGJhJnJGqvIIgdECeODCT98wSWDAJ94SSuVpYQUoTcGUIL6L4yNB7j1DFFHSBg==}
+
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
@@ -5043,6 +5049,9 @@ packages:
   validate-npm-package-name@5.0.1:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  videocontext@0.54.0:
+    resolution: {integrity: sha512-DVZfW9o0X2gN9MZAthRN9rEdamtll0vNvC3hoSEaHqutXJtHxGIJEbqre5GAlBqeoSEjgmJCG+rSXbLIEhAzuA==}
 
   vite-bundle-analyzer@0.12.1:
     resolution: {integrity: sha512-mIYwsDvTYCqXAUtOZIL3f7NdwWUeL/MlNFhOJzlTdcZE4pye6h06IEnOvWhnc/e+HM4oVVNxuRHZt0Rz6VO7EA==}
@@ -9623,6 +9632,8 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
+  regenerator-runtime@0.11.1: {}
+
   regenerator-runtime@0.14.1: {}
 
   regexp.prototype.flags@1.5.2:
@@ -10432,6 +10443,10 @@ snapshots:
       spdx-expression-parse: 3.0.1
 
   validate-npm-package-name@5.0.1: {}
+
+  videocontext@0.54.0:
+    dependencies:
+      regenerator-runtime: 0.11.1
 
   vite-bundle-analyzer@0.12.1: {}
 
