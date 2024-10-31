@@ -2,7 +2,6 @@ import { EffectInternal } from '@/Effect'
 import { computed, effect, EffectScope, getCurrentScope, ref, Ref, watch } from '@/framework/reactivity'
 import { Renderer } from '@/renderer/Renderer'
 import { Context2D, Effect, ImageEditState, ImageSourceOption } from '@/types'
-import { get2dContext } from '@/utils'
 
 import { ImageSourceInternal } from './ImageSourceInternal'
 
@@ -24,7 +23,6 @@ export class ImageEditor {
   #isLoadingSource = computed(() => this.sources.value.some((s) => s.isLoading))
   #isLoadingEffects = computed(() => this.effects.value.some((e) => e.isLoading.value))
   #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
-  scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
 
   get isLoadingSource() {
     return this.#isLoadingSource.value
@@ -114,7 +112,7 @@ export class ImageEditor {
     this.effects.value.length = 0
 
     this.effects.value = effects.map((effectInfo) => {
-      const effect = new EffectInternal(effectInfo, this.renderer, this.scratchPad2d)
+      const effect = new EffectInternal(effectInfo, this.renderer)
 
       return effect
     })

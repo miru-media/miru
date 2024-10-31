@@ -65,11 +65,7 @@ export const FilterView = ({
   const container = ref<HTMLElement>()
   const scrolledEffectIndex = ref(-1)
 
-  const ORIGINAL_EFFECT: EffectInternal = new EffectInternal(
-    { name: 'Original', ops: [] },
-    editor.renderer,
-    editor.scratchPad2d,
-  )
+  const ORIGINAL_EFFECT: EffectInternal = new EffectInternal({ name: 'Original', ops: [] }, editor.renderer)
 
   const onInputIntensity = (event: InputEvent) => {
     if (source.value == null) return

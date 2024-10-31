@@ -17,7 +17,7 @@ precision mediump sampler3D;
 in vec2 v_unitPosition;
 in vec2 v_texCoord;
 
-uniform sampler2D u_source;
+uniform sampler2D u_image;
 uniform vec2 u_size;
 uniform float u_intensity;
 
@@ -80,7 +80,7 @@ vec4 applyAdjustments(Adjustments values, vec4 color) {
 }
 
 void main() {
-  vec4 color = texture(u_source, v_texCoord);
+  vec4 color = texture(u_image, v_texCoord);
 
   color = applyAdjustments(u_adjustments, color);
 

@@ -17,7 +17,6 @@ export class TextureResource {
   constructor(
     { source, type, crossOrigin }: ImageSourceObject,
     renderer: Renderer,
-    scratchpad: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   ) {
     this.canvas = document.createElement('canvas')
     this.context = this.canvas.getContext('bitmaprenderer') ?? undefined
@@ -29,7 +28,7 @@ export class TextureResource {
 
     const onDecoded = (decodedImage: SyncImageSource) => {
       if (type === AssetType.Lut || type === AssetType.HaldLut) {
-        const imageData = getImageData(decodedImage, scratchpad)
+        const imageData = getImageData(decodedImage, renderer.scratchPad2d)
         renderer.loadLut(this.texture, imageData, type)
       } else {
         renderer.loadImage(this.texture, decodedImage, SOURCE_TEX_OPTIONS)

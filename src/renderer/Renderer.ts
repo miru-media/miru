@@ -13,7 +13,7 @@ import {
   Size,
   SyncImageSource,
 } from '@/types'
-import { canvasToBlob, getWebgl2Context, isOffscreenCanvas, setObjectSize } from '@/utils'
+import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from '@/utils'
 
 import fs from './glsl/main.frag'
 import vs from './glsl/main.vert'
@@ -28,7 +28,7 @@ export class Renderer {
   #programInfo: twgl.ProgramInfo
   #uniforms = {
     u_resolution: [1, 1],
-    u_source: null as WebGLTexture | null,
+    u_image: null as WebGLTexture | null,
     u_size: [1, 1],
     u_intensity: 1,
     u_images: [] as WebGLTexture[],
@@ -39,8 +39,8 @@ export class Renderer {
     u_textureMatrix: mat4.create(),
   }
   #vertexBuffers: WebGLBuffer[] = []
-  readonly emptyTexture: WebGLTexture
-  readonly emptyTexture3D: WebGLTexture
+  emptyTexture: WebGLTexture
+  emptyTexture3D: WebGLTexture
   isDisposed = false
 
   #emptyAdjustments: AdjustmentsState = {
@@ -52,29 +52,26 @@ export class Renderer {
   get canvas() {
     return this.#gl.canvas
   }
+  scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
 
   constructor({ gl = getWebgl2Context() } = {}) {
     this.#gl = gl
 
-    gl.clearColor(0, 0, 0, 1)
-    gl.enable(GL.BLEND)
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
     this.#programInfo = twgl.createProgramInfo(gl, [vs, fs])
 
-    const unitQuad = [0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1]
+    const unitQuad = new Float32Array([1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0])
 
     ;[
-      // a_position
-      unitQuad,
-      // a_texcoord
-      unitQuad,
-    ].forEach((data, index) => {
+      { name: 'a_position', data: unitQuad },
+      { name: 'a_texCoord', data: unitQuad },
+    ].forEach(({ name, data }) => {
+      const location = gl.getAttribLocation(this.#programInfo.program, name)
       const buffer = gl.createBuffer()!
+
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW)
-      gl.vertexAttribPointer(index, 2, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(index)
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+      gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(location)
       this.#vertexBuffers.push(buffer)
     })
 
@@ -85,7 +82,7 @@ export class Renderer {
   setSourceTexture(texture: WebGLTexture, resolution: Size, textureSize: Size, crop?: CropState) {
     crop ??= { x: 0, y: 0, width: textureSize.width, height: textureSize.height, rotate: 0 }
 
-    this.#uniforms.u_source = texture
+    this.#uniforms.u_image = texture
     this.#uniforms.u_size = [crop.width, crop.height]
 
     {
@@ -194,18 +191,15 @@ export class Renderer {
       internalFormat = GL.RGBA8,
       format = GL.RGBA,
       type = GL.UNSIGNED_BYTE,
-      width = 1,
-      height = 1,
     } = textureOptions
 
     const texture = gl.createTexture()
     if (texture == undefined) throw new Error(`[miru] gl.createTexture() failed`)
 
-    gl.bindTexture(target, texture)
+    twgl.setTextureParameters(gl, texture, textureOptions)
 
-    if (target === GL.TEXTURE_2D)
-      gl.texImage2D(target, 0, internalFormat, width, height, 0, format, type, null)
-    else gl.texImage3D(target, 0, internalFormat, width, height, 0, 0, format, type, null)
+    if (target === GL.TEXTURE_2D) gl.texImage2D(target, 0, internalFormat, 1, 1, 0, format, type, null)
+    else gl.texImage3D(target, 0, internalFormat, 1, 1, 0, 0, format, type, null)
 
     return texture
   }
@@ -215,9 +209,21 @@ export class Renderer {
     source: SyncImageSource,
     textureOptions: Omit<twgl.TextureOptions, 'width' | 'height'> = SOURCE_TEX_OPTIONS,
   ) {
-    const { internalFormat = GL.RGBA8, format = GL.RGBA, type = GL.UNSIGNED_BYTE } = textureOptions
+    const gl = this.#gl
+    const {
+      internalFormat = GL.RGBA,
+      format = GL.RGBA,
+      type = GL.UNSIGNED_BYTE,
+      premultiplyAlpha = false,
+      flipY = false,
+      colorspaceConversion = GL.BROWSER_DEFAULT_WEBGL,
+    } = textureOptions
 
-    twgl.setTextureParameters(this.#gl, texture, textureOptions)
+    gl.bindTexture(GL.TEXTURE_2D, texture)
+    gl.pixelStorei(GL.UNPACK_COLORSPACE_CONVERSION_WEBGL, colorspaceConversion)
+    gl.pixelStorei(GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha)
+    gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, flipY)
+
     this.#gl.texImage2D(GL.TEXTURE_2D, 0, internalFormat, format, type, source)
     if (textureOptions.auto === true) this.#gl.generateMipmap(GL.TEXTURE_2D)
   }
@@ -241,8 +247,12 @@ export class Renderer {
   draw() {
     const gl = this.#gl
 
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
     gl.useProgram(this.#programInfo.program)
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
+    gl.clearColor(0, 0, 0, 1)
+    gl.enable(GL.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
     twgl.setUniforms(this.#programInfo, this.#uniforms)
 
     gl.drawArrays(GL.TRIANGLES, 0, 6)

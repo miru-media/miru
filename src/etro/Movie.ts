@@ -6,7 +6,7 @@ import { getDefaultFilters } from '@/effects'
 import { computed, createEffectScope, effect, Ref, ref } from '@/framework/reactivity'
 import { Renderer } from '@/renderer/Renderer'
 import { Size } from '@/types'
-import { get2dContext, getWebgl2Context } from '@/utils'
+import { getWebgl2Context } from '@/utils'
 
 import { Clip } from './Clip'
 import { useMappedUniqueArray } from './utils'
@@ -28,10 +28,9 @@ export class Movie {
   displayCanvas = document.createElement('canvas')
 
   #renderer = new Renderer({ gl: getWebgl2Context(this.displayCanvas) })
-  #scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
   // etro = new etro.Movie({ canvas: this.displayCanvas })
   etro = new EtroMovie(this.#renderer)
-  effects = ref(getDefaultFilters().map((e) => new EffectInternal(e, this.#renderer, this.#scratchPad2d)))
+  effects = ref(getDefaultFilters().map((e) => new EffectInternal(e, this.#renderer)))
 
   isPaused = ref(true)
   #scope = createEffectScope()

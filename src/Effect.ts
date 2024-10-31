@@ -1,5 +1,5 @@
 import { Renderer } from '@/renderer/Renderer'
-import { AssetType, Context2D, Effect, RendererEffectOp } from '@/types'
+import { AssetType, Effect, RendererEffectOp } from '@/types'
 
 import { MAX_EFFECT_TEXTURES } from './constants'
 import { computed, Ref } from './framework/reactivity'
@@ -20,7 +20,7 @@ export class EffectInternal {
     return this.resources.length ? Promise.all(this.resources.map((t) => t.promise)) : undefined
   }
 
-  constructor(info: Effect, renderer: Renderer, scratchpad: Context2D) {
+  constructor(info: Effect, renderer: Renderer) {
     const { name, ops } = info
 
     this.renderer = renderer
@@ -36,7 +36,7 @@ export class EffectInternal {
 
       if (op.image != undefined) {
         const type = AssetType.Image
-        const resource = new TextureResource(normalizeSourceOption(op.image, type), renderer, scratchpad)
+        const resource = new TextureResource(normalizeSourceOption(op.image, type), renderer)
         resources.push(resource)
 
         imageIndex = images.length
@@ -45,7 +45,7 @@ export class EffectInternal {
 
       if (op.lut != undefined) {
         const type = AssetType.Lut
-        const resource = new TextureResource(normalizeSourceOption(op.lut, type), renderer, scratchpad)
+        const resource = new TextureResource(normalizeSourceOption(op.lut, type), renderer)
         resources.push(resource)
 
         lutIndex = luts.length
