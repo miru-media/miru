@@ -34,7 +34,7 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
-        { allowNullableNumber: true, allowNullableObject: false, allowNullableString: true },
+        { allowNullableNumber: false, allowNullableObject: true, allowNullableString: true },
       ],
       '@typescript-eslint/restrict-template-expressions': [
         'error',

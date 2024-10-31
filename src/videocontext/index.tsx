@@ -4,11 +4,14 @@ import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bu
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
 /* eslint-enable import/no-unresolved */
 
+import { getDefaultFilters } from '@/effects'
 import { render } from '@/framework/jsx-runtime'
 import { ref } from '@/framework/reactivity'
 import { InputEvent } from '@/types'
 
 import { Movie } from './Movie'
+
+const filters = getDefaultFilters()
 
 const Demo = () => {
   const RESOLUTION = { width: 1920, height: 1080 }
@@ -23,7 +26,7 @@ const Demo = () => {
             width: RESOLUTION.width,
             height: RESOLUTION.height,
             source: sampleVideo1,
-            effects: [],
+            filter: filters[2],
           },
           {
             time: { start: 2, source: 20, duration: 3 },
@@ -32,7 +35,7 @@ const Demo = () => {
             width: RESOLUTION.width,
             height: RESOLUTION.height,
             source: sampleVideo2,
-            effects: [],
+            filter: filters[1],
           },
           {
             time: { start: 4, source: 4, duration: 4 },
@@ -41,7 +44,6 @@ const Demo = () => {
             width: RESOLUTION.width,
             height: RESOLUTION.height,
             source: sampleVideo1,
-            effects: [],
           },
         ],
         transitions: [

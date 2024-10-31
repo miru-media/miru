@@ -72,6 +72,8 @@ declare module 'videocontext' {
     connect(targetNode: GraphNode, targetPort?: string | number): boolean
     disconnect(targetNode?: GraphNode): boolean
     destroy(): void
+    _gl: WebGLRenderingContext
+    _displayName: string
   }
 
   class DestinationNode extends GraphNode {}
@@ -84,18 +86,30 @@ declare module 'videocontext' {
       inputNames: string[],
       limitConnections: boolean,
     )
-    _currentTime: number
     get state(): number
+    _currentTime: number
+    _update(currentTime: number, triggerTextureUpdate: boolean): void
+    _seek(time: number): void
   }
 
+  class CanvasNode extends SourceNode {}
+  class ImageNode extends SourceNode {}
   class MediaNode extends SourceNode {
     constructor(...args: any[])
-
     _sourceOffset: number
   }
 
   class VideoNode extends MediaNode {
-    constructor(...args: any[])
+    constructor(
+      src: string | HTMLVideoElement | MediaStream,
+      gl: WebGL2RenderingContext,
+      renderGraph: RenderGraph,
+      currentTime: number,
+      sourceOffset?: number,
+      preloadTime?: number,
+      mediaElementCache?: any,
+      options?: Record<string, unknown>,
+    )
     get duration(): number
     start(time: number): boolean
     startAt(time: number): boolean
@@ -108,7 +122,7 @@ declare module 'videocontext' {
     getProperty<K extends keyof T>(name: K): T[K]
     _update(currentTime: number): void
     _seek(currentTime: number): void
-    _render(currentTime: number): void
+    _render(): void
   }
 
   class CompositingNode<T extends Record<string, unknown>> extends ProcessorNode<T> {}
@@ -134,7 +148,7 @@ declare module 'videocontext' {
     clearTransitions(propertyName?: string): boolean
   }
 
-  export type { GraphNode, VideoNode, CompositingNode, TransitionNode }
+  export type { RenderGraph, GraphNode, VideoNode, CompositingNode, TransitionNode }
 
   export default class VideoContext {
     constructor(canvas: HTMLCanvasElement)
@@ -148,6 +162,14 @@ declare module 'videocontext' {
       preloadTime?: number,
       videoElementAttributes?: Record<string, unknown>,
     ): VideoNode
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+    customSourceNode<T extends SourceNode>(
+      CustomSourceNode: typeof T,
+      src: string | HTMLVideoElement | MediaStream,
+      sourceOffset?: number,
+      preloadTime?: number,
+      options?: Record<string, unknown>,
+    ): T
     compositor<T extends Record<string, any>>(definition: EffectDefinition): CompositingNode<T>
     transition<T extends Record<string, any>>(...args: any[]): TransitionNode<T>
 
@@ -166,8 +188,8 @@ declare module 'videocontext' {
 
     static NODES = {
       AudioNode,
-      // CanvasNode,
-      // ImageNode,
+      CanvasNode,
+      ImageNode,
       MediaNode,
       SourceNode,
       VideoNode,

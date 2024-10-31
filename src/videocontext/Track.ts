@@ -1,6 +1,7 @@
 import VideoContext, { CompositingNode } from 'videocontext'
 
 import { computed, ref, watch } from '@/framework/reactivity'
+import { Renderer } from '@/renderer/Renderer'
 
 import { Clip } from './Clip'
 import { Transition } from './Transition'
@@ -28,9 +29,10 @@ export class Track {
   get duration() {
     return this.#duration.value
   }
-  constructor(init: Track.Init, videoContext: VideoContext) {
+
+  constructor(init: Track.Init, videoContext: VideoContext, renderer: Renderer) {
     this.node = videoContext.compositor(VideoContext.DEFINITIONS.COMBINE)
-    this.clips = ref(init.clips.map((c) => new Clip(c, videoContext)))
+    this.clips = ref(init.clips.map((c) => new Clip(c, videoContext, renderer)))
 
     this.transitions.value = init.transitions.map(
       (transitionInit) => new Transition(transitionInit, videoContext),

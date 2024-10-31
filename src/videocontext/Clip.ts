@@ -1,10 +1,12 @@
-import VideoContext, { VideoNode } from 'videocontext'
+import VideoContext from 'videocontext'
 
 import { EffectInternal } from '@/Effect'
 import { createEffectScope, effect, onScopeDispose, ref, Ref } from '@/framework/reactivity'
-import { AssetType, ImageSourceOption } from '@/types'
+import { Renderer } from '@/renderer/Renderer'
+import { AssetType, Effect, ImageSourceOption } from '@/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from '@/utils'
 
+import { MiruVideoNode } from './custom'
 import { useMediaError } from './utils'
 
 export enum SourceNodeState {
@@ -25,7 +27,7 @@ export namespace Clip {
     width: number
     height: number
     source: ImageSourceOption
-    effects: EffectInternal[]
+    filter?: Effect
   }
 }
 
@@ -42,21 +44,21 @@ export class Clip {
   width: Ref<number>
   height: Ref<number>
   media: Ref<HTMLVideoElement>
-  effects: Ref<EffectInternal[]>
+  filter: Ref<EffectInternal | undefined>
 
-  node = ref<VideoNode>(undefined as never)
+  node = ref<MiruVideoNode>(undefined as never)
   latestEvent = ref<Event>()
   error: Ref<MediaError | undefined>
 
   #scope = createEffectScope()
 
-  constructor(init: Clip.Init, context: VideoContext) {
+  constructor(init: Clip.Init, context: VideoContext, renderer: Renderer) {
     this.time = ref(init.time)
     this.x = ref(init.x)
     this.y = ref(init.y)
     this.width = ref(init.width)
     this.height = ref(init.height)
-    this.effects = ref(init.effects)
+    this.filter = ref(init.filter && new EffectInternal(init.filter, renderer))
 
     const sourceOption = normalizeSourceOption(init.source, AssetType.Video)
 
@@ -106,13 +108,23 @@ export class Clip {
     )
 
     this.#scope.run(() => {
-      effect(() => {
+      effect((onCleanup) => {
         const time = this.time.value
-        const node = (this.node.value = context.video(this.media.value, time.source))
+        const node = (this.node.value = context.customSourceNode(
+          MiruVideoNode,
+          this.media.value,
+          time.source,
+          undefined,
+          { renderer },
+        ))
 
         node.startAt(time.start)
         node.stopAt(time.start + time.duration)
+
+        onCleanup(() => node.destroy())
       })
+
+      effect(() => (this.node.value.effect = this.filter.value))
     })
   }
 
@@ -125,7 +137,7 @@ export class Clip {
       width: width.value,
       height: height.value,
       source: this.media.value.src,
-      effects: [],
+      filter: undefined,
     }
   }
 }

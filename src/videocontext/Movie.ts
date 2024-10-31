@@ -2,8 +2,9 @@ import Stats from 'stats.js'
 import VideoContext from 'videocontext'
 
 import { computed, createEffectScope, effect, Ref, ref, watch } from '@/framework/reactivity'
+import { Renderer } from '@/renderer/Renderer'
 import { Size } from '@/types'
-import { setObjectSize } from '@/utils'
+import { getWebgl2Context, setObjectSize } from '@/utils'
 
 import { Track } from './Track'
 
@@ -29,6 +30,8 @@ export class Movie {
   tracks = ref<Track[]>([])
   resolution: Ref<Size>
   displayCanvas = document.createElement('canvas')
+  #gl = getWebgl2Context(this.displayCanvas)
+  renderer = new Renderer({ gl: this.#gl })
 
   videoContext: VideoContext
 
@@ -54,6 +57,10 @@ export class Movie {
   }
 
   constructor({ tracks = [], resolution }: Movie.Init) {
+    const canvas = this.displayCanvas
+    // force webgl2 context
+    canvas.getContext = ((_id, _options) => this.#gl) as typeof canvas.getContext
+
     this.resolution = ref(resolution)
 
     this.#scope.run(() => {
@@ -66,7 +73,7 @@ export class Movie {
     this.videoContext.pause()
 
     this.#scope.run(() => {
-      this.tracks.value = tracks.map((t) => new Track(t, this.videoContext))
+      this.tracks.value = tracks.map((t) => new Track(t, this.videoContext, this.renderer))
       watch([this.tracks], ([tracks], _prev, onCleanup) => {
         tracks.forEach((track) => track.node.connect(this.videoContext.destination))
         onCleanup(() => tracks.forEach((track) => track.node.disconnect()))
