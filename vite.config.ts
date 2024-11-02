@@ -49,7 +49,7 @@ export default defineConfig({
       input: {
         index: resolve(import.meta.dirname, 'index.html'),
         etro: resolve(import.meta.dirname, 'etro.html'),
-        videocontext: resolve(import.meta.dirname, 'videocontext.html'),
+        videocontext: resolve(import.meta.dirname, 'video/index.html'),
       },
     },
   },

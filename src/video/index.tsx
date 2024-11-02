@@ -5,7 +5,7 @@ import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bu
 /* eslint-enable import/no-unresolved */
 
 import { getDefaultFilters } from '@/effects'
-import { render } from '@/framework/jsx-runtime'
+import { h, render } from '@/framework/jsx-runtime'
 import { ref } from '@/framework/reactivity'
 import { InputEvent } from '@/types'
 
@@ -26,10 +26,9 @@ const Demo = () => {
             width: RESOLUTION.width,
             height: RESOLUTION.height,
             source: sampleVideo1,
-            filter: filters[2],
           },
           {
-            time: { start: 2, source: 20, duration: 3 },
+            time: { start: 2, source: 20, duration: 2.5 },
             x: 0,
             y: 0,
             width: RESOLUTION.width,
@@ -44,6 +43,7 @@ const Demo = () => {
             width: RESOLUTION.width,
             height: RESOLUTION.height,
             source: sampleVideo1,
+            filter: filters[5],
           },
         ],
         transitions: [
@@ -56,12 +56,12 @@ const Demo = () => {
     resolution: RESOLUTION,
   })
 
-  movie.displayCanvas.className = 'w-full h-85vh max-w-screen max-h-screen object-contain'
   const recordedBlob = ref<Blob>()
 
   return (
-    <>
-      <div>{movie.displayCanvas}</div>
+    <div class="flex flex-col h-screen overflow-hidden">
+      {h(movie.displayCanvas, { class: 'flex-1 w-full h-full object-contain' })}
+      <div>{() => movie.currentTime.toFixed(2)}</div>
       <input
         type="range"
         class="w-full m-0"
@@ -71,26 +71,55 @@ const Demo = () => {
         value={() => movie.currentTime}
         onInput={(event: InputEvent) => movie.seekTo(event.target.valueAsNumber)}
       />
-      <div class="fixed bottom-0 left-0 bg-#0004 max-w-full p-2 text-white">
+
+      {() =>
+        movie.tracks.value.map((track, trackIndex) => (
+          <>
+            <div>Track {trackIndex + 1}</div>
+            <div class="flex relative h-4rem">
+              {() =>
+                track.clips.value.map((clip, clipIndex) => {
+                  const time = clip.time.value
+                  const left = `${(time.start * 100) / movie.duration}%`
+                  const width = `${(time.duration * 100) / movie.duration}%`
+
+                  return (
+                    <div
+                      class="absolute bg-#8888 text-black h-full rounded"
+                      style={`left:${left}; width:${width}`}
+                    >
+                      CLIP {clipIndex + 1}
+                    </div>
+                  )
+                })
+              }
+            </div>
+          </>
+        ))
+      }
+
+      <div class="w-full p-2 flex-shrink-0 overflow-auto">
         <p class="flex gap-3">
           {() =>
             movie.isPaused.value ? (
               <button
                 type="button"
+                class="flex items-center text-xl"
                 onClick={() => {
                   if (movie.isEnded.value) movie.seekTo(0)
                   movie.play()
                 }}
               >
-                Play
+                Play <IconTablerPlayerPlayFilled />
               </button>
             ) : (
-              <button type="button" onClick={() => movie.pause()}>
-                Pause
+              <button type="button" class="flex items-center text-xl" onClick={() => movie.pause()}>
+                Pause <IconTablerPlayerPauseFilled />
               </button>
             )
           }
           <button
+            class="hidden"
             type="button"
             onClick={async () => {
               movie.pause()
@@ -125,7 +154,7 @@ const Demo = () => {
                 {() => (
                   <>
                     <div>
-                      {[clip.node.value._currentTime.toFixed(2), clip.latestEvent.value?.type].join(' ')}
+                      {[clip.media.value.currentTime.toFixed(2), clip.latestEvent.value?.type].join(' ')}
                     </div>
                     <div>
                       state: {clip.node.value.state}, error?: {clip.error.value?.code}
@@ -133,6 +162,45 @@ const Demo = () => {
                   </>
                 )}
 
+                <div>
+                  <label>
+                    start time
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      value={() => clip.time.value.start}
+                      onInput={(event: InputEvent) => clip.setTime({ start: event.target.valueAsNumber })}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    source time
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      value={() => clip.time.value.source}
+                      onInput={(event: InputEvent) => clip.setTime({ source: event.target.valueAsNumber })}
+                    />
+                    <div>
+                      <label>
+                        source
+                        <input
+                          type="file"
+                          accept="video"
+                          onInput={(event: InputEvent) => {
+                            const file = event.target.files?.[0]
+                            if (!file) return
+
+                            clip.setMedia(URL.createObjectURL(file))
+                          }}
+                        />
+                      </label>
+                    </div>{' '}
+                  </label>
+                </div>
                 {/*
                 <select
                   size="3"
@@ -160,7 +228,7 @@ const Demo = () => {
           }
         </p>
       </div>
-    </>
+    </div>
   )
 }
 

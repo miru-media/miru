@@ -17,6 +17,8 @@ declare global {
   const IconTablerDropletHalfFilled: typeof import('~icons/tabler/droplet-half-filled.jsx')['default']
   const IconTablerFilters: typeof import('~icons/tabler/filters.jsx')['default']
   const IconTablerPhoto: (typeof import('~icons/tabler/photo.tsx'))['default']
+  const IconTablerPlayerPauseFilled: typeof import('~icons/tabler/player-pause-filled.jsx')['default']
+  const IconTablerPlayerPlayFilled: typeof import('~icons/tabler/player-play-filled.jsx')['default']
   const IconTablerRotateClockwise: typeof import('~icons/tabler/rotate-clockwise.jsx')['default']
   const IconTablerSun: typeof import('~icons/tabler/sun.jsx')['default']
   const IconTablerWand: typeof import('~icons/tabler/wand.jsx')['default']

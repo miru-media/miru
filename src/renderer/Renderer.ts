@@ -23,6 +23,17 @@ export interface RendererOptions {
   canvas?: HTMLCanvasElement | OffscreenCanvas
 }
 
+const setTextureParameters = (
+  gl: WebGL2RenderingContext,
+  texture: WebGLTexture,
+  options: twgl.TextureOptions,
+) => {
+  twgl.setTextureParameters(gl, texture, options)
+  gl.pixelStorei(GL.UNPACK_COLORSPACE_CONVERSION_WEBGL, options.colorspaceConversion ?? false)
+  gl.pixelStorei(GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, options.premultiplyAlpha ?? false)
+  gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, options.flipY ?? false)
+}
+
 export class Renderer {
   #gl: WebGL2RenderingContext
   #programInfo: twgl.ProgramInfo
@@ -75,8 +86,44 @@ export class Renderer {
       this.#vertexBuffers.push(buffer)
     })
 
-    this.emptyTexture = gl.createTexture()!
-    this.emptyTexture3D = gl.createTexture()!
+    this.emptyTexture = this.createTexture()
+    this.emptyTexture3D = this.createTexture(LUT_TEX_OPTIONS)
+  }
+
+  createTexture(textureOptions: twgl.TextureOptions = SOURCE_TEX_OPTIONS) {
+    const gl = this.#gl
+    const {
+      target = GL.TEXTURE_2D,
+      internalFormat = GL.RGBA8,
+      format = GL.RGBA,
+      type = GL.UNSIGNED_BYTE,
+    } = textureOptions
+
+    const texture = gl.createTexture()
+    if (texture == undefined) throw new Error(`[miru] gl.createTexture() failed`)
+
+    twgl.setTextureParameters(gl, texture, textureOptions)
+
+    const data = new ImageData(new Uint8ClampedArray(4), 1)
+
+    if (target === GL.TEXTURE_2D) gl.texImage2D(target, 0, internalFormat, 1, 1, 0, format, type, data)
+    else gl.texImage3D(target, 0, internalFormat, 1, 1, 1, 0, format, type, data)
+
+    return texture
+  }
+
+  loadImage(
+    texture: WebGLTexture,
+    source: SyncImageSource,
+    textureOptions: Omit<twgl.TextureOptions, 'width' | 'height'> = SOURCE_TEX_OPTIONS,
+  ) {
+    const gl = this.#gl
+    const { internalFormat = GL.RGBA, format = GL.RGBA, type = GL.UNSIGNED_BYTE } = textureOptions
+
+    setTextureParameters(gl, texture, textureOptions)
+
+    this.#gl.texImage2D(GL.TEXTURE_2D, 0, internalFormat, format, type, source)
+    if (textureOptions.auto === true) this.#gl.generateMipmap(GL.TEXTURE_2D)
   }
 
   setSourceTexture(texture: WebGLTexture, resolution: Size, textureSize: Size, crop?: CropState) {
@@ -109,6 +156,58 @@ export class Renderer {
     canvas.height = resolution.height
   }
 
+  loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut) {
+    const isHald = type === AssetType.HaldLut
+    this.#loadLut(texture, imageData, isHald)
+  }
+
+  #loadLut(texture: WebGLTexture, imageData: ImageData | undefined, isHald: boolean) {
+    const gl = this.#gl
+
+    if (imageData == undefined) return
+
+    const format = GL.RGBA
+    const type = GL.UNSIGNED_BYTE
+
+    const { width, height } = imageData
+    const size = Math.cbrt(width * height)
+    const slicesPerRow = width / size
+
+    setTextureParameters(gl, texture, LUT_TEX_OPTIONS)
+
+    if (isHald || width === 1 || height === 1) {
+      gl.texImage3D(GL.TEXTURE_3D, 0, format, size, size, size, 0, format, type, imageData.data)
+      return
+    }
+
+    gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
+    gl.pixelStorei(GL.UNPACK_ROW_LENGTH, width)
+    gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, height)
+    gl.texStorage3D(GL.TEXTURE_3D, 1, GL.RGBA8, size, size, size)
+
+    const pixelBuffer = gl.createBuffer()
+    gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, pixelBuffer)
+    gl.bufferData(GL.PIXEL_UNPACK_BUFFER, imageData.data, GL.STREAM_DRAW)
+
+    for (let z = 0; z < size; z++) {
+      const skipX = (z % slicesPerRow) * size
+      const skipY = Math.floor(z / slicesPerRow) * size
+
+      gl.pixelStorei(GL.UNPACK_SKIP_PIXELS, skipX)
+      gl.pixelStorei(GL.UNPACK_SKIP_ROWS, skipY)
+      gl.texSubImage3D(GL.TEXTURE_3D, 0, 0, 0, z, size, size, 1, format, type, 0)
+    }
+
+    gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
+    gl.pixelStorei(GL.UNPACK_ROW_LENGTH, 0)
+    gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, 0)
+    gl.pixelStorei(GL.UNPACK_SKIP_PIXELS, 0)
+    gl.pixelStorei(GL.UNPACK_SKIP_ROWS, 0)
+
+    // gl.deleteBuffer(pixelBuffer)
+    gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, null)
+  }
+
   setEffect(effect?: RendererEffect) {
     const { images, luts, ops } = effect ?? { images: [], luts: [], ops: [] }
 
@@ -130,106 +229,6 @@ export class Renderer {
     this.#uniforms.u_images = images
     this.#uniforms.u_luts = luts
     this.#uniforms.u_operations = paddedOps
-  }
-
-  loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut) {
-    const isHald = type === AssetType.HaldLut
-    this.#loadLut(texture, imageData, isHald)
-  }
-
-  #loadLut(texture: WebGLTexture, imageData: ImageData | undefined, isHald: boolean) {
-    const gl = this.#gl
-
-    if (imageData == undefined) return
-
-    const format = GL.RGBA
-    const type = GL.UNSIGNED_BYTE
-
-    const { width, height } = imageData
-    const size = Math.cbrt(width * height)
-    const slicesPerRow = width / size
-
-    twgl.setTextureParameters(gl, texture, LUT_TEX_OPTIONS)
-
-    if (isHald || width === 1 || height === 1) {
-      gl.texImage3D(GL.TEXTURE_3D, 0, format, size, size, size, 0, format, type, imageData.data)
-      return
-    }
-
-    const pixelBuffer = gl.createBuffer()
-    gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
-    gl.pixelStorei(GL.UNPACK_ROW_LENGTH, width)
-    gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, height)
-    gl.texStorage3D(GL.TEXTURE_3D, 1, GL.RGBA8, size, size, size)
-
-    gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, pixelBuffer)
-    gl.bufferData(GL.PIXEL_UNPACK_BUFFER, imageData.data, GL.STREAM_DRAW)
-
-    for (let z = 0; z < size; z++) {
-      const skipX = (z % slicesPerRow) * size
-      const skipY = Math.floor(z / slicesPerRow) * size
-
-      gl.pixelStorei(GL.UNPACK_SKIP_PIXELS, skipX)
-      gl.pixelStorei(GL.UNPACK_SKIP_ROWS, skipY)
-      gl.texSubImage3D(GL.TEXTURE_3D, 0, 0, 0, z, size, size, 1, format, type, 0)
-    }
-
-    gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
-    gl.pixelStorei(GL.UNPACK_ROW_LENGTH, 0)
-    gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, 0)
-    gl.pixelStorei(GL.UNPACK_SKIP_PIXELS, 0)
-    gl.pixelStorei(GL.UNPACK_SKIP_ROWS, 0)
-
-    gl.deleteBuffer(pixelBuffer)
-    gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, null)
-  }
-
-  createTexture(textureOptions: twgl.TextureOptions = SOURCE_TEX_OPTIONS) {
-    const gl = this.#gl
-    const {
-      target = GL.TEXTURE_2D,
-      internalFormat = GL.RGBA8,
-      format = GL.RGBA,
-      type = GL.UNSIGNED_BYTE,
-    } = textureOptions
-
-    const texture = gl.createTexture()
-    if (texture == undefined) throw new Error(`[miru] gl.createTexture() failed`)
-
-    twgl.setTextureParameters(gl, texture, textureOptions)
-
-    if (target === GL.TEXTURE_2D) gl.texImage2D(target, 0, internalFormat, 1, 1, 0, format, type, null)
-    else gl.texImage3D(target, 0, internalFormat, 1, 1, 0, 0, format, type, null)
-
-    return texture
-  }
-
-  loadImage(
-    texture: WebGLTexture,
-    source: SyncImageSource,
-    textureOptions: Omit<twgl.TextureOptions, 'width' | 'height'> = SOURCE_TEX_OPTIONS,
-  ) {
-    const gl = this.#gl
-    const {
-      internalFormat = GL.RGBA,
-      format = GL.RGBA,
-      type = GL.UNSIGNED_BYTE,
-      premultiplyAlpha = false,
-      flipY = false,
-      colorspaceConversion = GL.BROWSER_DEFAULT_WEBGL,
-    } = textureOptions
-
-    gl.bindTexture(GL.TEXTURE_2D, texture)
-    gl.pixelStorei(GL.UNPACK_COLORSPACE_CONVERSION_WEBGL, colorspaceConversion)
-    gl.pixelStorei(GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha)
-    gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, flipY)
-
-    this.#gl.texImage2D(GL.TEXTURE_2D, 0, internalFormat, format, type, source)
-    if (textureOptions.auto === true) this.#gl.generateMipmap(GL.TEXTURE_2D)
-  }
-
-  deleteTexture(texture: WebGLTexture) {
-    this.#gl.deleteTexture(texture)
   }
 
   setIntensity(value: number) {
@@ -286,6 +285,10 @@ export class Renderer {
 
   toBlob(options?: ImageEncodeOptions) {
     return canvasToBlob(this.#gl.canvas, options)
+  }
+
+  deleteTexture(texture: WebGLTexture) {
+    this.#gl.deleteTexture(texture)
   }
 
   dispose() {

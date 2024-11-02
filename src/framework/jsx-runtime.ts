@@ -16,6 +16,7 @@ import {
 } from './reactivity'
 import { SVG_TYPES } from './svgTypes'
 
+type NativeElement = Element
 declare global {
   /** @internal */
   /* eslint-disable-next-line @typescript-eslint/no-namespace */
@@ -26,7 +27,7 @@ declare global {
       el: Node | DocumentFragment
       marker?: Node
       scope?: EffectScope
-      type: Component | string
+      type: Component | string | NativeElement
       [HNODE_MARKER]: true
     }
   }
@@ -112,7 +113,7 @@ const toClassName = (value: unknown): string => {
   return value === false ? '' : String(value ?? '')
 }
 
-export const h = (type: string | Component, props: ComponentProps): JSX.Element => {
+export const h = (type: string | Component | Element, props: ComponentProps): JSX.Element => {
   if (typeof type === 'function') {
     const scope = createEffectScope()
     const hNode = scope.run(() => type(props))
@@ -123,10 +124,10 @@ export const h = (type: string | Component, props: ComponentProps): JSX.Element 
   return createElementHNode(type, props)
 }
 
-const createElementHNode = (type: string, props: ComponentProps): HNode => {
+const createElementHNode = (type: string | Element, props: ComponentProps): HNode => {
   const appendedNodes: AppendedChild[] = []
 
-  const isSvg = SVG_TYPES.has(type)
+  const isSvg = typeof type === 'string' && SVG_TYPES.has(type)
   let element: Element | DocumentFragment
   let marker: Comment | null = null
 
@@ -136,9 +137,12 @@ const createElementHNode = (type: string, props: ComponentProps): HNode => {
     element.appendChild(marker)
     element[HNODE_MARKER] = marker
   } else {
-    element = isSvg
-      ? document.createElementNS('http://www.w3.org/2000/svg', type)
-      : document.createElement(type)
+    element =
+      typeof type === 'string'
+        ? isSvg
+          ? document.createElementNS('http://www.w3.org/2000/svg', type)
+          : document.createElement(type)
+        : type
   }
 
   const hNode: HNode = {

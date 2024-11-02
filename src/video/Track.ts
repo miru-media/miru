@@ -38,29 +38,31 @@ export class Track {
       (transitionInit) => new Transition(transitionInit, videoContext),
     )
 
-    watch([this.clips, this.transitions], ([clips, transitions], _prev, onCleanup) => {
-      clips.forEach((clip, index) => {
-        const clipNode = clip.node.value
-        let outTransition, inTransition
+    watch(
+      [() => this.clips.value.map((clip) => clip.node.value), this.transitions],
+      ([clipNodes, transitions], _prev, onCleanup) => {
+        clipNodes.forEach((clipNode, index) => {
+          let outTransition, inTransition
 
-        for (const transition of transitions) {
-          if (transition.clips.value[0] === index) outTransition = transition
-          else if (transition.clips.value[1] === index) inTransition = transition
-        }
+          for (const transition of transitions) {
+            if (transition.clips.value[0] === index) outTransition = transition
+            else if (transition.clips.value[1] === index) inTransition = transition
+          }
 
-        if (outTransition) {
-          ;(inTransition?.node ?? clipNode).connect(outTransition.node, 0)
-          outTransition.node.connect(this.node)
-        }
-        if (inTransition) clipNode.connect(inTransition.node, 1)
+          if (outTransition) {
+            ;(inTransition?.node ?? clipNode).connect(outTransition.node, 0)
+            outTransition.node.connect(this.node)
+          }
+          if (inTransition) clipNode.connect(inTransition.node, 1)
 
-        if (!outTransition && !inTransition) clipNode.connect(this.node)
-      })
+          if (!outTransition && !inTransition) clipNode.connect(this.node)
+        })
 
-      onCleanup(() => {
-        clips.forEach((clip) => clip.node.value.disconnect(this.node))
-        transitions.forEach((t) => t.node.disconnect())
-      })
-    })
+        onCleanup(() => {
+          clipNodes.forEach((clipNode) => clipNode.disconnect())
+          transitions.forEach((t) => t.node.disconnect())
+        })
+      },
+    )
   }
 }

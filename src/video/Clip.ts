@@ -1,7 +1,7 @@
 import VideoContext from 'videocontext'
 
 import { EffectInternal } from '@/Effect'
-import { createEffectScope, effect, onScopeDispose, ref, Ref } from '@/framework/reactivity'
+import { createEffectScope, effect, onScopeDispose, ref, Ref, watch } from '@/framework/reactivity'
 import { Renderer } from '@/renderer/Renderer'
 import { AssetType, Effect, ImageSourceOption } from '@/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from '@/utils'
@@ -43,7 +43,7 @@ export class Clip {
   y: Ref<number>
   width: Ref<number>
   height: Ref<number>
-  media: Ref<HTMLVideoElement>
+  media = ref<HTMLVideoElement>(undefined as never)
   filter: Ref<EffectInternal | undefined>
 
   node = ref<MiruVideoNode>(undefined as never)
@@ -60,22 +60,7 @@ export class Clip {
     this.height = ref(init.height)
     this.filter = ref(init.filter && new EffectInternal(init.filter, renderer))
 
-    const sourceOption = normalizeSourceOption(init.source, AssetType.Video)
-
-    if (sourceOption.source instanceof HTMLVideoElement) this.media = ref(sourceOption.source)
-    else {
-      if (isSyncSource(sourceOption.source)) {
-        throw new Error('[miru] expected video source')
-      }
-
-      const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
-
-      this.#scope.run(() => {
-        onScopeDispose(close)
-      })
-
-      this.media = ref(media)
-    }
+    this.setMedia(init.source)
 
     this.error = useMediaError(this.media)
     const allEventTypes = [
@@ -108,24 +93,55 @@ export class Clip {
     )
 
     this.#scope.run(() => {
-      effect((onCleanup) => {
+      watch([this.media], ([media], _prev, onCleanup) => {
         const time = this.time.value
         const node = (this.node.value = context.customSourceNode(
           MiruVideoNode,
-          this.media.value,
+          media,
           time.source,
           undefined,
           { renderer },
         ))
 
+        onCleanup(() => node.destroy())
+      })
+
+      effect(() => {
+        const node = this.node.value
+        const time = this.time.value
+
+        node._sourceOffset = time.source
+        node.clearTimelineState()
         node.startAt(time.start)
         node.stopAt(time.start + time.duration)
-
-        onCleanup(() => node.destroy())
+        node._seek(context.currentTime)
       })
 
       effect(() => (this.node.value.effect = this.filter.value))
     })
+  }
+
+  setTime(value: Partial<ClipTime>) {
+    this.time.value = { ...this.time.value, ...value }
+  }
+
+  setMedia(value: ImageSourceOption) {
+    const sourceOption = normalizeSourceOption(value, AssetType.Video)
+
+    if (sourceOption.source instanceof HTMLVideoElement) this.media.value = sourceOption.source
+    else {
+      if (isSyncSource(sourceOption.source)) {
+        throw new Error('[miru] expected video source')
+      }
+
+      const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+
+      this.#scope.run(() => {
+        onScopeDispose(close)
+      })
+
+      this.media.value = media
+    }
   }
 
   toObject(): Clip.Init {

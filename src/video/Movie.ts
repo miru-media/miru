@@ -8,7 +8,7 @@ import { getWebgl2Context, setObjectSize } from '@/utils'
 
 import { Track } from './Track'
 
-const stats = import.meta.env.DEV ? new Stats() : undefined
+const stats = new Stats()
 
 export const enum VideoContextState {
   PLAYING = 0,
@@ -69,13 +69,13 @@ export class Movie {
       })
     })
 
-    this.videoContext = new VideoContext(this.displayCanvas)
-    this.videoContext.pause()
+    const videoContext = (this.videoContext = new VideoContext(this.displayCanvas))
+    videoContext.pause()
 
     this.#scope.run(() => {
-      this.tracks.value = tracks.map((t) => new Track(t, this.videoContext, this.renderer))
+      this.tracks.value = tracks.map((t) => new Track(t, videoContext, this.renderer))
       watch([this.tracks], ([tracks], _prev, onCleanup) => {
-        tracks.forEach((track) => track.node.connect(this.videoContext.destination))
+        tracks.forEach((track) => track.node.connect(videoContext.destination))
         onCleanup(() => tracks.forEach((track) => track.node.disconnect()))
       })
     })
@@ -87,19 +87,25 @@ export class Movie {
       this.isPaused.value = state === VideoContextState.PAUSED || isEnded
       this.#currentTime.value = currentTime
     }
-    this.videoContext.registerCallback(VideoContext.EVENTS.UPDATE, updateState)
-    this.videoContext.registerCallback(VideoContext.EVENTS.ENDED, updateState)
+    videoContext.registerCallback(VideoContext.EVENTS.UPDATE, updateState)
+    videoContext.registerCallback(VideoContext.EVENTS.ENDED, updateState)
 
-    if (stats != undefined) {
-      stats.showPanel(0)
-      document.body.appendChild(stats.dom)
-      this.videoContext.registerCallback(VideoContext.EVENTS.UPDATE, () => stats.end())
+    stats.showPanel(0)
+    document.body.appendChild(stats.dom)
 
-      Object.values(VideoContext.EVENTS).forEach((type) =>
-        // eslint-disable-next-line no-console -- WIP
-        this.videoContext.registerCallback(type, () => type !== 'update' && console.log(type)),
-      )
+    const _update = videoContext._update.bind(videoContext)
+    this.videoContext._update = (dt) => {
+      const isPlaying = !this.isPaused.value
+
+      if (isPlaying) stats.begin()
+      _update(dt)
+      if (isPlaying) stats.end()
     }
+
+    Object.values(VideoContext.EVENTS).forEach((type) =>
+      // eslint-disable-next-line no-console -- WIP
+      this.videoContext.registerCallback(type, () => type !== 'update' && console.log(type)),
+    )
   }
 
   play() {
@@ -113,6 +119,8 @@ export class Movie {
 
   seekTo(time: number) {
     this.videoContext.currentTime = time
+    // reschedule playback of VideoContext source nodes
+    this.tracks.value.forEach((track) => track.clips.value.forEach((clip) => clip.setTime({})))
   }
 
   refresh() {

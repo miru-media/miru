@@ -88,8 +88,14 @@ declare module 'videocontext' {
     )
     get state(): number
     _currentTime: number
-    _update(currentTime: number, triggerTextureUpdate: boolean): void
+    clearTimelineState(): void
+    _update(currentTime: number, triggerTextureUpdate: boolean): boolean
     _seek(time: number): void
+    _unload(): void
+
+    _ready: boolean
+    _isElementPlaying: boolean
+    _loadTriggered: boolean
   }
 
   class CanvasNode extends SourceNode {}
@@ -177,6 +183,8 @@ declare module 'videocontext' {
     play(): boolean
     update(dt: number): void
     registerCallback(type: string, func: (currentTime: number) => unknown): void
+
+    _update(dt: number): void
 
     static EVENTS = {
       UPDATE: 'update',

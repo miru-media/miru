@@ -14,10 +14,7 @@ export class TextureResource {
   janitor = new Janitor()
   texture: WebGLTexture
 
-  constructor(
-    { source, type, crossOrigin }: ImageSourceObject,
-    renderer: Renderer,
-  ) {
+  constructor({ source, type, crossOrigin }: ImageSourceObject, renderer: Renderer) {
     this.canvas = document.createElement('canvas')
     this.context = this.canvas.getContext('bitmaprenderer') ?? undefined
     this.texture = renderer.createTexture(

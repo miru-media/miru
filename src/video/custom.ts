@@ -57,7 +57,6 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
 
     this.#framebuffer = gl.createFramebuffer()!
     gl.bindFramebuffer(GL.FRAMEBUFFER, this.#framebuffer)
-    // must this be done every time?
     gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.#outTexture, 0)
     gl.bindFramebuffer(GL.FRAMEBUFFER, null)
 
@@ -83,20 +82,23 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
     const mediaSize = { width: this.#media.videoWidth, height: this.#media.videoHeight }
 
     this._texture = this.#mediaTexture
-    super._update(currentTime, false)
+    const superUpated = super._update(currentTime, false)
 
     const canRender = this.#media.readyState >= 2
-    const shouldRender =
-      currentTime >= this._startTime &&
-      currentTime < this._startTime + this.duration &&
-      this.#lastUploadTime !== currentTime
+    const isWithinTime = currentTime >= this._startTime && currentTime < this._startTime + this.duration
+    const shouldUploadTexture =
+      triggerTextureUpdate && canRender && isWithinTime && this.#lastUploadTime !== currentTime
 
     if (!canRender) this.#lastUploadTime = -1
-    else if (triggerTextureUpdate && shouldRender) {
+    if (!isWithinTime) return false
+
+    if (shouldUploadTexture) {
       renderer.loadImage(this.#mediaTexture, this.#media, { ...SOURCE_TEX_OPTIONS, ...mediaSize })
       this.#lastUploadTime = currentTime
       ;(this.#mediaTexture as { _isTextureCleared: boolean })._isTextureCleared = false
     }
+
+    if (!superUpated) return false
 
     gl.bindTexture(GL.TEXTURE_2D, this.#outTexture)
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer)
@@ -109,6 +111,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
     renderer.draw()
 
     this._texture = this.#outTexture
+    return true
   }
 
   _seek(time: number) {
@@ -118,5 +121,6 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
 
   destroy() {
     this.#renderer = undefined as never
+    super.destroy()
   }
 }
