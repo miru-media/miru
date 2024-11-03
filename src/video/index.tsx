@@ -79,15 +79,15 @@ const Demo = () => {
             <div class="flex relative h-4rem">
               {() =>
                 track.clips.value.map((clip, clipIndex) => {
-                  const time = clip.time.value
-                  const left = `${(time.start * 100) / movie.duration}%`
-                  const width = `${(time.duration * 100) / movie.duration}%`
+                  const getStyle = () => {
+                    const time = clip.time.value
+                    const left = `${(time.start * 100) / movie.duration}%`
+                    const width = `${(time.duration * 100) / movie.duration}%`
+                    return `left:${left}; width:${width}`
+                  }
 
                   return (
-                    <div
-                      class="absolute bg-#8888 text-black h-full rounded"
-                      style={`left:${left}; width:${width}`}
-                    >
+                    <div class="absolute bg-#8888 text-black h-full rounded" style={getStyle}>
                       CLIP {clipIndex + 1}
                     </div>
                   )
@@ -100,24 +100,22 @@ const Demo = () => {
 
       <div class="w-full p-2 flex-shrink-0 overflow-auto">
         <p class="flex gap-3">
-          {() =>
-            movie.isPaused.value ? (
-              <button
-                type="button"
-                class="flex items-center text-xl"
-                onClick={() => {
-                  if (movie.isEnded.value) movie.seekTo(0)
-                  movie.play()
-                }}
-              >
-                Play <IconTablerPlayerPlayFilled />
-              </button>
-            ) : (
-              <button type="button" class="flex items-center text-xl" onClick={() => movie.pause()}>
-                Pause <IconTablerPlayerPauseFilled />
-              </button>
-            )
-          }
+          <button
+            type="button"
+            class="flex items-center text-xl"
+            onClick={() => {
+              if (movie.isPaused.value) {
+                if (movie.isEnded.value) movie.seekTo(0)
+                movie.play()
+              } else movie.pause()
+            }}
+          >
+            {() =>
+              movie.isPaused.value
+                ? ['Play', <IconTablerPlayerPlayFilled />]
+                : ['Pause', <IconTablerPlayerPauseFilled />]
+            }
+          </button>
           <button
             class="hidden"
             type="button"
@@ -151,16 +149,16 @@ const Demo = () => {
           {() =>
             movie.tracks.value[0].clips.value.map((clip) => (
               <div class="font-mono">
-                {() => (
-                  <>
-                    <div>
-                      {[clip.media.value.currentTime.toFixed(2), clip.latestEvent.value?.type].join(' ')}
-                    </div>
-                    <div>
+                <div>
+                  {() => [clip.media.value.currentTime.toFixed(2), clip.latestEvent.value?.type].join(' ')}
+                </div>
+                <div>
+                  {() => (
+                    <>
                       state: {clip.node.value.state}, error?: {clip.error.value?.code}
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
 
                 <div>
                   <label>
@@ -169,6 +167,7 @@ const Demo = () => {
                       type="number"
                       min="0"
                       max="20"
+                      step="0.25"
                       value={() => clip.time.value.start}
                       onInput={(event: InputEvent) => clip.setTime({ start: event.target.valueAsNumber })}
                     />
@@ -181,6 +180,7 @@ const Demo = () => {
                       type="number"
                       min="0"
                       max="20"
+                      step="0.25"
                       value={() => clip.time.value.source}
                       onInput={(event: InputEvent) => clip.setTime({ source: event.target.valueAsNumber })}
                     />
