@@ -184,19 +184,19 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
       // if there are fewer children than before, unmount the extra from before
       for (let i = children.length; i < appendedNodes.length; i++) unappendAndStop(appendedNodes[i], appendTo)
     })
-
-    onScopeDispose(() => {
-      if (isDocFrag(element)) {
-        const parentNode = marker!.parentNode
-        marker!.remove()
-        if (parentNode != null) appendedNodes.forEach((node) => unappend(node, parentNode))
-      }
-
-      appendedNodes.length = 0
-      hNode.el = undefined as never
-      if (props.ref != undefined) props.ref.value = undefined
-    })
   }
+
+  onScopeDispose(() => {
+    if (isDocFrag(element)) {
+      const parentNode = marker!.parentNode
+      marker!.remove()
+      if (parentNode != null) appendedNodes.forEach((node) => unappend(node, parentNode))
+    }
+
+    appendedNodes.length = 0
+    hNode.el = undefined as never
+    if (props.ref != undefined) props.ref.value = undefined
+  })
 
   if (isDocFrag(element)) return hNode
 
