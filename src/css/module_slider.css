@@ -10,11 +10,13 @@
 /* SLIDER */
 .miru--slider {
   flex-grow: 1;
-  height: 100%;
+  height: calc(100% - 2 * var(--gap-default));
   background-clip: padding-box;
-  border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2) solid transparent;
+  border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
+    transparent;
   border-right: var(--gap-default) solid transparent;
-  border-bottom: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2) solid transparent;
+  border-bottom: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
+    transparent;
   border-left: var(--gap-default) solid transparent;
 
   &::-moz-range-thumb {

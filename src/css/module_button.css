@@ -32,10 +32,7 @@
   }
 
   &.miru--small {
-    flex-grow: 0;
-
-    /* flex-basis: var(--height-menu-row); */
-    width: var(--height-menu-row);
+    flex: 0 0 var(--height-menu-row);
   }
 
   /* BUTTON ICON */

@@ -10,8 +10,9 @@
   --size-button-icon: 1.25rem;
   --roundness-button: 0.25rem;
   --height-slider: 0.6rem;
-  --width-slider-thumb: 2.5rem; /* moz only */
+  --width-slider-thumb: 2.5rem;
   --gap-default: 1rem;
+  --gap-preview: 1rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;
