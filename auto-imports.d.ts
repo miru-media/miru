@@ -6,6 +6,9 @@
 // biome-ignore lint: disable
 export {}
 declare global {
+  const IconTablerAdjustments: typeof import('~icons/tabler/adjustments.jsx')['default']
+  const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx')['default']
+  const IconTablerChevronsRight: typeof import('~icons/tabler/chevrons-right.jsx')['default']
   const IconTablerCircleOff: typeof import('~icons/tabler/circle-off.jsx')['default']
   const IconTablerContrastFilled: typeof import('~icons/tabler/contrast-filled.jsx')['default']
   const IconTablerCrop: typeof import('~icons/tabler/crop.jsx')['default']
@@ -14,6 +17,7 @@ declare global {
   const IconTablerCropLandscape: typeof import('~icons/tabler/crop-landscape.jsx')['default']
   const IconTablerCropPortrait: typeof import('~icons/tabler/crop-portrait.jsx')['default']
   const IconTablerCrop_1_1: typeof import('~icons/tabler/crop-1-1.jsx')['default']
+  const IconTablerCut: typeof import('~icons/tabler/cut.jsx')['default']
   const IconTablerDropletHalfFilled: typeof import('~icons/tabler/droplet-half-filled.jsx')['default']
   const IconTablerFilters: typeof import('~icons/tabler/filters.jsx')['default']
   const IconTablerPhoto: (typeof import('~icons/tabler/photo.tsx'))['default']
@@ -21,5 +25,6 @@ declare global {
   const IconTablerPlayerPlayFilled: typeof import('~icons/tabler/player-play-filled.jsx')['default']
   const IconTablerRotateClockwise: typeof import('~icons/tabler/rotate-clockwise.jsx')['default']
   const IconTablerSun: typeof import('~icons/tabler/sun.jsx')['default']
+  const IconTablerTrash: typeof import('~icons/tabler/trash.jsx')['default']
   const IconTablerWand: typeof import('~icons/tabler/wand.jsx')['default']
 }

@@ -1,4 +1,4 @@
-import { effect, ref } from '@/framework/reactivity'
+import { computed, effect, ref } from '@/framework/reactivity'
 import { type InputEvent } from '@/types'
 import { useElementSize } from '@/utils'
 
@@ -24,6 +24,62 @@ const Cursor = ({ editor }: { editor: VideoEditor }) => {
       <span class="rounded bg-yellow text-black">{() => formatTime(editor.movie.currentTime)}</span>
       <div class="w-2px bg-yellow" style={() => `height: ${editor.timelineSize.value.height}px`} />
     </div>
+  )
+}
+
+const Ruler = ({ editor }: { editor: VideoEditor }) => {
+  const intervalS = computed(() => {
+    const range = editor.secondsPerPixel.value
+    const exponent = Math.floor(Math.log2(range))
+    const magnitude = Math.pow(2, exponent)
+
+    return magnitude * 32
+  })
+
+  const Labels = () => {
+    return (
+      <div>
+        {() => {
+          const timelineRangeS = editor.pixelsToSeconds(editor.timelineSize.value.width)
+          const spacing = 4
+
+          const children: JSX.Element[] = []
+          const labelIntervalS = intervalS.value * spacing
+          const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
+
+          let fromS = Math.max(editor.movie.currentTime - timelineRangeS / 2, 0)
+          fromS = fromS - (fromS % labelIntervalS)
+
+          for (let i = 0; i < nLabels; i++) {
+            const time = fromS + i * labelIntervalS
+            if (time > editor.movie.duration + timelineRangeS / 2.1) break
+
+            const left = editor.secondsToPixels(time)
+            children.push(
+              <div class="absolute" style={`translate:${left}px`}>
+                {time}s
+              </div>,
+            )
+          }
+
+          return children
+        }}
+      </div>
+    )
+  }
+
+  const style = () => `
+    height: 1rem;
+    width: calc(100% + ${editor.timelineSize.value.width / 2.1}px);
+    background-size: ${editor.secondsToPixels(intervalS.value)}px 1rem;
+    background-image: radial-gradient(circle at 0 center, white 0.125rem, rgba(0, 0, 0, 0) 0.125rem);
+    `
+
+  return (
+    <>
+      <div class="absolute left-0 top-0" style={style}></div>
+      <Labels />
+    </>
   )
 }
 
@@ -70,6 +126,23 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
 
   return (
     <div ref={root}>
+      <button
+        type="button"
+        class="flex items-center text-xl"
+        onClick={() => {
+          if (movie.isPaused.value) {
+            if (movie.isEnded.value) movie.seekTo(0)
+            movie.play()
+          } else movie.pause()
+        }}
+      >
+        {() =>
+          movie.isPaused.value
+            ? ['Play', <IconTablerPlayerPlayFilled />]
+            : ['Pause', <IconTablerPlayerPauseFilled />]
+        }
+      </button>
+
       <Cursor editor={editor} />
 
       <input
@@ -87,6 +160,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
           }
         >
           <div class="relative" style={`width:${editor.secondsToPixels(movie.duration)}px`}>
+            <Ruler editor={editor} />
             {() =>
               movie.tracks.value.map((track) => (
                 <div class="flex relative h-4rem">

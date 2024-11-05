@@ -6,12 +6,6 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
   const buttons = [
     { icon: IconTablerTrash, onClick: () => editor.delete() },
     { icon: IconTablerCut, onClick: () => editor.splitAtCurrentTime() },
-    {
-      icon: IconTablerAdjustments,
-      onClick: () => {
-        throw new Error('Not implemented.')
-      },
-    },
   ]
 
   return (

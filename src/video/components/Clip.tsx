@@ -19,6 +19,7 @@ export const Clip = (props: { clip: ClipType; editor: VideoEditor }) => {
 
   const getBoxStyle = () => {
     const { left, right } = edges.value
+    // TODO: use translate
     return `left:${left}px; width:${right - left}px`
   }
 

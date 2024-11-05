@@ -59,22 +59,6 @@ const Demo = () => {
       <div class="w-full p-2 flex-shrink-0 overflow-auto">
         <p class="flex gap-3">
           <button
-            type="button"
-            class="flex items-center text-xl"
-            onClick={() => {
-              if (movie.isPaused.value) {
-                if (movie.isEnded.value) movie.seekTo(0)
-                movie.play()
-              } else movie.pause()
-            }}
-          >
-            {() =>
-              movie.isPaused.value
-                ? ['Play', <IconTablerPlayerPlayFilled />]
-                : ['Pause', <IconTablerPlayerPauseFilled />]
-            }
-          </button>
-          <button
             class="hidden"
             type="button"
             onClick={async () => {
