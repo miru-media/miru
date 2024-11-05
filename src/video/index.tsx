@@ -51,7 +51,7 @@ const Demo = () => {
 
   return (
     <div class="flex flex-col h-screen overflow-hidden">
-      {h(movie.displayCanvas, { class: 'flex-1 w-full h-full object-contain' })}
+      {h(movie.displayCanvas, { class: 'flex-1 w-full h-full object-contain max-h-70vh' })}
 
       <Timeline editor={editor} />
       <Actions.ClipActions editor={editor} />
