@@ -1,4 +1,4 @@
-import { computed, effect, MaybeRefOrGetter, onScopeDispose, ref, toValue } from '@/framework/reactivity'
+import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from '@/framework/reactivity'
 import { useEventListener } from '@/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
@@ -60,4 +60,14 @@ export const useMediaError = (media: MaybeRefOrGetter<HTMLMediaElement | undefin
   events.forEach((type) => useEventListener(media, type, updateValue))
 
   return error
+}
+
+export const formatTime = (timeS: number) => {
+  const minutes = String(Math.trunc(timeS / 60) % 60).padStart(2, '0')
+  const hoursNumber = Math.trunc(timeS / (60 * 60))
+  const hours = hoursNumber ? String(hoursNumber).padStart(2, '0') : ''
+  const seconds = String(Math.trunc(timeS)).padStart(2, '0')
+  const subSeconds = String(Math.trunc((timeS % 1) * 100)).padStart(2, '0')
+
+  return `${hours ? `${hours}:` : ''}${minutes}:${seconds}.${subSeconds}`
 }

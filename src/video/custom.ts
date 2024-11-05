@@ -1,12 +1,12 @@
-import VideoContext, { RenderGraph } from 'videocontext'
+import VideoContext, { type RenderGraph } from 'videocontext'
 
 import { FRAMEBUFFER_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from '@/constants'
-import { EffectInternal } from '@/Effect'
+import { type EffectInternal } from '@/Effect'
 import * as GL from '@/GL'
 import fragmentShader from '@/renderer/glsl/main.frag'
 import vertexShader from '@/renderer/glsl/main.vert'
-import { Renderer } from '@/renderer/Renderer'
-import { AdjustmentsState, Size } from '@/types'
+import { type Renderer } from '@/renderer/Renderer'
+import { type AdjustmentsState, type Size } from '@/types'
 import { setObjectSize } from '@/utils'
 
 export const definition = {
@@ -81,6 +81,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
     const gl = this._gl
     const mediaSize = { width: this.#media.videoWidth, height: this.#media.videoHeight }
 
+    // avoid super._update() resizing the framebuffer texture
     this._texture = this.#mediaTexture
     const superUpated = super._update(currentTime, false)
 
@@ -115,11 +116,15 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
   }
 
   _seek(time: number) {
+    // avoid resizing the framebuffer texture
     this._texture = this.#mediaTexture
     super._seek(time)
+    this._texture = this.#outTexture
   }
 
   destroy() {
+    this.#renderer.deleteTexture(this.#mediaTexture)
+    this.#renderer.deleteTexture(this.#outTexture)
     this.#renderer = undefined as never
     super.destroy()
   }

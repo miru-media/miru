@@ -1,9 +1,9 @@
 import Stats from 'stats.js'
 import VideoContext from 'videocontext'
 
-import { computed, createEffectScope, effect, Ref, ref, watch } from '@/framework/reactivity'
+import { computed, createEffectScope, effect, type Ref, ref, watch } from '@/framework/reactivity'
 import { Renderer } from '@/renderer/Renderer'
-import { Size } from '@/types'
+import { type Size } from '@/types'
 import { getWebgl2Context, setObjectSize } from '@/utils'
 
 import { Track } from './Track'
@@ -118,9 +118,9 @@ export class Movie {
   }
 
   seekTo(time: number) {
-    this.videoContext.currentTime = time
+    this.videoContext.currentTime = this.#currentTime.value = time
     // reschedule playback of VideoContext source nodes
-    this.tracks.value.forEach((track) => track.clips.value.forEach((clip) => clip.setTime({})))
+    this.tracks.value.forEach((track) => track.forEachClip((clip) => clip.schedule()))
   }
 
   refresh() {

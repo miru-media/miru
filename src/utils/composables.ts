@@ -1,6 +1,8 @@
 import { throttle } from 'throttle-debounce'
 
-import { effect, MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
+import { effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
+
+import { win } from './window'
 
 export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | undefined>) => {
   const initialElement = toValue(element)
@@ -73,16 +75,43 @@ export const arrayFlatToValue = <T>(value: T | T[], result: T[] = []): T[] => {
   return result
 }
 
-export const useEventListener = (
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+export const useEventListener = <T extends Event>(
   targetRef: MaybeRefOrGetter<EventTarget | undefined>,
   type: string,
-  listener: EventListener,
+  listener: (event: T) => void,
   options?: EventListenerOptions,
 ) =>
   effect((onCleanup) => {
     const target = toValue(targetRef)
     if (target == undefined) return
 
-    target.addEventListener(type, listener, options)
-    onCleanup(() => target.removeEventListener(type, listener, options))
+    target.addEventListener(type, listener as (event: Event) => void, options)
+    onCleanup(() => target.removeEventListener(type, listener as (event: Event) => void, options))
   })
+
+const supportsHover = ref(false)
+{
+  const query = win.matchMedia('(hover: hover)')
+  supportsHover.value = query.matches
+  query.addEventListener('change', () => (supportsHover.value = query.matches))
+}
+
+export const useHoverCoords = (targetRef: MaybeRefOrGetter<EventTarget | undefined>) => {
+  const coords = ref({ x: 0, y: 0 })
+
+  useEventListener(
+    () => (supportsHover.value ? toValue(targetRef) : undefined),
+    'pointermove',
+    (event: PointerEvent) => {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+
+      coords.value = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      }
+    },
+  )
+
+  return coords
+}

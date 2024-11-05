@@ -1,68 +1,88 @@
-import VideoContext, { CompositingNode } from 'videocontext'
+import VideoContext, { type CompositingNode } from 'videocontext'
 
-import { computed, ref, watch } from '@/framework/reactivity'
-import { Renderer } from '@/renderer/Renderer'
+import { computed, ref } from '@/framework/reactivity'
+import { type Renderer } from '@/renderer/Renderer'
 
 import { Clip } from './Clip'
-import { Transition } from './Transition'
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Track {
   export interface Init {
     clips: Clip.Init[]
-    transitions: Transition.Init[]
   }
 }
 
 export class Track {
-  clips = ref<Clip[]>([])
-  transitions = ref<Transition[]>([])
+  #head = ref<Clip>()
+  #tail = ref<Clip>()
+
   node: CompositingNode<never>
+  context: VideoContext
 
   #duration = computed(() => {
-    return this.clips.value.reduce((end, clip) => {
-      const { start, duration } = clip.time.value
-      return Math.max(start + duration, end)
-    }, 0)
+    const lastClip = this.#tail.value
+    if (!lastClip) return 0
+
+    const { start, duration } = lastClip.time
+    return start + duration
   })
+
+  get head() {
+    return this.#head.value
+  }
+  get tail() {
+    return this.#tail.value
+  }
 
   get duration() {
     return this.#duration.value
   }
+  get count() {
+    return this.#tail.value?.index ?? 0
+  }
 
   constructor(init: Track.Init, videoContext: VideoContext, renderer: Renderer) {
+    this.context = videoContext
     this.node = videoContext.compositor(VideoContext.DEFINITIONS.COMBINE)
-    this.clips = ref(init.clips.map((c) => new Clip(c, videoContext, renderer)))
+    init.clips.forEach((c) => this.pushSingleClip(new Clip(c, videoContext, this, renderer)))
+  }
 
-    this.transitions.value = init.transitions.map(
-      (transitionInit) => new Transition(transitionInit, videoContext),
-    )
+  forEachClip(fn: (clip: Clip, index: number) => unknown) {
+    let index = 0
+    for (let current = this.#head.value; current; current = current.next) fn(current, index++)
+  }
+  mapClips<T>(fn: (clip: Clip, index: number) => T) {
+    const array: T[] = []
+    this.forEachClip((clip, index) => array.push(fn(clip, index)))
+    return array
+  }
+  toArray() {
+    return this.mapClips((clip) => clip)
+  }
 
-    watch(
-      [() => this.clips.value.map((clip) => clip.node.value), this.transitions],
-      ([clipNodes, transitions], _prev, onCleanup) => {
-        clipNodes.forEach((clipNode, index) => {
-          let outTransition, inTransition
+  pushSingleClip(clip: Clip) {
+    const tail = this.#tail.value
+    if (tail === clip) return
 
-          for (const transition of transitions) {
-            if (transition.clips.value[0] === index) outTransition = transition
-            else if (transition.clips.value[1] === index) inTransition = transition
-          }
+    if (!tail) this.#head.value = clip
+    else {
+      tail.next = clip
+      clip.prev = tail
+    }
 
-          if (outTransition) {
-            ;(inTransition?.node ?? clipNode).connect(outTransition.node, 0)
-            outTransition.node.connect(this.node)
-          }
-          if (inTransition) clipNode.connect(inTransition.node, 1)
+    this.#tail.value = clip
+  }
 
-          if (!outTransition && !inTransition) clipNode.connect(this.node)
-        })
+  sliceSingleClip(clip: Clip) {
+    const head = this.#head.value
+    const tail = this.#tail.value
+    const { prev, next } = clip
 
-        onCleanup(() => {
-          clipNodes.forEach((clipNode) => clipNode.disconnect())
-          transitions.forEach((t) => t.node.disconnect())
-        })
-      },
-    )
+    if (clip === head) this.#head.value = next
+    if (clip === tail) this.#tail.value = prev
+    if (prev) prev.next = next
+    if (next) next.prev = prev
+
+    clip.prev = clip.next = undefined
   }
 }

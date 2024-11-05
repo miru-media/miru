@@ -48,3 +48,5 @@ export const FRAMEBUFFER_TEX_OPTIONS = {
 
 export const SCROLL_SELECT_EVENT_THROTTLE_MS = 40
 export const SCROLL_SELECT_TIMEOUT_MS = 300
+
+export const MOBILE_MAX_WIDTH = 640

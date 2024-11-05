@@ -157,7 +157,18 @@ declare module 'videocontext' {
   export type { RenderGraph, GraphNode, VideoNode, CompositingNode, TransitionNode }
 
   export default class VideoContext {
-    constructor(canvas: HTMLCanvasElement)
+    constructor(
+      canvas: HTMLCanvasElement,
+      initErrorCallback?: () => unknown,
+      options?: {
+        manualUpdate?: boolean
+        endOnLastSourceEnd?: boolean
+        useVideoElementCache?: boolean
+        videoElementCacheSize?: number
+        webglContextAttributes?: Record<string, unknown>
+      },
+    )
+
     destination: DestinationNode
     currentTime: number
     get state(): number
