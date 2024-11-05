@@ -73,9 +73,8 @@ export class Track {
     this.#tail.value = clip
   }
 
-  sliceSingleClip(clip: Clip) {
-    const head = this.#head.value
-    const tail = this.#tail.value
+  sliceClip(clip: Clip) {
+    const { head, tail } = this
     const { prev, next } = clip
 
     if (clip === head) this.#head.value = next
@@ -84,5 +83,24 @@ export class Track {
     if (next) next.prev = prev
 
     clip.prev = clip.next = undefined
+  }
+
+  insertClipBefore(clip: Clip, before: Clip | undefined) {
+    if (clip === before) return
+
+    clip.next = before
+    clip.prev = before?.prev
+
+    if (!before) {
+      this.pushSingleClip(clip)
+      return
+    }
+
+    const { head } = this
+    const { prev } = before
+    if (before === head) this.#head.value = clip
+    if (prev) prev.next = clip
+
+    before.prev = clip
   }
 }

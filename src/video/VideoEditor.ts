@@ -2,8 +2,17 @@ import { ref } from '@/framework/reactivity'
 import { type Size } from '@/types'
 import { remap0 } from '@/utils/math'
 
-import { type Clip } from './Clip'
+import { Clip } from './Clip'
 import { Movie } from './Movie'
+import { type Track } from './Track'
+
+const getClipAtTime = (track: Track, time: number) => {
+  for (let clip = track.head; clip; clip = clip.next) {
+    const clipTime = clip.time
+
+    if (clipTime.start < time && time < clipTime.end) return clip
+  }
+}
 
 export class VideoEditor {
   movie: Movie
@@ -21,11 +30,49 @@ export class VideoEditor {
     throw new Error('Not Implemented.')
   }
 
+  splitAtCurrentTime() {
+    const { currentTime } = this.movie
+    const trackOfSelectedClip = this.selected.value?.track
+
+    // first search the track that contains a selected clip
+    let clip = trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
+
+    if (!clip) {
+      // then search all tracks for a clip at the current time
+      for (const track of this.movie.tracks.value) {
+        clip = getClipAtTime(track, currentTime)
+        if (clip) break
+      }
+    }
+
+    if (!clip) return
+
+    const delta = currentTime - clip.time.start
+    const prevClipTime = clip.time
+
+    const newClip = new Clip(
+      {
+        sourceStart: prevClipTime.source + delta,
+        duration: prevClipTime.duration - delta,
+        source: clip.media.value.src,
+        transition: undefined,
+      },
+      this.movie.videoContext,
+      clip.track,
+      this.movie.renderer,
+    )
+
+    clip.duration.value = delta
+    clip.track.insertClipBefore(newClip, clip.next)
+    newClip.transition = clip.transition
+    clip.transition = undefined
+  }
+
   delete() {
     const clip = this.selected.value
     if (!clip) return
 
-    clip.track.sliceSingleClip(clip)
+    clip.track.sliceClip(clip)
     clip.dispose()
   }
 

@@ -1,30 +1,50 @@
+import { computed, toRef } from '@/framework/reactivity'
+
 import { type Clip as ClipType } from '../Clip'
 import { type VideoEditor } from '../VideoEditor'
 
+import { IconButton } from './IconButton'
+
 export const Clip = (props: { clip: ClipType; editor: VideoEditor }) => {
-  const getStyle = () => {
-    const { editor } = props
+  const edges = computed(() => {
+    const { editor, clip } = props
+    const { time, prev, transition } = clip
 
-    const time = props.clip.time
-    const startPx = editor.secondsToPixels(time.start)
-    const endPx = editor.secondsToPixels(time.end)
+    // start end end offsets meeting at the centeres of transition overlaps
+    return {
+      left: editor.secondsToPixels(time.start + (prev?.transition?.duration ?? 0) / 2),
+      right: editor.secondsToPixels(time.end - (transition?.duration ?? 0) / 2),
+    }
+  })
 
-    return `left:${startPx}px; width:${endPx - startPx}px`
+  const getBoxStyle = () => {
+    const { left, right } = edges.value
+    return `left:${left}px; width:${right - left}px`
   }
-
-  const onClick = () => props.editor.selectClip(props.clip)
 
   return (
     <>
-      <div class="absolute bg-#8888 text-black h-full rounded cursor-grab" style={getStyle} onClick={onClick}>
+      <div
+        class="absolute bg-#8888 text-black h-full rounded cursor-grab"
+        style={getBoxStyle}
+        onClick={() => props.editor.selectClip(props.clip)}
+      >
         Clip {() => props.clip.index}
       </div>
       <div
-        style={getStyle}
+        style={getBoxStyle}
         class={() => [
           'absolute h-full border-solid border-yellow pointer-events-none',
           props.editor.selected.value !== props.clip && 'opacity-0',
         ]}
+      />
+      <IconButton
+        icon={toRef(() => (props.clip.transition ? IconTablerChevronsRight : IconTablerChevronRight))}
+        class="absolute z-1"
+        style={() => `left: ${edges.value.right}px; translate: -50%`}
+        onClick={() => {
+          alert('Not implemented.')
+        }}
       />
     </>
   )
