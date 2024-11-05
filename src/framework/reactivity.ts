@@ -61,39 +61,42 @@ export interface Ref<T = unknown> {
 }
 
 class RefImpl<T = unknown> implements Ref {
-  _v = reactive_<any>(undefined)
-  /** is function value */
-  _f!: boolean
+  _v: Reactive<T>
   /** is from computed reactive value */
   _r!: boolean
 
   __m_isRef = true
 
   get value(): T {
-    const value = this._v.value
-    return this._f ? value.v : value
+    return this._v.value
   }
   set value(value: T) {
     this._set(value)
   }
 
-  constructor(value: T | Reactive<T>) {
+  constructor(value: T | Reactive<T> | (() => T)) {
     if (value instanceof Reactive) {
       this._v = value
       this._r = true
-    } else this._set(value)
+    } else this._v = reactive_(value)
   }
 
   private _set(value: T) {
     if (this._r) throw new Error(`[miru] Can't set computed value`)
 
-    if (isFunction(value)) {
-      this._f = true
-      this._v.value = { v: value }
-    } else {
-      this._f = false
-      this._v.value = value
-    }
+    this._v.value = value
+  }
+}
+
+class GetterRef<T = unknown> implements Ref {
+  _f: () => T
+  __m_isRef = true
+
+  get value() {
+    return this._f()
+  }
+  constructor(getter: () => T) {
+    this._f = getter
   }
 }
 
@@ -127,7 +130,7 @@ export const toValue = <T>(source: MaybeRefOrGetter<T>): T => {
 
 export const toRef = <T>(value: MaybeRefOrGetter<T>): Ref<T> => {
   if (isRef(value)) return value
-  if (isFunction(value)) return computed(value)
+  if (isFunction(value)) return new GetterRef(value)
   if (value instanceof Reactive) return new RefImpl(value)
   return ref(value)
 }
