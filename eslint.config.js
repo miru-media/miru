@@ -21,6 +21,13 @@ export default tseslint.config(
       },
     },
     rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          disallowTypeAnnotations: true,
+          fixStyle: 'inline-type-imports',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
@@ -34,7 +41,12 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
-        { allowNullableNumber: false, allowNullableObject: true, allowNullableString: true },
+        {
+          allowNullableNumber: false,
+          allowNullableBoolean: true,
+          allowNullableObject: true,
+          allowNullableString: true,
+        },
       ],
       '@typescript-eslint/restrict-template-expressions': [
         'error',
