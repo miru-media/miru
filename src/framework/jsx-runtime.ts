@@ -1,16 +1,16 @@
-import { MaybeArray } from '@/types'
+import { type MaybeArray } from '@/types'
 import { arrayFlatToValue, toKebabCase } from '@/utils'
 
 import {
   createEffectScope,
   effect,
-  EffectScope,
+  type EffectScope,
   getCurrentScope,
   isRef,
-  MaybeRef,
-  MaybeRefOrGetter,
+  type MaybeRef,
+  type MaybeRefOrGetter,
   onScopeDispose,
-  Ref,
+  type Ref,
   toValue,
   watch,
 } from './reactivity'
@@ -205,10 +205,11 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
       if (isIgnoredPropKey(key)) continue
 
       const value = props[key]
-      const first2Chars = key.slice(0, 2)
 
-      if (first2Chars === 'on') {
-        ;(element as any)[key.toLowerCase()] = isRef(value) ? value.value : value
+      if (key.startsWith('on')) {
+        const listener = (isRef(value) ? value.value : value) as () => unknown
+        const type = key.slice(2).toLowerCase()
+        element.addEventListener(type, listener)
       } else if (key === 'class') {
         element.setAttribute('class', toClassName(value))
       } else if (isSvg) {
@@ -229,7 +230,10 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
       if (isIgnoredPropKey(key)) continue
 
       if (key.startsWith('on')) {
-        ;(element as any)[key.toLowerCase()] = null
+        const value = props[key]
+        const listener = (isRef(value) ? value.value : value) as () => unknown
+        const type = key.slice(2).toLowerCase()
+        element.removeEventListener(type, listener)
         continue
       }
 
