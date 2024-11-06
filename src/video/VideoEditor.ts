@@ -62,10 +62,15 @@ export class VideoEditor {
       this.movie.renderer,
     )
 
+    if (clip.transition) {
+      const { type, duration } = clip.transition
+      newClip.transition = { type, duration: Math.min(duration, newClip.time.duration) }
+    }
+    clip.transition = undefined
     clip.duration.value = delta
     clip.track.insertClipBefore(newClip, clip.next)
-    newClip.transition = clip.transition
-    clip.transition = undefined
+
+    this.selectClip(newClip)
   }
 
   delete() {

@@ -1,6 +1,6 @@
 import VideoContext, { type CompositingNode } from 'videocontext'
 
-import { computed, ref } from '@/framework/reactivity'
+import { computed, effect, ref } from '@/framework/reactivity'
 import { type Renderer } from '@/renderer/Renderer'
 
 import { Clip } from './Clip'
@@ -45,6 +45,13 @@ export class Track {
     this.context = videoContext
     this.node = videoContext.compositor(VideoContext.DEFINITIONS.COMBINE)
     init.clips.forEach((c) => this.pushSingleClip(new Clip(c, videoContext, this, renderer)))
+
+    // connect clip nodes and transitions in the correct order
+    effect((onCleanup) => {
+      const clips = this.toArray()
+      clips.forEach((clip) => clip.connect())
+      onCleanup(() => clips.forEach((clip) => clip.disconnect()))
+    })
   }
 
   forEachClip(fn: (clip: Clip, index: number) => unknown) {

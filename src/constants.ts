@@ -50,3 +50,5 @@ export const SCROLL_SELECT_EVENT_THROTTLE_MS = 40
 export const SCROLL_SELECT_TIMEOUT_MS = 300
 
 export const MOBILE_MAX_WIDTH = 640
+
+export const MIN_CLIP_DURATION_S = 0.25

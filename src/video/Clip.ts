@@ -16,7 +16,7 @@ import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventLi
 
 import { MiruVideoNode } from './custom'
 import { type Track } from './Track'
-import { useMediaError } from './utils'
+import { useMediaError, useMediaReadyState } from './utils'
 
 export enum SourceNodeState {
   waiting = 0,
@@ -52,9 +52,11 @@ export class Clip {
   node = ref<MiruVideoNode>(undefined as never)
   latestEvent = ref<Event>()
   error: Ref<MediaError | undefined>
+  readyState = useMediaReadyState(this.media)
 
   #scope = createEffectScope()
-  #transition = ref<{ duration: number; type: TransitionType; node: TransitionNode<{ mix: number }> }>()
+  #transitionNode = ref<TransitionNode<{ mix: number }>>()
+  #transition = ref<{ duration: number; type: TransitionType }>()
 
   #time = computed(
     (): {
@@ -111,26 +113,18 @@ export class Clip {
     return this.#derivedState.value.index
   }
 
-  set transition(transition: Clip.Init['transition'] | undefined) {
-    this.#transition.value?.node.destroy()
-
-    if (!transition) {
-      this.#transition.value = undefined
-      return
-    }
-
-    const { type, duration } = transition
-    const { end } = this.time
-    const node = this.track.context.transition<{ mix: number }>(VideoContext.DEFINITIONS[type])
-
-    node.transitionAt(end - transition.duration, end, 0, 1, 'mix')
-    this.#transition.value = { type, duration, node }
-  }
   get transition() {
-    const transition = this.#transition.value
-    if (!transition) return undefined
+    return this.#transition.value
+  }
+  set transition(transition: Clip.Init['transition'] | undefined) {
+    this.#transition.value = transition
+  }
 
-    return { type: transition.type, duration: transition.duration }
+  get outTransitionNode() {
+    return this.#transitionNode.value
+  }
+  get inTransitionNode() {
+    return this.prev && this.prev.#transitionNode.value
   }
 
   constructor(init: Clip.Init, context: VideoContext, track: Track, renderer: Renderer) {
@@ -182,42 +176,46 @@ export class Clip {
           { renderer },
         ))
 
-        onCleanup(() => node.destroy())
+        onCleanup(() => {
+          node.destroy()
+        })
       })
 
       effect(() => this.schedule())
       effect(() => (this.node.value.effect = this.filter.value))
 
-      // schedule the clip's out transition
-      effect((onCleanup) => {
-        const transition = this.#transition.value
-        if (!transition) return
+      // create out transition
+      watch([() => this.#transition.value?.type], ([type], _prev, onCleanup) => {
+        if (!type) return (this.#transitionNode.value = undefined)
 
-        const { end } = this.time
-        transition.node.transitionAt(end - transition.duration, end, 0, 1, 'mix')
+        const transitionNode = (this.#transitionNode.value = this.track.context.transition<{ mix: number }>(
+          VideoContext.DEFINITIONS[type],
+        ))
 
-        onCleanup(() => transition.node.clearTransitions())
+        onCleanup(() => transitionNode.destroy())
       })
 
-      // connect this clip node to the parent track and/or in and out transitions
-      effect((onCleanup) => {
-        const node = this.node.value
-        const outTransition = this.#transition.value?.node
-        const inTransition = this.prev && this.prev.#transition.value?.node
+      // schedule the out transition
+      effect(() => {
+        const transitionNode = this.#transitionNode.value
+        const { transition, time } = this
+        if (!transitionNode || !transition) return
 
-        if (outTransition) {
-          ;(inTransition ?? node).connect(outTransition, 0)
-          outTransition.connect(this.track.node)
-        }
-        if (inTransition) node.connect(inTransition, 1)
-
-        if (!outTransition && !inTransition) node.connect(this.track.node)
-
-        onCleanup(() => {
-          this.#transition.value?.node.disconnect()
-          this.node.value.disconnect()
-        })
+        transitionNode.clearTransitions()
+        transitionNode.transitionAt(time.end - transition.duration, time.end, 0, 1, 'mix')
       })
+    })
+
+    // Ensure the whole clip duration is playable
+    // TODO: always get media duration before setting
+    watch([() => this.readyState.value > 0], () => {
+      const mediaDuration = this.media.value.duration
+      if (!mediaDuration) return
+
+      const clipTime = this.time
+      const durationOutsideClip = mediaDuration - (clipTime.source + clipTime.duration)
+      this.sourceStart.value += Math.min(0, durationOutsideClip)
+      this.duration.value = Math.min(clipTime.duration, mediaDuration)
     })
   }
 
@@ -251,6 +249,29 @@ export class Clip {
     node._seek(this.track.context.currentTime)
   }
 
+  connect() {
+    const node = this.node.value
+    const outTransition = this.#transitionNode.value
+    const inTransition = this.prev && this.prev.#transitionNode.value
+
+    if (outTransition) {
+      outTransition.inputs[0]?.disconnect()
+      ;(inTransition ?? node).connect(outTransition, 0)
+      outTransition.connect(this.track.node)
+    }
+    if (inTransition) {
+      inTransition.inputs[1]?.disconnect()
+      node.connect(inTransition, 1)
+    }
+
+    if (!outTransition && !inTransition) node.connect(this.track.node)
+  }
+
+  disconnect() {
+    this.node.value.disconnect()
+    this.#transitionNode.value?.disconnect()
+  }
+
   toObject(): Clip.Init {
     const { time } = this
 
@@ -258,6 +279,7 @@ export class Clip {
       sourceStart: time.source,
       duration: time.duration,
       source: this.media.value.src,
+      transition: this.transition,
       filter: undefined,
     }
   }

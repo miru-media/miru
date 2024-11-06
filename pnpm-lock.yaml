@@ -13,6 +13,21 @@ importers:
 
   .:
     dependencies:
+      '@interactjs/actions':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      '@interactjs/auto-start':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      '@interactjs/core':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/interact':
+        specifier: ^1.10.27
+        version: 1.10.27
+      '@interactjs/modifiers':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
       '@reactively/core':
         specifier: ^0.0.8
         version: 0.0.8
@@ -1115,6 +1130,40 @@ packages:
 
   '@iconify/utils@2.1.33':
     resolution: {integrity: sha512-jP9h6v/g0BIZx0p7XGJJVtkVnydtbgTgt9mVNcGDYwaa7UhdHdI9dvoq+gKj9sijMSJKxUPEG2JyjsgXjxL7Kw==}
+
+  '@interactjs/actions@1.10.27':
+    resolution: {integrity: sha512-FCRg5KwB+stkPcAMx/Cn0fgGP6p4LyMX9S/Upcn/W+hpYme31bPi54PCqmOebzz6myTthN6zFf9jMyLOqtI/gg==}
+    peerDependencies:
+      '@interactjs/core': 1.10.27
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/auto-start@1.10.27':
+    resolution: {integrity: sha512-ECLBO/nxmaF1knncJKIE5F7la3KKRgEkn0Cu2JTPOYj9xy/LpfYElo3wkRHsodgOqF651nR70GK2/IzPR2lO9A==}
+    peerDependencies:
+      '@interactjs/core': 1.10.27
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/core@1.10.27':
+    resolution: {integrity: sha512-SliUr/3ZbLAdED8LokzYzWHWMdCB5Cq+UnpXuRy+BIod1j97m4IUFf/D1iIKUBBjBcucgXbz28z96WnenVCB7Q==}
+    peerDependencies:
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/interact@1.10.27':
+    resolution: {integrity: sha512-XdH3A2UUzjEFGGJgFuJlhiz99tE8jB8xNh/DmnoMuL6uOQPxNA+sWRnzEVjG0+zY2P3/dbhEpi4Cn3FLPzydwA==}
+
+  '@interactjs/modifiers@1.10.27':
+    resolution: {integrity: sha512-ei/qfoQ+9/8k6WzNzdNqHI6cWkIV576N4Ap16r5CoqOWwhA6Xzj3OMHf1g0t1O4eSq2HdJsVJn3eLNfw9HsbeQ==}
+    peerDependencies:
+      '@interactjs/core': 1.10.27
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/snappers@1.10.27':
+    resolution: {integrity: sha512-HZLZ0XSi6HI08OmTv/HKG6AltQoaKAALLQ+KDW92utj3XSgw7oren0KsWUKPhaPg3Av7R1jFQd08s+uafqIlLw==}
+    peerDependencies:
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/utils@1.10.27':
+    resolution: {integrity: sha512-+qfLOio2OxQqg1cXSnRaCl+N8MQDQLDS9w+aOGxH8YLAhIMyt7Asxx/46//sT8orgsi16pmlBPtngPHT9s8zKw==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -5917,6 +5966,45 @@ snapshots:
       mlly: 1.7.2
     transitivePeerDependencies:
       - supports-color
+
+  '@interactjs/actions@1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)':
+    dependencies:
+      '@interactjs/core': 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/utils': 1.10.27
+    optionalDependencies:
+      '@interactjs/interact': 1.10.27
+
+  '@interactjs/auto-start@1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)':
+    dependencies:
+      '@interactjs/core': 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/utils': 1.10.27
+    optionalDependencies:
+      '@interactjs/interact': 1.10.27
+
+  '@interactjs/core@1.10.27(@interactjs/utils@1.10.27)':
+    dependencies:
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/interact@1.10.27':
+    dependencies:
+      '@interactjs/core': 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/utils': 1.10.27
+
+  '@interactjs/modifiers@1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)':
+    dependencies:
+      '@interactjs/core': 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/snappers': 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/utils': 1.10.27
+    optionalDependencies:
+      '@interactjs/interact': 1.10.27
+
+  '@interactjs/snappers@1.10.27(@interactjs/utils@1.10.27)':
+    dependencies:
+      '@interactjs/utils': 1.10.27
+    optionalDependencies:
+      '@interactjs/interact': 1.10.27
+
+  '@interactjs/utils@1.10.27': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

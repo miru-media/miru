@@ -28,6 +28,11 @@
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
   "dependencies": {
+    "@interactjs/actions": "^1.10.27",
+    "@interactjs/auto-start": "^1.10.27",
+    "@interactjs/core": "^1.10.27",
+    "@interactjs/interact": "^1.10.27",
+    "@interactjs/modifiers": "^1.10.27",
     "@reactively/core": "^0.0.8",
     "cropperjs": "^1.6.2",
     "etro": "^0.12.1",

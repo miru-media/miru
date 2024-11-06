@@ -36,50 +36,58 @@ const Ruler = ({ editor }: { editor: VideoEditor }) => {
     return magnitude * 32
   })
 
-  const Labels = () => {
-    return (
-      <div>
-        {() => {
-          const timelineRangeS = editor.pixelsToSeconds(editor.timelineSize.value.width)
-          const spacing = 4
+  const Markings = () => {
+    const style = () => {
+      const $intervalS = intervalS.value
+      const size = editor.secondsToPixels($intervalS)
+      const offset = -size / 2 + ((editor.timelineSize.value.width / 2) % size)
 
-          const children: JSX.Element[] = []
-          const labelIntervalS = intervalS.value * spacing
-          const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
+      return `
+        height: 1rem;
+        width: 100%;
+        background-size: ${size}px 100%;
+        translate: ${offset}px;
+        background-image: radial-gradient(circle, white 0.125rem, rgba(0, 0, 0, 0) 0.125rem);
+      `
+    }
 
-          let fromS = Math.max(editor.movie.currentTime - timelineRangeS / 2, 0)
-          fromS = fromS - (fromS % labelIntervalS)
-
-          for (let i = 0; i < nLabels; i++) {
-            const time = fromS + i * labelIntervalS
-            if (time > editor.movie.duration + timelineRangeS / 2.1) break
-
-            const left = editor.secondsToPixels(time)
-            children.push(
-              <div class="absolute" style={`translate:${left}px`}>
-                {time}s
-              </div>,
-            )
-          }
-
-          return children
-        }}
-      </div>
-    )
+    return <div class="absolute left-0 top-0 right-0 h-inherit" style={style}></div>
   }
 
-  const style = () => `
-    height: 1rem;
-    width: calc(100% + ${editor.timelineSize.value.width / 2.1}px);
-    background-size: ${editor.secondsToPixels(intervalS.value)}px 1rem;
-    background-image: radial-gradient(circle at 0 center, white 0.125rem, rgba(0, 0, 0, 0) 0.125rem);
-    `
+  const Labels = () => {
+    const getChildren = () => {
+      const timelineRangeS = editor.pixelsToSeconds(editor.timelineSize.value.width)
+      const spacing = 4
+
+      const children: JSX.Element[] = []
+      const labelIntervalS = intervalS.value * spacing
+      const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
+
+      let fromS = Math.max(editor.movie.currentTime - timelineRangeS / 2, 0)
+      fromS = fromS - (fromS % labelIntervalS)
+
+      for (let i = 0; i < nLabels; i++) {
+        const time = fromS + i * labelIntervalS
+
+        const left = editor.secondsToPixels(time)
+        children.push(
+          <div class="absolute" style={`translate:calc(${left}px - 50%)`}>
+            {time}s
+          </div>,
+        )
+      }
+
+      return children
+    }
+
+    return <div>{getChildren}</div>
+  }
 
   return (
-    <>
-      <div class="absolute left-0 top-0" style={style}></div>
+    <div class="h-1rem">
+      <Markings />
       <Labels />
-    </>
+    </div>
   )
 }
 
@@ -96,19 +104,22 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
   })
 
   let lastScroll = 0
+  const scrollIsClose = () => Math.abs(lastScroll - (scrollContainer.value?.scrollLeft ?? 0)) < 1
 
   effect(() => {
     const scrollEl = scrollContainer.value
-    if (!scrollEl) return
+    const newScroll = editor.secondsToPixels(movie.currentTime)
+    if (!scrollEl || lastScroll === newScroll) return
 
-    scrollEl.scrollLeft = lastScroll = Math.round(editor.secondsToPixels(movie.currentTime))
+    scrollEl.scrollLeft = newScroll
+    lastScroll = scrollEl.scrollLeft
   })
 
   const onScroll = () => {
     const scrollEl = scrollContainer.value
-    if (!scrollEl || scrollEl.scrollLeft === lastScroll) return
+    if (!scrollEl || scrollIsClose()) return
 
-    const time = editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft))
+    const time = Math.max(0, editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
     editor.seekTo(time)
   }
 
@@ -147,20 +158,24 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
 
       <input
         type="range"
-        min="0.001"
-        max={() => (movie.duration / rootSize.value.width) * 1.25}
+        min="0.0005"
+        max={() => Math.max(0.2, (movie.duration / rootSize.value.width) * 1.5)}
         step="any"
         value={secondsPerPixel}
-        onInput={(event: InputEvent) => (secondsPerPixel.value = event.target.valueAsNumber)}
+        onInput={(event: InputEvent) => {
+          secondsPerPixel.value = event.target.valueAsNumber
+        }}
       />
       <div ref={scrollContainer} class="overflow-x-auto" onScroll={onScroll}>
         <div
+          class="relative overflow-hidden"
           style={() =>
             `padding: 0 ${rootSize.value.width / 2}px;width:${editor.secondsToPixels(movie.duration) + rootSize.value.width}px`
           }
         >
+          <Ruler editor={editor} />
+
           <div class="relative" style={`width:${editor.secondsToPixels(movie.duration)}px`}>
-            <Ruler editor={editor} />
             {() =>
               movie.tracks.value.map((track) => (
                 <div class="flex relative h-4rem">
