@@ -84,6 +84,7 @@ export class Track {
     }
 
     this.#tail.value = clip
+    clip.next = undefined
   }
 
   sliceClip(clip: Clip) {
@@ -101,13 +102,16 @@ export class Track {
   insertClipBefore(clip: Clip, before: Clip | undefined) {
     if (clip === before) return
 
+    this.sliceClip(clip)
+
     clip.next = before
-    clip.prev = before?.prev
 
     if (!before) {
       this.pushSingleClip(clip)
       return
     }
+
+    clip.prev = before.prev
 
     const { head } = this
     const { prev } = before

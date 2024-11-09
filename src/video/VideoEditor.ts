@@ -23,11 +23,8 @@ export class VideoEditor {
   timelineSize = ref<Size>({ width: 1, height: 1 })
   canvasSize: Ref<Size>
 
-  stateBeforeClipResize = ref<{
-    movieDuration: number
-    inTransitionDuration: number
-    outTransitionDuration: number
-  }>()
+  resize = ref<{ movieDuration: number }>()
+  drag = ref({ isDragging: false, x: 0 })
 
   showStats = ref(import.meta.env.DEV)
 

@@ -1,4 +1,5 @@
 import { computed, effect, ref } from '@/framework/reactivity'
+import { type InputEvent } from '@/types'
 import { useElementSize } from '@/utils'
 
 import { type Clip as ClipType } from '../Clip'
@@ -6,7 +7,6 @@ import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
 import { Clip } from './Clip'
-import { InputEvent } from '@/types'
 
 const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
@@ -140,14 +140,14 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     // TODO: allow returning null
     return clip ? (
       <>
-        <Clip editor={editor} clip={clip} />
+        <Clip editor={editor} clip={clip} isSelected={() => editor.selected.value === clip} />
         <ClipList clip={clip.next} />
       </>
     ) : (
       <></>
     )
   }
-  
+
   const onInputClipFile = (event: InputEvent) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -162,7 +162,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
         style={() => `
           --timeline-width: ${rootSize.value.width}px;
           --timeline-height: ${rootSize.value.height}px;
-          --movie-width:${editor.secondsToPixels(Math.max(editor.stateBeforeClipResize.value?.movieDuration ?? 0, movie.duration))}px`}
+          --movie-width:${editor.secondsToPixels(Math.max(editor.resize.value?.movieDuration ?? 0, movie.duration))}px`}
       >
         <Playhead editor={editor} />
 

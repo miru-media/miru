@@ -10,31 +10,26 @@
   --purple-dark: #8f54f9;
   --purple: #a06efb;
   --purple-light: #ac7dff;
-
   --red-yellow: #ead627;
   --yellow: #feea38;
   --yellow-light: #fff38b;
-
   --green-dark: #03b072;
   --green: #03ad70;
   --green-light: #1ed291;
-
-  --black-1: rgba(0, 0, 0, 0.1);
-  --black-2: rgba(0, 0, 0, 0.3);
-  --black-3: rgba(0, 0, 0, 0.6);
-  --white-1: rgba(255, 255, 255, 0.1);
-  --white-2: rgba(255, 255, 255, 0.3);
-  --white-3: rgba(255, 255, 255, 0.6);
-
+  --black-1: rgb(0 0 0 / 10%);
+  --black-2: rgb(0 0 0 / 30%);
+  --black-3: rgb(0 0 0 / 60%);
+  --white-1: rgb(255 255 255 / 10%);
+  --white-2: rgb(255 255 255 / 30%);
+  --white-3: rgb(255 255 255 / 60%);
   --clip-height: 2.75rem;
   --ruler-height: 1rem;
   --ruler-spacing-top: 1rem;
   --ruler-spacing-bottom: 2.625rem;
-
   --primary-bg: #171717;
+  color: white;
 
   background-color: var(--primary-bg);
-  color: white;
 }
 
 .video-editor {
@@ -45,66 +40,65 @@
 }
 
 .viewport {
-  width: 100%;
-  max-height: 60vh;
   display: flex;
   justify-content: center;
+  width: 100%;
+  max-height: 60vh;
   padding: 0.25rem;
 }
 
 .viewport-canvas {
-  border-radius: 1.25rem;
   height: 100%;
+  border-radius: 1.25rem;
 }
 
 .playback-controls {
   display: flex;
-  padding: 0;
   justify-content: space-between;
+  padding: 0;
   padding: 0.25rem max(env(safe-area-inset-left, 1.25rem), 1.25rem) 0.25rem
     max(env(safe-area-inset-right, 1.25rem), 1.25rem);
 }
 
 .playback-play {
-  width: 1.5rem;
-  height: 1.5rem;
-  font-size: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .timeline {
   position: relative;
-  overflow: hidden;
   flex-grow: 1;
+  overflow: hidden;
 }
 
 .timeline-scroller {
-  overflow-x: auto;
-  overflow-y: hidden;
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: auto hidden;
 }
 
 .timeline-scroller-child {
+  position: relative;
+  box-sizing: content-box;
   display: flex;
   flex-direction: column;
-  position: relative;
-  padding: 0 calc(var(--timeline-width) / 2);
-  box-sizing: content-box;
   width: var(--movie-width);
   height: 100%;
+  padding: 0 calc(var(--timeline-width) / 2);
 }
 
 .timeline-playhead {
+  position: absolute;
+  top: calc(var(--ruler-spacing-top) + var(--ruler-height) + 0.5rem);
+  left: calc(var(--timeline-width) / 2);
   z-index: 10;
   display: flex;
-  position: absolute;
   user-select: none;
-  left: calc(var(--timeline-width) / 2);
-  top: calc(var(--ruler-spacing-top) + var(--ruler-height) + 0.5rem);
 }
 
 .timeline-playhead .time-pill {
@@ -112,13 +106,13 @@
 }
 
 .time-pill {
-  background-color: var(--yellow);
-  color: var(--black);
-  border-radius: 9999px;
-  padding: 0.25rem 0.5rem;
-  text-align: center;
   display: flex;
   gap: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--black);
+  text-align: center;
+  background-color: var(--yellow);
+  border-radius: 9999px;
 }
 
 .time-pill-digits {
@@ -131,23 +125,23 @@
 }
 
 .time-pill-drop {
-  color: var(--yellow);
   position: absolute;
   bottom: -0.5rem;
+  left: calc(50% - 0.5rem);
   width: 1rem;
   height: 0.5rem;
-  left: calc(50% - 0.5rem);
+  color: var(--yellow);
 }
 
 .timeline-cursor {
-  width: 0.125rem;
   position: absolute;
-  left: calc(var(--timeline-width) / 2 - 0.0625rem);
   top: calc(var(--ruler-spacing-bottom));
   bottom: 0;
+  left: calc(var(--timeline-width) / 2 - 0.0625rem);
   z-index: 10;
-  background-color: var(--yellow);
+  width: 0.125rem;
   pointer-events: none;
+  background-color: var(--yellow);
 }
 
 .text-small {
@@ -216,16 +210,15 @@
 
 .track-list {
   position: relative;
+  box-sizing: content-box;
   display: flex;
+  flex-shrink: 1;
   flex-direction: column;
   gap: 0.625rem;
-  min-height: calc(var(--clip-height) * 2.5);
-  flex-shrink: 1;
-  padding: 0 calc(var(--timeline-width) / 2) 1rem;
   width: var(--movie-width);
-  overflow-y: auto;
-  overflow-x: hidden;
-  box-sizing: content-box;
+  min-height: calc(var(--clip-height) * 2.5);
+  padding: 0 calc(var(--timeline-width) / 2) 1rem;
+  overflow: hidden auto;
 }
 
 .track {
@@ -236,150 +229,159 @@
 
 .clip {
   height: var(--clip-height);
+  touch-action: pan-y;
+}
+
+.clip.is-dragging {
+  z-index: 20;
 }
 
 .clip-box {
   position: absolute;
-  border-radius: 0.5rem;
-  height: var(--clip-height);
-
-  background-color: var(--green-light);
-  cursor: pointer;
-  user-select: none;
-  overflow: hidden;
 
   left: var(--clip-box-left);
   width: calc(var(--clip-box-right) - var(--clip-box-left));
+  height: var(--clip-height);
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+
+  background-color: var(--green-light);
+  border-radius: 0.5rem;
 }
 
 .clip-transition {
+  position: absolute;
+  top: 50%;
+  left: var(--clip-box-right);
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  left: 0;
-  top: 50%;
-  height: 1.75rem;
   width: 1.75rem;
-  border-radius: 0.5rem;
-  z-index: 10;
-  background: var(--black);
-  opacity: 0.7;
+  height: 1.75rem;
   color: var(--white);
-  transform: translateX(var(--clip-box-right)) translate(-50%, -50%);
+  background: var(--black);
+  border-radius: 0.5rem;
+  opacity: 0.7;
+  transition: transform 0.2s;
+  transform: translate(-50%, -50%);
 }
 
 .clip.is-selected .clip-transition {
-  transform: translateX(var(--clip-box-right)) translate(0%, -50%);
+  transform: translate(0%, -50%);
 }
 
 .clip.next-is-selected .clip-transition {
-  transform: translateX(var(--clip-box-right)) translate(-100%, -50%);
+  transform: translate(-100%, -50%);
 }
 
 .clip-controls {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-color: var(--yellow);
+  border-style: solid;
+  border-width: 0.125rem;
   border-radius: 0.5rem;
   opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  overflow: hidden;
-  inset: 0;
-  border-width: 0.125rem;
-  border-style: solid;
-  border-color: var(--yellow);
 }
+
 .clip.is-selected .clip-controls {
-  opacity: 1;
   pointer-events: auto;
+  opacity: 1;
 }
 
 .clip-resize-left,
 .clip-resize-right {
-  touch-action: pan-y;
-  visibility: hidden;
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  background-color: var(--yellow);
   width: 1.5rem;
   height: 100%;
   color: black;
+  touch-action: pan-y;
+  visibility: hidden;
+  background-color: var(--yellow);
 }
 
 .clip-resize-left {
   left: 0;
 }
+
 .clip-resize-right {
   right: 0;
 }
+
 .clip.is-selected.has-prev .clip-resize-left,
 .clip.is-selected .clip-resize-right {
   visibility: visible;
 }
 
 .add-clip {
-  border: dashed;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.12);
   position: absolute;
   left: 1rem;
-  translate: var(--movie-width);
+  display: flex;
+  gap: 0.675rem;
+  align-items: center;
+  justify-content: center;
   min-width: var(--clip-height);
   height: var(--clip-height);
-  border-radius: 0.625rem;
+  padding: 0.675rem 0.875rem;
   color: var(--white-3);
   cursor: pointer;
-  gap: 0.675rem;
-  padding: 0.675rem 0.875rem;
+  background-color: rgb(255 255 255 / 3%);
+  border: dashed;
+  border-color: rgb(255 255 255 / 12%);
+  border-radius: 0.625rem;
+  translate: var(--movie-width);
 }
 
 .ruler {
-  flex-shrink: 0;
   position: relative;
-  color: var(--white-3);
+  flex-shrink: 0;
+  width: 100%;
+  width: calc(var(--timeline-width) + var(--movie-width));
   height: var(--ruler-height);
   margin-top: var(--ruler-spacing-top);
   margin-bottom: var(--ruler-spacing-bottom);
-  width: 100%;
-  width: calc(var(--timeline-width) + var(--movie-width));
   overflow: hidden;
+  color: var(--white-3);
 }
 
 .ruler-markings {
   position: absolute;
   inset: 0;
+  background-color: var(--primary-bg);
+  background-image: radial-gradient(circle, currentcolor 0.125rem, rgb(0 0 0 / 0%) 0.125rem);
   background-size: var(--ruler-interval) 100%;
   translate: var(--ruler-markings-offset);
-  background-color: var(--primary-bg);
-  background-image: radial-gradient(circle, currentColor 0.125rem, rgba(0, 0, 0, 0) 0.125rem);
 }
 
 .ruler-label {
-  display: inline-block;
-  background-color: var(--primary-bg);
   position: absolute;
+  display: inline-block;
   padding-top: 0.25em;
+  background-color: var(--primary-bg);
 }
 
 .toolbar {
+  display: flex;
   flex-shrink: 0;
+  gap: 0.5rem;
 
   width: 100%;
   padding: 0.675rem max(env(safe-area-inset-left, 1.25rem), 1.25rem) 0.675rem
     max(env(safe-area-inset-right, 1.25rem), 1.25rem);
   overflow-x: auto;
-  display: flex;
-  gap: 0.5rem;
   color: var(--white);
 }
 
 .toolbar-button {
-  font-size: 1.5rem;
   width: 2.5rem;
   height: 2.5rem;
+  font-size: 1.5rem;
   cursor: pointer;
 }

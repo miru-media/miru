@@ -1,6 +1,8 @@
 import '@interactjs/actions/resize'
+import '@interactjs/actions/drag'
 import '@interactjs/modifiers'
 import '@interactjs/auto-start'
+import { type DragEvent } from '@interactjs/actions/drag/plugin'
 import { type ResizeEvent } from '@interactjs/actions/resize/plugin'
 import interact from '@interactjs/interact'
 
@@ -12,17 +14,35 @@ import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'
 
-export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) => {
+const MIN_CLIP_WIDTH_PX = 1
+
+export const Clip = ({
+  clip,
+  editor,
+  isSelected,
+}: {
+  clip: ClipType
+  editor: VideoEditor
+  isSelected: () => boolean
+}) => {
   const mainContainer = ref<HTMLElement>()
-  const isSelected = computed(() => editor.selected.value === clip)
 
   const boxEdges = computed(() => {
     const { time, prev, next, transition } = clip
+    const drag = editor.drag.value
 
     // start, end offsets meeting at the centers of transition overlaps
+    const startPx = isSelected() && drag.isDragging ? drag.x : editor.secondsToPixels(time.start)
+    const left = startPx + editor.secondsToPixels((prev?.transition?.duration ?? 0) / 2)
+
     return {
-      left: editor.secondsToPixels(time.start + (prev?.transition?.duration ?? 0) / 2),
-      right: editor.secondsToPixels(time.end - (next && transition ? transition.duration : 0) / 2),
+      left,
+      right:
+        startPx +
+        Math.max(
+          MIN_CLIP_WIDTH_PX,
+          editor.secondsToPixels(time.duration - (next && transition ? transition.duration : 0) / 2),
+        ),
     }
   })
 
@@ -55,8 +75,8 @@ export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) 
               return {
                 left: editor.secondsToPixels(minStartTime),
                 right: editor.secondsToPixels(maxEndTime),
-                top: -Infinity,
-                bottom: Infinity,
+                top: 0,
+                bottom: 0,
               }
             },
             inner: () => {
@@ -65,8 +85,8 @@ export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) 
               return {
                 left: editor.secondsToPixels(time.end - MIN_CLIP_DURATION_S),
                 right: editor.secondsToPixels(time.start + MIN_CLIP_DURATION_S),
-                top: -Infinity,
-                bottom: Infinity,
+                top: 0,
+                bottom: 0,
               }
             },
           }),
@@ -74,10 +94,8 @@ export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) 
         listeners: {
           start() {
             editor.movie.pause()
-            editor.stateBeforeClipResize.value = {
+            editor.resize.value = {
               movieDuration: editor.movie.duration,
-              inTransitionDuration: clip.prev?.transition?.duration ?? 0,
-              outTransitionDuration: clip.transition?.duration ?? 0,
             }
           },
           move({ rect }: ResizeEvent) {
@@ -90,25 +108,78 @@ export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) 
             if (prev) prev.duration.value = newStart - prev.time.start + (prev.transition?.duration ?? 0)
           },
           end() {
-            editor.stateBeforeClipResize.value = undefined
+            editor.resize.value = undefined
+          },
+        },
+      },
+      drag: {
+        modifiers: [
+          interact.modifiers.restrictRect({
+            restriction: () => {
+              return { left: 0, right: editor.secondsToPixels(editor.movie.duration), top: 0, bottom: 0 }
+            },
+          }),
+        ],
+        startAxis: 'x',
+        listeners: {
+          start({ rect }: DragEvent) {
+            editor.drag.value = { x: rect.left, isDragging: true }
+            editor.selectClip(clip)
+          },
+          move({ rect }: DragEvent) {
+            editor.drag.value = { x: rect.left, isDragging: true }
+            const newStartTime = editor.pixelsToSeconds(rect.left)
+            const newCenterTime = newStartTime + clip.time.duration / 2
+
+            let insertBefore: ClipType | undefined
+            for (let prev = clip.prev; prev; prev = prev.prev) {
+              const { start, duration } = prev.time
+              if (start >= newStartTime || start + duration / 2 >= newCenterTime) insertBefore = prev
+              else break
+            }
+
+            if (insertBefore) {
+              clip.track.insertClipBefore(clip, insertBefore)
+              return
+            }
+
+            const newEndTime = newStartTime + clip.time.duration
+
+            let insertAfter: ClipType | undefined
+            for (let next = clip.next; next; next = next.next) {
+              const { end, duration } = next.time
+              if (end <= newEndTime || end - duration / 2 <= newCenterTime) insertAfter = next
+              else break
+            }
+            if (insertAfter) {
+              clip.track.insertClipBefore(clip, insertAfter.next)
+              return
+            }
+          },
+          end() {
+            editor.drag.value = { x: 0, isDragging: false }
           },
         },
       },
     })
 
-    onCleanup(() => interactable.unset())
+    onCleanup(() => {
+      interactable.unset()
+    })
   })
 
   return (
     <div
       class={() => [
         'clip',
-        isSelected.value && 'is-selected',
+        isSelected() && ['is-selected', editor.drag.value.isDragging && 'is-dragging'],
         clip.prev && 'has-prev',
         clip.next && 'has-next',
         clip.next && editor.selected.value === clip.next && 'next-is-selected',
       ]}
-      style={() => `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px`}
+      style={() =>
+        `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--drag-offset:${editor.drag.value.x}`
+      }
     >
       <div ref={mainContainer} class="clip-box" onClick={() => editor.selectClip(clip)}>
         Clip {() => clip.index}
