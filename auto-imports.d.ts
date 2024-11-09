@@ -7,6 +7,7 @@
 export {}
 declare global {
   const IconTablerAdjustments: typeof import('~icons/tabler/adjustments.jsx')['default']
+  const IconTablerChevronLeft: typeof import('~icons/tabler/chevron-left.jsx')['default']
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx')['default']
   const IconTablerChevronsRight: typeof import('~icons/tabler/chevrons-right.jsx')['default']
   const IconTablerCircleOff: typeof import('~icons/tabler/circle-off.jsx')['default']
@@ -21,10 +22,15 @@ declare global {
   const IconTablerDropletHalfFilled: typeof import('~icons/tabler/droplet-half-filled.jsx')['default']
   const IconTablerFilters: typeof import('~icons/tabler/filters.jsx')['default']
   const IconTablerPhoto: (typeof import('~icons/tabler/photo.tsx'))['default']
+  const IconTablerPlayerPause: typeof import('~icons/tabler/player-pause.jsx')['default']
   const IconTablerPlayerPauseFilled: typeof import('~icons/tabler/player-pause-filled.jsx')['default']
+  const IconTablerPlayerPlay: typeof import('~icons/tabler/player-play.jsx')['default']
   const IconTablerPlayerPlayFilled: typeof import('~icons/tabler/player-play-filled.jsx')['default']
+  const IconTablerPlus: typeof import('~icons/tabler/plus.jsx')['default']
   const IconTablerRotateClockwise: typeof import('~icons/tabler/rotate-clockwise.jsx')['default']
   const IconTablerSun: typeof import('~icons/tabler/sun.jsx')['default']
   const IconTablerTrash: typeof import('~icons/tabler/trash.jsx')['default']
+  const IconTablerVideo: typeof import('~icons/tabler/video.jsx')['default']
+  const IconTablerVideoPlus: typeof import('~icons/tabler/video-plus.jsx')['default']
   const IconTablerWand: typeof import('~icons/tabler/wand.jsx')['default']
 }

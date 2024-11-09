@@ -4,14 +4,15 @@ import { IconButton } from './IconButton'
 
 export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
   const buttons = [
-    { icon: IconTablerTrash, onClick: () => editor.delete() },
     { icon: IconTablerCut, onClick: () => editor.splitAtCurrentTime() },
+    { icon: IconTablerTrash, onClick: () => editor.delete() },
+    { icon: IconTablerWand, onClick: () => alert('Not implemented.') },
   ]
 
   return (
-    <div>
+    <div class="toolbar">
       {buttons.map(({ icon, onClick }) => (
-        <IconButton icon={icon} onClick={onClick}></IconButton>
+        <IconButton class="toolbar-button" icon={icon} onClick={onClick}></IconButton>
       ))}
     </div>
   )

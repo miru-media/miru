@@ -26,7 +26,8 @@ export default defineConfig({
     alias({
       entries: {
         '@': resolve(import.meta.dirname, 'src'),
-        'virtual:shadow.css': resolve(import.meta.dirname, 'src/index.css'),
+        'virtual:image-shadow.css': resolve(import.meta.dirname, 'src/index.css'),
+        'virtual:video-shadow.css': resolve(import.meta.dirname, 'src/video/css/index.css'),
       },
     }),
     nodeResolve(),

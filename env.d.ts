@@ -10,7 +10,7 @@ declare module 'https://*.mp4' {
   export default src
 }
 
-declare module 'virtual:shadow.css' {
+declare module 'virtual:*-shadow.css' {
   const src: string
   export default src
 }

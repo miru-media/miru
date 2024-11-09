@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-unresolved
-import css from 'virtual:image-shadow.css'
+import css from 'virtual:video-shadow.css'
 
 let styleSheet_: CSSStyleSheet | HTMLStyleElement | undefined
 
@@ -18,21 +18,23 @@ const getStyleSheet = () => {
   return styleSheet_
 }
 
-export const setShadowStyles = (shadow: ShadowRoot) => {
+export const setShadowStyles = (root: ShadowRoot | Document) => {
   const styleSheet = getStyleSheet()
 
   if (styleSheet instanceof HTMLStyleElement) {
-    shadow.appendChild(styleSheet.cloneNode(true))
+    ;('body' in root ? root.body : root).appendChild(styleSheet.cloneNode(true))
   } else {
-    shadow.adoptedStyleSheets = [styleSheet]
+    root.adoptedStyleSheets = [styleSheet]
   }
 }
 
 if (import.meta.hot != null && 'CSSStyleSheet' in window) {
-  import.meta.hot.accept('../index.css?inline', (mod) => {
-    if (mod == null) import.meta.hot?.invalidate()
-    if (styleSheet_ == null) return
-    else if (styleSheet_ instanceof HTMLStyleElement) return
-    else styleSheet_.replaceSync((mod as unknown as { default: string }).default)
+  import.meta.hot.accept('../css/index.css?inline', (mod) => {
+    if (mod == null) return import.meta.hot?.invalidate()
+    if (!styleSheet_) return
+
+    const newCss = (mod as unknown as { default: string }).default
+    if (styleSheet_ instanceof HTMLStyleElement) styleSheet_.textContent = newCss
+    else styleSheet_.replaceSync(newCss)
   })
 }

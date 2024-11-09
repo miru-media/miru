@@ -38,7 +38,7 @@ export class Track {
     return this.#duration.value
   }
   get count() {
-    return this.#tail.value?.index ?? 0
+    return (this.#tail.value?.index ?? -1) + 1
   }
 
   constructor(init: Track.Init, videoContext: VideoContext, renderer: Renderer) {

@@ -1,10 +1,11 @@
-import { ref } from '@/framework/reactivity'
+import { effect, type Ref, ref } from '@/framework/reactivity'
 import { type Size } from '@/types'
+import { useElementSize } from '@/utils'
 import { remap0 } from '@/utils/math'
 
 import { Clip } from './Clip'
 import { Movie } from './Movie'
-import { type Track } from './Track'
+import { Track } from './Track'
 
 const getClipAtTime = (track: Track, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -20,10 +21,24 @@ export class VideoEditor {
   selected = ref<Clip>()
   secondsPerPixel = ref(0.01)
   timelineSize = ref<Size>({ width: 1, height: 1 })
-  centerCurrentTime = ref(true)
+  canvasSize: Ref<Size>
+
+  stateBeforeClipResize = ref<{
+    movieDuration: number
+    inTransitionDuration: number
+    outTransitionDuration: number
+  }>()
 
   constructor(initialState: Movie.Init = { tracks: [], resolution: { width: 1280, height: 720 } }) {
     this.movie = new Movie(initialState)
+    this.canvasSize = useElementSize(this.movie.displayCanvas)
+
+    effect(() => {
+      const { movie } = this
+      if (!movie.tracks.value.length) {
+        movie.tracks.value = [new Track({ clips: [] }, movie.videoContext, movie.renderer)]
+      }
+    })
   }
 
   addClip() {

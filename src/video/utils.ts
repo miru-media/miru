@@ -62,12 +62,18 @@ export const useMediaError = (media: MaybeRefOrGetter<HTMLMediaElement | undefin
   return error
 }
 
-export const formatTime = (timeS: number) => {
+export const splitTime = (timeS: number) => {
   const minutes = String(Math.trunc(timeS / 60) % 60).padStart(2, '0')
   const hoursNumber = Math.trunc(timeS / (60 * 60))
-  const hours = hoursNumber ? String(hoursNumber).padStart(2, '0') : ''
+  const hours = String(hoursNumber).padStart(2, '0')
   const seconds = String(Math.trunc(timeS)).padStart(2, '0')
   const subSeconds = String(Math.trunc((timeS % 1) * 100)).padStart(2, '0')
 
-  return `${hours ? `${hours}:` : ''}${minutes}:${seconds}.${subSeconds}`
+  return { minutes, hours, seconds, subSeconds }
+}
+
+export const formatTime = (timeS: number) => {
+  const { minutes, hours, seconds, subSeconds } = splitTime(timeS)
+
+  return `${hours === '00' ? '' : `${hours}:`}${minutes}:${seconds}.${subSeconds}`
 }

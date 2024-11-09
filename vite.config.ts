@@ -33,7 +33,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      'virtual:shadow.css': resolve(import.meta.dirname, 'src/index.css?inline'),
+      'virtual:image-shadow.css': resolve(import.meta.dirname, 'src/index.css?inline'),
+      'virtual:video-shadow.css': resolve(import.meta.dirname, 'src/video/css/index.css?inline'),
       '@': resolve(import.meta.dirname, 'src'),
     },
   },

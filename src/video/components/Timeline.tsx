@@ -1,29 +1,42 @@
-import { computed, effect, ref } from '@/framework/reactivity'
+import { computed, effect, ref, toRef } from '@/framework/reactivity'
 import { type InputEvent } from '@/types'
 import { useElementSize } from '@/utils'
 
 import { type Clip as ClipType } from '../Clip'
-import { formatTime } from '../utils'
+import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
 import { Clip } from './Clip'
 
-const Cursor = ({ editor }: { editor: VideoEditor }) => {
+const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
   const size = useElementSize(root)
 
-  const getStyle = () => {
-    return `left: ${editor.timelineSize.value.width / 2 - size.value.width / 2}px`
-  }
+  const timeParts = toRef(() => splitTime(editor.movie.currentTime))
+
   return (
-    <div
-      ref={root}
-      class="absolute flex flex-col items-center p-0.25rem pointer-events-none"
-      style={getStyle}
-    >
-      <span class="rounded bg-yellow text-black">{() => formatTime(editor.movie.currentTime)}</span>
-      <div class="w-2px bg-yellow" style={() => `height: ${editor.timelineSize.value.height}px`} />
-    </div>
+    <>
+      <div ref={root} class="timeline-playhead" style={() => `--time-pill-width: ${size.value.width}px`}>
+        <span class="time-pill text-body-small">
+          <span class="time-pill-left">
+            <span class="time-pill-digits">{() => timeParts.value.hours}</span>:
+            <span class="time-pill-digits">{() => timeParts.value.minutes}</span>
+          </span>
+          <span class="time-pill-right">
+            <span class="time-pill-digits">{() => timeParts.value.seconds}</span>:
+            <span class="time-pill-digits">{() => timeParts.value.subSeconds}</span>
+          </span>
+
+          <svg class="time-pill-drop" viewBox="0 0 16 8" fill="none">
+            <path
+              d="M7.99282 8C7.99282 8 10.3614 0 15.3381 0C20.3147 0 -4.57808 0 0.753127 0C6.08433 0 7.99282 8 7.99282 8Z"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+      </div>
+      <div class="timeline-cursor" />
+    </>
   )
 }
 
@@ -43,24 +56,23 @@ const Ruler = ({ editor }: { editor: VideoEditor }) => {
       const offset = -size / 2 + ((editor.timelineSize.value.width / 2) % size)
 
       return `
-        height: 1rem;
-        width: 100%;
-        background-size: ${size}px 100%;
-        translate: ${offset}px;
-        background-image: radial-gradient(circle, white 0.125rem, rgba(0, 0, 0, 0) 0.125rem);
+        --ruler-interval: ${size}px;
+        --ruler-markings-offset: ${offset}px;
       `
     }
 
-    return <div class="absolute left-0 top-0 right-0 h-inherit" style={style}></div>
+    return <div class="ruler-markings" style={style}></div>
   }
 
   const Labels = () => {
+    const LABEL_SPACING = 4
+
     const getChildren = () => {
-      const timelineRangeS = editor.pixelsToSeconds(editor.timelineSize.value.width)
-      const spacing = 4
+      const timelineWidth = editor.timelineSize.value.width
+      const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
 
       const children: JSX.Element[] = []
-      const labelIntervalS = intervalS.value * spacing
+      const labelIntervalS = intervalS.value * LABEL_SPACING
       const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
 
       let fromS = Math.max(editor.movie.currentTime - timelineRangeS / 2, 0)
@@ -69,9 +81,9 @@ const Ruler = ({ editor }: { editor: VideoEditor }) => {
       for (let i = 0; i < nLabels; i++) {
         const time = fromS + i * labelIntervalS
 
-        const left = editor.secondsToPixels(time)
+        const left = editor.secondsToPixels(time) + timelineWidth / 2
         children.push(
-          <div class="absolute" style={`translate:calc(${left}px - 50%)`}>
+          <div class="ruler-label text-small" style={`translate:calc(${left}px - 50%)`}>
             {time}s
           </div>,
         )
@@ -84,7 +96,7 @@ const Ruler = ({ editor }: { editor: VideoEditor }) => {
   }
 
   return (
-    <div class="h-1rem">
+    <div class="ruler">
       <Markings />
       <Labels />
     </div>
@@ -136,56 +148,50 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
   }
 
   return (
-    <div ref={root}>
-      <button
-        type="button"
-        class="flex items-center text-xl"
-        onClick={() => {
-          if (movie.isPaused.value) {
-            if (movie.isEnded.value) movie.seekTo(0)
-            movie.play()
-          } else movie.pause()
-        }}
+    <>
+      <div
+        ref={root}
+        class="timeline"
+        style={() => `
+          --timeline-width: ${rootSize.value.width}px;
+          --timeline-height: ${rootSize.value.height}px;
+          --movie-width:${editor.secondsToPixels(Math.max(editor.stateBeforeClipResize.value?.movieDuration ?? 0, movie.duration))}px`}
       >
-        {() =>
-          movie.isPaused.value
-            ? ['Play', <IconTablerPlayerPlayFilled />]
-            : ['Pause', <IconTablerPlayerPauseFilled />]
-        }
-      </button>
+        <Playhead editor={editor} />
 
-      <Cursor editor={editor} />
-
-      <input
-        type="range"
-        min="0.0005"
-        max={() => Math.max(0.2, (movie.duration / rootSize.value.width) * 1.5)}
-        step="any"
-        value={secondsPerPixel}
-        onInput={(event: InputEvent) => {
-          secondsPerPixel.value = event.target.valueAsNumber
-        }}
-      />
-      <div ref={scrollContainer} class="overflow-x-auto" onScroll={onScroll}>
-        <div
-          class="relative overflow-hidden"
-          style={() =>
-            `padding: 0 ${rootSize.value.width / 2}px;width:${editor.secondsToPixels(movie.duration) + rootSize.value.width}px`
-          }
-        >
+        <div ref={scrollContainer} class="timeline-scroller" onScroll={onScroll}>
           <Ruler editor={editor} />
 
-          <div class="relative" style={`width:${editor.secondsToPixels(movie.duration)}px`}>
+          <div class="track-list">
             {() =>
-              movie.tracks.value.map((track) => (
-                <div class="flex relative h-4rem">
-                  <ClipList clip={track.head} />
-                </div>
-              ))
+              movie.tracks.value.length ? (
+                movie.tracks.value.map((track) => (
+                  <div class="track">
+                    <ClipList clip={track.head} />
+                    <button type="button" class="add-clip">
+                      {() =>
+                        track.count ? (
+                          <>
+                            <IconTablerPlus />
+                            <span class="sr-only">Add a clip</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconTablerVideo />
+                            <span class="text-body">Click to add a clip</span>
+                          </>
+                        )
+                      }
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div class="track" />
+              )
             }
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

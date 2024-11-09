@@ -5,11 +5,13 @@ import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bu
 /* eslint-enable import/no-unresolved */
 
 import { getDefaultFilters } from '@/effects'
-import { h, render } from '@/framework/jsx-runtime'
+import { h } from '@/framework/jsx-runtime'
 import { ref } from '@/framework/reactivity'
 import { type InputEvent } from '@/types'
 
 import * as Actions from './components/Actions'
+import { PlaybackControls } from './components/PlaybackControls'
+import { renderComponentTo } from './components/renderTo'
 import { Timeline } from './components/Timeline'
 import { VideoEditor } from './VideoEditor'
 
@@ -50,13 +52,14 @@ const Demo = () => {
   const recordedBlob = ref<Blob>()
 
   return (
-    <div class="flex flex-col h-screen overflow-hidden">
-      {h(movie.displayCanvas, { class: 'flex-1 w-full h-full object-contain max-h-70vh' })}
+    <div class="flex flex-col h-full overflow-hidden">
+      <div class="viewport">{h(movie.displayCanvas, { class: 'viewport-canvas' })}</div>
 
+      <PlaybackControls editor={editor} />
       <Timeline editor={editor} />
       <Actions.ClipActions editor={editor} />
 
-      <div class="w-full p-2 flex-shrink-0 overflow-auto">
+      <div class="w-full p-2 overflow-auto hidden">
         <p class="flex gap-3">
           <button
             class="hidden"
@@ -104,19 +107,6 @@ const Demo = () => {
 
                 <div>
                   <label>
-                    duration
-                    <input
-                      type="number"
-                      min="0.25"
-                      max="20"
-                      step="0.25"
-                      value={clip.duration}
-                      onInput={(event: InputEvent) => (clip.duration.value = event.target.valueAsNumber)}
-                    />
-                  </label>
-                </div>
-                <div>
-                  <label>
                     source time
                     <input
                       type="number"
@@ -152,4 +142,4 @@ const Demo = () => {
   )
 }
 
-render(<Demo />, document.getElementById('app')!)
+renderComponentTo(Demo, {}, document.getElementById('app')!)
