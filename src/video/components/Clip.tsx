@@ -37,12 +37,7 @@ export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) 
         const right = editor.secondsToPixels(time.end)
         const { top, bottom } = element.getBoundingClientRect()
 
-        return {
-          left,
-          right,
-          top,
-          bottom,
-        }
+        return { left, right, top, bottom }
       },
       resize: {
         edges: { left: '.clip-resize-left', right: '.clip-resize-right' },
@@ -86,40 +81,13 @@ export const Clip = ({ clip, editor }: { clip: ClipType; editor: VideoEditor }) 
             }
           },
           move({ rect }: ResizeEvent) {
-            const { prev, transition } = clip
+            const { prev } = clip
             const newStart = editor.pixelsToSeconds(rect.left)
 
             // TODO: correct source offset time
+            clip.duration.value = editor.pixelsToSeconds(rect.width)
 
-            if (prev) {
-              const newPrevClipDuration = newStart - prev.time.start + (prev.transition?.duration ?? 0)
-              const inTransition = prev.transition
-
-              prev.duration.value = newPrevClipDuration
-
-              const maxTransitionDuration = Math.min(newPrevClipDuration, clip.time.duration)
-              if (inTransition && inTransition.duration > maxTransitionDuration) {
-                prev.transition = {
-                  type: inTransition.type,
-                  duration: Math.min(
-                    maxTransitionDuration,
-                    editor.stateBeforeClipResize.value?.inTransitionDuration ?? Infinity,
-                  ),
-                }
-              }
-            }
-
-            const newDuration = (clip.duration.value = editor.pixelsToSeconds(rect.width))
-
-            if (transition && transition.duration > newDuration) {
-              clip.transition = {
-                duration: Math.min(
-                  newDuration,
-                  editor.stateBeforeClipResize.value?.outTransitionDuration ?? Infinity,
-                ),
-                type: transition.type,
-              }
-            }
+            if (prev) prev.duration.value = newStart - prev.time.start + (prev.transition?.duration ?? 0)
           },
           end() {
             editor.stateBeforeClipResize.value = undefined

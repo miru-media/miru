@@ -52,3 +52,4 @@ export const SCROLL_SELECT_TIMEOUT_MS = 300
 export const MOBILE_MAX_WIDTH = 640
 
 export const MIN_CLIP_DURATION_S = 0.25
+export const TRANSITION_DURATION_S = 0.5

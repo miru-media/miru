@@ -27,14 +27,14 @@ const Demo = () => {
             sourceStart: 5,
             duration: 3,
             source: sampleVideo1,
-            transition: { duration: 1, type: 'CROSSFADE' },
+            transition: { type: 'CROSSFADE' },
           },
           {
             sourceStart: 20,
             duration: 2.5,
             source: sampleVideo2,
             filter: filters[1],
-            transition: { duration: 0.5, type: 'HORIZONTAL_WIPE' },
+            transition: { type: 'HORIZONTAL_WIPE' },
           },
           {
             sourceStart: 4,
@@ -52,17 +52,26 @@ const Demo = () => {
   const recordedBlob = ref<Blob>()
 
   return (
-    <div class="flex flex-col h-full overflow-hidden">
+    <div class="video-editor">
+      {() => editor.showStats.value && movie.stats.dom}
       <div class="viewport">{h(movie.displayCanvas, { class: 'viewport-canvas' })}</div>
 
       <PlaybackControls editor={editor} />
       <Timeline editor={editor} />
       <Actions.ClipActions editor={editor} />
 
-      <div class="w-full p-2 overflow-auto hidden">
-        <p class="flex gap-3">
+      <div
+        class="text-body-small"
+        style={() =>
+          `width:100%;
+          padding:0.25rem;
+          overflow:auto;
+          display:${editor.showStats.value ? 'block' : 'none'}`
+        }
+      >
+        <p style="display:flex;gap:0.25rem">
           <button
-            class="hidden"
+            style="display:none"
             type="button"
             onClick={async () => {
               movie.pause()
@@ -93,7 +102,7 @@ const Demo = () => {
           }}
           {() =>
             movie.tracks.value[0].mapClips((clip) => (
-              <div class="font-mono">
+              <div style="font-family:monospace">
                 <div>
                   {() => [clip.media.value.currentTime.toFixed(2), clip.latestEvent.value?.type].join(' ')}
                 </div>
@@ -116,22 +125,24 @@ const Demo = () => {
                       value={clip.sourceStart}
                       onInput={(event: InputEvent) => (clip.sourceStart.value = event.target.valueAsNumber)}
                     />
-                    <div>
-                      <label>
-                        source
-                        <input
-                          type="file"
-                          accept="video"
-                          onInput={(event: InputEvent) => {
-                            const file = event.target.files?.[0]
-                            if (!file) return
-
-                            clip.setMedia(URL.createObjectURL(file))
-                          }}
-                        />
-                      </label>
-                    </div>{' '}
                   </label>
+                  <div>
+                    <label>
+                      source
+                      <input
+                        type="file"
+                        accept="video"
+                        onInput={(event: InputEvent) => {
+                          const file = event.target.files?.[0]
+                          if (!file) return
+
+                          clip.setMedia(URL.createObjectURL(file))
+                        }}
+                      />
+                    </label>
+                  </div>
+                  [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}] |{' '}
+                  {() => clip.transition?.duration.toFixed(2)}
                 </div>
               </div>
             ))

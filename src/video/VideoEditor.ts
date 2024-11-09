@@ -3,7 +3,7 @@ import { type Size } from '@/types'
 import { useElementSize } from '@/utils'
 import { remap0 } from '@/utils/math'
 
-import { Clip } from './Clip'
+import { type Clip } from './Clip'
 import { Movie } from './Movie'
 import { Track } from './Track'
 
@@ -29,6 +29,8 @@ export class VideoEditor {
     outTransitionDuration: number
   }>()
 
+  showStats = ref(import.meta.env.DEV)
+
   constructor(initialState: Movie.Init = { tracks: [], resolution: { width: 1280, height: 720 } }) {
     this.movie = new Movie(initialState)
     this.canvasSize = useElementSize(this.movie.displayCanvas)
@@ -41,8 +43,19 @@ export class VideoEditor {
     })
   }
 
-  addClip() {
-    throw new Error('Not Implemented.')
+  addClip(blob: Blob) {
+    const url = URL.createObjectURL(blob)
+    const track = this.movie.tracks.value[0]
+
+    // TODO: load metadata and get duration before adding
+    const clip = track.createClip({
+      sourceStart: 0,
+      duration: 4,
+      source: url,
+      transition: undefined,
+    })
+
+    track.pushSingleClip(clip)
   }
 
   splitAtCurrentTime() {
@@ -65,22 +78,13 @@ export class VideoEditor {
     const delta = currentTime - clip.time.start
     const prevClipTime = clip.time
 
-    const newClip = new Clip(
-      {
-        sourceStart: prevClipTime.source + delta,
-        duration: prevClipTime.duration - delta,
-        source: clip.media.value.src,
-        transition: undefined,
-      },
-      this.movie.videoContext,
-      clip.track,
-      this.movie.renderer,
-    )
+    const newClip = clip.track.createClip({
+      sourceStart: prevClipTime.source + delta,
+      duration: prevClipTime.duration - delta,
+      source: clip.media.value.src,
+      transition: clip.transition,
+    })
 
-    if (clip.transition) {
-      const { type, duration } = clip.transition
-      newClip.transition = { type, duration: Math.min(duration, newClip.time.duration) }
-    }
     clip.transition = undefined
     clip.duration.value = delta
     clip.track.insertClipBefore(newClip, clip.next)

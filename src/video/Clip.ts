@@ -17,6 +17,7 @@ import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventLi
 import { MiruVideoNode } from './custom'
 import { type Track } from './Track'
 import { useMediaError, useMediaReadyState } from './utils'
+import { TRANSITION_DURATION_S } from '@/constants'
 
 export enum SourceNodeState {
   waiting = 0,
@@ -35,7 +36,7 @@ export namespace Clip {
     duration: number
     source: ImageSourceOption
     filter?: Effect
-    transition?: { duration: number; type: TransitionType }
+    transition?: { type: TransitionType }
   }
 }
 
@@ -56,7 +57,7 @@ export class Clip {
 
   #scope = createEffectScope()
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
-  #transition = ref<{ duration: number; type: TransitionType }>()
+  #transition = ref<{ type: TransitionType }>()
 
   #time = computed(
     (): {
@@ -86,7 +87,7 @@ export class Clip {
         }
 
       const prevTime = prev.time
-      const startTime = prevTime.start + prevTime.duration - (prev.#transition.value?.duration ?? 0)
+      const startTime = prevTime.start + prevTime.duration - (prev.transition?.duration ?? 0)
 
       return { start: startTime, end: startTime + this.duration.value, index: prev.index + 1 }
     },
@@ -113,11 +114,18 @@ export class Clip {
     return this.#derivedState.value.index
   }
 
-  get transition() {
-    return this.#transition.value
+  get transition(): { duration: number; type: TransitionType } | undefined {
+    const value = this.#transition.value
+
+    return (
+      value && {
+        duration: Math.min(TRANSITION_DURATION_S, this.duration.value, this.next?.duration.value ?? Infinity),
+        ...value,
+      }
+    )
   }
   set transition(transition: Clip.Init['transition'] | undefined) {
-    this.#transition.value = transition
+    this.#transition.value = transition && { type: transition.type }
   }
 
   get outTransitionNode() {

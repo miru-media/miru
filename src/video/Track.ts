@@ -18,6 +18,7 @@ export class Track {
 
   node: CompositingNode<never>
   context: VideoContext
+  renderer: Renderer
 
   #duration = computed(() => {
     const lastClip = this.#tail.value
@@ -43,8 +44,9 @@ export class Track {
 
   constructor(init: Track.Init, videoContext: VideoContext, renderer: Renderer) {
     this.context = videoContext
+    this.renderer = renderer
     this.node = videoContext.compositor(VideoContext.DEFINITIONS.COMBINE)
-    init.clips.forEach((c) => this.pushSingleClip(new Clip(c, videoContext, this, renderer)))
+    init.clips.forEach((c) => this.pushSingleClip(this.createClip(c)))
 
     // connect clip nodes and transitions in the correct order
     effect((onCleanup) => {
@@ -52,6 +54,10 @@ export class Track {
       clips.forEach((clip) => clip.connect())
       onCleanup(() => clips.forEach((clip) => clip.disconnect()))
     })
+  }
+
+  createClip(init: Clip.Init) {
+    return new Clip(init, this.context, this, this.renderer)
   }
 
   forEachClip(fn: (clip: Clip, index: number) => unknown) {

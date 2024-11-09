@@ -1,5 +1,4 @@
-import { computed, effect, ref, toRef } from '@/framework/reactivity'
-import { type InputEvent } from '@/types'
+import { computed, effect, ref } from '@/framework/reactivity'
 import { useElementSize } from '@/utils'
 
 import { type Clip as ClipType } from '../Clip'
@@ -7,12 +6,13 @@ import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
 import { Clip } from './Clip'
+import { InputEvent } from '@/types'
 
 const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
   const size = useElementSize(root)
 
-  const timeParts = toRef(() => splitTime(editor.movie.currentTime))
+  const timeParts = computed(() => splitTime(editor.movie.currentTime))
 
   return (
     <>
@@ -23,7 +23,7 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
             <span class="time-pill-digits">{() => timeParts.value.minutes}</span>
           </span>
           <span class="time-pill-right">
-            <span class="time-pill-digits">{() => timeParts.value.seconds}</span>:
+            <span class="time-pill-digits">{() => timeParts.value.seconds}</span>.
             <span class="time-pill-digits">{() => timeParts.value.subSeconds}</span>
           </span>
 
@@ -106,7 +106,7 @@ const Ruler = ({ editor }: { editor: VideoEditor }) => {
 export const Timeline = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
   const scrollContainer = ref<HTMLElement>()
-  const { movie, secondsPerPixel } = editor
+  const { movie } = editor
 
   const rootSize = useElementSize(root)
 
@@ -132,7 +132,8 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     if (!scrollEl || scrollIsClose()) return
 
     const time = Math.max(0, editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
-    editor.seekTo(time)
+    // clamp to exclude 0 and the movie duration so that a frame is always rendered
+    editor.seekTo(Math.max(0.0001, Math.min(time, movie.duration - 0.001)))
   }
 
   const ClipList = ({ clip }: { clip: ClipType | undefined }) => {
@@ -145,6 +146,12 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     ) : (
       <></>
     )
+  }
+  
+  const onInputClipFile = (event: InputEvent) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    editor.addClip(file)
   }
 
   return (
@@ -168,7 +175,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                 movie.tracks.value.map((track) => (
                   <div class="track">
                     <ClipList clip={track.head} />
-                    <button type="button" class="add-clip">
+                    <label type="button" class="add-clip">
                       {() =>
                         track.count ? (
                           <>
@@ -182,7 +189,8 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                           </>
                         )
                       }
-                    </button>
+                      <input style="display:none" type="file" accept="video" onInput={onInputClipFile} />
+                    </label>
                   </div>
                 ))
               ) : (

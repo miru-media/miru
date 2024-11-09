@@ -27,7 +27,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
   #outTexture: WebGLTexture
   #framebuffer: WebGLFramebuffer
   #framebufferSize: Size = { width: 1, height: 1 }
-  #lastUploadTime = -1
+  #lastRenderTime = -1
 
   declare _texture: WebGLTexture
   declare _gl: WebGL2RenderingContext
@@ -83,34 +83,36 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
 
     // avoid super._update() resizing the framebuffer texture
     this._texture = this.#mediaTexture
-    const superUpated = super._update(currentTime, false)
+    super._update(currentTime, false)
     this._texture = this.#outTexture
 
     const canRender = this.#media.readyState >= 2
-    const isWithinTime = currentTime >= this._startTime && currentTime <= this._startTime + this.duration
-    const shouldUploadTexture =
-      triggerTextureUpdate && canRender && isWithinTime && this.#lastUploadTime !== currentTime
+    const clampedCurrentTime = Math.max(
+      this._startTime,
+      Math.min(currentTime, this._startTime + this.duration),
+    )
+    const shouldRender = triggerTextureUpdate && canRender && this.#lastRenderTime !== clampedCurrentTime
 
-    if (!canRender) this.#lastUploadTime = -1
-    if (!isWithinTime) return false
+    if (!canRender) this.#lastRenderTime = -1
 
-    if (shouldUploadTexture) {
+    if (shouldRender) {
       renderer.loadImage(this.#mediaTexture, this.#media, { ...SOURCE_TEX_OPTIONS, ...mediaSize })
-      this.#lastUploadTime = currentTime
       ;(this.#mediaTexture as { _isTextureCleared: boolean })._isTextureCleared = false
+
+      gl.bindTexture(GL.TEXTURE_2D, this.#outTexture)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer)
+      gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.#outTexture, 0)
+
+      renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize)
+      renderer.setEffect(this.effect)
+      renderer.setIntensity(this.intensity)
+      renderer.setAdjustments(this.adjustments)
+      renderer.draw()
+
+      this.#lastRenderTime = clampedCurrentTime
     }
 
-    if (!superUpated) return false
-
-    gl.bindTexture(GL.TEXTURE_2D, this.#outTexture)
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer)
-    gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.#outTexture, 0)
-
-    renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize)
-    renderer.setEffect(this.effect)
-    renderer.setIntensity(this.intensity)
-    renderer.setAdjustments(this.adjustments)
-    renderer.draw()
+    this._texture = this.#outTexture
 
     return true
   }

@@ -9,7 +9,9 @@ export const renderComponentTo = <P extends Record<string, unknown>>(
 ) => {
   node.classList.add('miru-video-editor')
 
-  setShadowStyles(node.ownerDocument)
+  const shadow = node.attachShadow({ mode: 'open' })
 
-  return render(h(Component as never, props), node)
+  setShadowStyles(shadow)
+
+  return render(h(Component as never, props), shadow)
 }

@@ -1,6 +1,6 @@
 @import url('@/css/reset');
 
-:root {
+:host {
   --black: #000;
   --white: #fff;
   --gray: #252525;
@@ -31,8 +31,17 @@
   --ruler-spacing-top: 1rem;
   --ruler-spacing-bottom: 2.625rem;
 
-  background-color: var(--gray);
+  --primary-bg: #171717;
+
+  background-color: var(--primary-bg);
   color: white;
+}
+
+.video-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .viewport {
@@ -52,6 +61,8 @@
   display: flex;
   padding: 0;
   justify-content: space-between;
+  padding: 0.25rem max(env(safe-area-inset-left, 1.25rem), 1.25rem) 0.25rem
+    max(env(safe-area-inset-right, 1.25rem), 1.25rem);
 }
 
 .playback-play {
@@ -136,6 +147,7 @@
   bottom: 0;
   z-index: 10;
   background-color: var(--yellow);
+  pointer-events: none;
 }
 
 .text-small {
@@ -184,6 +196,22 @@
   font-size: 30px;
   font-weight: 700;
   line-height: 36px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.icon-button {
+  cursor: pointer;
 }
 
 .track-list {
@@ -326,13 +354,13 @@
   inset: 0;
   background-size: var(--ruler-interval) 100%;
   translate: var(--ruler-markings-offset);
-  background-color: var(--gray);
+  background-color: var(--primary-bg);
   background-image: radial-gradient(circle, currentColor 0.125rem, rgba(0, 0, 0, 0) 0.125rem);
 }
 
 .ruler-label {
   display: inline-block;
-  background-color: var(--gray);
+  background-color: var(--primary-bg);
   position: absolute;
   padding-top: 0.25em;
 }

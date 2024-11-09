@@ -2,13 +2,15 @@ import { toRef } from '@/framework/reactivity'
 import { type InputEvent } from '@/types'
 import { type VideoEditor } from '@/video/VideoEditor'
 
+import { IconButton } from './IconButton'
+
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
   const { movie } = editor
 
   return (
     <div class="playback-controls">
-      <button
-        type="button"
+      <IconButton
+        icon={toRef(() => (movie.isPaused.value ? IconTablerPlayerPlay : IconTablerPlayerPause))}
         class="playback-play"
         onClick={() => {
           if (movie.isPaused.value) {
@@ -17,20 +19,8 @@ export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
           } else movie.pause()
         }}
       >
-        {() =>
-          movie.isPaused.value ? (
-            <>
-              <IconTablerPlayerPlay />
-              <span class="sr-only">Play</span>
-            </>
-          ) : (
-            <>
-              <IconTablerPlayerPause />
-              <span class="sr-only">Pause</span>
-            </>
-          )
-        }
-      </button>
+        <span class="sr-only">{() => (movie.isPaused.value ? 'Play' : 'Pause')}</span>
+      </IconButton>
 
       <input
         type="range"

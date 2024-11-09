@@ -8,8 +8,6 @@ import { getWebgl2Context, setObjectSize } from '@/utils'
 
 import { Track } from './Track'
 
-const stats = new Stats()
-
 export const enum VideoContextState {
   PLAYING = 0,
   PAUSED = 1,
@@ -43,6 +41,8 @@ export class Movie {
 
   #currentTime = ref(0)
   #duration = computed(() => this.tracks.value.reduce((end, track) => Math.max(track.duration, end), 0))
+
+  stats = new Stats()
 
   get state() {
     return this.videoContext.state as VideoContextState
@@ -90,16 +90,14 @@ export class Movie {
     videoContext.registerCallback(VideoContext.EVENTS.UPDATE, updateState)
     videoContext.registerCallback(VideoContext.EVENTS.ENDED, updateState)
 
-    stats.showPanel(0)
-    document.body.appendChild(stats.dom)
-
+    this.stats.showPanel(0)
     const _update = videoContext._update.bind(videoContext)
     this.videoContext._update = (dt) => {
       const isPlaying = !this.isPaused.value
 
-      if (isPlaying) stats.begin()
+      if (isPlaying) this.stats.begin()
       _update(dt)
-      if (isPlaying) stats.end()
+      if (isPlaying) this.stats.end()
     }
 
     Object.values(VideoContext.EVENTS).forEach((type) =>

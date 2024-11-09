@@ -4,6 +4,8 @@ import { isRef, type MaybeRef } from '@/framework/reactivity'
 export const IconButton = ({
   icon,
   onClick,
+  children,
+  class: className,
   ...props
 }: {
   icon: MaybeRef<Component>
@@ -11,11 +13,12 @@ export const IconButton = ({
   [key: string]: unknown
 }) => {
   return (
-    <button type="button" onClick={onClick} {...props}>
+    <button type="button" class={() => ['icon-button', className]} onClick={onClick} {...props}>
       {() => {
         const IconComponent = isRef(icon) ? icon.value : icon
         return <IconComponent />
       }}
+      {children}
     </button>
   )
 }
