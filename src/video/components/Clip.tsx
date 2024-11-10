@@ -8,6 +8,7 @@ import interact from '@interactjs/interact'
 
 import { MIN_CLIP_DURATION_S } from '@/constants'
 import { computed, effect, ref, toRef } from '@/framework/reactivity'
+import { stringHashCode } from '@/utils'
 
 import { type Clip as ClipType } from '../Clip'
 import { type VideoEditor } from '../VideoEditor'
@@ -15,6 +16,16 @@ import { type VideoEditor } from '../VideoEditor'
 import { IconButton } from './IconButton'
 
 const MIN_CLIP_WIDTH_PX = 1
+
+const CLIP_COLORS = [
+  'var(--red-dark)',
+  'var(--red)',
+  'var(--red-light)',
+  'var(--purple)',
+  'var(--purple-light)',
+  'var(--green)',
+  'var(--green-light)',
+]
 
 export const Clip = ({
   clip,
@@ -26,6 +37,10 @@ export const Clip = ({
   isSelected: () => boolean
 }) => {
   const mainContainer = ref<HTMLElement>()
+  const clipColor = computed(() => {
+    const hash = stringHashCode(clip.media.value.src)
+    return CLIP_COLORS[Math.abs(hash) % CLIP_COLORS.length]
+  })
 
   const boxEdges = computed(() => {
     const { time, prev, next, transition } = clip
@@ -178,7 +193,7 @@ export const Clip = ({
         clip.next && editor.selected.value === clip.next && 'next-is-selected',
       ]}
       style={() =>
-        `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--drag-offset:${editor.drag.value.x}`
+        `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--drag-offset:${editor.drag.value.x};--clip-color:${clipColor.value}`
       }
     >
       <div ref={mainContainer} class="clip-box" onClick={() => editor.selectClip(clip)}>

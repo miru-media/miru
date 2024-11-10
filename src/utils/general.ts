@@ -47,3 +47,18 @@ export const devSlowDown: DevSlowDown | undefined = VITE_DEV_SLOW_DOWN_MS
 export const toKebabCase = (str: string) =>
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
+
+// https://stackoverflow.com/a/7616484
+export const stringHashCode = (str: string) => {
+  let hash = 0
+  let i
+  let chr
+
+  if (str.length === 0) return hash
+  for (i = 0; i < str.length; i++) {
+    chr = str.charCodeAt(i)
+    hash = (hash << 5) - hash + chr
+    hash |= 0 // Convert to 32bit integer
+  }
+  return hash
+}

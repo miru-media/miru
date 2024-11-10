@@ -83,8 +83,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
 
     // avoid super._update() resizing the framebuffer texture
     this._texture = this.#mediaTexture
-    super._update(currentTime, false)
-    this._texture = this.#outTexture
+    const superWasUpdated = super._update(currentTime, false)
 
     const canRender = this.#media.readyState >= 2
     const clampedCurrentTime = Math.max(
@@ -112,7 +111,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
       this.#lastRenderTime = clampedCurrentTime
     }
 
-    this._texture = this.#outTexture
+    if (superWasUpdated) this._texture = this.#outTexture
 
     return true
   }

@@ -10,7 +10,7 @@
   --purple-dark: #8f54f9;
   --purple: #a06efb;
   --purple-light: #ac7dff;
-  --red-yellow: #ead627;
+  --yellow-dark: #ead627;
   --yellow: #feea38;
   --yellow-light: #fff38b;
   --green-dark: #03b072;
@@ -246,7 +246,7 @@
   cursor: pointer;
   user-select: none;
 
-  background-color: var(--green-light);
+  background-color: var(--clip-color);
   border-radius: 0.5rem;
 }
 

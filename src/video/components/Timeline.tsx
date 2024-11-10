@@ -189,7 +189,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                           </>
                         )
                       }
-                      <input style="display:none" type="file" accept="video" onInput={onInputClipFile} />
+                      <input style="display:none" type="file" accept="video/*" onInput={onInputClipFile} />
                     </label>
                   </div>
                 ))
