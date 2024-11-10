@@ -1,6 +1,6 @@
 import VideoContext, { type RenderGraph } from 'videocontext'
 
-import { FRAMEBUFFER_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from '@/constants'
+import { FRAMEBUFFER_TEX_OPTIONS } from '@/constants'
 import { type EffectInternal } from '@/Effect'
 import * as GL from '@/GL'
 import fragmentShader from '@/renderer/glsl/main.frag'
@@ -27,8 +27,6 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
   #outTexture: WebGLTexture
   #framebuffer: WebGLFramebuffer
   #framebufferSize: Size = { width: 1, height: 1 }
-  #lastRenderTime = -1
-  #emptyTexture: WebGLTexture
 
   declare _texture: WebGLTexture
   declare _gl: WebGL2RenderingContext
@@ -53,7 +51,6 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
     this.#renderer = renderer
     this.#mediaTexture = this._texture
     this.#outTexture = renderer.createTexture(FRAMEBUFFER_TEX_OPTIONS)
-    this.#emptyTexture = renderer.createTexture()
 
     this.#updateSize()
 
@@ -83,39 +80,23 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
     const gl = this._gl
     const mediaSize = { width: this.#media.videoWidth, height: this.#media.videoHeight }
 
-    // avoid super._update() resizing the framebuffer texture
     this._texture = this.#mediaTexture
-    super._update(currentTime, false)
-    this._texture = this.#outTexture
+    const superUpdated = super._update(currentTime, triggerTextureUpdate)
 
-    const canRender = this.#media.readyState >= 2
     const isBeforeStart = currentTime < this._startTime
-    const clampedCurrentTime = Math.max(
-      this._startTime,
-      Math.min(currentTime, this._startTime + this.duration),
-    )
-    const shouldRender =
-      triggerTextureUpdate && canRender && !isBeforeStart && this.#lastRenderTime !== clampedCurrentTime
-
-    if (!canRender) this.#lastRenderTime = -1
+    const shouldRender = triggerTextureUpdate && superUpdated && !isBeforeStart
 
     if (shouldRender) {
-      renderer.loadImage(this.#mediaTexture, this.#media, { ...SOURCE_TEX_OPTIONS, ...mediaSize })
-      ;(this.#mediaTexture as { _isTextureCleared: boolean })._isTextureCleared = false
-
       gl.bindTexture(GL.TEXTURE_2D, this.#outTexture)
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer)
       gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.#outTexture, 0)
 
-      renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize)
+      renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize, undefined, true)
       renderer.setEffect(this.effect)
       renderer.setIntensity(this.intensity)
       renderer.setAdjustments(this.adjustments)
       renderer.draw()
-
-      this.#lastRenderTime = clampedCurrentTime
-    } else if (isBeforeStart) {
-      this._texture = this.#emptyTexture
+      this._texture = this.#outTexture
     }
 
     return true

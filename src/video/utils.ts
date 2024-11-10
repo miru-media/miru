@@ -66,7 +66,7 @@ export const splitTime = (timeS: number) => {
   const minutes = String(Math.trunc(timeS / 60) % 60).padStart(2, '0')
   const hoursNumber = Math.trunc(timeS / (60 * 60))
   const hours = String(hoursNumber).padStart(2, '0')
-  const seconds = String(Math.trunc(timeS)).padStart(2, '0')
+  const seconds = String(Math.trunc(timeS) % 60).padStart(2, '0')
   const subSeconds = String(Math.trunc((timeS % 1) * 100)).padStart(2, '0')
 
   return { minutes, hours, seconds, subSeconds }

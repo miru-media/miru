@@ -154,6 +154,10 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     editor.addClip(file)
   }
 
+  const onPointerdownScroller = (event: Event) => {
+    if (!(event.target as HTMLElement).closest('.clip')) editor.selectClip(undefined)
+  }
+
   return (
     <>
       <div
@@ -166,7 +170,12 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
       >
         <Playhead editor={editor} />
 
-        <div ref={scrollContainer} class="timeline-scroller" onScroll={onScroll}>
+        <div
+          ref={scrollContainer}
+          class="timeline-scroller"
+          onScroll={onScroll}
+          onPointerdown={onPointerdownScroller}
+        >
           <Ruler editor={editor} />
 
           <div class="track-list">
@@ -189,7 +198,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                           </>
                         )
                       }
-                      <input style="display:none" type="file" accept="video/*" onInput={onInputClipFile} />
+                      <input type="file" accept="video/*" onInput={onInputClipFile} />
                     </label>
                   </div>
                 ))

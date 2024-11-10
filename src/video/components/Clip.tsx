@@ -15,7 +15,7 @@ import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'
 
-const MIN_CLIP_WIDTH_PX = 1
+const MIN_CLIP_WIDTH_PX = 2
 
 const CLIP_COLORS = [
   'var(--red-dark)',
@@ -49,16 +49,13 @@ export const Clip = ({
     // start, end offsets meeting at the centers of transition overlaps
     const startPx = isSelected() && drag.isDragging ? drag.x : editor.secondsToPixels(time.start)
     const left = startPx + editor.secondsToPixels((prev?.transition?.duration ?? 0) / 2)
+    const width = Math.max(
+      MIN_CLIP_WIDTH_PX,
+      editor.secondsToPixels(time.duration - (next && transition ? transition.duration : 0) / 2),
+    )
+    const right = Math.max(left + MIN_CLIP_WIDTH_PX, startPx + width)
 
-    return {
-      left,
-      right:
-        startPx +
-        Math.max(
-          MIN_CLIP_WIDTH_PX,
-          editor.secondsToPixels(time.duration - (next && transition ? transition.duration : 0) / 2),
-        ),
-    }
+    return { left, right }
   })
 
   effect((onCleanup) => {
@@ -96,10 +93,11 @@ export const Clip = ({
             },
             inner: () => {
               const { time } = clip
+              const minDuration = MIN_CLIP_DURATION_S + (clip.transition?.duration ?? 0)
 
               return {
-                left: editor.secondsToPixels(time.end - MIN_CLIP_DURATION_S),
-                right: editor.secondsToPixels(time.start + MIN_CLIP_DURATION_S),
+                left: editor.secondsToPixels(time.end - minDuration),
+                right: editor.secondsToPixels(time.start + minDuration),
                 top: 0,
                 bottom: 0,
               }
@@ -113,12 +111,17 @@ export const Clip = ({
               movieDuration: editor.movie.duration,
             }
           },
-          move({ rect }: ResizeEvent) {
+          move({ rect, edges }: ResizeEvent) {
             const { prev } = clip
             const newStart = editor.pixelsToSeconds(rect.left)
+            const newDuration = editor.pixelsToSeconds(rect.width)
 
-            // TODO: correct source offset time
-            clip.duration.value = editor.pixelsToSeconds(rect.width)
+            if (edges?.left as boolean) {
+              const delta = newDuration - clip.duration.value
+              clip.sourceStart.value = Math.max(0, clip.sourceStart.value - delta)
+            }
+
+            clip.duration.value = newDuration
 
             if (prev) prev.duration.value = newStart - prev.time.start + (prev.transition?.duration ?? 0)
           },
@@ -137,7 +140,11 @@ export const Clip = ({
         ],
         startAxis: 'x',
         listeners: {
-          start({ rect }: DragEvent) {
+          start({ rect, interaction }: DragEvent) {
+            if (!isSelected()) {
+              interaction.stop()
+              return
+            }
             editor.drag.value = { x: rect.left, isDragging: true }
             editor.selectClip(clip)
           },

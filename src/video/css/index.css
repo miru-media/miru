@@ -76,6 +76,7 @@
 }
 
 .timeline-scroller {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -205,6 +206,10 @@
 }
 
 .icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -229,6 +234,9 @@
 
 .clip {
   height: var(--clip-height);
+}
+
+.clip.is-selected {
   touch-action: pan-y;
 }
 

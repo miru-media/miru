@@ -20,6 +20,7 @@ declare global {
   const IconTablerCrop_1_1: typeof import('~icons/tabler/crop-1-1.jsx')['default']
   const IconTablerCut: typeof import('~icons/tabler/cut.jsx')['default']
   const IconTablerDropletHalfFilled: typeof import('~icons/tabler/droplet-half-filled.jsx')['default']
+  const IconTablerExchange: typeof import('~icons/tabler/exchange.jsx')['default']
   const IconTablerFilters: typeof import('~icons/tabler/filters.jsx')['default']
   const IconTablerGraph: typeof import('~icons/tabler/graph.jsx')['default']
   const IconTablerGraphFilled: typeof import('~icons/tabler/graph-filled.jsx')['default']

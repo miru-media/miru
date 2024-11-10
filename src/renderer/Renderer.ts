@@ -4,14 +4,14 @@ import * as twgl from 'twgl.js'
 import { EffectOpType, LUT_TEX_OPTIONS, MAX_EFFECT_OPS, SOURCE_TEX_OPTIONS } from '@/constants'
 import * as GL from '@/GL'
 import {
-  AdjustmentsState,
+  type AdjustmentsState,
   AssetType,
-  Context2D,
-  CropState,
-  RendererEffect,
-  RendererEffectOp,
-  Size,
-  SyncImageSource,
+  type Context2D,
+  type CropState,
+  type RendererEffect,
+  type RendererEffectOp,
+  type Size,
+  type SyncImageSource,
 } from '@/types'
 import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from '@/utils'
 
@@ -38,6 +38,7 @@ export class Renderer {
   #gl: WebGL2RenderingContext
   #programInfo: twgl.ProgramInfo
   #uniforms = {
+    u_flipY: true,
     u_resolution: [1, 1],
     u_image: null as WebGLTexture | null,
     u_size: [1, 1],
@@ -126,9 +127,16 @@ export class Renderer {
     if (textureOptions.auto === true) this.#gl.generateMipmap(GL.TEXTURE_2D)
   }
 
-  setSourceTexture(texture: WebGLTexture, resolution: Size, textureSize: Size, crop?: CropState) {
+  setSourceTexture(
+    texture: WebGLTexture,
+    resolution: Size,
+    textureSize: Size,
+    crop?: CropState,
+    flipY = false,
+  ) {
     crop ??= { x: 0, y: 0, width: textureSize.width, height: textureSize.height, rotate: 0 }
 
+    this.#uniforms.u_flipY = flipY
     this.#uniforms.u_image = texture
     this.#uniforms.u_size = [crop.width, crop.height]
 
