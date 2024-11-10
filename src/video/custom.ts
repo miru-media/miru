@@ -28,6 +28,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
   #framebuffer: WebGLFramebuffer
   #framebufferSize: Size = { width: 1, height: 1 }
   #lastRenderTime = -1
+  #emptyTexture: WebGLTexture
 
   declare _texture: WebGLTexture
   declare _gl: WebGL2RenderingContext
@@ -52,6 +53,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
     this.#renderer = renderer
     this.#mediaTexture = this._texture
     this.#outTexture = renderer.createTexture(FRAMEBUFFER_TEX_OPTIONS)
+    this.#emptyTexture = renderer.createTexture()
 
     this.#updateSize()
 
@@ -83,14 +85,17 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
 
     // avoid super._update() resizing the framebuffer texture
     this._texture = this.#mediaTexture
-    const superWasUpdated = super._update(currentTime, false)
+    super._update(currentTime, false)
+    this._texture = this.#outTexture
 
     const canRender = this.#media.readyState >= 2
+    const isBeforeStart = currentTime < this._startTime
     const clampedCurrentTime = Math.max(
       this._startTime,
       Math.min(currentTime, this._startTime + this.duration),
     )
-    const shouldRender = triggerTextureUpdate && canRender && this.#lastRenderTime !== clampedCurrentTime
+    const shouldRender =
+      triggerTextureUpdate && canRender && !isBeforeStart && this.#lastRenderTime !== clampedCurrentTime
 
     if (!canRender) this.#lastRenderTime = -1
 
@@ -109,9 +114,9 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
       renderer.draw()
 
       this.#lastRenderTime = clampedCurrentTime
+    } else if (isBeforeStart) {
+      this._texture = this.#emptyTexture
     }
-
-    if (superWasUpdated) this._texture = this.#outTexture
 
     return true
   }

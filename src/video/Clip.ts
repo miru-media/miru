@@ -1,5 +1,6 @@
 import VideoContext, { type TransitionNode } from 'videocontext'
 
+import { TRANSITION_DURATION_S } from '@/constants'
 import { EffectInternal } from '@/Effect'
 import {
   computed,
@@ -17,7 +18,6 @@ import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventLi
 import { MiruVideoNode } from './custom'
 import { type Track } from './Track'
 import { useMediaError, useMediaReadyState } from './utils'
-import { TRANSITION_DURATION_S } from '@/constants'
 
 export enum SourceNodeState {
   waiting = 0,
@@ -277,7 +277,13 @@ export class Clip {
 
   disconnect() {
     this.node.value.disconnect()
-    this.#transitionNode.value?.disconnect()
+    const transitionNode = this.#transitionNode.value
+
+    if (transitionNode) {
+      transitionNode.disconnect()
+      transitionNode.inputs[0]?.disconnect()
+      transitionNode.inputs[1]?.disconnect()
+    }
   }
 
   toObject(): Clip.Init {
