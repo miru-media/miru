@@ -12,6 +12,7 @@ import { type InputEvent } from '@/types'
 import * as Actions from './components/Actions'
 import { PlaybackControls } from './components/PlaybackControls'
 import { renderComponentTo } from './components/renderTo'
+import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
 import { VideoEditor } from './VideoEditor'
 
@@ -46,6 +47,7 @@ const Demo = () => {
       },
     ],
     resolution: RESOLUTION,
+    frameRate: 60,
   })
 
   const { movie } = editor
@@ -56,6 +58,7 @@ const Demo = () => {
       {() => editor.showStats.value && movie.stats.dom}
       <div class="viewport">{h(movie.displayCanvas, { class: 'viewport-canvas' })}</div>
 
+      <Settings editor={editor} />
       <PlaybackControls editor={editor} />
       <Timeline editor={editor} />
       <Actions.ClipActions editor={editor} />

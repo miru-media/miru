@@ -21,19 +21,19 @@ export namespace Movie {
   export interface Init {
     tracks: Track.Init[]
     resolution: Size
+    frameRate: number
   }
 }
 
 export class Movie {
   tracks = ref<Track[]>([])
   resolution: Ref<Size>
+  frameRate: Ref<number>
   displayCanvas = document.createElement('canvas')
   #gl = getWebgl2Context(this.displayCanvas)
   renderer = new Renderer({ gl: this.#gl })
 
   videoContext: VideoContext
-
-  fps = 60
 
   isEnded = ref(false)
   isPaused = ref(true)
@@ -56,12 +56,13 @@ export class Movie {
     return this.#currentTime.value
   }
 
-  constructor({ tracks = [], resolution }: Movie.Init) {
+  constructor({ tracks = [], resolution, frameRate }: Movie.Init) {
     const canvas = this.displayCanvas
     // force webgl2 context
     canvas.getContext = ((_id, _options) => this.#gl) as typeof canvas.getContext
 
     this.resolution = ref(resolution)
+    this.frameRate = ref(frameRate)
 
     this.#scope.run(() => {
       effect(() => {
@@ -73,10 +74,10 @@ export class Movie {
     videoContext.pause()
 
     this.#scope.run(() => {
-      this.tracks.value = tracks.map((t) => new Track(t, videoContext, this.renderer))
-      watch([this.tracks], ([tracks], _prev, onCleanup) => {
-        tracks.forEach((track) => track.node.connect(videoContext.destination))
-        onCleanup(() => tracks.forEach((track) => track.node.disconnect()))
+      this.tracks.value = tracks.map((t) => new Track(t, this))
+      watch([() => this.tracks.value.map((t) => t.node.value)], ([trackNodes], _prev, onCleanup) => {
+        trackNodes.forEach((node) => node.connect(videoContext.destination))
+        onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
       })
     })
 

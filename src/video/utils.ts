@@ -1,5 +1,5 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from '@/framework/reactivity'
-import { useEventListener } from '@/utils'
+import { decodeAsyncImageSource, useEventListener } from '@/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
   sourceArrayRef: MaybeRefOrGetter<T[]>,
@@ -76,4 +76,14 @@ export const formatTime = (timeS: number) => {
   const { minutes, hours, seconds, subSeconds } = splitTime(timeS)
 
   return `${hours === '00' ? '' : `${hours}:`}${minutes}:${seconds}.${subSeconds}`
+}
+
+export const getVideoInfo = async (source: Blob | string) => {
+  const { media, promise, close } = decodeAsyncImageSource(source, undefined, true)
+
+  await promise
+  const duration = media.duration
+  close()
+
+  return { duration }
 }

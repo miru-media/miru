@@ -6,11 +6,12 @@ import { type VideoEditor } from '../VideoEditor'
 import { IconButton } from './IconButton'
 
 export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
-  const onInputVideoFile = (event: InputEvent) => {
+  const onInputVideoFile = async (event: InputEvent) => {
     const file = event.target.files?.[0]
     if (!file) return
     event.target.value = ''
-    editor.selected.value?.setMedia(URL.createObjectURL(file))
+
+    await editor.replaceClipSource(file)
   }
 
   return (

@@ -107,7 +107,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
       this._texture = this.#outTexture
     }
 
-    return true
+    return superUpdated
   }
 
   _seek(time: number) {

@@ -6,6 +6,7 @@ import { remap0 } from '@/utils/math'
 import { type Clip } from './Clip'
 import { Movie } from './Movie'
 import { Track } from './Track'
+import { getVideoInfo } from './utils'
 
 const getClipAtTime = (track: Track, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -25,34 +26,52 @@ export class VideoEditor {
 
   resize = ref<{ movieDuration: number }>()
   drag = ref({ isDragging: false, x: 0 })
+  #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
 
   showStats = ref(import.meta.env.DEV)
 
-  constructor(initialState: Movie.Init = { tracks: [], resolution: { width: 1280, height: 720 } }) {
+  constructor(
+    initialState: Movie.Init = { tracks: [], resolution: { width: 1280, height: 720 }, frameRate: 60 },
+  ) {
     this.movie = new Movie(initialState)
+    this.movie.tracks.value.forEach((track) =>
+      track.forEachClip((clip) => this.#incrementMediaSource(clip.media.value.src)),
+    )
     this.canvasSize = useElementSize(this.movie.displayCanvas)
 
     effect(() => {
       const { movie } = this
       if (!movie.tracks.value.length) {
-        movie.tracks.value = [new Track({ clips: [] }, movie.videoContext, movie.renderer)]
+        movie.tracks.value = [new Track({ clips: [] }, movie)]
       }
     })
   }
 
-  addClip(blob: Blob) {
-    const url = URL.createObjectURL(blob)
-    const track = this.movie.tracks.value[0]
+  async addClip(source: string | Blob) {
+    const url = this.#incrementMediaSource(source)
 
-    // TODO: load metadata and get duration before adding
+    const track = this.movie.tracks.value[0]
+    const { duration } = await getVideoInfo(source)
+
     const clip = track.createClip({
       sourceStart: 0,
-      duration: 4,
+      duration,
       source: url,
       transition: undefined,
     })
 
     track.pushSingleClip(clip)
+  }
+
+  async replaceClipSource(source: string | Blob) {
+    const { duration } = await getVideoInfo(source)
+    const clip = this.selected.value
+    if (!clip) return
+
+    const url = this.#incrementMediaSource(source)
+    this.#decrementMediaSource(clip.media.value.src)
+    clip.duration.value = Math.min(duration, clip.duration.value)
+    clip.setMedia(url)
   }
 
   splitAtCurrentTime() {
@@ -86,13 +105,15 @@ export class VideoEditor {
     clip.duration.value = delta
     clip.track.insertClipBefore(newClip, clip.next)
 
-    this.selectClip(newClip)
+    this.#incrementMediaSource(clip.media.value.src)
+    this.selectClip(clip)
   }
 
   delete() {
     const clip = this.selected.value
     if (!clip) return
 
+    this.#decrementMediaSource(clip.media.value.src)
     clip.track.sliceClip(clip)
     clip.dispose()
   }
@@ -119,5 +140,34 @@ export class VideoEditor {
 
   pixelsToSeconds(offset: number) {
     return offset * this.secondsPerPixel.value
+  }
+
+  #incrementMediaSource(source: string | Blob) {
+    let url
+    let blob
+    if (typeof source === 'string') {
+      url = source
+      blob = undefined
+    } else {
+      url = URL.createObjectURL(source)
+      blob = source
+    }
+    const entry = this.#mediaSources.get(url) ?? { refCount: 0, blob }
+    entry.refCount++
+    this.#mediaSources.set(url, entry)
+
+    return url
+  }
+
+  #decrementMediaSource(url: string) {
+    const entry = this.#mediaSources.get(url)
+    if (!entry) return
+
+    entry.refCount--
+
+    if (entry.refCount <= 0) {
+      this.#mediaSources.delete(url)
+      if (entry.blob) URL.revokeObjectURL(url)
+    }
   }
 }

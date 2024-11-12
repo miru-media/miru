@@ -65,7 +65,7 @@ const Ruler = ({ editor }: { editor: VideoEditor }) => {
   }
 
   const Labels = () => {
-    const LABEL_SPACING = 4
+    const LABEL_SPACING = 5
 
     const getChildren = () => {
       const timelineWidth = editor.timelineSize.value.width
@@ -148,10 +148,10 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     )
   }
 
-  const onInputClipFile = (event: InputEvent) => {
+  const onInputClipFile = async (event: InputEvent) => {
     const file = event.target.files?.[0]
     if (!file) return
-    editor.addClip(file)
+    await editor.addClip(file)
   }
 
   const onPointerdownScroller = (event: Event) => {

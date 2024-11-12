@@ -82,7 +82,7 @@ export const Clip = ({
                 time.end - mediaDuration,
                 Math.max(0, prev ? prev.time.start + MIN_CLIP_DURATION_S : 0),
               )
-              const maxEndTime = time.start + (mediaDuration - time.source)
+              const maxEndTime = time.start + mediaDuration
 
               return {
                 left: editor.secondsToPixels(minStartTime),
@@ -116,12 +116,14 @@ export const Clip = ({
             const newStart = editor.pixelsToSeconds(rect.left)
             const newDuration = editor.pixelsToSeconds(rect.width)
 
-            if (edges?.left as boolean) {
+            if (edges?.left === true) {
               const delta = newDuration - clip.duration.value
               clip.sourceStart.value = Math.max(0, clip.sourceStart.value - delta)
             }
 
             clip.duration.value = newDuration
+
+            if (edges?.right === true) clip.ensureDurationIsPlayable()
 
             if (prev) prev.duration.value = newStart - prev.time.start + (prev.transition?.duration ?? 0)
           },

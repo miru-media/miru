@@ -1,19 +1,19 @@
 import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../constants'
 import {
-  AdjustmentsState,
-  AssetType,
-  AsyncImageSource,
-  Context2D,
-  CropState,
-  CrossOrigin,
-  DisplayContext as DisplayContext,
-  ImageEditState,
-  ImageSource,
-  ImageSourceObject,
-  ImageSourceOption,
-  SyncImageSource,
-  Tlwh,
-  Xywh,
+  type AdjustmentsState,
+  type AssetType,
+  type AsyncImageSource,
+  type Context2D,
+  type CropState,
+  type CrossOrigin,
+  type DisplayContext as DisplayContext,
+  type ImageEditState,
+  type ImageSource,
+  type ImageSourceObject,
+  type ImageSourceOption,
+  type SyncImageSource,
+  type Tlwh,
+  type Xywh,
 } from '../types'
 
 import { devSlowDown } from './general'
@@ -196,15 +196,27 @@ const decodeVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
   const decodePromise = new Promise<HTMLVideoElement>((resolve, reject) => {
     const onLoadedMetadata = () => {
       resolve(video)
-      video.removeEventListener('abort', onAbort)
+      removeListeners()
     }
     const onAbort = () => {
       reject(new Error('aborted'))
+      removeListeners()
+    }
+    const onError = (error: ErrorEvent) => {
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+      reject(error)
+      removeListeners()
+    }
+
+    const removeListeners = () => {
       video.removeEventListener('loadedmetadata', onLoadedMetadata)
+      video.removeEventListener('abort', onAbort)
+      video.removeEventListener('abort', onAbort)
     }
 
     video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true })
     video.addEventListener('abort', onAbort, { once: true })
+    video.addEventListener('error', onError, { once: true })
   })
 
   return { decodePromise, media: video }
@@ -311,7 +323,7 @@ export const normalizeSourceOption = <T extends ImageSource>(
 
 export const editIsEqualTo = (a: ImageEditState | undefined, b: ImageEditState | undefined) => {
   if (a === b) return true
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+
   if (!a || !b) return false
 
   if (a.effect !== b.effect || a.intensity !== b.intensity) return false
@@ -324,7 +336,7 @@ export const editIsEqualTo = (a: ImageEditState | undefined, b: ImageEditState |
 
 export const adjustmentIsEqualTo = (a: AdjustmentsState | undefined, b: AdjustmentsState | undefined) => {
   if (a === b) return true
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+
   if (!a || !b) return false
 
   return a.brightness === b.brightness && a.contrast === b.contrast && a.saturation === b.saturation
@@ -332,7 +344,7 @@ export const adjustmentIsEqualTo = (a: AdjustmentsState | undefined, b: Adjustme
 
 export const cropIsEqualTo = (a: CropState | undefined, b: CropState | undefined) => {
   if (a === b) return true
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+
   if (!a || !b) return false
 
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height && a.rotate === b.rotate

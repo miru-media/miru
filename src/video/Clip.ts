@@ -192,8 +192,10 @@ export class Clip {
       effect(() => this.schedule())
       effect(() => (this.node.value.effect = this.filter.value))
 
-      // create out transition
-      watch([() => this.#transition.value?.type], ([type], _prev, onCleanup) => {
+      // Workaround to recreate processing nodes when the movie resolution changes
+      // beacause VideoContext assumes the canvas size is constant
+      // TODO
+      watch([() => this.#transition.value?.type, track.movie.resolution], ([type], _prev, onCleanup) => {
         if (!type) return (this.#transitionNode.value = undefined)
 
         const transitionNode = (this.#transitionNode.value = this.track.context.transition<{ mix: number }>(
@@ -212,18 +214,6 @@ export class Clip {
         transitionNode.clearTransitions()
         transitionNode.transitionAt(time.end - transition.duration, time.end, 0, 1, 'mix')
       })
-    })
-
-    // Ensure the whole clip duration is playable
-    // TODO: always get media duration before setting
-    watch([() => this.readyState.value > 0], () => {
-      const mediaDuration = this.media.value.duration
-      if (!mediaDuration) return
-
-      const clipTime = this.time
-      const durationOutsideClip = mediaDuration - (clipTime.source + clipTime.duration)
-      this.sourceStart.value += Math.min(0, durationOutsideClip)
-      this.duration.value = Math.min(clipTime.duration, mediaDuration)
     })
   }
 
@@ -246,6 +236,16 @@ export class Clip {
     }
   }
 
+  ensureDurationIsPlayable() {
+    const mediaDuration = this.media.value.duration
+    if (!mediaDuration) return
+
+    const clipTime = this.time
+    const durationOutsideClip = mediaDuration - (clipTime.source + clipTime.duration)
+    this.sourceStart.value += Math.min(0, durationOutsideClip)
+    this.duration.value = Math.min(clipTime.duration, mediaDuration)
+  }
+
   schedule() {
     const node = this.node.value
     const { time } = this
@@ -265,14 +265,14 @@ export class Clip {
     if (outTransition) {
       outTransition.inputs[0]?.disconnect()
       ;(inTransition ?? node).connect(outTransition, 0)
-      outTransition.connect(this.track.node)
+      outTransition.connect(this.track.node.value)
     }
     if (inTransition) {
       inTransition.inputs[1]?.disconnect()
       node.connect(inTransition, 1)
     }
 
-    if (!outTransition && !inTransition) node.connect(this.track.node)
+    if (!outTransition && !inTransition) node.connect(this.track.node.value)
   }
 
   disconnect() {

@@ -24,9 +24,10 @@
   --white-3: rgb(255 255 255 / 60%);
   --clip-height: 2.75rem;
   --ruler-height: 1rem;
-  --ruler-spacing-top: 1rem;
+  --ruler-spacing-top: 0.25rem;
   --ruler-spacing-bottom: 2.625rem;
   --primary-bg: #171717;
+  --primary-bg-05: #17171788;
   color: white;
 
   background-color: var(--primary-bg);
@@ -43,7 +44,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  max-height: 60vh;
+  max-height: min(60vh, calc(100vh - 19rem));
   padding: 0.25rem;
 }
 
@@ -52,12 +53,70 @@
   border-radius: 1.25rem;
 }
 
+.settings-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  justify-content: right;
+  padding-top: max(env(safe-area-inset-p, 1.25rem), 1.25rem);
+  padding-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
+}
+
+.settings-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.25rem;
+}
+
+.settings-content {
+  position: absolute;
+  top: 4rem;
+  display: none;
+  padding: 0.5rem;
+}
+
+.settings-button,
+.settings-content {
+  background-color: var(--primary-bg-05);
+  border-radius: 0.5rem;
+}
+
+.settings-controls.is-open .settings-content {
+  display: block;
+}
+
 .playback-controls {
   display: flex;
   justify-content: space-between;
-  padding: 0;
-  padding: 0.25rem max(env(safe-area-inset-left, 1.25rem), 1.25rem) 0.25rem
-    max(env(safe-area-inset-right, 1.25rem), 1.25rem);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+
+  width: 100%;
+  padding-top: 0.675rem;
+  padding-bottom: 0.675rem;
+  overflow-x: auto;
+  color: var(--white);
+}
+
+.toolbar-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.settings-controls,
+.playback-controls,
+.toolbar {
+  padding-right: max(env(safe-area-inset-right, 1.25rem), 1.25rem);
+  padding-left: max(env(safe-area-inset-left, 1.25rem), 1.25rem);
 }
 
 .playback-play {
@@ -373,23 +432,4 @@
   display: inline-block;
   padding-top: 0.25em;
   background-color: var(--primary-bg);
-}
-
-.toolbar {
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.5rem;
-
-  width: 100%;
-  padding: 0.675rem max(env(safe-area-inset-left, 1.25rem), 1.25rem) 0.675rem
-    max(env(safe-area-inset-right, 1.25rem), 1.25rem);
-  overflow-x: auto;
-  color: var(--white);
-}
-
-.toolbar-button {
-  width: 2.5rem;
-  height: 2.5rem;
-  font-size: 1.5rem;
-  cursor: pointer;
 }

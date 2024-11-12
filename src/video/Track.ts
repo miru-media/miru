@@ -1,9 +1,9 @@
 import VideoContext, { type CompositingNode } from 'videocontext'
 
-import { computed, effect, ref } from '@/framework/reactivity'
-import { type Renderer } from '@/renderer/Renderer'
+import { computed, effect, type Ref, ref, watch } from '@/framework/reactivity'
 
 import { Clip } from './Clip'
+import { type Movie } from './Movie'
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Track {
@@ -16,9 +16,8 @@ export class Track {
   #head = ref<Clip>()
   #tail = ref<Clip>()
 
-  node: CompositingNode<never>
-  context: VideoContext
-  renderer: Renderer
+  node: Ref<CompositingNode<never>>
+  movie: Movie
 
   #duration = computed(() => {
     const lastClip = this.#tail.value
@@ -42,10 +41,26 @@ export class Track {
     return (this.#tail.value?.index ?? -1) + 1
   }
 
-  constructor(init: Track.Init, videoContext: VideoContext, renderer: Renderer) {
-    this.context = videoContext
-    this.renderer = renderer
-    this.node = videoContext.compositor(VideoContext.DEFINITIONS.COMBINE)
+  get context() {
+    return this.movie.videoContext
+  }
+
+  get renderer() {
+    return this.movie.renderer
+  }
+
+  constructor(init: Track.Init, movie: Movie) {
+    this.movie = movie
+    this.node = ref(undefined as never)
+
+    // Workaround to recreate processing nodes when the movie resolution changes
+    // beacause VideoContext assumes the canvas size is constant
+    // TODO
+    watch([movie.resolution], (_cur, _prev, onCleanup) => {
+      const node = (this.node.value = this.context.compositor(VideoContext.DEFINITIONS.COMBINE))
+      onCleanup(() => node.destroy())
+    })
+
     init.clips.forEach((c) => this.pushSingleClip(this.createClip(c)))
 
     // connect clip nodes and transitions in the correct order
