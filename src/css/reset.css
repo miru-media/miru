@@ -52,6 +52,7 @@
   .miru--slider {
     overflow: hidden;
     appearance: none;
+    touch-action: none;
     cursor: pointer;
 
     &:focus {
@@ -74,6 +75,7 @@
   }
 
   .miru--slider::-webkit-slider-thumb {
+    width: 0.35rem;
     height: 200px;
     margin-top: -80px;
     appearance: none;

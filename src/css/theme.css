@@ -1,13 +1,15 @@
 :host {
   /* APP COLORS */
   color: var(--color-fnt-default);
-  background-color: var(--color-bg-button);
 
   /* SCROLLBARS */
   scrollbar-color: var(--color-scrollbar-both);
+  background-color: var(--color-bg-button);
+
   ::-webkit-scrollbar-thumb {
     background-color: var(--color-scrollbar-thumb);
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
@@ -48,17 +50,19 @@
 
   /* SLIDER */
   .miru--slider {
-    border-color: var(--color-bg-button); /* sets the background color of the area around the slider */
     background-color: var(--color-slider-track);
+    border-color: var(--color-bg-button); /* sets the background color of the area around the slider */
     &::-moz-range-thumb {
       background-color: var(--color-slider-thumb);
     }
+
     &::-moz-range-progress {
       background-color: var(--color-slider-progress);
     }
   }
-  .miru--slider::-webkit-slider-thumb { /* seems like this does not like & nesting */
-    width: 0.35rem;
+
+  .miru--slider::-webkit-slider-thumb {
+    /* seems like this does not like & nesting */
     background-color: var(--color-slider-thumb);
     box-shadow: -4000px 0 0 4000px var(--color-slider-progress);
   }
@@ -68,9 +72,11 @@
     .cropper-view-box {
       outline-color: var(--color-crop-outline);
     }
+
     .cropper-dashed {
       border-color: var(--color-crop-dashed);
     }
+
     .cropper-drag-box {
       background-color: var(--color-crop-overlay);
     }
