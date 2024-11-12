@@ -57,7 +57,7 @@ export default defineConfig({
     }),
     postcss({ inject: false }),
     autoImport(autoImportOptions),
-    icons({ compiler: 'jsx', jsx: 'preact' }),
+    icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
     url({
       limit: 0,

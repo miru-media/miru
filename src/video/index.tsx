@@ -19,31 +19,33 @@ import { VideoEditor } from './VideoEditor'
 const filters = getDefaultFilters()
 
 const Demo = () => {
-  const RESOLUTION = { width: 1920, height: 1080 }
+  const RESOLUTION = { width: 1080, height: 1920 }
   const editor = new VideoEditor({
     tracks: [
       {
-        clips: [
-          {
-            sourceStart: 5,
-            duration: 3,
-            source: sampleVideo1,
-            transition: { type: 'CROSSFADE' },
-          },
-          {
-            sourceStart: 20,
-            duration: 2.5,
-            source: sampleVideo2,
-            filter: filters[1],
-            transition: { type: 'HORIZONTAL_WIPE' },
-          },
-          {
-            sourceStart: 4,
-            duration: 4,
-            source: sampleVideo1,
-            filter: filters[5],
-          },
-        ],
+        clips: import.meta.env.DEV
+          ? [
+              {
+                sourceStart: 5,
+                duration: 3,
+                source: sampleVideo1,
+                transition: { type: 'CROSSFADE' },
+              },
+              {
+                sourceStart: 20,
+                duration: 2.5,
+                source: sampleVideo2,
+                filter: filters[1],
+                transition: { type: 'HORIZONTAL_WIPE' },
+              },
+              {
+                sourceStart: 4,
+                duration: 4,
+                source: sampleVideo1,
+                filter: filters[5],
+              },
+            ]
+          : [],
       },
     ],
     resolution: RESOLUTION,

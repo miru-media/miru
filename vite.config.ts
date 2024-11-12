@@ -25,7 +25,7 @@ export default defineConfig({
         },
       ],
     }),
-    icons({ compiler: 'jsx', jsx: 'preact' }),
+    icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
     unocss({ presets: [presetUno(), presetIcons()] }),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
     !!process.env.BASIC_SSL && basicSsl(),

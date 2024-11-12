@@ -31,7 +31,11 @@ export class VideoEditor {
   showStats = ref(import.meta.env.DEV)
 
   constructor(
-    initialState: Movie.Init = { tracks: [], resolution: { width: 1280, height: 720 }, frameRate: 60 },
+    initialState: Movie.Init = {
+      tracks: [{ clips: [] }],
+      resolution: { width: 1280, height: 720 },
+      frameRate: 60,
+    },
   ) {
     this.movie = new Movie(initialState)
     this.movie.tracks.value.forEach((track) =>
@@ -47,10 +51,9 @@ export class VideoEditor {
     })
   }
 
-  async addClip(source: string | Blob) {
+  async addClip(track: Track, source: string | Blob) {
     const url = this.#incrementMediaSource(source)
 
-    const track = this.movie.tracks.value[0]
     const { duration } = await getVideoInfo(source)
 
     const clip = track.createClip({

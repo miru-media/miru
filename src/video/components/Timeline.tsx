@@ -3,10 +3,12 @@ import { type InputEvent } from '@/types'
 import { useElementSize } from '@/utils'
 
 import { type Clip as ClipType } from '../Clip'
+import { type Track } from '../Track'
 import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
 import { Clip } from './Clip'
+import { Ruler } from './Ruler'
 
 const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
@@ -37,69 +39,6 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
       </div>
       <div class="timeline-cursor" />
     </>
-  )
-}
-
-const Ruler = ({ editor }: { editor: VideoEditor }) => {
-  const intervalS = computed(() => {
-    const range = editor.secondsPerPixel.value
-    const exponent = Math.floor(Math.log2(range))
-    const magnitude = Math.pow(2, exponent)
-
-    return magnitude * 32
-  })
-
-  const Markings = () => {
-    const style = () => {
-      const $intervalS = intervalS.value
-      const size = editor.secondsToPixels($intervalS)
-      const offset = -size / 2 + ((editor.timelineSize.value.width / 2) % size)
-
-      return `
-        --ruler-interval: ${size}px;
-        --ruler-markings-offset: ${offset}px;
-      `
-    }
-
-    return <div class="ruler-markings" style={style}></div>
-  }
-
-  const Labels = () => {
-    const LABEL_SPACING = 5
-
-    const getChildren = () => {
-      const timelineWidth = editor.timelineSize.value.width
-      const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
-
-      const children: JSX.Element[] = []
-      const labelIntervalS = intervalS.value * LABEL_SPACING
-      const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
-
-      let fromS = Math.max(editor.movie.currentTime - timelineRangeS / 2, 0)
-      fromS = fromS - (fromS % labelIntervalS)
-
-      for (let i = 0; i < nLabels; i++) {
-        const time = fromS + i * labelIntervalS
-
-        const left = editor.secondsToPixels(time) + timelineWidth / 2
-        children.push(
-          <div class="ruler-label text-small" style={`translate:calc(${left}px - 50%)`}>
-            {time}s
-          </div>,
-        )
-      }
-
-      return children
-    }
-
-    return <div>{getChildren}</div>
-  }
-
-  return (
-    <div class="ruler">
-      <Markings />
-      <Labels />
-    </div>
   )
 }
 
@@ -148,10 +87,10 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     )
   }
 
-  const onInputClipFile = async (event: InputEvent) => {
+  const onInputClipFile = async (event: InputEvent, track: Track) => {
     const file = event.target.files?.[0]
     if (!file) return
-    await editor.addClip(file)
+    await editor.addClip(track, file)
   }
 
   const onPointerdownScroller = (event: Event) => {
@@ -198,7 +137,12 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                           </>
                         )
                       }
-                      <input type="file" accept="video/*" onInput={onInputClipFile} />
+                      <input
+                        type="file"
+                        hidden
+                        accept="video/*"
+                        onInput={(event) => onInputClipFile(event, track)}
+                      />
                     </label>
                   </div>
                 ))

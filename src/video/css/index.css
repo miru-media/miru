@@ -50,6 +50,7 @@
 
 .viewport-canvas {
   height: 100%;
+  background-color: black;
   border-radius: 1.25rem;
 }
 
@@ -72,6 +73,7 @@
 .settings-content {
   position: absolute;
   top: 4rem;
+  z-index: 10;
   display: none;
   padding: 0.5rem;
 }
@@ -264,6 +266,10 @@
   border-width: 0;
 }
 
+.icon {
+  flex-shrink: 0;
+}
+
 .icon-button {
   display: flex;
   align-items: center;
@@ -274,14 +280,14 @@
 
 .track-list {
   position: relative;
-  box-sizing: content-box;
   display: flex;
   flex-shrink: 1;
   flex-direction: column;
   gap: 0.625rem;
-  width: var(--movie-width);
+  width: calc(var(--movie-width) + var(--timeline-width));
   min-height: calc(var(--clip-height) * 2.5);
-  padding: 0 calc(var(--timeline-width) / 2) 1rem;
+  padding-bottom: 1rem;
+  padding-left: calc(var(--timeline-width) / 2);
   overflow: hidden auto;
 }
 

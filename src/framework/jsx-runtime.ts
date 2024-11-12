@@ -210,7 +210,7 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
         const listener = (isRef(value) ? value.value : value) as () => unknown
         const type = key.slice(2).toLowerCase()
         element.addEventListener(type, listener)
-      } else if (key === 'class') {
+      } else if (key === 'class' || key === 'className') {
         element.setAttribute('class', toClassName(value))
       } else if (isSvg) {
         const svgKey = key === 'viewBox' ? key : toKebabCase(key)
@@ -244,7 +244,7 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
       }
 
       if (key in element && key !== 'style') (element as any)[key] = null
-      else element.removeAttribute(key)
+      else element.removeAttribute(key === 'className' ? 'class' : key)
     }
   })
 

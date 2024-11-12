@@ -216,13 +216,15 @@ export const Clip = ({
           </div>
         </div>
       </div>
-      <IconButton
-        icon={toRef(() => (clip.transition ? IconTablerChevronsRight : IconTablerChevronRight))}
-        class="clip-transition"
-        onClick={() => {
-          alert('Not implemented.')
-        }}
-      />
+      {import.meta.env.DEV && (
+        <IconButton
+          icon={toRef(() => (clip.transition ? IconTablerChevronsRight : IconTablerChevronRight))}
+          class="clip-transition"
+          onClick={() => {
+            alert('Not implemented.')
+          }}
+        />
+      )}
     </div>
   )
 }
