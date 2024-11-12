@@ -1,3 +1,4 @@
+import { mat4 } from 'gl-matrix'
 import VideoContext, { type RenderGraph } from 'videocontext'
 
 import { FRAMEBUFFER_TEX_OPTIONS } from '@/constants'
@@ -7,7 +8,7 @@ import fragmentShader from '@/renderer/glsl/main.frag'
 import vertexShader from '@/renderer/glsl/main.vert'
 import { type Renderer } from '@/renderer/Renderer'
 import { type AdjustmentsState, type Size } from '@/types'
-import { setObjectSize } from '@/utils'
+import { fit, setObjectSize } from '@/utils'
 
 export const definition = {
   title: 'Miru Filter',
@@ -91,7 +92,14 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer)
       gl.framebufferTexture2D(GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, this.#outTexture, 0)
 
-      renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize, undefined, true)
+      const coverSize = fit(mediaSize, gl.canvas, 'cover')
+      const transform = mat4.fromScaling(new Float32Array(16), [
+        coverSize.width / gl.canvas.width,
+        coverSize.height / gl.canvas.height,
+        1,
+      ])
+
+      renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize, undefined, true, transform)
       renderer.setEffect(this.effect)
       renderer.setIntensity(this.intensity)
       renderer.setAdjustments(this.adjustments)

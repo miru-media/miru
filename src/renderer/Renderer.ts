@@ -133,29 +133,27 @@ export class Renderer {
     textureSize: Size,
     crop?: CropState,
     flipY = false,
+    transform?: mat4,
   ) {
     crop ??= { x: 0, y: 0, width: textureSize.width, height: textureSize.height, rotate: 0 }
 
     this.#uniforms.u_flipY = flipY
     this.#uniforms.u_image = texture
     this.#uniforms.u_size = [crop.width, crop.height]
-
-    {
-      const { width, height } = resolution
-      this.#uniforms.u_resolution = [width, height]
-      const { u_matrix } = this.#uniforms
-      mat4.ortho(u_matrix, 0, width, height, 0, -1, 1)
-      mat4.scale(u_matrix, u_matrix, [width, height, 1])
-    }
+    this.#uniforms.u_resolution = [resolution.width, resolution.height]
 
     {
       const { width, height } = textureSize
-      const tm = this.#uniforms.u_textureMatrix
 
-      mat4.fromScaling(tm, [1 / width, 1 / height, 1])
-      mat4.translate(tm, tm, [crop.x, crop.y, 0])
+      const { u_matrix } = this.#uniforms
+      mat4.ortho(u_matrix, 0, width, height, 0, -1, 1)
+      if (transform) mat4.multiply(u_matrix, transform, u_matrix)
+      mat4.scale(u_matrix, u_matrix, [width, height, 1])
 
-      mat4.scale(tm, tm, [crop.width, crop.height, 1])
+      const { u_textureMatrix } = this.#uniforms
+      mat4.fromScaling(u_textureMatrix, [1 / width, 1 / height, 1])
+      mat4.translate(u_textureMatrix, u_textureMatrix, [crop.x, crop.y, 0])
+      mat4.scale(u_textureMatrix, u_textureMatrix, [crop.width, crop.height, 1])
     }
 
     const { canvas } = this.#gl
