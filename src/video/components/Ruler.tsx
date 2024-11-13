@@ -12,29 +12,30 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
   })
 
   const Markings = () => {
-    const style = () => {
-      const $intervalS = intervalS.value
-      const size = editor.secondsToPixels($intervalS)
-      const offset = -size / 2 + ((editor.timelineSize.value.width / 2) % size)
+    const size = computed(() => editor.secondsToPixels(intervalS.value))
+    const offset = computed(() => (editor.timelineSize.value.width / 2) % size.value)
 
-      return `
-        --ruler-interval: ${size}px;
-        --ruler-markings-offset: ${offset}px;
-      `
-    }
+    return (
+      <svg class="ruler-markings" style={() => `--ruler-markings-offset: ${offset.value}px`}>
+        <defs>
+          <pattern id="Pattern" x="0" y="0" width={size} height="100%" patternUnits="userSpaceOnUse">
+            <circle cx="0.125rem" cy="50%" r="0.125rem" fill="currentColor" />
+          </pattern>
+        </defs>
 
-    return <div class="ruler-markings" style={style}></div>
+        <rect fill="url(#Pattern)" width="100%" height="100%" />
+      </svg>
+    )
   }
 
   const Labels = () => {
-    const LABEL_SPACING = 5
-
     const getChildren = () => {
       const timelineWidth = editor.timelineSize.value.width
       const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
 
       const children: JSX.Element[] = []
-      const labelIntervalS = intervalS.value * LABEL_SPACING
+      const labelSpacing = intervalS.value < 1 ? 4 : 5
+      const labelIntervalS = intervalS.value * labelSpacing
       const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
 
       let fromS = Math.max(editor.movie.currentTime - timelineRangeS / 2, 0)

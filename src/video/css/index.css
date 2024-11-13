@@ -427,8 +427,9 @@
 .ruler-markings {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background-color: var(--primary-bg);
-  background-image: radial-gradient(circle, currentcolor 0.125rem, rgb(0 0 0 / 0%) 0.125rem);
   background-size: var(--ruler-interval) 100%;
   translate: var(--ruler-markings-offset);
 }

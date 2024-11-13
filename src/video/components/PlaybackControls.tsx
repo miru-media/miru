@@ -9,7 +9,7 @@ const MIN_PPS = 0.005
 
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
   const { movie } = editor
-  const maxPps = () => Math.max(0.2, (movie.duration / editor.timelineSize.value.width) * 1.5)
+  const maxPps = () => Math.max(0.2, (movie.duration / editor.timelineSize.value.width) * 2)
 
   return (
     <div class="playback-controls">

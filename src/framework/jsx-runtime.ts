@@ -213,7 +213,12 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
       } else if (key === 'class' || key === 'className') {
         element.setAttribute('class', toClassName(value))
       } else if (isSvg) {
-        const svgKey = key === 'viewBox' ? key : toKebabCase(key)
+        const svgKey =
+          /(Box|Type|Transform|Constant|Units|Length|Angle|Alpha|Ratio|Count|Dur|Features|Exponent|Method|Offset|Deviation|Tiles|Scale|Language|Values|targetX|targetY|Selector|edgeMode)$/.test(
+            key,
+          )
+            ? key
+            : toKebabCase(key)
         element.setAttribute(svgKey, String(toValue(value)))
       } else if (key === 'style' || !(key in element)) {
         element.setAttribute(key, toValue(value) as string)
