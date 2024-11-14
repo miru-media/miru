@@ -10,6 +10,7 @@ import Crispy_Cyan from '@/assets/luts/03_Cyan/Crispy_Cyan.jpg'
 import Blue_to_Yellow from '@/assets/luts/04_Color/Blue_to_Yellow.jpg'
 import Bruce_Banner from '@/assets/luts/04_Color/Bruce_Banner.jpg'
 import Green_to_Red from '@/assets/luts/04_Color/Green_to_Red.jpg'
+import Metallic from '@/assets/luts/04_Color/Metallic.jpg'
 import Orange_Cyan from '@/assets/luts/04_Color/Orange_Cyan.jpg'
 import Pink from '@/assets/luts/04_Color/Pink.jpg'
 import Purple_Dreams from '@/assets/luts/04_Color/Purple_Dreams.jpg'
@@ -255,6 +256,16 @@ export const getDefaultFilters = (assetsPath?: string): Effect[] => {
         {
           type: EffectOpType.LUT,
           lut: { source: rebaseAssetUrl(Skin), type: AssetType.HaldLut },
+          intensity: 1.0,
+        },
+      ],
+    },
+    {
+      name: 'Metallic',
+      ops: [
+        {
+          type: EffectOpType.LUT,
+          lut: { source: rebaseAssetUrl(Metallic), type: AssetType.HaldLut },
           intensity: 1.0,
         },
       ],
