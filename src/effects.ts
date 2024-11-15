@@ -2,6 +2,7 @@ import Beige from '@/assets/luts/01_Warm/Beige.jpg'
 import Fall from '@/assets/luts/01_Warm/Fall.jpg'
 import Muted_Warm from '@/assets/luts/01_Warm/Muted_Warm.jpg'
 import Pinky from '@/assets/luts/01_Warm/Pinky.jpg'
+import Romantic from '@/assets/luts/01_Warm/Romantic.jpg'
 import Bleach from '@/assets/luts/02_Bright/Bleach.jpg'
 import Bleach_Blue from '@/assets/luts/02_Bright/Bleach_Blue.jpg'
 import Stocky from '@/assets/luts/02_Bright/Stocky.jpg'
@@ -43,6 +44,27 @@ export const getDefaultFilters = (assetsPath?: string): Effect[] => {
     assetsPath ? new URL(path, new URL(assetsPath, location.href)).href : path
 
   return [
+    {
+      name: 'TEST',
+      ops: [
+        { type: EffectOpType.ADJUST_COLOR, args: [0, 0.8, 0.65] },
+        {
+          type: EffectOpType.LUT,
+          lut: { source: rebaseAssetUrl(Crispy_Cyan), type: AssetType.HaldLut },
+          intensity: 1.0,
+        },
+        {
+          type: EffectOpType.LUT,
+          lut: { source: rebaseAssetUrl(Toon_Goblin), type: AssetType.HaldLut },
+          intensity: 1.0,
+        },
+        {
+          type: EffectOpType.LUT,
+          lut: { source: rebaseAssetUrl(Skin), type: AssetType.HaldLut },
+          intensity: 1.0,
+        },
+      ],
+    },
     // SORT IN
     {
       name: 'Contrast',
@@ -111,6 +133,16 @@ export const getDefaultFilters = (assetsPath?: string): Effect[] => {
         {
           type: EffectOpType.LUT,
           lut: { source: rebaseAssetUrl(Pinky), type: AssetType.HaldLut },
+          intensity: 1.0,
+        },
+      ],
+    },
+    {
+      name: 'Romantic',
+      ops: [
+        {
+          type: EffectOpType.LUT,
+          lut: { source: rebaseAssetUrl(Romantic), type: AssetType.HaldLut },
           intensity: 1.0,
         },
       ],
