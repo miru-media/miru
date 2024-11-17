@@ -1,0 +1,68 @@
+.text-small {
+  font-size: 9px;
+  font-weight: semibold;
+  line-height: 12px;
+}
+
+.text-body-small {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+}
+
+.text-body {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 17px;
+}
+
+.text-body-bold {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 17px;
+}
+
+.text-body-big {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.text-body-big-bold {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.text-great {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.text-super-great {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 36px;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.safe-padding-x {
+  padding-right: max(env(safe-area-inset-right, 1.25rem), 1.25rem);
+  padding-left: max(env(safe-area-inset-left, 1.25rem), 1.25rem);
+}

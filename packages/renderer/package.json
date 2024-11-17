@@ -1,0 +1,8 @@
+{
+  "name": "renderer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "author": "Taye Adeyemi",
+  "license": "AGPL-3.0-only"
+}

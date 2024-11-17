@@ -1,0 +1,101 @@
+:host {
+  --clip-height: 2.75rem;
+  --clip-resize-handle-width: 1.5rem;
+}
+
+.clip {
+  height: var(--clip-height);
+}
+
+.clip.is-selected {
+  touch-action: pan-y;
+}
+
+.clip.is-dragging {
+  z-index: 20;
+}
+
+.clip-box {
+  position: absolute;
+
+  left: var(--clip-box-left);
+  width: calc(var(--clip-box-right) - var(--clip-box-left));
+  height: var(--clip-height);
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+
+  background-color: var(--clip-color);
+  border-radius: 0.5rem;
+}
+
+.clip-transition {
+  position: absolute;
+  top: 50%;
+  left: var(--clip-box-right);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--white);
+  background: var(--black);
+  border-radius: 0.5rem;
+  opacity: 0.7;
+  transition: transform 0.2s;
+  transform: translate(-50%, -50%);
+}
+
+.clip.is-selected .clip-transition {
+  transform: translate(0%, -50%);
+}
+
+.clip.next-is-selected .clip-transition {
+  transform: translate(-100%, -50%);
+}
+
+.clip-controls {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-color: var(--yellow);
+  border-style: solid;
+  border-width: 0.125rem;
+  border-radius: 0.5rem;
+  opacity: 0;
+}
+
+.clip.is-selected .clip-controls {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.clip-resize-left,
+.clip-resize-right {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--clip-resize-handle-width);
+  height: 100%;
+  color: black;
+  touch-action: none;
+  cursor: ew-resize;
+  visibility: hidden;
+  background-color: var(--yellow);
+}
+
+.clip-resize-left {
+  left: 0;
+}
+
+.clip-resize-right {
+  right: 0;
+}
+
+.clip.is-selected.can-resize-left .clip-resize-left,
+.clip.is-selected .clip-resize-right {
+  visibility: visible;
+}

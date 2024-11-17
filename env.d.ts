@@ -36,6 +36,8 @@ declare module 'eslint-plugin-import' {
   export = val
 }
 
+declare module 'mp4box' {}
+
 declare module 'videocontext' {
   interface EffectDefinition {
     title: string

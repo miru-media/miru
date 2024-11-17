@@ -36,5 +36,8 @@ declare global {
   const IconTablerTrash: typeof import('~icons/tabler/trash.jsx')['default']
   const IconTablerVideo: typeof import('~icons/tabler/video.jsx')['default']
   const IconTablerVideoPlus: typeof import('~icons/tabler/video-plus.jsx')['default']
+  const IconTablerVolume: typeof import('~icons/tabler/volume.jsx')['default']
+  const IconTablerVolumeOff: typeof import('~icons/tabler/volume-off.jsx')['default']
+  const IconTablerVolume_3: typeof import('~icons/tabler/volume-3.jsx')['default']
   const IconTablerWand: typeof import('~icons/tabler/wand.jsx')['default']
 }

@@ -1,0 +1,35 @@
+@import url('../../image-editor/css/reset.css');
+@import url('./untility.css');
+
+.viewport {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: 0.25rem;
+}
+
+.viewport-canvas {
+  background-color: black;
+  border-radius: 1.25rem;
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+.icon-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.icon-button[disabled] {
+  cursor: default;
+}

@@ -61,12 +61,13 @@ export default tseslint.config(
         },
       ],
       'import/no-cycle': 'error',
+      'import/no-useless-path-segments': 'error',
       'no-undef': 'off',
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
     },
   },
   {
-    files: ['src/**/*.{ts,tsx,js,jsx}'],
+    files: ['packages/**/*.{ts,tsx,js,jsx}'],
     rules: {
       'no-console': 'error',
     },

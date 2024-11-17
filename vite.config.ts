@@ -26,16 +26,24 @@ export default defineConfig({
       ],
     }),
     icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
-    unocss({ presets: [presetUno(), presetIcons()] }),
+    unocss({
+      presets: [presetUno(), presetIcons()],
+      content: {
+        pipeline: {
+          include: [/\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/],
+          exclude: ['dist', 'packages/*/dist'],
+        },
+      },
+    }),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
     !!process.env.BASIC_SSL && basicSsl(),
     !!process.env.BUNDLE_ANALYZER && analyzer({ openAnalyzer: false, analyzerPort: 5173 }),
   ],
   resolve: {
     alias: {
-      'virtual:image-shadow.css': resolve(import.meta.dirname, 'src/index.css?inline'),
-      'virtual:video-shadow.css': resolve(import.meta.dirname, 'src/video/css/index.css?inline'),
-      '@': resolve(import.meta.dirname, 'src'),
+      'virtual:image-shadow.css': resolve(import.meta.dirname, 'packages/image-editor/index.css?inline'),
+      'virtual:video-shadow.css': resolve(import.meta.dirname, 'packages/video-editor/index.css?inline'),
+      '@': resolve(import.meta.dirname, 'packages/shared'),
     },
   },
   esbuild: {
@@ -44,13 +52,15 @@ export default defineConfig({
   },
   base: './',
   build: {
-    minify: true,
+    minify: false,
 
     rollupOptions: {
       input: {
         index: resolve(import.meta.dirname, 'index.html'),
+        imageeditor: resolve(import.meta.dirname, 'image/index.html'),
         etro: resolve(import.meta.dirname, 'etro.html'),
-        videocontext: resolve(import.meta.dirname, 'video/index.html'),
+        videoeditor: resolve(import.meta.dirname, 'video/index.html'),
+        videotrimmer: resolve(import.meta.dirname, 'trim/index.html'),
       },
     },
   },

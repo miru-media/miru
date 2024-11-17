@@ -1,0 +1,25 @@
+{
+  "name": "miru-image-editor",
+  "version": "0.0.0",
+  "packageManager": "pnpm@9.10.0",
+  "type": "module",
+  "main": "dist/image-editor.umd.js",
+  "exports": {
+    ".": {
+      "import": "./dist/image-editor.js",
+      "require": "./dist/image-editor.umd.js"
+    },
+    "./vue2": {
+      "import": "./dist/vue2.js",
+      "require": "./dist/vue2.umd.js"
+    }
+  },
+  "author": "Taye Adeyemi",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "cropperjs": "^1.6.2",
+    "gl-matrix": "^3.4.3",
+    "throttle-debounce": "^5.0.2",
+    "twgl.js": "^5.5.4"
+  }
+}
