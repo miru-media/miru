@@ -113,6 +113,11 @@ const toClassName = (value: unknown): string => {
   return value === false ? '' : String(value ?? '')
 }
 
+const setAttribute = (element: Element, name: string, value: unknown) => {
+  if (value == null) element.removeAttribute(name)
+  else element.setAttribute(name, String(value))
+}
+
 export const h = (type: string | Component | Element, props: ComponentProps): JSX.Element => {
   if (typeof type === 'function') {
     const scope = createEffectScope()
@@ -219,9 +224,9 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
           )
             ? key
             : toKebabCase(key)
-        element.setAttribute(svgKey, String(toValue(value)))
+        setAttribute(element, svgKey, String(toValue(value)))
       } else if (key === 'style' || !(key in element)) {
-        element.setAttribute(key, toValue(value) as string)
+        setAttribute(element, key, toValue(value) as string)
       } else {
         ;(element as any)[key] = toValue(value)
       }

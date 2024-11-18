@@ -8,7 +8,7 @@ import { IconButton } from '../video-editor/components/IconButton'
 import { ToggleButton } from '../video-editor/components/ToggleButton'
 import { formatDuration, formatTime, getVideoInfo } from '../video-editor/utils'
 
-import { getMediaInfo } from './utils'
+import { getMediaInfo, hasRequiredApis } from './utils'
 
 export interface LoadInfo {
   duration: number
@@ -156,7 +156,7 @@ export const VideoTrimmerUI = (props: {
     return source + duration
   })
   const errorMessage = ref('')
-  const unableToDecode = ref(false)
+  const unableToDecode = ref(!hasRequiredApis())
 
   ;['timeupdate', 'seeking'].forEach((type) =>
     useEventListener(media, type, () => (currentTime.value = media.currentTime)),
@@ -200,7 +200,7 @@ export const VideoTrimmerUI = (props: {
 
     media.pause()
     errorMessage.value = ''
-    unableToDecode.value = false
+    unableToDecode.value = !hasRequiredApis()
 
     if (source == null || source === '') {
       clip.value = undefined

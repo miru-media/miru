@@ -1,3 +1,18 @@
+export class Janitor {
+  private _onDispose = new Set<() => void>()
+  isDisposed = false
+
+  add(fn: () => void) {
+    this._onDispose.add(fn)
+  }
+
+  dispose() {
+    this._onDispose.forEach((fn) => fn())
+    this._onDispose.clear()
+    this.isDisposed = true
+  }
+}
+
 export const downloadBlob = (blob: Blob, fileName: string) => {
   const anchor = document.createElement('a')
   const url = URL.createObjectURL(blob)

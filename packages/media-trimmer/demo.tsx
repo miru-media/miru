@@ -14,7 +14,7 @@ const state = ref<TrimState>()
 
 const progress = ref(0)
 const trimmedBlob = ref<Blob>()
-const resultUrl = ref('')
+const resultUrl = ref<string>()
 
 effect((onCleanup) => {
   const blob = trimmedBlob.value
@@ -98,7 +98,13 @@ createEffectScope().run(() => {
           )
         }
       </div>
-      {() => resultUrl.value && <video src={resultUrl} height="200" autoplay="true" controls />}
+      <video
+        src={resultUrl}
+        height="300"
+        autoplay="true"
+        controls
+        class={() => !resultUrl.value && 'hidden'}
+      />
     </div>,
     document.getElementById('app')!,
   )

@@ -4,14 +4,16 @@
   "packageManager": "pnpm@9.10.0",
   "type": "module",
   "main": "dist/image-editor.umd.js",
-  "exports": {
-    ".": {
-      "import": "./dist/image-editor.js",
-      "require": "./dist/image-editor.umd.js"
-    },
-    "./vue2": {
-      "import": "./dist/vue2.js",
-      "require": "./dist/vue2.umd.js"
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/image-editor.js",
+        "require": "./dist/image-editor.umd.js"
+      },
+      "./vue2": {
+        "import": "./dist/vue2.js",
+        "require": "./dist/vue2.umd.js"
+      }
     }
   },
   "author": "Taye Adeyemi",

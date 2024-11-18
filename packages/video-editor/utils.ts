@@ -1,5 +1,5 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from '@/framework/reactivity'
-import { decodeAsyncImageSource, useEventListener } from '@/utils'
+import { decodeAsyncImageSource, promiseWithResolvers, useEventListener } from '@/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
   sourceArrayRef: MaybeRefOrGetter<T[]>,
@@ -93,6 +93,7 @@ export const getVideoInfo = async (source: Blob | string) => {
   const media_: any = media
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   const hasAudio = !!(media_.audioTracks?.length || media_.mozHasAudio || media_.webkitAudioDecodedByteCount)
+
   close()
 
   return {
@@ -101,4 +102,26 @@ export const getVideoInfo = async (source: Blob | string) => {
     width: media.videoWidth,
     height: media.videoHeight,
   }
+}
+
+export const seekAndWait = async (video: HTMLVideoElement, timeS: number, signal: AbortSignal) => {
+  const p = promiseWithResolvers<unknown>()
+
+  const onError = () => p.reject(video.error ?? new Error('Unkown error'))
+  const onAbort = () => p.reject(new Error('Aborted'))
+
+  const stateChangeEvents = ['load', 'canplay', 'seeked']
+  const onReadyStateChange = () => video.readyState >= 2 && p.resolve(undefined)
+
+  stateChangeEvents.forEach((type) => video.addEventListener(type, onReadyStateChange, { once: true }))
+  video.addEventListener('error', onError, { once: true })
+  signal.addEventListener('abort', onAbort, { once: true })
+
+  video.currentTime = timeS
+
+  await p.promise.finally(() => {
+    stateChangeEvents.forEach((type) => video.removeEventListener(type, onReadyStateChange))
+    video.removeEventListener('seeked', onReadyStateChange)
+    signal.removeEventListener('abort', onAbort)
+  })
 }

@@ -136,11 +136,6 @@ export interface MP4BoxFileInfo {
 
 const MP4Box = MP4Box_ as { createFile<S = unknown, E = unknown>(): MP4BoxFile<S, E>; DataStream: any }
 
-export interface DemuxerConfig {
-  info: MP4BoxFileInfo
-  file: MP4BoxFile
-}
-
 export interface DemuxerChunkInfo {
   type: 'key' | 'delta'
   timestamp: number
@@ -155,7 +150,8 @@ interface TrackState {
   track: MP4BoxTrack
   isEnded: boolean
   sampleBytes: number
-  callback: (chunk: EncodedVideoChunk | DemuxerChunkInfo) => unknown
+  onSample: (chunk: EncodedVideoChunk | DemuxerChunkInfo) => unknown
+  onDone?: () => void
   resolve: () => void
   reject: (reason: any) => void
 }
@@ -164,9 +160,14 @@ export class MP4Demuxer {
   #file = MP4Box.createFile<unknown, TrackState>()
   #inputStream?: ReadableStream<Uint8Array>
   #pipePromise?: Promise<void>
+  #trackConfigs: (
+    | { track: MP4BoxVideoTrack; onSample: VideoSampleCallback; onDone?: () => void }
+    | { track: MP4BoxAudioTrack; onSample: AudioSampleCallback; onDone?: () => void }
+  )[] = []
+  #promise?: Promise<void>
 
-  async init(url: string) {
-    const response = await fetch(url)
+  async init(url: string, requestInit?: RequestInit) {
+    const response = await fetch(url, requestInit)
 
     if (!response.ok || !response.body) throw new Error(`Invalid response from "${url}".`)
 
@@ -177,8 +178,8 @@ export class MP4Demuxer {
     this.#inputStream = response.body
     let fileOffset = 0
 
-    return new Promise<DemuxerConfig>((resolve, reject) => {
-      this.#file.onReady = (info: MP4BoxFileInfo) => resolve({ info, file: this.#file })
+    return new Promise<MP4BoxFileInfo>((resolve, reject) => {
+      this.#file.onReady = (info: MP4BoxFileInfo) => resolve(info)
       this.#file.onError = reject
 
       this.#pipePromise = this.#inputStream!.pipeTo(
@@ -234,26 +235,27 @@ export class MP4Demuxer {
     }
   }
 
-  async start(
-    trackConfigs: (
-      | { track: MP4BoxVideoTrack; callback: VideoSampleCallback }
-      | { track: MP4BoxAudioTrack; callback: AudioSampleCallback }
-    )[],
-    _startTime = 0,
-    endTime = trackConfigs.reduce(
+  setExtractionOptions(track: MP4BoxVideoTrack, onSample: VideoSampleCallback, onDone?: () => void): void
+  setExtractionOptions(track: MP4BoxAudioTrack, onSample: AudioSampleCallback, onDone?: () => void): void
+  setExtractionOptions(track: never, onSample: never, onDone?: () => void) {
+    this.#trackConfigs.push({ track, onSample, onDone })
+  }
+
+  start(_startTimeS = 0, endTimeS?: number) {
+    endTimeS ??= this.#trackConfigs.reduce(
       (acc, { track }) => Math.min(acc, track.duration / track.timescale),
       Infinity,
-    ),
-  ) {
+    )
     const extractionPromises: Promise<void>[] = []
 
-    trackConfigs.forEach(({ track, callback }) => {
+    this.#trackConfigs.forEach(({ track, onSample, onDone }) => {
       const { promise, resolve, reject } = promiseWithResolvers()
       extractionPromises.push(promise)
 
       this.#file.setExtractionOptions(track.id, {
         track,
-        callback: callback as TrackState['callback'],
+        onSample: onSample as TrackState['onSample'],
+        onDone,
         sampleBytes: 0,
         isEnded: false,
         resolve,
@@ -273,7 +275,7 @@ export class MP4Demuxer {
 
           state.sampleBytes += data.byteLength
 
-          state.isEnded = timeS >= endTime
+          state.isEnded = timeS >= endTimeS
           if (state.isEnded) break
 
           const chunkInfo: DemuxerChunkInfo = {
@@ -284,7 +286,7 @@ export class MP4Demuxer {
           }
 
           const { track } = state
-          state.callback(track.type === 'video' ? new EncodedVideoChunk(chunkInfo) : chunkInfo)
+          state.onSample(track.type === 'video' ? new EncodedVideoChunk(chunkInfo) : chunkInfo)
         }
 
         const trak = this.#file.getTrackById(track_id)
@@ -296,12 +298,13 @@ export class MP4Demuxer {
       }
 
       if (state.isEnded) {
+        state.onDone?.()
         state.resolve()
         return
       }
     }
 
-    await new Promise<void>((resolve, reject) => {
+    this.#promise = new Promise<void>((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/use-unknown-in-catch-callback-variable
       this.#pipePromise?.catch(reject)
       this.#file.onError = reject
@@ -310,13 +313,15 @@ export class MP4Demuxer {
         .then(() => resolve())
         // eslint-disable-next-line @typescript-eslint/use-unknown-in-catch-callback-variable
         .catch(reject)
-    })
-
-    this.stop()
+    }).finally(this.stop.bind(this))
   }
 
   stop() {
     this.#file.stop()
-    this.#inputStream?.cancel().catch(() => undefined)
+    if (this.#inputStream?.locked === false) this.#inputStream.cancel().catch(() => undefined)
+  }
+
+  flush() {
+    return Promise.resolve(this.#promise)
   }
 }

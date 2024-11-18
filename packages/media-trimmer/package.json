@@ -3,15 +3,19 @@
   "version": "0.0.0",
   "type": "module",
   "main": "dist/media-trimmer.umd.js",
-  "files": ["dist"],
-  "exports": {
-    ".": {
-      "import": "./dist/media-trimmer.js",
-      "require": "./dist/media-trimmer.umd.js"
-    },
-    "./vue2": {
-      "import": "./dist/vue2.js",
-      "require": "./dist/vue2.umd.js"
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/media-trimmer.js",
+        "require": "./dist/media-trimmer.umd.js"
+      },
+      "./vue2": {
+        "import": "./dist/vue2.js",
+        "require": "./dist/vue2.umd.js"
+      }
     }
   },
   "scripts": {

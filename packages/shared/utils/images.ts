@@ -295,21 +295,6 @@ export const drawImage = (context: Context2D, image: SyncImageSource, dx: number
   else context.drawImage(image, dx, dy)
 }
 
-export class Janitor {
-  private _onDispose = new Set<() => void>()
-  isDisposed = false
-
-  add(fn: () => void) {
-    this._onDispose.add(fn)
-  }
-
-  dispose() {
-    this._onDispose.forEach((fn) => fn())
-    this._onDispose.clear()
-    this.isDisposed = true
-  }
-}
-
 export const isSyncSource = (source: ImageSource): source is SyncImageSource => {
   return !(typeof source === 'string' || source instanceof Blob)
 }

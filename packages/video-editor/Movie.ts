@@ -104,7 +104,7 @@ export class Movie {
 
     Object.values(VideoContext.EVENTS).forEach((type) =>
       // eslint-disable-next-line no-console -- WIP
-      this.videoContext.registerCallback(type, () => type !== 'update' && console.log(type)),
+      this.videoContext.registerCallback(type, () => type !== 'update' && console.info(type)),
     )
   }
 

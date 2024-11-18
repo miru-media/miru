@@ -1,8 +1,10 @@
-import { timeout } from '@/utils'
+import { decodeAsyncImageSource, Janitor, promiseWithResolvers, timeout } from '@/utils'
 import { ArrayBufferTarget, Muxer, type MuxerOptions } from 'mp4-muxer'
 
-import { type DemuxerChunkInfo, type MP4BoxAudioTrack, type MP4BoxVideoTrack, MP4Demuxer } from './demuxer'
-import { assertDecoderConfigIsSupported, assertEncoderConfigIsSupported } from './utils'
+import { type DemuxerChunkInfo, type MP4BoxVideoTrack, MP4Demuxer } from './demuxer'
+import { RvfcExtractor } from './RvfcExtractor'
+import { assertHasRequiredApis } from './utils'
+import { VideoDecoderExtractor } from './VideoDecoderExtractor'
 
 export interface TrimOptions {
   /** The time in seconds of the original video to trim from.  */
@@ -11,6 +13,10 @@ export interface TrimOptions {
   end: number
   /** Whether to include the existing audio track in the output. */
   mute?: boolean
+  /** Credentials for fetching and demuxing URL */
+  credentials?: RequestCredentials
+  /** How to handle cross origin URL for RVFC decoder */
+  crossOrigin?: 'anonymous' | 'use-credentials' | null
   /** Callback that will be called with the progress of the trim */
   onProgress?: (
     /** A value between 0 and 1 */
@@ -22,10 +28,12 @@ export interface TrimOptions {
 
 export const trim = async (url: string, options: TrimOptions) => {
   const { onProgress } = options
-  if (!onProgress) return trim_(url, options)
+  const janitor = new Janitor()
+
+  if (!onProgress) return trim_(url, options, janitor).finally(() => janitor.dispose())
 
   let progress = 0
-  let lastProgress = 0
+  let lastProgress = -1
   let rafId = 0
 
   const rafLoop = () => {
@@ -35,31 +43,42 @@ export const trim = async (url: string, options: TrimOptions) => {
   }
   rafLoop()
 
-  return trim_(url, {
-    ...options,
-    onProgress: (value) => (progress = value),
-  }).finally(() => {
+  options = { ...options, onProgress: (value) => (progress = value) }
+
+  return trim_(url, options, janitor).finally(() => {
+    janitor.dispose()
     onProgress(progress)
     cancelAnimationFrame(rafId)
   })
 }
 
-export const trim_ = async (url: string, options: TrimOptions) => {
-  if (typeof VideoDecoder === 'undefined') throw new Error('Missing VideoDecoder support.')
-  if (typeof VideoEncoder === 'undefined') throw new Error('Missing VideoEncoder support.')
+export const trim_ = async (url: string, options: TrimOptions, janitor: Janitor) => {
+  assertHasRequiredApis()
 
+  const abort = new AbortController()
   const demuxer = new MP4Demuxer()
-  const config = await demuxer.init(url)
+  const mp4Info = await demuxer.init(url, { credentials: options.credentials, signal: abort.signal })
 
-  const videoTrack = config.info.videoTracks[0] as MP4BoxVideoTrack | undefined
-  const audioTrack = config.info.audioTracks[0] as MP4BoxAudioTrack | undefined
+  const videoTrack = mp4Info.videoTracks[0] as MP4BoxVideoTrack | undefined
+  const audioTrack = options.mute ? undefined : mp4Info.audioTracks[0]
 
   if (!videoTrack) throw new Error(`File doesn't contain a video track.`)
-  const decoderConfig = demuxer.getConfig(videoTrack)
 
-  await assertDecoderConfigIsSupported(decoderConfig)
+  let videoExtractor
 
-  const withAudio = audioTrack && !options.mute
+  try {
+    videoExtractor = new VideoDecoderExtractor(demuxer, videoTrack, options.start, options.end)
+    await videoExtractor.configure()
+  } catch {
+    const { promise, media, close } = decodeAsyncImageSource(url, options.crossOrigin, true)
+    janitor.add(close)
+    await promise
+
+    const { nb_samples, duration, timescale } = videoTrack
+    const fps = nb_samples / (duration / timescale)
+    videoExtractor = new RvfcExtractor(media, options.start, options.end, fps)
+  }
+
   const { width, height } = videoTrack.video
 
   const muxer = new Muxer({
@@ -70,64 +89,39 @@ export const trim_ = async (url: string, options: TrimOptions) => {
       height,
       rotation: Array.from(videoTrack.matrix).map((n, i) => n / (i % 3 === 2 ? 2 ** 30 : 2 ** 16)) as any,
     },
-    audio: withAudio
-      ? {
-          codec: 'aac',
-          sampleRate: audioTrack.audio.sample_rate,
-          numberOfChannels: audioTrack.audio.channel_count,
-        }
-      : undefined,
+    audio: audioTrack && {
+      codec: 'aac',
+      sampleRate: audioTrack.audio.sample_rate,
+      numberOfChannels: audioTrack.audio.channel_count,
+    },
     fastStart: options.fastStart ?? false,
   })
 
   const startTimeUs = options.start * 1_000_000
   const endTimeUs = options.end * 1_000_000
-  let firstVideoChunkTimestamp = -1
 
-  let decodeError: unknown
-  let encodeError: unknown
+  const encodePromise = promiseWithResolvers()
 
-  const videoDecoder = new VideoDecoder({
-    output(frame) {
-      const { timestamp } = frame
+  videoExtractor.start((frame, trimmedTimestamp) => {
+    if (videoEncoder.state !== 'configured') {
+      frame.close()
+      return
+    }
 
-      if (videoEncoder.state === 'closed') {
-        frame.close()
-        return
-      }
+    if (trimmedTimestamp >= 0) videoEncoder.encode(frame)
 
-      const useFrame = () => {
-        if (firstVideoChunkTimestamp === -1) firstVideoChunkTimestamp = timestamp
-        videoEncoder.encode(frame)
-        frame.close()
-      }
-
-      if (options.start === 0) {
-        useFrame()
-        return
-      }
-
-      if (timestamp < startTimeUs) {
-        frame.close()
-        options.onProgress?.(Math.max(0, timestamp) / endTimeUs)
-        return
-      }
-
-      useFrame()
-    },
-    error(error) {
-      decodeError = error
-    },
-  })
-
-  videoDecoder.configure(decoderConfig)
+    frame.close()
+  }, abort.signal)
 
   const videoEncoder = new VideoEncoder({
     output: (chunk, meta) => {
-      muxer.addVideoChunk(chunk, meta, chunk.timestamp - firstVideoChunkTimestamp)
+      muxer.addVideoChunk(chunk, meta, chunk.timestamp - videoExtractor.firstFrameTimestamp)
       options.onProgress?.(chunk.timestamp / endTimeUs)
     },
-    error: (error) => (encodeError = error),
+    error: (error) => {
+      encodePromise.reject(error)
+      abort.abort(error)
+    },
   })
 
   const MAX_AREA_LEVEL_30 = 1280 * 720
@@ -139,43 +133,40 @@ export const trim_ = async (url: string, options: TrimOptions) => {
     bitrate: 1_000_000,
   }
 
-  await assertEncoderConfigIsSupported(encoderConfig)
-
   videoEncoder.configure(encoderConfig)
 
-  let firstAudioChunkTimestamp = 0
-  const onAudioChunk = (chunk: DemuxerChunkInfo) => {
-    const { timestamp } = chunk
-    if (timestamp < startTimeUs) return
+  if (audioTrack) {
+    let firstAudioChunkTimestamp = -1
 
-    firstAudioChunkTimestamp ||= timestamp
-    muxer.addAudioChunkRaw(
-      new Uint8Array(chunk.data),
-      chunk.type,
-      chunk.timestamp - firstAudioChunkTimestamp,
-      chunk.duration,
+    demuxer.setExtractionOptions(
+      audioTrack,
+      (chunk: DemuxerChunkInfo) => {
+        const { timestamp } = chunk
+        if (timestamp < startTimeUs) return
+        if (firstAudioChunkTimestamp === -1) firstAudioChunkTimestamp = timestamp
+
+        muxer.addAudioChunkRaw(
+          new Uint8Array(chunk.data),
+          chunk.type,
+          timestamp - firstAudioChunkTimestamp,
+          chunk.duration,
+        )
+      },
+      encodePromise.resolve,
     )
   }
 
-  await demuxer.start(
-    [
-      { callback: (chunk: EncodedVideoChunk) => videoDecoder.decode(chunk), track: videoTrack },
-      ...(withAudio ? [{ callback: onAudioChunk, track: audioTrack }] : []),
-    ],
-    options.start,
-    options.end,
-  )
+  janitor.add(() => {
+    demuxer.stop()
+    videoExtractor.stop()
+    if (videoEncoder.state === 'configured') videoEncoder.close()
+  })
 
-  demuxer.stop()
-
-  await timeout(10)
-  if (decodeError != null) throw decodeError as unknown
-  await videoDecoder.flush()
-
-  await timeout(10)
-  if (encodeError != null) throw encodeError as unknown
+  demuxer.start(options.start, options.end)
+  await demuxer.flush()
+  await timeout(500)
+  await videoExtractor.flush()
   await videoEncoder.flush()
-
   muxer.finalize()
   options.onProgress?.(1)
 
