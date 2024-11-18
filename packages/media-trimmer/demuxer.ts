@@ -67,7 +67,39 @@ export interface MP4BoxSample {
     frame_count: number
     compressorname: string
     depth: number
-    avcC: unknown
+    avcC?: {
+      type: 'avcC'
+      size: number
+      hdr_size: number
+      start: number
+      configurationVersion: number
+      AVCProfileIndication: number
+      profile_compatibility: number
+      AVCLevelIndication: number
+      lengthSizeMinusOne: number
+      nb_SPS_nalus: number
+      SPS: {
+        length: number
+        nalu: Uint8Array
+      }[]
+      nb_PPS_nalus: 1
+      PPS: {
+        length: number
+        nalu: Uint8Array
+      }[]
+    }
+    colr?: {
+      type: 'colr'
+      size: number
+      hdr_size: number
+      start: number
+      data: Uint8Array
+      colour_type: string
+      colour_primaries: number
+      transfer_characteristics: number
+      matrix_coefficients: number
+      full_range_flag: number
+    }
   }
 }
 
@@ -141,6 +173,9 @@ export interface DemuxerChunkInfo {
   timestamp: number
   duration: number
   data: ArrayBuffer
+  colorSpace?: VideoColorSpaceInit
+  codedWidth: number
+  codedHeight: number
 }
 
 export type VideoSampleCallback = (chunk: EncodedVideoChunk) => void
@@ -267,10 +302,19 @@ export class MP4Demuxer {
       if (state.isEnded) return
 
       const samplesLength = samples.length
+      const PRIMARIES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<
+        number,
+        VideoColorSpaceInit['primaries']
+      >
+      const TRANFERS = { 1: 'bt709', 13: 'iec61966-2-1' } as Record<number, VideoColorSpaceInit['transfer']>
+      const MATRICES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<
+        number,
+        VideoColorSpaceInit['matrix']
+      >
 
       try {
         for (let i = 0; i < samplesLength; i++) {
-          const { data, is_sync, cts, duration, timescale } = samples[i]
+          const { data, is_sync, cts, duration, timescale, description } = samples[i]
           const timeS = cts / timescale
 
           state.sampleBytes += data.byteLength
@@ -278,14 +322,33 @@ export class MP4Demuxer {
           state.isEnded = timeS >= endTimeS
           if (state.isEnded) break
 
+          const { track } = state
+          let codedWidth = 0
+          let codedHeight = 0
+          let colorSpace: VideoColorSpaceInit | undefined
+
+          if (track.type === 'video') {
+            codedWidth = description.width
+            codedHeight = description.height
+
+            const { colr } = description
+            colorSpace = colr && {
+              primaries: PRIMARIES[colr.colour_primaries],
+              transfer: TRANFERS[colr.transfer_characteristics],
+              matrix: MATRICES[colr.matrix_coefficients],
+            }
+          }
+
           const chunkInfo: DemuxerChunkInfo = {
             data,
             type: is_sync ? ('key' as const) : ('delta' as const),
             timestamp: timeS * 1_000_000,
             duration: (duration * 1_000_000) / timescale,
+            codedWidth,
+            codedHeight,
+            colorSpace,
           }
 
-          const { track } = state
           state.onSample(track.type === 'video' ? new EncodedVideoChunk(chunkInfo) : chunkInfo)
         }
 

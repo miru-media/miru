@@ -15,7 +15,7 @@ try {
   await trim('video.mp4', {
     start: 2, //    start time in seconds
     end: 10, //     end time in seconds
-    mute: false, // exclude the audio track from the output?
+    mute: false, // ignore the audio track?
   })
 } catch (error) {
   alert(error)

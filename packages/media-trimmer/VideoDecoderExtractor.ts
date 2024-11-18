@@ -1,23 +1,21 @@
 import { promiseWithResolvers, timeout } from '@/utils'
 
-import { type MP4BoxVideoTrack, type MP4Demuxer } from './demuxer'
+import { type MP4Demuxer } from './demuxer'
 import { FrameExtractor } from './FrameExtractor'
 import { assertDecoderConfigIsSupported } from './utils'
 
 export class VideoDecoderExtractor extends FrameExtractor {
   rvfcHandle = 0
-  demuxer: MP4Demuxer
   decoder?: VideoDecoder
-  track: MP4BoxVideoTrack
   config!: VideoDecoderConfig
+  demuxer: MP4Demuxer
 
-  constructor(demuxer: MP4Demuxer, track: MP4BoxVideoTrack, startTimeS: number, endTimeS: number) {
-    super(startTimeS, endTimeS)
+  constructor(demuxer: MP4Demuxer, options: FrameExtractor.Options) {
+    super(options)
     this.demuxer = demuxer
-    this.track = track
   }
 
-  async configure() {
+  async init() {
     const config = (this.config = this.demuxer.getConfig(this.track))
     await assertDecoderConfigIsSupported(config)
   }
@@ -30,20 +28,14 @@ export class VideoDecoderExtractor extends FrameExtractor {
 
     const decoder = (this.decoder = new VideoDecoder({
       output(frame) {
-        if (!signal.aborted && frame.timestamp <= endTimeUs) onFrame(frame)
+        if (!signal.aborted && frame.timestamp <= endTimeUs) onFrame(frame, frame.timestamp)
         frame.close()
       },
       error: (error) => p.reject(error),
     }))
 
     decoder.configure(this.config)
-    demuxer.setExtractionOptions(
-      this.track,
-      (chunk) => {
-        decoder.decode(chunk)
-      },
-      p.resolve,
-    )
+    demuxer.setExtractionOptions(this.track, decoder.decode.bind(decoder), p.resolve)
 
     await p.promise
   }

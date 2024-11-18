@@ -1,9 +1,8 @@
-import { IS_LIKE_MAC, IS_SAFARI } from '@/constants'
+import { IS_LIKE_MAC, IS_SAFARI_16 } from '@/constants'
 
 import { MP4Demuxer } from './demuxer'
 
 const hasVideoDecoder = () => typeof VideoDecoder === 'function'
-const hasVideoFrame = () => typeof VideoFrame === 'function'
 const hasVideoEncoder = () => typeof VideoEncoder === 'function'
 const hasRvfc = () =>
   typeof HTMLVideoElement === 'function' &&
@@ -19,15 +18,14 @@ export const hasRequiredApis = () => {
 }
 
 export const assertHasRequiredApis = () => {
-  if (!(hasVideoDecoder() || hasRvfc()))
+  if (!hasVideoDecoder() && !hasRvfc())
     throw new Error('Missing VideoDecoder and requestVideoFrameCallback APIs.')
-  if (!hasVideoFrame()) throw new Error('Missing VideoFrame API.')
   if (!hasVideoEncoder()) throw new Error('Missing VideoEncoder support.')
 }
 
 export const assertDecoderConfigIsSupported = async (config: VideoDecoderConfig) => {
   if (!hasVideoDecoder()) throw new Error('Missing VideoDecoder API.')
-  if (IS_SAFARI && IS_LIKE_MAC) throw new Error(`VideoDecoder doesn't work on Safari.`)
+  if (IS_SAFARI_16 && IS_LIKE_MAC) throw new Error(`VideoEncoder doesn't work on Safari 16.`)
   if (!(await VideoDecoder.isConfigSupported(config)).supported)
     throw new Error(`Decoding config "${config.codec}" is not supported by the user agent.`)
 }
@@ -38,11 +36,12 @@ export const assertEncoderConfigIsSupported = async (config: VideoEncoderConfig)
 
 export const getMediaInfo = async (url: string) => {
   const demuxer = new MP4Demuxer()
+  const abort = new AbortController()
   let info
 
   try {
     try {
-      info = await demuxer.init(url)
+      info = await demuxer.init(url, { signal: abort.signal })
     } catch {
       throw new Error(
         `The media can't be decoded for trimming (${JSON.stringify(info?.videoTracks[0]?.codec ?? 'not an mp4')}).`,
@@ -53,6 +52,7 @@ export const getMediaInfo = async (url: string) => {
     demuxer.getConfig(info.videoTracks[0])
   } finally {
     demuxer.stop()
+    abort.abort()
   }
 
   const duration = info.duration / info.timescale

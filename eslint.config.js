@@ -39,6 +39,7 @@ export default tseslint.config(
         { ignoreArrowShorthand: true, ignoreVoidOperator: true },
       ],
       '@typescript-eslint/no-non-null-assertion': 'warn',
+      "@typescript-eslint/no-namespace": "off",
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
         {
