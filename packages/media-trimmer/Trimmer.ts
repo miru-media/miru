@@ -1,4 +1,4 @@
-import { IS_LIKE_MAC, IS_SAFARI } from '@/constants'
+import { IS_LIKE_MAC, IS_SAFARI } from '@/userAgent'
 import { Janitor, promiseWithResolvers } from '@/utils'
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
 
@@ -12,7 +12,7 @@ import {
 import { type FrameExtractor } from './FrameExtractor'
 import { RvfcExtractor } from './RvfcExtractor'
 import { type TrimOptions } from './trim'
-import { assertHasRequiredApis } from './utils'
+import { assertEncoderConfigIsSupported, assertHasRequiredApis } from './utils'
 import { VideoDecoderExtractor } from './VideoDecoderExtractor'
 
 type MuxerRotation = [number, number, number, number, number, number, number, number, number]
@@ -38,6 +38,7 @@ export class Trimmer {
   async trim() {
     const { onProgress } = this.options
     onProgress?.(0)
+    this.janitor?.dispose()
     const blob = await this._trim().finally(this.dispose.bind(this))
     onProgress?.(1)
     return blob
@@ -77,7 +78,7 @@ export class Trimmer {
       fastStart: options.fastStart ?? false,
     })
 
-    const videoEncoder = this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error))
+    const videoEncoder = await this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error))
 
     frameExtractor.start((frame, trimmedTimestamp) => {
       if (videoEncoder.state !== 'configured' || trimmedTimestamp < 0) return
@@ -155,7 +156,7 @@ export class Trimmer {
     return extractor
   }
 
-  createVideoEncoder(extractor: FrameExtractor, muxer: Muxer<any>, onError: (error: unknown) => void) {
+  async createVideoEncoder(extractor: FrameExtractor, muxer: Muxer<any>, onError: (error: unknown) => void) {
     const { options } = this
     const endTimeUs = options.end * 1_000_000
     const { width, height } = extractor.track.video
@@ -165,7 +166,15 @@ export class Trimmer {
       bitrate = 1e6,
     } = options.encoderConfig ?? {}
 
-    const config: VideoEncoderConfig = { codec, width, height, framerate: extractor.fps, bitrate }
+    const config: VideoEncoderConfig = {
+      codec,
+      width,
+      height,
+      bitrate,
+      framerate: extractor.fps,
+    }
+
+    await assertEncoderConfigIsSupported(config)
 
     const encoder = new VideoEncoder({
       output: (chunk, meta) => {

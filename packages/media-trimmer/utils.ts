@@ -1,4 +1,4 @@
-import { IS_LIKE_MAC, IS_SAFARI_16 } from '@/constants'
+import { IS_LIKE_MAC, IS_SAFARI_16, IS_SAFARI_17 } from '@/userAgent'
 
 import { MP4Demuxer } from './demuxer'
 
@@ -18,6 +18,9 @@ export const hasRequiredApis = () => {
 }
 
 export const assertHasRequiredApis = () => {
+  if ((IS_SAFARI_16 || IS_SAFARI_17) && IS_LIKE_MAC)
+    throw new Error(`VideoEncoder doesn't work on Safari <= 17.`)
+
   if (!hasVideoDecoder() && !hasRvfc())
     throw new Error('Missing VideoDecoder and requestVideoFrameCallback APIs.')
   if (!hasVideoEncoder()) throw new Error('Missing VideoEncoder support.')

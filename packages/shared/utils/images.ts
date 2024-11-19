@@ -1,4 +1,3 @@
-import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../constants'
 import {
   type AdjustmentsState,
   type AssetType,
@@ -15,6 +14,7 @@ import {
   type Tlwh,
   type Xywh,
 } from '../types'
+import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent'
 
 import { devSlowDown } from './general'
 
@@ -206,9 +206,9 @@ const decodeVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
           reject(new Error('aborted'))
           removeListeners()
         }
-        const onError = (error: ErrorEvent) => {
+        const onError = (event: ErrorEvent) => {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(error)
+          reject(video.error ?? event.error ?? new Error('Unknown video error.'))
           removeListeners()
         }
 
