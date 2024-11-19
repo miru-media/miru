@@ -22,29 +22,33 @@ export class RvfcExtractor extends FrameExtractor {
     await promise
   }
 
-  async _start(onFrame: FrameExtractor.OnFrame, signal: AbortSignal, janitor: Janitor) {
+  async _start(signal: AbortSignal, janitor: Janitor) {
+    janitor.add(() => {
+      video.cancelVideoFrameCallback(this.rvfcHandle)
+      this.closeVideo?.()
+    })
+
     const { video, startTimeS } = this
-    const startTimeUs = startTimeS * 1e6
-    const endTimeUs = Math.min(this.endTimeS, video.duration) * 1e6
+    const endTimeS = Math.min(this.endTimeS, video.duration)
     const p = promiseWithResolvers()
     const { frameDurationS } = this
 
     let nextTime = startTimeS
-    let prevTimestamp = -Infinity
+    let previousTimeS = -1
 
-    const rvfcTimeoutMs = frameDurationS * 2
+    const rvfcTimeoutMs = 500
     const queueForceAdvance = debounce(rvfcTimeoutMs, () => {
       if (video.ended) {
         p.resolve()
         return
       }
       if (video.readyState < 2) return
-      video.currentTime = nextTime += frameDurationS / 2
+      video.currentTime = nextTime += frameDurationS * 0.25
     })
     janitor.add(queueForceAdvance.cancel)
 
     const advance = () => {
-      nextTime += frameDurationS
+      nextTime += frameDurationS * (0.999)
       video.currentTime = nextTime
       this.rvfcHandle = video.requestVideoFrameCallback(rvfcLoop)
       queueForceAdvance()
@@ -58,31 +62,41 @@ export class RvfcExtractor extends FrameExtractor {
         return
       }
 
-      const frame = new VideoFrame(video)
-      const timestamp = video.currentTime * 1e6
+      const { currentTime } = video
+      const currentTimesUs = Math.trunc(currentTime * 1e6)
+      const isAtEndTime = currentTime >= endTimeS
 
-      if (prevTimestamp !== -Infinity && timestamp - prevTimestamp > frameDurationS * 1.5 * 1e6)
+      if (previousTimeS !== -1 && currentTime - previousTimeS > frameDurationS * 1.5)
         // eslint-disable-next-line no-console
-        console.warn('[media-trimmer] Skipped a frame before', timestamp)
+        console.warn('[media-trimmer] Skipped a frame before', currentTime)
 
-      if (timestamp >= startTimeUs && timestamp !== prevTimestamp) onFrame(frame, timestamp)
-      frame.close()
+      if (
+        currentTime >= startTimeS &&
+        currentTime !== previousTimeS &&
+        (!isAtEndTime || this.firstFrameTimeUs === currentTimesUs)
+      ) {
+        // const frame = new VideoFrame(video, { timestamp: currentTimesUs, duration: frameDurationS })
+        this.onImage!(video, currentTimesUs)
+        // frame.close()
+      }
 
-      prevTimestamp = timestamp
-      nextTime = timestamp / 1e6
+      previousTimeS = currentTime
+      // will be increased by advance()
+      nextTime = currentTime
 
-      if (timestamp >= endTimeUs || video.ended) p.resolve()
+      if (isAtEndTime || video.ended) p.resolve()
       else advance()
     }
 
     await seekAndWait(video, Math.max(0, startTimeS - frameDurationS), signal)
     if (janitor.isDisposed) return
 
-    janitor.add(() => {
-      video.cancelVideoFrameCallback(this.rvfcHandle)
-    })
     rvfcLoop()
 
     await p.promise
+  }
+
+  flush() {
+    return super.flush().finally(() => this.closeVideo?.())
   }
 }

@@ -80,14 +80,8 @@ export class Trimmer {
     const videoEncoder = this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error))
 
     frameExtractor.start((frame, trimmedTimestamp) => {
-      if (videoEncoder.state !== 'configured') {
-        frame.close()
-        return
-      }
-
-      if (trimmedTimestamp >= 0) videoEncoder.encode(frame)
-
-      frame.close()
+      if (videoEncoder.state !== 'configured' || trimmedTimestamp < 0) return
+      videoEncoder.encode(frame)
     }, abort.signal)
 
     const audioRemuxPromise = promiseWithResolvers()
@@ -175,7 +169,7 @@ export class Trimmer {
 
     const encoder = new VideoEncoder({
       output: (chunk, meta) => {
-        muxer.addVideoChunk(chunk, meta, chunk.timestamp - extractor.firstFrameTimestamp)
+        muxer.addVideoChunk(chunk, meta, chunk.timestamp - extractor.firstFrameTimeUs)
         options.onProgress?.(chunk.timestamp / endTimeUs)
       },
       error: (error) => {

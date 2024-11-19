@@ -12,6 +12,12 @@ export namespace FrameExtractor {
   }
 }
 
+const getImageSize = (image: VideoFrame | HTMLVideoElement | OffscreenCanvas | HTMLCanvasElement) => {
+  if ('codedWidth' in image) return { width: image.codedWidth, height: image.codedHeight }
+  if ('videoWidth' in image) return { width: image.videoWidth, height: image.videoHeight }
+  return image
+}
+
 export abstract class FrameExtractor {
   private abort: AbortController | undefined
   private promise?: Promise<void>
@@ -24,7 +30,7 @@ export abstract class FrameExtractor {
   fps: number
   frameDurationS: number
 
-  firstFrameTimestamp = -1
+  firstFrameTimeUs = -1
 
   constructor(options: FrameExtractor.Options) {
     this.track = options.track
@@ -50,17 +56,17 @@ export abstract class FrameExtractor {
     const { width, height } = this.track.video
     const trackIsLandscape = width > height
 
-    const onFrame_: FrameExtractor.OnFrame = (image, sourceTimestamp: number) => {
-      if (this.firstFrameTimestamp === -1 && sourceTimestamp >= startTimeUs)
-        this.firstFrameTimestamp = sourceTimestamp
-      const { firstFrameTimestamp } = this
-      const trimmedTimestamp = firstFrameTimestamp === -1 ? -1 : sourceTimestamp - firstFrameTimestamp
+    this.onImage = function (image, sourceTimeUs: number) {
+      if (this.firstFrameTimeUs === -1 && sourceTimeUs >= startTimeUs) this.firstFrameTimeUs = sourceTimeUs
 
-      const frameOpions = { timestamp: trimmedTimestamp, duration }
+      const { firstFrameTimeUs: firstFrameTimeUs } = this
+      const trimmedTimeUs = firstFrameTimeUs === -1 ? -1 : sourceTimeUs - firstFrameTimeUs
+
+      const frameOpions = { timestamp: sourceTimeUs, duration }
       let frame
 
       if (this.has90DegreeRotation) {
-        const size = 'codedWidth' in image ? { width: image.codedWidth, height: image.codedHeight } : image
+        const size = getImageSize(image)
         const imageIsLandscape = size.width > size.height
         const hasDifferentOrientation = trackIsLandscape !== imageIsLandscape
 
@@ -71,23 +77,21 @@ export abstract class FrameExtractor {
         else frame = new VideoFrame(image, frameOpions)
       }
 
-      onFrame(frame, trimmedTimestamp)
+      onFrame(frame, trimmedTimeUs)
       if (frame !== image) frame.close()
     }
 
-    this.promise = this._start(onFrame_, this.abort.signal, janitor).finally(() => {
+    this.promise = this._start(this.abort.signal, janitor).finally(() => {
       signal?.removeEventListener('abort', forwardAbort)
       janitor.dispose()
     })
   }
 
-  protected abstract _start(
-    onFrame: FrameExtractor.OnFrame,
-    signal: AbortSignal,
-    janitor: Janitor,
-  ): Promise<void>
+  protected abstract _start(signal: AbortSignal, janitor: Janitor): Promise<void>
 
-  rotate(image: VideoFrame | ImageBitmap, size: { width: number; height: number }, angle: number) {
+  onImage?: (image: VideoFrame | HTMLVideoElement, sourceTimeUs: number) => void
+
+  rotate(image: VideoFrame | HTMLVideoElement, size: { width: number; height: number }, angle: number) {
     const { context } = this
     const { canvas } = context
 
@@ -104,7 +108,7 @@ export abstract class FrameExtractor {
   }
 
   flush() {
-    return Promise.resolve(this.promise)
+    return Promise.resolve(this.promise).finally(() => (this.onImage = undefined))
   }
 
   stop() {

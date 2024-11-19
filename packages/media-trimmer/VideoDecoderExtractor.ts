@@ -20,15 +20,17 @@ export class VideoDecoderExtractor extends FrameExtractor {
     await assertDecoderConfigIsSupported(config)
   }
 
-  protected async _start(onFrame: FrameExtractor.OnFrame, signal: AbortSignal) {
+  protected async _start(signal: AbortSignal) {
     const { demuxer } = this
 
     const endTimeUs = this.endTimeS * 1e6
     const p = promiseWithResolvers()
 
     const decoder = (this.decoder = new VideoDecoder({
-      output(frame) {
-        if (!signal.aborted && frame.timestamp <= endTimeUs) onFrame(frame, frame.timestamp)
+      output: (frame) => {
+        if (!signal.aborted && frame.timestamp <= endTimeUs) {
+          this.onImage!(frame, frame.timestamp)
+        }
         frame.close()
       },
       error: (error) => p.reject(error),
@@ -38,6 +40,7 @@ export class VideoDecoderExtractor extends FrameExtractor {
     demuxer.setExtractionOptions(this.track, decoder.decode.bind(decoder), p.resolve)
 
     await p.promise
+    await decoder.flush()
   }
 
   async flush() {
