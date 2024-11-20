@@ -1,4 +1,4 @@
-import { type EffectOpType } from '../renderer/constants'
+import { type EffectOpType } from 'renderer/constants'
 
 export type SyncImageSource =
   | HTMLImageElement

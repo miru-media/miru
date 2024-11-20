@@ -1,6 +1,5 @@
 import { createEffectScope, type EffectScope, onScopeDispose, ref, type Ref } from '@/framework/reactivity'
-
-import { renderComponentTo } from '../video-editor/components/renderTo'
+import { renderComponentTo } from 'miru-video-editor/components/renderTo'
 
 import { type TrimState, VideoTrimmerUI } from './VideoTrimmerUI'
 
@@ -67,4 +66,4 @@ export const MediaTrimmer = {
   },
 }
 
-export * from './index'
+export * from './trim'

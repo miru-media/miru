@@ -1,11 +1,9 @@
-import Stats from 'stats.js'
-import VideoContext from 'videocontext'
-
 import { computed, createEffectScope, effect, type Ref, ref, watch } from '@/framework/reactivity'
 import { type Size } from '@/types'
 import { getWebgl2Context, setObjectSize } from '@/utils'
-
-import { Renderer } from '../renderer/Renderer'
+import { Renderer } from 'renderer/Renderer'
+import Stats from 'stats.js'
+import VideoContext from 'videocontext'
 
 import { Track } from './Track'
 
@@ -17,7 +15,6 @@ export const enum VideoContextState {
   BROKEN = 4,
 }
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Movie {
   export interface Init {
     tracks: Track.Init[]

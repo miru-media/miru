@@ -1,11 +1,9 @@
-import VideoContext, { type TransitionNode } from 'videocontext'
-
 import { effect, ref, type Ref, watch } from '@/framework/reactivity'
 import { type Effect } from '@/types'
 import { useEventListener } from '@/utils'
-
-import { EffectInternal } from '../reactive-effects/Effect'
-import { type Renderer } from '../renderer/Renderer'
+import { EffectInternal } from 'reactive-effects/Effect'
+import { type Renderer } from 'renderer/Renderer'
+import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { BaseClip } from './BaseClip'
 import { MiruVideoNode } from './custom'
@@ -21,7 +19,7 @@ export enum SourceNodeState {
 }
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
-// eslint-disable-next-line @typescript-eslint/no-namespace
+
 export namespace Clip {
   export interface Init extends BaseClip.Init {
     filter?: Effect

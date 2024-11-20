@@ -34,9 +34,8 @@ import {
   useElementSize,
   win,
 } from '@/utils'
-
-import { type EffectInternal } from '../reactive-effects/Effect'
-import { type Renderer } from '../renderer/Renderer'
+import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Renderer } from 'renderer/Renderer'
 
 import { DEFAULT_INTENSITY } from './constants'
 

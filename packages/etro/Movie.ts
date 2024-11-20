@@ -1,13 +1,11 @@
-import etro from 'etro'
-import Stats from 'stats.js'
-
 import { computed, createEffectScope, effect, type Ref, ref } from '@/framework/reactivity'
 import { type Size } from '@/types'
 import { getWebgl2Context } from '@/utils'
-
-import { EffectInternal } from '../reactive-effects/Effect'
-import { Renderer } from '../renderer/Renderer'
-import { getDefaultFilters } from '../image-editor/defaultFilters'
+import etro from 'etro'
+import { getDefaultFilters } from 'miru-image-editor/defaultFilters'
+import { EffectInternal } from 'reactive-effects/Effect'
+import { Renderer } from 'renderer/Renderer'
+import Stats from 'stats.js'
 
 import { Clip } from './Clip'
 import { useMappedUniqueArray } from './utils'

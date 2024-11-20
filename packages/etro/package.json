@@ -1,0 +1,17 @@
+{
+  "name": "etro-editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "author": "Taye Adeyemi",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "etro": "^0.12.1",
+    "filesize": "catalog:",
+    "miru-image-editor": "workspace:",
+    "reactive-effects": "workspace:",
+    "renderer": "workspace:",
+    "shared": "workspace:",
+    "stats.js": "catalog:"
+  }
+}

@@ -1,7 +1,6 @@
 import { decodeAsyncImageSource, type Janitor, promiseWithResolvers } from '@/utils'
+import { seekAndWait } from 'miru-video-editor/utils'
 import { debounce } from 'throttle-debounce'
-
-import { seekAndWait } from '../video-editor/utils'
 
 import { FrameExtractor } from './FrameExtractor'
 
@@ -48,7 +47,7 @@ export class RvfcExtractor extends FrameExtractor {
     janitor.add(queueForceAdvance.cancel)
 
     const advance = () => {
-      nextTime += frameDurationS * (0.999)
+      nextTime += frameDurationS * 0.999
       video.currentTime = nextTime
       this.rvfcHandle = video.requestVideoFrameCallback(rvfcLoop)
       queueForceAdvance()

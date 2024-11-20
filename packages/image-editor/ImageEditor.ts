@@ -8,9 +8,8 @@ import {
   watch,
 } from '@/framework/reactivity'
 import { type Context2D, type Effect, type ImageEditState, type ImageSourceOption } from '@/types'
-
-import { EffectInternal } from '../reactive-effects/Effect'
-import { Renderer } from '../renderer/Renderer'
+import { EffectInternal } from 'reactive-effects/Effect'
+import { Renderer } from 'renderer/Renderer'
 
 import { ImageSourceInternal } from './ImageSourceInternal'
 

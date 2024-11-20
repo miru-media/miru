@@ -1,4 +1,3 @@
-
 import {
   computed,
   effect,
@@ -11,9 +10,9 @@ import {
 } from '@/framework/reactivity'
 import { type DisplayContext, type InputEvent } from '@/types'
 import { createDisplayContext, getCenter, useElementSize } from '@/utils'
+import { EffectInternal } from 'reactive-effects/Effect'
 import { throttle } from 'throttle-debounce'
 
-import { EffectInternal } from '../../reactive-effects/Effect'
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants'
 import { type ImageEditor } from '../ImageEditor'
 import { type ImageSourceInternal } from '../ImageSourceInternal'

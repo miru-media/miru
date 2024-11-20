@@ -1,14 +1,12 @@
+import { h } from '@/framework/jsx-runtime'
+import { ref } from '@/framework/reactivity'
+import { type InputEvent } from '@/types'
 import { filesize } from 'filesize'
 /* eslint-disable import/no-unresolved */
 import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/BigBuckBunnyVideo.mp4'
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
 /* eslint-enable import/no-unresolved */
-
-import { h } from '@/framework/jsx-runtime'
-import { ref } from '@/framework/reactivity'
-import { type InputEvent } from '@/types'
-
-import { getDefaultFilters } from '../image-editor/defaultFilters'
+import { getDefaultFilters } from 'miru-image-editor/defaultFilters'
 
 import * as Actions from './components/Actions'
 import { PlaybackControls } from './components/PlaybackControls'

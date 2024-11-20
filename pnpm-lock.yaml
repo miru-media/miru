@@ -4,6 +4,24 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    filesize:
+      specifier: ^10.1.6
+      version: 10.1.6
+    gl-matrix:
+      specifier: ^3.4.3
+      version: 3.4.3
+    stats.js:
+      specifier: ^0.17.0
+      version: 0.17.0
+    throttle-debounce:
+      specifier: ^5.0.2
+      version: 5.0.2
+    twgl.js:
+      specifier: ^5.5.4
+      version: 5.5.4
+
 patchedDependencies:
   glsl-tokenizer:
     hash: zmua56ll3nsogq7n7h7yfzgwo4
@@ -12,64 +30,6 @@ patchedDependencies:
 importers:
 
   .:
-    dependencies:
-      '@interactjs/actions':
-        specifier: ^1.10.27
-        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
-      '@interactjs/auto-start':
-        specifier: ^1.10.27
-        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
-      '@interactjs/core':
-        specifier: ^1.10.27
-        version: 1.10.27(@interactjs/utils@1.10.27)
-      '@interactjs/interact':
-        specifier: ^1.10.27
-        version: 1.10.27
-      '@interactjs/modifiers':
-        specifier: ^1.10.27
-        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
-      '@reactively/core':
-        specifier: ^0.0.8
-        version: 0.0.8
-      cropperjs:
-        specifier: ^1.6.2
-        version: 1.6.2
-      etro:
-        specifier: ^0.12.1
-        version: 0.12.1
-      gl-matrix:
-        specifier: ^3.4.3
-        version: 3.4.3
-      glsl-blend:
-        specifier: ^1.0.3
-        version: 1.0.3
-      glsl-film-grain:
-        specifier: ^1.0.4
-        version: 1.0.4
-      glsl-luma:
-        specifier: ^1.0.1
-        version: 1.0.1
-      glsl-noise:
-        specifier: ^0.0.0
-        version: 0.0.0
-      glsl-vignette:
-        specifier: ^1.1.0
-        version: 1.1.0
-      mp4-muxer:
-        specifier: ^5.1.3
-        version: 5.1.3
-      mp4box:
-        specifier: ^0.5.3
-        version: 0.5.3
-      throttle-debounce:
-        specifier: ^5.0.2
-        version: 5.0.2
-      twgl.js:
-        specifier: ^5.5.4
-        version: 5.5.4
-      videocontext:
-        specifier: ^0.54.0
-        version: 0.54.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.13.0
@@ -201,7 +161,7 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2(postcss@8.4.47)
       stats.js:
-        specifier: ^0.17.0
+        specifier: 'catalog:'
         version: 0.17.0
       stylelint:
         specifier: ^16.10.0
@@ -245,6 +205,171 @@ importers:
       vite-plugin-remote-assets:
         specifier: ^0.5.0
         version: 0.5.0(vite@5.4.9(@types/node@22.7.7)(terser@5.36.0))
+
+  packages/etro:
+    dependencies:
+      etro:
+        specifier: ^0.12.1
+        version: 0.12.1
+      filesize:
+        specifier: 'catalog:'
+        version: 10.1.6
+      miru-image-editor:
+        specifier: 'workspace:'
+        version: link:../image-editor
+      reactive-effects:
+        specifier: 'workspace:'
+        version: link:../reactive-effects
+      renderer:
+        specifier: 'workspace:'
+        version: link:../renderer
+      shared:
+        specifier: 'workspace:'
+        version: link:../shared
+      stats.js:
+        specifier: 'catalog:'
+        version: 0.17.0
+
+  packages/image-editor:
+    dependencies:
+      cropperjs:
+        specifier: ^1.6.2
+        version: 1.6.2
+      gl-matrix:
+        specifier: 'catalog:'
+        version: 3.4.3
+      throttle-debounce:
+        specifier: 'catalog:'
+        version: 5.0.2
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
+    devDependencies:
+      reactive-effects:
+        specifier: 'workspace:'
+        version: link:../reactive-effects
+      renderer:
+        specifier: 'workspace:'
+        version: link:../renderer
+      shared:
+        specifier: 'workspace:'
+        version: link:../shared
+
+  packages/media-trimmer:
+    dependencies:
+      mp4-muxer:
+        specifier: ^5.1.3
+        version: 5.1.3
+      mp4box:
+        specifier: ^0.5.3
+        version: 0.5.3
+    devDependencies:
+      miru-video-editor:
+        specifier: 'workspace:'
+        version: link:../video-editor
+      shared:
+        specifier: 'workspace:'
+        version: link:../shared
+      throttle-debounce:
+        specifier: 'catalog:'
+        version: 5.0.2
+
+  packages/reactive-effects:
+    dependencies:
+      renderer:
+        specifier: 'workspace:'
+        version: link:../renderer
+      shared:
+        specifier: 'workspace:'
+        version: link:../shared
+
+  packages/renderer:
+    dependencies:
+      gl-matrix:
+        specifier: 'catalog:'
+        version: 3.4.3
+      glsl-blend:
+        specifier: ^1.0.3
+        version: 1.0.3
+      glsl-film-grain:
+        specifier: ^1.0.4
+        version: 1.0.4
+      glsl-luma:
+        specifier: ^1.0.1
+        version: 1.0.1
+      glsl-noise:
+        specifier: ^0.0.0
+        version: 0.0.0
+      glsl-vignette:
+        specifier: ^1.1.0
+        version: 1.1.0
+      shared:
+        specifier: 'workspace:'
+        version: link:../shared
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
+
+  packages/shared:
+    dependencies:
+      '@reactively/core':
+        specifier: ^0.0.8
+        version: 0.0.8
+      renderer:
+        specifier: 'workspace:'
+        version: link:../renderer
+      throttle-debounce:
+        specifier: 'catalog:'
+        version: 5.0.2
+
+  packages/video-editor:
+    dependencies:
+      '@interactjs/actions':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      '@interactjs/auto-start':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      '@interactjs/core':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/utils@1.10.27)
+      '@interactjs/interact':
+        specifier: ^1.10.27
+        version: 1.10.27
+      '@interactjs/modifiers':
+        specifier: ^1.10.27
+        version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      filesize:
+        specifier: 'catalog:'
+        version: 10.1.6
+      gl-matrix:
+        specifier: 'catalog:'
+        version: 3.4.3
+      stats.js:
+        specifier: 'catalog:'
+        version: 0.17.0
+      throttle-debounce:
+        specifier: 'catalog:'
+        version: 5.0.2
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
+      videocontext:
+        specifier: ^0.54.0
+        version: 0.54.0
+    devDependencies:
+      miru-image-editor:
+        specifier: 'workspace:'
+        version: link:../image-editor
+      reactive-effects:
+        specifier: 'workspace:'
+        version: link:../reactive-effects
+      renderer:
+        specifier: 'workspace:'
+        version: link:../renderer
+      shared:
+        specifier: 'workspace:'
+        version: link:../shared
 
 packages:
 

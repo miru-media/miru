@@ -39,7 +39,7 @@ export default tseslint.config(
         { ignoreArrowShorthand: true, ignoreVoidOperator: true },
       ],
       '@typescript-eslint/no-non-null-assertion': 'warn',
-      "@typescript-eslint/no-namespace": "off",
+      '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
         {
@@ -62,6 +62,8 @@ export default tseslint.config(
         },
       ],
       'import/no-cycle': 'error',
+      'import/no-extraneous-dependencies': 'error',
+      'import/no-relative-packages': 'error',
       'import/no-useless-path-segments': 'error',
       'no-undef': 'off',
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],

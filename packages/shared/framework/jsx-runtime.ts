@@ -19,7 +19,7 @@ import { SVG_TYPES } from './svgTypes'
 type NativeElement = Element
 declare global {
   /** @internal */
-  /* eslint-disable-next-line @typescript-eslint/no-namespace */
+
   export namespace JSX {
     type IntrinsicElements = Record<string, unknown>
 

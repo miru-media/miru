@@ -5,7 +5,6 @@ import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from '@/u
 import { TRANSITION_DURATION_S } from './constants'
 import { useMediaError, useMediaReadyState } from './utils'
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace BaseClip {
   export interface Init {
     sourceStart: number

@@ -1,9 +1,8 @@
 import { createEffectScope, ref } from '@/framework/reactivity'
+import { renderComponentTo } from 'miru-video-editor/components/renderTo'
 
-import { renderComponentTo } from '../video-editor/components/renderTo'
-
-import { trim } from './trim'
-import { type TrimState, VideoTrimmerUI } from './VideoTrimmerUI'
+import { trim } from '../trim'
+import { type TrimState, VideoTrimmerUI } from '../VideoTrimmerUI'
 
 const OBSERVED_ATTRS = ['source', 'start', 'end', 'mute'] as const
 

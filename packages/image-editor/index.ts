@@ -1,10 +1,6 @@
-
 import { ImageEditorElement } from './customElements/ImageEditorElement'
-import {
-  ImageEditorFilterMenuElement,
-  ImageEditorPreviewElement,
-} from './customElements/wrapper'
-export { EffectOpType } from '../renderer/constants'
+import { ImageEditorFilterMenuElement, ImageEditorPreviewElement } from './customElements/wrapper'
+export { EffectOpType } from 'renderer/constants'
 
 if (typeof customElements !== 'undefined' && 'define' in customElements) {
   customElements.define('image-editor', ImageEditorElement)

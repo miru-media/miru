@@ -1,0 +1,11 @@
+packages:
+  - 'packages/*'
+
+catalog:
+  filesize: '^10.1.6'
+  gl-matrix: '^3.4.3'
+  mp4-muxer: '^5.1.3'
+  mp4box: '^0.5.3'
+  stats.js: '^0.17.0'
+  throttle-debounce: '^5.0.2'
+  twgl.js: '^5.5.4'

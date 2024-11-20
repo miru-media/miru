@@ -1,13 +1,11 @@
 import { createEffectScope, effect, onScopeDispose, ref, type Ref, watch } from '@/framework/reactivity'
 import { AssetType, type ImageSourceOption } from '@/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from '@/utils'
-
-import { type EffectInternal } from '../reactive-effects/Effect'
-import { type Renderer } from '../renderer/Renderer'
+import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Renderer } from 'renderer/Renderer'
 
 import { EtroVideo } from './EtroVideo'
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Clip {
   export interface Init {
     time: ClipTime

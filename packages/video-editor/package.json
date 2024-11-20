@@ -1,17 +1,18 @@
 {
-  "name": "miru-image-editor",
+  "name": "miru-video-editor",
   "version": "0.0.0",
+  "private": true,
   "type": "module",
-  "module": "dist/image-editor.js",
-  "main": "dist/image-editor.umd.js",
+  "module": "dist/video-editor.js",
+  "main": "dist/video-editor.umd.js",
   "files": [
     "dist"
   ],
   "publishConfig": {
     "exports": {
       ".": {
-        "import": "./dist/image-editor.js",
-        "require": "./dist/image-editor.umd.js"
+        "import": "./dist/video-editor.js",
+        "require": "./dist/video-editor.umd.js"
       },
       "./vue2": {
         "import": "./dist/vue2.js",
@@ -24,15 +25,23 @@
   "repository": {
     "type": "git",
     "url": "https://gitea.com/miru/miru.git",
-    "directory": "packages/image-editor"
+    "directory": "packages/video-editor"
   },
   "dependencies": {
-    "cropperjs": "^1.6.2",
+    "@interactjs/actions": "^1.10.27",
+    "@interactjs/auto-start": "^1.10.27",
+    "@interactjs/core": "^1.10.27",
+    "@interactjs/interact": "^1.10.27",
+    "@interactjs/modifiers": "^1.10.27",
+    "filesize": "catalog:",
     "gl-matrix": "catalog:",
+    "stats.js": "catalog:",
     "throttle-debounce": "catalog:",
-    "twgl.js": "catalog:"
+    "twgl.js": "catalog:",
+    "videocontext": "^0.54.0"
   },
   "devDependencies": {
+    "miru-image-editor": "workspace:",
     "reactive-effects": "workspace:",
     "renderer": "workspace:",
     "shared": "workspace:"

@@ -1,10 +1,8 @@
-import etro from 'etro'
-
 import { type Ref, ref } from '@/framework/reactivity'
 import { type AdjustmentsState } from '@/types'
-
-import { type EffectInternal } from '../reactive-effects/Effect'
-import { type Renderer } from '../renderer/Renderer'
+import etro from 'etro'
+import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Renderer } from 'renderer/Renderer'
 
 import { type EtroVideo } from './EtroVideo'
 

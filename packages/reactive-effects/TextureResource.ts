@@ -1,9 +1,8 @@
 import { ref } from '@/framework/reactivity'
 import { AssetType, type ImageSourceObject, type SyncImageSource } from '@/types'
 import { decodeAsyncImageSource, devSlowDown, getImageData, isSyncSource, Janitor } from '@/utils'
-
-import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from '../renderer/constants'
-import { type Renderer } from '../renderer/Renderer'
+import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from 'renderer/constants'
+import { type Renderer } from 'renderer/Renderer'
 
 export class TextureResource {
   canvas?: HTMLCanvasElement

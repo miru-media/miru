@@ -37,8 +37,7 @@ import Toon_Shadow from '@/assets/luts/06_Crushed/Toon_Shadow.jpg'
 import Toon_Sketch from '@/assets/luts/06_Crushed/Toon_Sketch.jpg'
 import Violent_Violet from '@/assets/luts/06_Crushed/Violent_Violet.jpg'
 import { AssetType, type Effect } from '@/types'
-
-import { EffectOpType } from '../renderer/constants'
+import { EffectOpType } from 'renderer/constants'
 
 export const getDefaultFilters = (assetsPath?: string): Effect[] => {
   const rebaseAssetUrl = (path: string) =>

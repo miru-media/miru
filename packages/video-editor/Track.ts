@@ -1,11 +1,9 @@
-import VideoContext, { type CompositingNode } from 'videocontext'
-
 import { computed, effect, type Ref, ref, watch } from '@/framework/reactivity'
+import VideoContext, { type CompositingNode } from 'videocontext'
 
 import { Clip } from './Clip'
 import { type Movie } from './Movie'
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Track {
   export interface Init {
     clips: Clip.Init[]

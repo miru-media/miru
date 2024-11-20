@@ -1,10 +1,10 @@
-import { getDefaultFilters } from '../defaultFilters'
 import { createEffectScope, effect, ref } from '@/framework/reactivity'
 import { type Context2D, EditorView, type Effect, type ImageEditState, type ImageSourceOption } from '@/types'
 import { downloadBlob, win } from '@/utils'
 
 import { ImageEditorUI } from '../components/ImageEditorUI'
 import { renderComponentTo } from '../components/renderTo'
+import { getDefaultFilters } from '../defaultFilters'
 import { ImageEditor } from '../ImageEditor'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const

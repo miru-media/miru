@@ -78,3 +78,6 @@ export const trim = async (url: string, options: TrimOptions): Promise<Blob> => 
     cancelAnimationFrame(rafId)
   })
 }
+
+export default trim
+export * from './utils'

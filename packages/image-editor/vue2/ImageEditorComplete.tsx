@@ -1,4 +1,3 @@
-import { getDefaultFilters } from '../defaultFilters'
 import { createEffectScope, type EffectScope, ref, type Ref } from '@/framework/reactivity'
 import {
   type Context2D,
@@ -11,6 +10,7 @@ import {
 
 import { ImageEditorUI } from '../components/ImageEditorUI'
 import { renderComponentTo } from '../components/renderTo'
+import { getDefaultFilters } from '../defaultFilters'
 import { ImageEditor, unwrap } from '../wrapper'
 
 interface VueInstance {

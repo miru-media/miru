@@ -1,15 +1,13 @@
-import { mat4 } from 'gl-matrix'
-import VideoContext, { type RenderGraph } from 'videocontext'
-
 import { type AdjustmentsState, type Size } from '@/types'
 import { fit, setObjectSize } from '@/utils'
-
-import { type EffectInternal } from '../reactive-effects/Effect'
-import { FRAMEBUFFER_TEX_OPTIONS } from '../renderer/constants'
-import * as GL from '../renderer/GL'
-import fragmentShader from '../renderer/glsl/main.frag'
-import vertexShader from '../renderer/glsl/main.vert'
-import { type Renderer } from '../renderer/Renderer'
+import { mat4 } from 'gl-matrix'
+import { type EffectInternal } from 'reactive-effects/Effect'
+import { FRAMEBUFFER_TEX_OPTIONS } from 'renderer/constants'
+import * as GL from 'renderer/GL'
+import fragmentShader from 'renderer/glsl/main.frag'
+import vertexShader from 'renderer/glsl/main.vert'
+import { type Renderer } from 'renderer/Renderer'
+import VideoContext, { type RenderGraph } from 'videocontext'
 
 export const definition = {
   title: 'Miru Filter',
