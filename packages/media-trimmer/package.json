@@ -21,10 +21,13 @@
         "import": "./dist/vue2.js",
         "require": "./dist/vue2.umd.js"
       }
-    }
+    },
+    "sideEffects": [
+      "dist/media-trimmer.js"
+    ]
   },
   "sideEffects": [
-    "dist/media-trimmer.js"
+    "./index.ts"
   ],
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
