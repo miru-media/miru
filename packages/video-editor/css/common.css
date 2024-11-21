@@ -4,13 +4,16 @@
 .viewport {
   position: relative;
   display: flex;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 100%;
   min-height: 0;
   padding: 0.25rem;
 }
 
 .viewport-canvas {
+  height: 100%;
+  overflow: hidden;
   background-color: black;
   border-radius: 1.25rem;
 }

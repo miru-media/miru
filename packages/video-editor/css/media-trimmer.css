@@ -14,10 +14,6 @@
       min-height: 16rem;
     }
   }
-
-  .viewport-canvas {
-    height: auto;
-  }
 }
 
 .video-trimmer-error {
