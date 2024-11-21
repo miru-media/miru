@@ -18,7 +18,9 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
     <div class="toolbar safe-padding-x">
       <IconButton class="toolbar-button" icon={IconTablerCut} onClick={() => editor.splitAtCurrentTime()} />
       <IconButton class="toolbar-button" icon={IconTablerTrash} onClick={() => editor.delete()} />
-      <IconButton class="toolbar-button" icon={IconTablerWand} onClick={() => alert('Not implemented.')} />
+      {import.meta.env.DEV && (
+        <IconButton class="toolbar-button" icon={IconTablerWand} onClick={() => alert('Not implemented.')} />
+      )}
 
       <label class="icon-button toolbar-button">
         <IconTablerExchange />
