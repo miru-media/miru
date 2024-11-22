@@ -11,7 +11,7 @@ import { trim } from 'media-trimmer'
 
 try {
   // The input video must be a `.mp4`/`.mov` file with a video track
-  // and the browser must support the WebCodecs API with the codecs in the video
+  // and the browser must support video encoding with the WebCodecs API
   await trim('video.mp4', {
     start: 2, //    start time in seconds
     end: 10, //     end time in seconds
@@ -44,6 +44,14 @@ Powered by:
 - [mp4Box.js](https://gpac.github.io/mp4box.js/)
 - [mp4-muxer](https://gpac.github.io/mp4box.js/)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
+
+## Roadmap
+
+- [ ] Lossless trimming
+- [ ] Bitrate/filesize controls
+- [ ] Webm support
+- [ ] Color profile preservation
+- [ ] Increased browser and codec support via [LibAVJS-WebCodecs-Polyfill](https://github.com/ennuicastr/libavjs-webcodecs-polyfill)
 
 ## Funding
 
