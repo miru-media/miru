@@ -41,6 +41,7 @@
 
   .viewport {
     max-height: min(60vh, calc(100vh - 19rem));
+    padding: 0.25rem;
   }
 
   .viewport-canvas {

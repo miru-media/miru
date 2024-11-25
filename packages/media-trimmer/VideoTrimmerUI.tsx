@@ -316,7 +316,7 @@ export const VideoTrimmerUI = (props: {
           )
         }
       </div>
-      <div class="safe-padding-x">
+      <div>
         <div class="video-trimmer-controls numeric">
           <ToggleButton
             class="video-trimmer-controls-left video-trimmer-play-pause"

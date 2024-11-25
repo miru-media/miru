@@ -3,7 +3,6 @@
   flex-direction: column;
   width: inherit;
   height: inherit;
-  padding-bottom: 0.25rem;
   overflow: hidden;
 
   .viewport {

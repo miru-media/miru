@@ -55,7 +55,7 @@ createEffectScope().run(() => {
   render(
     <div class="max-h-90vh @dark:text-#9ca3af bg-white text-black">
       <media-trimmer
-        class="block w-full @dark:bg-#171717 color-scheme-dark"
+        class="block w-full @dark:bg-#171717 p-0.5rem box-border"
         source={source}
         state={state}
         onChange={onChange}
