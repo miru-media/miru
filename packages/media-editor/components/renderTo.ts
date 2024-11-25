@@ -7,7 +7,7 @@ export const renderComponentTo = <P extends Record<string, unknown>>(
   props: P,
   node: HTMLElement,
 ) => {
-  node.classList.add('miru-image-editor')
+  node.classList.add('media-editor')
 
   node.setAttribute(
     'color-scheme',

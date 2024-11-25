@@ -214,9 +214,9 @@ importers:
       filesize:
         specifier: 'catalog:'
         version: 10.1.6
-      miru-image-editor:
+      media-editor:
         specifier: 'workspace:'
-        version: link:../image-editor
+        version: link:../media-editor
       reactive-effects:
         specifier: 'workspace:'
         version: link:../reactive-effects
@@ -230,7 +230,7 @@ importers:
         specifier: 'catalog:'
         version: 0.17.0
 
-  packages/image-editor:
+  packages/media-editor:
     dependencies:
       cropperjs:
         specifier: ^1.6.2
@@ -358,9 +358,9 @@ importers:
         specifier: ^0.54.0
         version: 0.54.0
     devDependencies:
-      miru-image-editor:
+      media-editor:
         specifier: 'workspace:'
-        version: link:../image-editor
+        version: link:../media-editor
       reactive-effects:
         specifier: 'workspace:'
         version: link:../reactive-effects

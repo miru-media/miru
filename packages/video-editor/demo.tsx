@@ -6,7 +6,7 @@ import { filesize } from 'filesize'
 import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/BigBuckBunnyVideo.mp4'
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
 /* eslint-enable import/no-unresolved */
-import { getDefaultFilters } from 'miru-image-editor/defaultFilters'
+import { getDefaultFilters } from 'media-editor/defaultFilters'
 
 import * as Actions from './components/Actions'
 import { PlaybackControls } from './components/PlaybackControls'

@@ -8,13 +8,13 @@ import {
   type ImageSourceOption,
 } from '@/types'
 
-import { ImageEditorUI } from '../components/ImageEditorUI'
+import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'
 import { getDefaultFilters } from '../defaultFilters'
-import { ImageEditor, unwrap } from '../wrapper'
+import { MediaEditor, unwrap } from '../wrapper'
 
 interface VueInstance {
-  editor: ImageEditor
+  editor: MediaEditor
   sources?: ImageSource[]
   view?: EditorView
   _view: Ref<EditorView>
@@ -35,7 +35,7 @@ const PROP_KEYS = ['sources', 'effects', 'view', 'assetsPath', 'editStates'] as 
 const EVENT_TYPES = ['edit', 'render'] as const
 
 export default {
-  name: 'miru-image-editor-complete',
+  name: 'media-editor-complete',
   props: PROP_KEYS,
   emits: EVENT_TYPES,
   beforeCreate(this: VueInstance) {
@@ -46,7 +46,7 @@ export default {
 
     this.editor = this.scope.run(
       () =>
-        new ImageEditor({
+        new MediaEditor({
           effects: () => this._effects.value,
           onEdit: (index, state) => this.$emit('edit', { index, ...state }),
           onRenderPreview: (sourceIndex: number, previewUrl) => {
@@ -58,7 +58,7 @@ export default {
   },
   mounted(this: VueInstance) {
     this.scope.run(() =>
-      renderComponentTo(ImageEditorUI, { editor: unwrap(this.editor), view: this._view }, this.$el),
+      renderComponentTo(MediaEditorUI, { editor: unwrap(this.editor), view: this._view }, this.$el),
     )
   },
   destroyed(this: VueInstance) {

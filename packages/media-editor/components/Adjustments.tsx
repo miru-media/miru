@@ -1,8 +1,8 @@
 import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from '@/framework/reactivity'
 import { type AdjustmentsState, type InputEvent } from '@/types'
 
-import { type ImageEditor } from '../ImageEditor'
 import { type ImageSourceInternal } from '../ImageSourceInternal'
+import { type MediaEditor } from '../MediaEditor'
 
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
@@ -12,7 +12,7 @@ export const AdjustmentsView = ({
   sourceIndex,
   showPreviews,
 }: {
-  editor: ImageEditor
+  editor: MediaEditor
   sourceIndex: MaybeRefOrGetter<number>
   showPreviews?: MaybeRefOrGetter<boolean | undefined>
 }) => {

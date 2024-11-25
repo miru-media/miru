@@ -1,4 +1,3 @@
-
 import { computed, ref, toValue, watch } from '@/framework/reactivity'
 import { type CropState } from '@/types'
 import {
@@ -13,14 +12,14 @@ import {
 } from '@/utils'
 import Cropper from 'cropperjs'
 
-import { type ImageEditor } from '../ImageEditor'
 import { type ImageSourceInternal } from '../ImageSourceInternal'
+import { type MediaEditor } from '../MediaEditor'
 
 export type CropContext = ReturnType<typeof useCrop>
 
 const SIMPLE_CROP = false as boolean
 
-export const useCrop = ({ editor, sourceIndex }: { editor: ImageEditor; sourceIndex: number }) => {
+export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIndex: number }) => {
   const sourceRef = computed(
     (): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)],
   )

@@ -2,12 +2,12 @@ import { type Component } from '@/framework/jsx-runtime'
 import { toValue } from '@/framework/reactivity'
 import { type InputEvent } from '@/types'
 
-import { type ImageEditor } from '../ImageEditor'
+import { type MediaEditor } from '../MediaEditor'
 
 import { RowSlider } from './RowSlider'
 import { useCrop } from './useCrop'
 
-export const CropView: Component<{ editor: ImageEditor; sourceIndex: number }> = (props) => {
+export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> = (props) => {
   const editor = toValue(props.editor)
   const { aspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom } = useCrop({
     editor,

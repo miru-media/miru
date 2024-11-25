@@ -13,13 +13,13 @@ import { Renderer } from 'renderer/Renderer'
 
 import { ImageSourceInternal } from './ImageSourceInternal'
 
-export interface ImageEditorOptions {
+export interface MediaEditorOptions {
   effects: Ref<Effect[]>
   onRenderPreview: (index: number) => unknown
   onEdit: (index: number, state: ImageEditState) => unknown
 }
 
-export class ImageEditor {
+export class MediaEditor {
   #scope: EffectScope
   renderer = new Renderer()
 
@@ -44,7 +44,7 @@ export class ImageEditor {
     return this.#isLoading.value
   }
 
-  constructor({ effects, onRenderPreview, onEdit }: ImageEditorOptions) {
+  constructor({ effects, onRenderPreview, onEdit }: MediaEditorOptions) {
     const scope = getCurrentScope()
     if (scope == undefined) throw new Error(`[miru] must be run in an EffectScope`)
     this.#scope = scope

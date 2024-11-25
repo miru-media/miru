@@ -1,35 +1,35 @@
 # An image editor with cropping and filters in the browser
 
-https://demo.miru.media/image-editor/
+https://demo.miru.media/image/
 
 ```sh
-npm install miru-image-editor
+npm install media-editor
 ```
 
 ```html
 <div>
-  <!-- after importing the library, these <image-editor-*> custom elements will be defined -->
+  <!-- after importing the library, these <media-editor-*> custom elements will be defined -->
 
   <!-- show a preview of the fist image being edited -->
-  <image-editor-preview sourceIndex="0"></image-editor-preview>
+  <media-editor-preview sourceIndex="0"></media-editor-preview>
   <!-- show a menu of filters to apply to the first image -->
-  <image-editor-filter-menu sourceIndex="0"></image-editor-filter-menu>
+  <media-editor-filter-menu sourceIndex="0"></media-editor-filter-menu>
 
-  <image-editor-preview sourceIndex="1"></image-editor-preview>
-  <image-editor-filter-menu sourceIndex="1"></image-editor-filter-menu>
+  <media-editor-preview sourceIndex="1"></media-editor-preview>
+  <media-editor-filter-menu sourceIndex="1"></media-editor-filter-menu>
 
   <button id="export" type="buton">Export</button>
 </div>
 ```
 
 ```js
-import { ImageEditor } from 'miru-image-editor'
+import { MediaEditor } from 'media-editor'
 
-const editor = new ImageEditor()
+const editor = new MediaEditor()
 
-// after creating the editor, give it to the <image-editor-*> elements
-const imageEditorElements = document.querySelectorAll('iamge-editor-preview, image-editor-filter-menu')
-for (const element of imageEditorElements) {
+// after creating the editor, give it to the <media-editor-*> elements
+const mediaEditorElements = document.querySelectorAll('media-editor-preview, media-editor-filter-menu')
+for (const element of mediaEditorElements) {
   element.editor = editor
 }
 ```

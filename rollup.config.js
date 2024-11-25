@@ -34,9 +34,9 @@ const isProd = NODE_ENV === 'production'
 /** @type {Options[]} */
 const packageOptions = [
   {
-    root: 'packages/image-editor',
+    root: 'packages/media-editor',
     inputs: {
-      'image-editor': 'index.ts',
+      'media-editor': 'index.ts',
       vue2: 'vue2/index.ts',
     },
     external: [],
@@ -55,7 +55,7 @@ const packageOptions = [
 const aliases = {
   entries: {
     '@': resolve(ROOT, 'packages/shared'),
-    'virtual:image-shadow.css': resolve(ROOT, 'packages/image-editor/index.css'),
+    'virtual:image-shadow.css': resolve(ROOT, 'packages/media-editor/index.css'),
     'virtual:video-shadow.css': resolve(ROOT, 'packages/video-editor/index.css'),
   },
 }

@@ -3,22 +3,22 @@ import { ref } from '@/framework/reactivity'
 import { FilterView } from '../components/Filter'
 import { renderComponentTo } from '../components/renderTo'
 import { SourcePreview } from '../components/SourcePreview'
-import { ImageEditor, unwrap } from '../wrapper'
+import { MediaEditor, unwrap } from '../wrapper'
 
-export { ImageEditor }
+export { MediaEditor as MediaEditor }
 
-export class ImageEditorPreviewElement extends HTMLElement {
+export class MediaEditorPreviewElement extends HTMLElement {
   sourceIndex = ref(0)
 
-  set editor(editor: ImageEditor) {
+  set editor(editor: MediaEditor) {
     renderComponentTo(SourcePreview, { editor: unwrap(editor), sourceIndex: this.sourceIndex }, this)
   }
 }
 
-export class ImageEditorFilterMenuElement extends HTMLElement {
+export class MediaEditorFilterMenuElement extends HTMLElement {
   sourceIndex = ref(0)
 
-  set editor(editor: ImageEditor) {
+  set editor(editor: MediaEditor) {
     renderComponentTo(FilterView, { editor: unwrap(editor), sourceIndex: this.sourceIndex }, this)
   }
 }

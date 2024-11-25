@@ -14,8 +14,8 @@ import { EffectInternal } from 'reactive-effects/Effect'
 import { throttle } from 'throttle-debounce'
 
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants'
-import { type ImageEditor } from '../ImageEditor'
 import { type ImageSourceInternal } from '../ImageSourceInternal'
+import { type MediaEditor } from '../MediaEditor'
 
 import { RowSlider } from './RowSlider'
 import { SourcePreview } from './SourcePreview'
@@ -64,7 +64,7 @@ export const FilterView = ({
   sourceIndex,
   showPreviews,
 }: {
-  editor: ImageEditor
+  editor: MediaEditor
   sourceIndex: MaybeRefOrGetter<number>
   showPreviews?: MaybeRefOrGetter<boolean | undefined>
 }) => {

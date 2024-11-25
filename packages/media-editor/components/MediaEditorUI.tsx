@@ -8,15 +8,15 @@ import {
 } from '@/framework/reactivity'
 import { EditorView } from '@/types'
 
-import { type ImageEditor } from '../ImageEditor'
 import { type ImageSourceInternal } from '../ImageSourceInternal'
+import { type MediaEditor } from '../MediaEditor'
 
 import { AdjustmentsView } from './Adjustments'
 import { CropView } from './Cropper'
 import { FilterView } from './Filter'
 
-export interface ImageEditorUIProps {
-  editor: ImageEditor
+export interface MediaEditorUIProps {
+  editor: MediaEditor
   view: Ref<EditorView>
   sourceIndex?: MaybeRefOrGetter<number>
 }
@@ -26,7 +26,7 @@ export interface ImageEditorUIProps {
  *
  * Used by the Custom Element and Vue component.
  */
-export const ImageEditorUI = (props: ImageEditorUIProps) => {
+export const MediaEditorUI = (props: MediaEditorUIProps) => {
   const { editor, view: currentView } = props
 
   const { sources } = editor

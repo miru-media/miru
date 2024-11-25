@@ -41,7 +41,7 @@
     "videocontext": "^0.54.0"
   },
   "devDependencies": {
-    "miru-image-editor": "workspace:",
+    "media-editor": "workspace:",
     "reactive-effects": "workspace:",
     "renderer": "workspace:",
     "shared": "workspace:"

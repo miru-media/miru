@@ -1,8 +1,8 @@
 import { computed, type MaybeRefOrGetter, toValue } from '@/framework/reactivity'
 import { useEventListener } from '@/utils'
 
-import { type ImageEditor } from '../ImageEditor'
 import { type ImageSourceInternal } from '../ImageSourceInternal'
+import { type MediaEditor } from '../MediaEditor'
 
 export const SourcePreview = ({
   editor,
@@ -10,7 +10,7 @@ export const SourcePreview = ({
   style = '',
   onClick,
 }: {
-  editor: MaybeRefOrGetter<ImageEditor>
+  editor: MaybeRefOrGetter<MediaEditor>
   sourceIndex: MaybeRefOrGetter<number>
   style?: MaybeRefOrGetter<string>
   onClick?: (event: Event) => unknown

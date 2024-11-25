@@ -1,10 +1,10 @@
 import { createEffectScope, type EffectScope, ref, type Ref } from '@/framework/reactivity'
 
 import { renderComponentTo } from '../components/renderTo'
-import { ImageEditor, type ImageEditor_, unwrap } from '../wrapper'
+import { MediaEditor, type MediaEditor_, unwrap } from '../wrapper'
 
 interface VueInstance {
-  editor: ImageEditor
+  editor: MediaEditor
   scope: EffectScope
   sourceIndex: number
   _sourceIndex: Ref<number>
@@ -17,7 +17,7 @@ interface VueInstance {
 }
 
 interface WrappedComponentProps {
-  editor: ImageEditor_
+  editor: MediaEditor_
   sourceIndex: Ref<number>
   showAllSources?: boolean | undefined
 }
@@ -29,7 +29,7 @@ export const wrap = (
 ) => ({
   name,
   props: {
-    editor: { type: ImageEditor, required: true },
+    editor: { type: MediaEditor, required: true },
     sourceIndex: { type: Number, default: 0 },
     ...extraProps,
   },

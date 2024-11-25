@@ -2,21 +2,21 @@ import { createEffectScope, effect, ref } from '@/framework/reactivity'
 import { type Context2D, EditorView, type Effect, type ImageEditState, type ImageSourceOption } from '@/types'
 import { downloadBlob, win } from '@/utils'
 
-import { ImageEditorUI } from '../components/ImageEditorUI'
+import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'
 import { getDefaultFilters } from '../defaultFilters'
-import { ImageEditor } from '../ImageEditor'
+import { MediaEditor } from '../MediaEditor'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
 
 const HTMLElement = ((win.HTMLElement as unknown) ?? Object) as typeof window.HTMLElement
 
-export class ImageEditorElement extends HTMLElement {
+export class MediaEditorElement extends HTMLElement {
   static observedAttributes = OBSERVED_ATTRS
 
   #scope = createEffectScope()
-  #editor: ImageEditor
+  #editor: MediaEditor
   #effects = ref<Effect[]>([])
   #unmount: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
@@ -60,7 +60,7 @@ export class ImageEditorElement extends HTMLElement {
 
     this.#editor = this.#scope.run(
       () =>
-        new ImageEditor({
+        new MediaEditor({
           effects: this.#effects,
           onEdit: (index, state) => this.#dispatchEvent('miruedit', { index, ...state }),
           onRenderPreview: () => undefined,
@@ -69,7 +69,7 @@ export class ImageEditorElement extends HTMLElement {
     this.#effects.value = getDefaultFilters(import.meta.env.ASSETS_PATH)
 
     this.#unmount = this.#scope.run(() =>
-      renderComponentTo(ImageEditorUI, { editor: this.#editor, view: this.#view }, this),
+      renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
     )
   }
 

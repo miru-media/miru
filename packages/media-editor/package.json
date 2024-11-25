@@ -1,17 +1,17 @@
 {
-  "name": "miru-image-editor",
+  "name": "media-editor",
   "version": "0.0.0",
   "type": "module",
-  "module": "dist/image-editor.js",
-  "main": "dist/image-editor.umd.js",
+  "module": "dist/media-editor.js",
+  "main": "dist/media-editor.umd.js",
   "files": [
     "dist"
   ],
   "publishConfig": {
     "exports": {
       ".": {
-        "import": "./dist/image-editor.js",
-        "require": "./dist/image-editor.umd.js"
+        "import": "./dist/media-editor.js",
+        "require": "./dist/media-editor.umd.js"
       },
       "./vue2": {
         "import": "./dist/vue2.js",
@@ -24,8 +24,21 @@
   "repository": {
     "type": "git",
     "url": "https://gitea.com/miru/miru.git",
-    "directory": "packages/image-editor"
+    "directory": "packages/media-editor"
   },
+  "keywords": [
+    "image",
+    "editor",
+    "crop",
+    "rotate",
+    "filter",
+    "webgl",
+    "lut",
+    "clut",
+    "lookup table",
+    "glsl",
+    "image editor"
+  ],
   "dependencies": {
     "cropperjs": "^1.6.2",
     "gl-matrix": "catalog:",

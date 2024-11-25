@@ -3,28 +3,28 @@ import { type Effect, type ImageEditState, type ImageSourceOption } from '@/type
 import { canvasToBlob } from '@/utils'
 
 import { getDefaultFilters } from './defaultFilters'
-import { ImageEditor as ImageEditor_ } from './ImageEditor'
+import { MediaEditor as MediaEditor_ } from './MediaEditor'
 
-interface ImageEditorProps {
+interface MediaEditorProps {
   effects?: Effect[] | (() => Effect[])
   onRenderPreview?: (sourceIndex: number, previewUrl: string) => unknown
   onEdit?: (index: number, state: ImageEditState) => unknown
 }
 
-export const editorMap = new WeakMap<ImageEditor, ImageEditor_>()
+export const editorMap = new WeakMap<MediaEditor, MediaEditor_>()
 
-export class ImageEditor {
-  #editor: ImageEditor_
+export class MediaEditor {
+  #editor: MediaEditor_
   #thumbnailUrls: string[] = []
 
-  constructor(props: ImageEditorProps) {
+  constructor(props: MediaEditorProps) {
     const noop = () => undefined
     const scope = createEffectScope()
 
     this.#editor = scope.run(() => {
       onScopeDispose(() => (this.#editor = undefined as never))
 
-      return new ImageEditor_({
+      return new MediaEditor_({
         effects: toRef(props.effects ?? getDefaultFilters()),
         onRenderPreview: async (sourceIndex) => {
           const source = this.#editor.sources.value[sourceIndex]
@@ -59,5 +59,5 @@ export class ImageEditor {
   }
 }
 
-export { ImageEditor_ }
-export const unwrap = (wrapped: ImageEditor) => editorMap.get(wrapped)!
+export { MediaEditor_ as MediaEditor_ }
+export const unwrap = (wrapped: MediaEditor) => editorMap.get(wrapped)!
