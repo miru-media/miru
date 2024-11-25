@@ -1,5 +1,6 @@
 {
   "name": "media-editor",
+  "description": "A simple image editor with cropping, rotation, and WebGL filters",
   "version": "0.0.0",
   "type": "module",
   "module": "dist/media-editor.js",
@@ -21,6 +22,7 @@
   },
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
+  "homepage": "https://demo.miru.media",
   "repository": {
     "type": "git",
     "url": "https://gitea.com/miru/miru.git",

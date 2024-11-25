@@ -1,5 +1,6 @@
 {
   "name": "media-trimmer",
+  "description": "A simple mp4 video trimmer using the WebCodecs API",
   "version": "0.0.0",
   "type": "module",
   "module": "dist/media-trimmer.js",
@@ -31,6 +32,7 @@
   ],
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
+  "homepage": "https://demo.miru.media/trim/",
   "repository": {
     "type": "git",
     "url": "https://gitea.com/miru/miru.git",

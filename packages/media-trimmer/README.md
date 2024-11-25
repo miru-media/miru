@@ -1,5 +1,7 @@
 # A video trimmer in the browser
 
+![Screenshot](./screenshot.jpg)
+
 https://demo.miru.media/trim/
 
 ```sh
