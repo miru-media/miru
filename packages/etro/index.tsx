@@ -1,9 +1,10 @@
-import { render } from '@/framework/jsx-runtime'
-import { ref } from '@/framework/reactivity'
 import { filesize } from 'filesize'
 /* eslint-disable import/no-unresolved */
 import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/BigBuckBunnyVideo.mp4'
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
+
+import { render } from 'shared/framework/jsx-runtime'
+import { ref } from 'shared/framework/reactivity'
 /* eslint-enable import/no-unresolved */
 
 import { Movie } from './Movie'

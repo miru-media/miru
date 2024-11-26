@@ -39,11 +39,5 @@
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:",
     "videocontext": "^0.54.0"
-  },
-  "devDependencies": {
-    "media-editor": "workspace:",
-    "reactive-effects": "workspace:",
-    "renderer": "workspace:",
-    "shared": "workspace:"
   }
 }

@@ -1,8 +1,9 @@
-import { ref, type Ref } from '@/framework/reactivity'
-import { useEventListener } from '@/utils'
 import etro from 'etro'
+
 import { type EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
+import { ref, type Ref } from 'shared/framework/reactivity'
+import { useEventListener } from 'shared/utils'
 
 import { EtroEffect } from './EtroEffect'
 import { useMappedUniqueArray, useMediaError, useMediaReadyState } from './utils'

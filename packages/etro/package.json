@@ -8,7 +8,7 @@
   "dependencies": {
     "etro": "^0.12.1",
     "filesize": "catalog:",
-    "media-editor": "workspace:",
+    "webgl-media-editor": "workspace:",
     "reactive-effects": "workspace:",
     "renderer": "workspace:",
     "shared": "workspace:",

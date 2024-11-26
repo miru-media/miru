@@ -1,8 +1,8 @@
-import { createEffectScope, effect, onScopeDispose, ref, type Ref, watch } from '@/framework/reactivity'
-import { AssetType, type ImageSourceOption } from '@/types'
-import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from '@/utils'
 import { type EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
+import { createEffectScope, effect, onScopeDispose, ref, type Ref, watch } from 'shared/framework/reactivity'
+import { AssetType, type ImageSourceOption } from 'shared/types'
+import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
 
 import { EtroVideo } from './EtroVideo'
 

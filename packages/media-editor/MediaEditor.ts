@@ -1,3 +1,5 @@
+import { EffectInternal } from 'reactive-effects/Effect'
+import { Renderer } from 'renderer/Renderer'
 import {
   computed,
   effect,
@@ -6,10 +8,8 @@ import {
   ref,
   type Ref,
   watch,
-} from '@/framework/reactivity'
-import { type Context2D, type Effect, type ImageEditState, type ImageSourceOption } from '@/types'
-import { EffectInternal } from 'reactive-effects/Effect'
-import { Renderer } from 'renderer/Renderer'
+} from 'shared/framework/reactivity'
+import { type Context2D, type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
 
 import { ImageSourceInternal } from './ImageSourceInternal'
 

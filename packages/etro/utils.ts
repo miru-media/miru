@@ -1,5 +1,5 @@
-import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from '@/framework/reactivity'
-import { useEventListener } from '@/utils'
+import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'shared/framework/reactivity'
+import { useEventListener } from 'shared/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
   sourceArrayRef: MaybeRefOrGetter<T[]>,

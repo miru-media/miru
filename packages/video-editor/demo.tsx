@@ -1,12 +1,13 @@
-import { h } from '@/framework/jsx-runtime'
-import { ref } from '@/framework/reactivity'
-import { type InputEvent } from '@/types'
 import { filesize } from 'filesize'
 /* eslint-disable import/no-unresolved */
 import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/BigBuckBunnyVideo.mp4'
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
 /* eslint-enable import/no-unresolved */
-import { getDefaultFilters } from 'media-editor/defaultFilters'
+
+import { h } from 'shared/framework/jsx-runtime'
+import { ref } from 'shared/framework/reactivity'
+import { type InputEvent } from 'shared/types'
+import { getDefaultFilters } from 'webgl-media-editor/defaultFilters'
 
 import * as Actions from './components/Actions'
 import { PlaybackControls } from './components/PlaybackControls'

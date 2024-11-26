@@ -1,6 +1,6 @@
-import { ref } from '@/framework/reactivity'
-import { type InputEvent, type Size } from '@/types'
-import { useEventListener } from '@/utils'
+import { ref } from 'shared/framework/reactivity'
+import { type InputEvent, type Size } from 'shared/types'
+import { useEventListener } from 'shared/utils'
 
 import { type VideoEditor } from '../VideoEditor'
 

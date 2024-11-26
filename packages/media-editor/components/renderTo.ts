@@ -1,4 +1,4 @@
-import { h, render } from '@/framework/jsx-runtime'
+import { h, render } from 'shared/framework/jsx-runtime'
 
 import { setShadowStyles } from './setShadowStyles'
 

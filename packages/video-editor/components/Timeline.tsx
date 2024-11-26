@@ -1,6 +1,6 @@
-import { computed, effect, ref } from '@/framework/reactivity'
-import { type InputEvent } from '@/types'
-import { useElementSize } from '@/utils'
+import { computed, effect, ref } from 'shared/framework/reactivity'
+import { type InputEvent } from 'shared/types'
+import { useElementSize } from 'shared/utils'
 
 import { type Clip as ClipType } from '../Clip'
 import { type Track } from '../Track'

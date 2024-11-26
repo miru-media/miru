@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     "checkJs": true,
     "jsx": "preserve",
-    "jsxImportSource": "@/framework",
+    "jsxImportSource": "shared/framework",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -22,12 +22,8 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    "paths": {
-      "@/*": ["./packages/shared/*"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
-  "include": ["packages", "example", "scripts", "tools", "./*.ts", "./*.tsx", "./*.js", "./*.jsx", "./*.cjs"],
-  "exclude": ["packages/*/dist"]
+  "include": ["packages", "example", "scripts", "tools", "./*.ts", "./*.js", "./*.cjs"],
+  "exclude": ["**/dist"]
 }

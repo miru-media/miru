@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment  */
 
-import { promiseWithResolvers } from '@/utils'
 import * as MP4Box_ from 'mp4box'
+
+import { promiseWithResolvers } from 'shared/utils'
 
 export interface MP4BoxFile<S = unknown, E = unknown> {
   onMoovStart(): void

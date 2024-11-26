@@ -1,6 +1,6 @@
-import { computed, createEffectScope, onScopeDispose, type Ref, ref } from '@/framework/reactivity'
-import { AssetType, type ImageSourceOption } from '@/types'
-import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from '@/utils'
+import { computed, createEffectScope, onScopeDispose, type Ref, ref } from 'shared/framework/reactivity'
+import { AssetType, type ImageSourceOption } from 'shared/types'
+import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
 
 import { TRANSITION_DURATION_S } from './constants'
 import { useMediaError, useMediaReadyState } from './utils'

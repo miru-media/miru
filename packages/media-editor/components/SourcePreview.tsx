@@ -1,5 +1,5 @@
-import { computed, type MaybeRefOrGetter, toValue } from '@/framework/reactivity'
-import { useEventListener } from '@/utils'
+import { computed, type MaybeRefOrGetter, toValue } from 'shared/framework/reactivity'
+import { useEventListener } from 'shared/utils'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'
 import { type MediaEditor } from '../MediaEditor'

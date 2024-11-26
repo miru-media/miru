@@ -1,4 +1,4 @@
-import { ref } from '@/framework/reactivity'
+import { ref } from 'shared/framework/reactivity'
 
 import { FilterView } from '../components/Filter'
 import { renderComponentTo } from '../components/renderTo'

@@ -5,8 +5,8 @@ import {
   ref,
   type Ref,
   toRef,
-} from '@/framework/reactivity'
-import { EditorView } from '@/types'
+} from 'shared/framework/reactivity'
+import { EditorView } from 'shared/types'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'
 import { type MediaEditor } from '../MediaEditor'

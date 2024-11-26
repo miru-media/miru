@@ -1,5 +1,5 @@
-import { type MaybeArray } from '@/types'
-import { arrayFlatToValue, toKebabCase } from '@/utils'
+import { type MaybeArray } from 'shared/types'
+import { arrayFlatToValue, toKebabCase } from 'shared/utils'
 
 import {
   createEffectScope,

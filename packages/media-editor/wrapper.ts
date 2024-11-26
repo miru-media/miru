@@ -1,6 +1,6 @@
-import { createEffectScope, onScopeDispose, toRef } from '@/framework/reactivity'
-import { type Effect, type ImageEditState, type ImageSourceOption } from '@/types'
-import { canvasToBlob } from '@/utils'
+import { createEffectScope, onScopeDispose, toRef } from 'shared/framework/reactivity'
+import { type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
+import { canvasToBlob } from 'shared/utils'
 
 import { getDefaultFilters } from './defaultFilters'
 import { MediaEditor as MediaEditor_ } from './MediaEditor'

@@ -1,5 +1,6 @@
-import { computed, effect, type Ref, ref, watch } from '@/framework/reactivity'
 import VideoContext, { type CompositingNode } from 'videocontext'
+
+import { computed, effect, type Ref, ref, watch } from 'shared/framework/reactivity'
 
 import { Clip } from './Clip'
 import { type Movie } from './Movie'

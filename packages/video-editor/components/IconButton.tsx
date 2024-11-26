@@ -1,5 +1,5 @@
-import { type Component } from '@/framework/jsx-runtime'
-import { type MaybeRef, unref } from '@/framework/reactivity'
+import { type Component } from 'shared/framework/jsx-runtime'
+import { type MaybeRef, unref } from 'shared/framework/reactivity'
 
 export const IconButton = ({
   icon,

@@ -1,6 +1,6 @@
 import { throttle } from 'throttle-debounce'
 
-import { effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from '@/framework/reactivity'
+import { effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'shared/framework/reactivity'
 
 import { win } from './window'
 

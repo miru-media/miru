@@ -3,7 +3,7 @@
 https://demo.miru.media/image/
 
 ```sh
-npm install media-editor
+npm install webgl-media-editor
 ```
 
 ```html
@@ -23,7 +23,7 @@ npm install media-editor
 ```
 
 ```js
-import { MediaEditor } from 'media-editor'
+import { MediaEditor } from 'webgl-media-editor'
 
 const editor = new MediaEditor()
 

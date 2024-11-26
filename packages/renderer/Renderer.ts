@@ -1,3 +1,6 @@
+import { mat4 } from 'gl-matrix'
+import * as twgl from 'twgl.js'
+
 import {
   type AdjustmentsState,
   AssetType,
@@ -7,10 +10,8 @@ import {
   type RendererEffectOp,
   type Size,
   type SyncImageSource,
-} from '@/types'
-import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from '@/utils'
-import { mat4 } from 'gl-matrix'
-import * as twgl from 'twgl.js'
+} from 'shared/types'
+import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from 'shared/utils'
 
 import { EffectOpType, LUT_TEX_OPTIONS, MAX_EFFECT_OPS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './GL'

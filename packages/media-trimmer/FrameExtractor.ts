@@ -1,4 +1,4 @@
-import { get2dContext, Janitor } from '@/utils'
+import { get2dContext, Janitor } from 'shared/utils'
 
 import { type MP4BoxVideoTrack } from './demuxer'
 

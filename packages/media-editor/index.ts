@@ -3,9 +3,9 @@ import { MediaEditorFilterMenuElement, MediaEditorPreviewElement } from './custo
 export { EffectOpType } from 'renderer/constants'
 
 if (typeof customElements !== 'undefined' && 'define' in customElements) {
-  customElements.define('image-editor', MediaEditorElement)
-  customElements.define('image-editor-preview', MediaEditorPreviewElement)
-  customElements.define('image-editor-filter-menu', MediaEditorFilterMenuElement)
+  customElements.define('media-editor', MediaEditorElement)
+  customElements.define('media-editor-preview', MediaEditorPreviewElement)
+  customElements.define('media-editor-filter-menu', MediaEditorFilterMenuElement)
 }
 
 export { MediaEditorElement }

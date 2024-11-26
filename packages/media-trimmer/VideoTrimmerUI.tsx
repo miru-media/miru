@@ -1,11 +1,11 @@
-import { h } from '@/framework/jsx-runtime'
-import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from '@/framework/reactivity'
-import { useElementSize, useEventListener } from '@/utils'
-import { clamp } from '@/utils/math'
 import { BaseClip } from 'miru-video-editor/BaseClip'
 import { IconButton } from 'miru-video-editor/components/IconButton'
 import { ToggleButton } from 'miru-video-editor/components/ToggleButton'
 import { formatDuration, formatTime, getVideoInfo } from 'miru-video-editor/utils'
+import { h } from 'shared/framework/jsx-runtime'
+import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 'shared/framework/reactivity'
+import { useElementSize, useEventListener } from 'shared/utils'
+import { clamp } from 'shared/utils/math'
 
 import { getMediaInfo, hasRequiredApis } from './utils'
 

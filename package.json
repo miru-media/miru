@@ -1,6 +1,7 @@
 {
   "name": "miru",
   "version": "0.0.0",
+  "private": "true",
   "packageManager": "pnpm@9.10.0",
   "type": "module",
   "scripts": {
@@ -14,6 +15,13 @@
   },
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
+  "dependencies": {
+    "miru-video-editor": "workspace:",
+    "reactive-effects": "workspace:",
+    "renderer": "workspace:",
+    "shared": "workspace:",
+    "webgl-media-editor": "workspace:"
+  },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@iconify-json/tabler": "^1.2.5",
@@ -28,6 +36,7 @@
     "@types/debug": "^4.1.12",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.7.7",
+    "@types/semver": "^7.5.8",
     "@types/stats.js": "^0.17.3",
     "@types/throttle-debounce": "^5.0.2",
     "@unocss/preset-icons": "^0.63.4",
@@ -39,9 +48,11 @@
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
     "filesize": "^10.1.6",
+    "glob": "^11.0.0",
     "glslify": "^7.1.1",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
+    "nano-spawn": "^0.2.0",
     "picocolors": "^1.1.1",
     "postcss": "^8.4.47",
     "postcss-hover-media-feature": "^1.0.2",
@@ -58,6 +69,7 @@
     "rollup-plugin-filesize": "^10.0.0",
     "rollup-plugin-glsl-optimize": "^1.0.4",
     "rollup-plugin-postcss": "^4.0.2",
+    "semver": "^7.6.3",
     "stats.js": "catalog:",
     "stylelint": "^16.10.0",
     "stylelint-config-css-modules": "^4.4.0",

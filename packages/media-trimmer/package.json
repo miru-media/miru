@@ -4,31 +4,26 @@
   "version": "0.0.0",
   "type": "module",
   "module": "dist/media-trimmer.js",
-  "main": "dist/media-trimmer.umd.js",
+  "main": "dist/media-trimmer.js",
   "files": [
     "dist"
   ],
   "publishConfig": {
     "exports": {
       ".": {
-        "import": "./dist/media-trimmer.js",
-        "require": "./dist/media-trimmer.umd.js"
+        "import": "./dist/media-trimmer.js"
       },
       "./elements": {
-        "import": "./dist/elements.js",
-        "require": "./dist/elements.umd.js"
+        "import": "./dist/elements.js"
       },
       "./vue2": {
-        "import": "./dist/vue2.js",
-        "require": "./dist/vue2.umd.js"
+        "import": "./dist/vue2.js"
       }
-    },
-    "sideEffects": [
-      "dist/media-trimmer.js"
-    ]
+    }
   },
   "sideEffects": [
-    "./index.ts"
+    "dist/media-trimmer.js",
+    "index.ts"
   ],
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
@@ -49,11 +44,7 @@
   ],
   "dependencies": {
     "mp4-muxer": "^5.1.3",
-    "mp4box": "^0.5.3"
-  },
-  "devDependencies": {
-    "miru-video-editor": "workspace:",
-    "shared": "workspace:",
+    "mp4box": "^0.5.3",
     "throttle-debounce": "catalog:"
   }
 }

@@ -1,8 +1,8 @@
-import { computed, type Ref } from '@/framework/reactivity'
-import { AssetType, type Effect, type RendererEffectOp } from '@/types'
-import { Janitor, normalizeSourceOption } from '@/utils'
 import { MAX_EFFECT_TEXTURES } from 'renderer/constants'
 import { type Renderer } from 'renderer/Renderer'
+import { computed, type Ref } from 'shared/framework/reactivity'
+import { AssetType, type Effect, type RendererEffectOp } from 'shared/types'
+import { Janitor, normalizeSourceOption } from 'shared/utils'
 
 import { TextureResource } from './TextureResource'
 

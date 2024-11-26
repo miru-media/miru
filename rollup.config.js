@@ -18,14 +18,15 @@ import icons from 'unplugin-icons/rollup'
 import { autoImportOptions } from './tools/autoImportOptions.js'
 
 const ROOT = resolve(import.meta.dirname)
-const NODE_ENV = process.env.NODE_ENV
+const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
+const ALWAYS_BUNDLE = ['@reactively/core']
 
 /**
  * @typedef {{
  *  root: string,
  *  inputs: Record<string, string>
- *  external: string[]
+ *  external?: import('rollup').RollupOptions['external']
  *  dist?: string
  *  clearDist?: boolean
  * }} Options
@@ -36,10 +37,9 @@ const packageOptions = [
   {
     root: 'packages/media-editor',
     inputs: {
-      'media-editor': 'index.ts',
+      'webgl-media-editor': 'index.ts',
       vue2: 'vue2/index.ts',
     },
-    external: [],
   },
   {
     root: 'packages/media-trimmer',
@@ -48,19 +48,15 @@ const packageOptions = [
       elements: 'elements/index.ts',
       vue2: 'vue2.ts',
     },
-    external: ['mp4box', 'mp4-muxer'],
   },
 ]
 
 const aliases = {
   entries: {
-    '@': resolve(ROOT, 'packages/shared'),
     'virtual:image-shadow.css': resolve(ROOT, 'packages/media-editor/index.css'),
     'virtual:video-shadow.css': resolve(ROOT, 'packages/video-editor/index.css'),
   },
 }
-
-console.log(aliases)
 
 /** @type {import('rollup-plugin-esbuild-transform').Options[]} */
 const esbuildOptions = [
@@ -72,7 +68,7 @@ const esbuildOptions = [
     include: /\.(t|j)sx$/,
     loader: 'tsx',
     jsx: 'automatic',
-    jsxImportSource: '@/framework',
+    jsxImportSource: 'shared/framework',
     jsxDev: false,
   },
 ]
@@ -89,34 +85,45 @@ const replacements = {
   preventAssignment: true,
 }
 
-export default packageOptions.map(({ root: inputRoot, inputs, external, dist, clearDist = true }) => {
-  dist = dist ? resolve(inputRoot, dist) : resolve(inputRoot, 'dist')
+export default packageOptions.map(
+  ({
+    root: inputRoot,
+    inputs,
+    dist,
+    clearDist = true,
+    external = (id) =>
+      id.includes('/node_modules/') &&
+      !ALWAYS_BUNDLE.some((dep) => id === dep || id.includes(`/node_modules/${dep}/`)),
+  }) => {
+    dist = dist ? resolve(inputRoot, dist) : resolve(inputRoot, 'dist')
 
-  return defineConfig({
-    plugins: [
-      clearDist && del({ targets: resolve(dist, '*'), runOnce: true }),
-      nodeResolve({ extensions: ['.mjs', '.js', '.json', '.node', '.ts', '.tsx'] }),
-      commonjs(),
-      alias(aliases),
-      esbuild(esbuildOptions),
-      replace(replacements),
-      postcss({ inject: false }),
-      autoImport(autoImportOptions),
-      icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
-      glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
-      url({ limit: 0, destDir: resolve(dist, 'assets') }),
-      isProd && terser(),
-      filesize(),
-    ],
-    input: Object.fromEntries(
-      Object.entries(inputs).map(([key, filename]) => [key, resolve(inputRoot, filename)]),
-    ),
-    external,
-    output: {
-      dir: dist,
-      format: 'es',
-      entryFileNames: '[name].js',
-      sourcemap: true,
-    },
-  })
-})
+    return defineConfig({
+      plugins: [
+        clearDist && del({ targets: resolve(dist, '*'), runOnce: true }),
+        nodeResolve({ extensions: ['.mjs', '.js', '.json', '.node', '.ts', '.tsx'] }),
+        commonjs(),
+        alias(aliases),
+        esbuild(esbuildOptions),
+        replace(replacements),
+        postcss({ inject: false }),
+        autoImport(autoImportOptions),
+        icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
+        glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
+        url({ limit: 0, destDir: resolve(dist, 'assets') }),
+        isProd && terser(),
+        filesize(),
+      ],
+      input: Object.fromEntries(
+        Object.entries(inputs).map(([key, filename]) => [key, resolve(inputRoot, filename)]),
+      ),
+      external,
+      output: {
+        dir: dist,
+        format: 'es',
+        entryFileNames: '[name].js',
+        sourcemap: true,
+        hoistTransitiveImports: false,
+      },
+    })
+  },
+)

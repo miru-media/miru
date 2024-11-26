@@ -13,6 +13,7 @@ export default tseslint.config(
   {
     settings: {
       'import/resolver': { typescript: { project: '.' } },
+      'import/internal-regex': '^(webgl-media-editor|miru-video-editor|reactive-effects|renderer|shared)/',
     },
     languageOptions: {
       parserOptions: {

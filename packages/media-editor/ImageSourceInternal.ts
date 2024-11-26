@@ -1,3 +1,5 @@
+import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Renderer } from 'renderer/Renderer'
 import {
   computed,
   createEffectScope,
@@ -7,7 +9,7 @@ import {
   type Ref,
   toValue,
   watch,
-} from '@/framework/reactivity'
+} from 'shared/framework/reactivity'
 import {
   type AdjustmentsState,
   AssetType,
@@ -18,7 +20,7 @@ import {
   type ImageSourceOption,
   type Size,
   type SyncImageSource,
-} from '@/types'
+} from 'shared/types'
 import {
   createDisplayContext,
   decodeAsyncImageSource,
@@ -33,9 +35,7 @@ import {
   resizeImageSync,
   useElementSize,
   win,
-} from '@/utils'
-import { type EffectInternal } from 'reactive-effects/Effect'
-import { type Renderer } from 'renderer/Renderer'
+} from 'shared/utils'
 
 import { DEFAULT_INTENSITY } from './constants'
 

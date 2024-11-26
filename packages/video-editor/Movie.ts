@@ -1,9 +1,10 @@
-import { computed, createEffectScope, effect, type Ref, ref, watch } from '@/framework/reactivity'
-import { type Size } from '@/types'
-import { getWebgl2Context, setObjectSize } from '@/utils'
-import { Renderer } from 'renderer/Renderer'
 import Stats from 'stats.js'
 import VideoContext from 'videocontext'
+
+import { Renderer } from 'renderer/Renderer'
+import { computed, createEffectScope, effect, type Ref, ref, watch } from 'shared/framework/reactivity'
+import { type Size } from 'shared/types'
+import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
 import { Track } from './Track'
 

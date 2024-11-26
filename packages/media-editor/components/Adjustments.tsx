@@ -1,5 +1,5 @@
-import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from '@/framework/reactivity'
-import { type AdjustmentsState, type InputEvent } from '@/types'
+import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'shared/framework/reactivity'
+import { type AdjustmentsState, type InputEvent } from 'shared/types'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'
 import { type MediaEditor } from '../MediaEditor'

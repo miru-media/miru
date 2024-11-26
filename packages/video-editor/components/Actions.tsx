@@ -1,5 +1,5 @@
-import { toRef } from '@/framework/reactivity'
-import { type InputEvent } from '@/types'
+import { toRef } from 'shared/framework/reactivity'
+import { type InputEvent } from 'shared/types'
 
 import { type VideoEditor } from '../VideoEditor'
 

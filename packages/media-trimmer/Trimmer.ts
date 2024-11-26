@@ -1,6 +1,7 @@
-import { IS_LIKE_MAC, IS_SAFARI } from '@/userAgent'
-import { Janitor, promiseWithResolvers } from '@/utils'
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
+
+import { IS_LIKE_MAC, IS_SAFARI } from 'shared/userAgent'
+import { Janitor, promiseWithResolvers } from 'shared/utils'
 
 import {
   type DemuxerChunkInfo,

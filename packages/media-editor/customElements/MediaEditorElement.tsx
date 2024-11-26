@@ -1,6 +1,6 @@
-import { createEffectScope, effect, ref } from '@/framework/reactivity'
-import { type Context2D, EditorView, type Effect, type ImageEditState, type ImageSourceOption } from '@/types'
-import { downloadBlob, win } from '@/utils'
+import { createEffectScope, effect, ref } from 'shared/framework/reactivity'
+import { type Context2D, EditorView, type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
+import { downloadBlob, win } from 'shared/utils'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'

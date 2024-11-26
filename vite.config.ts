@@ -43,12 +43,11 @@ export default defineConfig({
     alias: {
       'virtual:image-shadow.css': resolve(import.meta.dirname, 'packages/media-editor/index.css?inline'),
       'virtual:video-shadow.css': resolve(import.meta.dirname, 'packages/video-editor/index.css?inline'),
-      '@': resolve(import.meta.dirname, 'packages/shared'),
     },
   },
   esbuild: {
     jsx: 'automatic',
-    jsxImportSource: '@/framework',
+    jsxImportSource: 'shared/framework',
   },
   base: './',
   build: {

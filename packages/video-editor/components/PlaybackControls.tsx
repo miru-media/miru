@@ -1,5 +1,5 @@
-import { type InputEvent } from '@/types'
-import { remap } from '@/utils/math'
+import { type InputEvent } from 'shared/types'
+import { remap } from 'shared/utils/math'
 
 import { type VideoEditor } from '../VideoEditor'
 

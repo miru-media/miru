@@ -1,4 +1,4 @@
-import { createEffectScope, type EffectScope, ref, type Ref } from '@/framework/reactivity'
+import { createEffectScope, type EffectScope, ref, type Ref } from 'shared/framework/reactivity'
 import {
   type Context2D,
   EditorView,
@@ -6,7 +6,7 @@ import {
   type ImageEditState,
   type ImageSource,
   type ImageSourceOption,
-} from '@/types'
+} from 'shared/types'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'

@@ -1,9 +1,10 @@
-import { effect, ref, type Ref, watch } from '@/framework/reactivity'
-import { type Effect } from '@/types'
-import { useEventListener } from '@/utils'
+import VideoContext, { type TransitionNode } from 'videocontext'
+
 import { EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
-import VideoContext, { type TransitionNode } from 'videocontext'
+import { effect, ref, type Ref, watch } from 'shared/framework/reactivity'
+import { type Effect } from 'shared/types'
+import { useEventListener } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
 import { MiruVideoNode } from './custom'

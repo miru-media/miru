@@ -1,6 +1,7 @@
-import { decodeAsyncImageSource, type Janitor, promiseWithResolvers } from '@/utils'
-import { seekAndWait } from 'miru-video-editor/utils'
 import { debounce } from 'throttle-debounce'
+
+import { seekAndWait } from 'miru-video-editor/utils'
+import { decodeAsyncImageSource, type Janitor, promiseWithResolvers } from 'shared/utils'
 
 import { FrameExtractor } from './FrameExtractor'
 

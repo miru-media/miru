@@ -1,4 +1,4 @@
-import { IS_LIKE_MAC, IS_SAFARI_16, IS_SAFARI_17 } from '@/userAgent'
+import { IS_LIKE_MAC, IS_SAFARI_16, IS_SAFARI_17 } from 'shared/userAgent'
 
 import { MP4Demuxer } from './demuxer'
 

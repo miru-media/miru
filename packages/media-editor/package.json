@@ -1,22 +1,20 @@
 {
-  "name": "media-editor",
+  "name": "webgl-media-editor",
   "description": "A simple image editor with cropping, rotation, and WebGL filters",
   "version": "0.0.0",
   "type": "module",
-  "module": "dist/media-editor.js",
-  "main": "dist/media-editor.umd.js",
+  "module": "dist/webgl-media-editor.js",
+  "main": "dist/webgl-media-editor.js",
   "files": [
     "dist"
   ],
   "publishConfig": {
     "exports": {
       ".": {
-        "import": "./dist/media-editor.js",
-        "require": "./dist/media-editor.umd.js"
+        "import": "./dist/webgl-media-editor.js"
       },
       "./vue2": {
-        "import": "./dist/vue2.js",
-        "require": "./dist/vue2.umd.js"
+        "import": "./dist/vue2.js"
       }
     }
   },
@@ -46,10 +44,5 @@
     "gl-matrix": "catalog:",
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:"
-  },
-  "devDependencies": {
-    "reactive-effects": "workspace:",
-    "renderer": "workspace:",
-    "shared": "workspace:"
   }
 }

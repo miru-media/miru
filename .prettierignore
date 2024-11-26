@@ -7,3 +7,4 @@ bin
 *.lock
 auto-imports.d.ts
 .eslintrc-auto-import.json
+CHANGELOG.md

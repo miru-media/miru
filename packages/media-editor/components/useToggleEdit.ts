@@ -1,4 +1,4 @@
-import { type MaybeRefOrGetter, ref, toRef, toValue, watch } from '@/framework/reactivity'
+import { type MaybeRefOrGetter, ref, toRef, toValue, watch } from 'shared/framework/reactivity'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'
 

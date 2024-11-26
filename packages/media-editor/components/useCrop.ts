@@ -1,5 +1,7 @@
-import { computed, ref, toValue, watch } from '@/framework/reactivity'
-import { type CropState } from '@/types'
+import Cropper from 'cropperjs'
+
+import { computed, ref, toValue, watch } from 'shared/framework/reactivity'
+import { type CropState } from 'shared/types'
 import {
   centerTo,
   cropIsEqualTo,
@@ -9,8 +11,7 @@ import {
   getCenter,
   offsetBy,
   setObjectSize,
-} from '@/utils'
-import Cropper from 'cropperjs'
+} from 'shared/utils'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'
 import { type MediaEditor } from '../MediaEditor'

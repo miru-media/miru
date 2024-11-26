@@ -1,4 +1,4 @@
-import { computed } from '@/framework/reactivity'
+import { computed } from 'shared/framework/reactivity'
 
 import { type VideoEditor } from '../VideoEditor'
 

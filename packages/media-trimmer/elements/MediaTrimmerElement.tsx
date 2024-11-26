@@ -1,5 +1,5 @@
-import { createEffectScope, ref } from '@/framework/reactivity'
 import { renderComponentTo } from 'miru-video-editor/components/renderTo'
+import { createEffectScope, ref } from 'shared/framework/reactivity'
 
 import { trim } from '../trim'
 import { type TrimState, VideoTrimmerUI } from '../VideoTrimmerUI'

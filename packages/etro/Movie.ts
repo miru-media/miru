@@ -1,11 +1,12 @@
-import { computed, createEffectScope, effect, type Ref, ref } from '@/framework/reactivity'
-import { type Size } from '@/types'
-import { getWebgl2Context } from '@/utils'
 import etro from 'etro'
-import { getDefaultFilters } from 'media-editor/defaultFilters'
+import Stats from 'stats.js'
+
 import { EffectInternal } from 'reactive-effects/Effect'
 import { Renderer } from 'renderer/Renderer'
-import Stats from 'stats.js'
+import { computed, createEffectScope, effect, type Ref, ref } from 'shared/framework/reactivity'
+import { type Size } from 'shared/types'
+import { getWebgl2Context } from 'shared/utils'
+import { getDefaultFilters } from 'webgl-media-editor/defaultFilters'
 
 import { Clip } from './Clip'
 import { useMappedUniqueArray } from './utils'

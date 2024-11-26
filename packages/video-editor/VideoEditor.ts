@@ -1,7 +1,7 @@
-import { effect, type Ref, ref } from '@/framework/reactivity'
-import { type Size } from '@/types'
-import { useElementSize } from '@/utils'
-import { remap0 } from '@/utils/math'
+import { effect, type Ref, ref } from 'shared/framework/reactivity'
+import { type Size } from 'shared/types'
+import { useElementSize } from 'shared/utils'
+import { remap0 } from 'shared/utils/math'
 
 import { type Clip } from './Clip'
 import { Movie } from './Movie'

@@ -1,4 +1,4 @@
-import { promiseWithResolvers, timeout } from '@/utils'
+import { promiseWithResolvers, timeout } from 'shared/utils'
 
 import { type MP4Demuxer } from './demuxer'
 import { FrameExtractor } from './FrameExtractor'
