@@ -99,6 +99,5 @@ export class EtroVideo extends etro.layer.Video {
     renderer.draw()
     renderer.setEffect(undefined)
     renderer.setIntensity(0)
-    renderer.setAdjustments(undefined)
   }
 }

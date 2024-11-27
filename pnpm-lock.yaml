@@ -179,6 +179,9 @@ importers:
       rollup-plugin-filesize:
         specifier: ^10.0.0
         version: 10.0.0
+      rollup-plugin-glob-import:
+        specifier: ^0.5.0
+        version: 0.5.0
       rollup-plugin-glsl-optimize:
         specifier: ^1.0.4
         version: 1.0.4(rollup@4.24.0)
@@ -332,6 +335,10 @@ importers:
       throttle-debounce:
         specifier: 'catalog:'
         version: 5.0.2
+    devDependencies:
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
 
   packages/video-editor:
     dependencies:
@@ -4701,6 +4708,10 @@ packages:
   rollup-plugin-filesize@10.0.0:
     resolution: {integrity: sha512-JAYYhzCcmGjmCzo3LEHSDE3RAPHKIeBdpqRhiyZSv5o/3wFhktUOzYAWg/uUKyEu5dEaVaql6UOmaqHx1qKrZA==}
     engines: {node: '>=16.0.0'}
+
+  rollup-plugin-glob-import@0.5.0:
+    resolution: {integrity: sha512-GpinkWAEihianHz1yGpGT89tjEf6HUqRBsMycd1E8M0r6UVNM4pWctHyTnIGpSYSzLra9amDpYVYlYUAqkMRbA==}
+    engines: {node: '>=8'}
 
   rollup-plugin-glsl-optimize@1.0.4:
     resolution: {integrity: sha512-S72YbW6jMm72yNV4aUSMq0syMy1fJQzxeB+bdtfld0gdMZFOmL7cqeaT8q+G0nmWRgHx+ZRvaoZDOM9l0D0Sig==}
@@ -10040,6 +10051,11 @@ snapshots:
       - bluebird
       - supports-color
 
+  rollup-plugin-glob-import@0.5.0:
+    dependencies:
+      fast-glob: 3.3.2
+      rollup-pluginutils: 2.8.2
+
   rollup-plugin-glsl-optimize@1.0.4(rollup@4.24.0):
     dependencies:
       '@derhuerst/http-basic': 8.2.4
@@ -10657,7 +10673,7 @@ snapshots:
       estree-walker: 3.0.3
       fast-glob: 3.3.2
       local-pkg: 0.5.0
-      magic-string: 0.30.11
+      magic-string: 0.30.12
       mlly: 1.7.1
       pathe: 1.1.2
       pkg-types: 1.2.0

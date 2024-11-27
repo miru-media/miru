@@ -1,7 +1,7 @@
 import { type EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
 import { createEffectScope, effect, onScopeDispose, ref, type Ref, watch } from 'shared/framework/reactivity'
-import { AssetType, type ImageSourceOption } from 'shared/types'
+import { type ImageSourceOption } from 'shared/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
 
 import { EtroVideo } from './EtroVideo'
@@ -45,7 +45,7 @@ export class Clip {
     this.height = ref(init.height)
     this.effects = ref(init.effects)
 
-    const sourceOption = normalizeSourceOption(init.source, AssetType.Video)
+    const sourceOption = normalizeSourceOption(init.source, 'video')
 
     if (sourceOption.source instanceof HTMLVideoElement) this.media = ref(sourceOption.source)
     else {

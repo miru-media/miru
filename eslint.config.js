@@ -63,7 +63,6 @@ export default tseslint.config(
         },
       ],
       'import/no-cycle': 'error',
-      'import/no-extraneous-dependencies': 'error',
       'import/no-relative-packages': 'error',
       'import/no-useless-path-segments': 'error',
       'no-undef': 'off',
@@ -73,6 +72,7 @@ export default tseslint.config(
   {
     files: ['packages/**/*.{ts,tsx,js,jsx}'],
     rules: {
+      'import/no-extraneous-dependencies': 'error',
       'no-console': 'error',
     },
   },

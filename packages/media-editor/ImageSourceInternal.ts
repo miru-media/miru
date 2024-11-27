@@ -12,12 +12,12 @@ import {
 } from 'shared/framework/reactivity'
 import {
   type AdjustmentsState,
-  AssetType,
   type Context2D,
   type CropState,
   type DisplayContext,
   type ImageEditState,
   type ImageSourceOption,
+  type RendererEffectOp,
   type Size,
   type SyncImageSource,
 } from 'shared/types'
@@ -44,6 +44,7 @@ interface ImageSourceInternalOptions {
   thumbnailSize: Ref<Size>
   renderer: Renderer
   effects: Ref<EffectInternal[]>
+  adjustColorOp: RendererEffectOp
   onRenderPreview: () => void
   onEdit: (state: ImageEditState) => void
 }
@@ -58,6 +59,7 @@ export class ImageSourceInternal {
   #isLoading = ref(true)
   #error = ref()
   #effects: Ref<EffectInternal[]>
+  #adjustColorOp: RendererEffectOp
 
   previewKey = ref(0)
   thumbnailKey = ref(0)
@@ -96,6 +98,7 @@ export class ImageSourceInternal {
     thumbnailSize,
     renderer,
     effects,
+    adjustColorOp,
     onRenderPreview,
     onEdit,
   }: ImageSourceInternalOptions) {
@@ -105,6 +108,7 @@ export class ImageSourceInternal {
     this.#renderer = renderer
     this.#texture = renderer.createTexture()!
     this.#effects = effects
+    this.#adjustColorOp = adjustColorOp
 
     this.onRenderPreview = onRenderPreview
 
@@ -161,7 +165,7 @@ export class ImageSourceInternal {
       const { promise } = decodeAsyncImageSource(
         sourceOption.source,
         sourceOption.crossOrigin,
-        sourceOption.type === AssetType.Video,
+        sourceOption.type === 'video',
       )
 
       ;(devSlowDown != undefined ? devSlowDown(promise) : promise)
@@ -264,12 +268,17 @@ export class ImageSourceInternal {
     this.crop.value = crop
   }
 
-  #applyEditValuesToRenderer() {
+  #applyEditValuesToRenderer(effect?: EffectInternal, adjustments?: AdjustmentsState) {
     const renderer = this.#renderer
 
-    renderer.setEffect(this.#effects.value[this.effect.value])
+    const ops = effect?.ops.slice() ?? []
+    if (adjustments) {
+      Object.assign(this.#adjustColorOp.uniforms, adjustments)
+      ops.unshift(this.#adjustColorOp)
+    }
+
+    renderer.setEffect({ ops })
     renderer.setIntensity(this.intensity.value)
-    renderer.setAdjustments(this.adjustments.value)
   }
 
   drawFullSize() {
@@ -292,7 +301,7 @@ export class ImageSourceInternal {
       const size = crop ?? rotated
       renderer.setSourceTexture(tempTexture, size, size)
       renderer.loadImage(tempTexture, cropped)
-      this.#applyEditValuesToRenderer()
+      this.#applyEditValuesToRenderer(this.#effects.value[this.effect.value], this.adjustments.value)
 
       renderer.clear()
       renderer.draw()
@@ -307,7 +316,7 @@ export class ImageSourceInternal {
 
     const renderer = this.#renderer
     renderer.setSourceTexture(this.#texture, this.#previewSize.value, rotated, this.crop.value)
-    this.#applyEditValuesToRenderer()
+    this.#applyEditValuesToRenderer(this.#effects.value[this.effect.value], this.adjustments.value)
 
     renderer.clear()
     await renderer.drawAndTransfer(context)
@@ -323,7 +332,7 @@ export class ImageSourceInternal {
     const renderer = this.#renderer
 
     renderer.setSourceTexture(this.#texture, this.#thumbnailSize.value, rotated, this.crop.value)
-    renderer.setEffect(effect)
+    this.#applyEditValuesToRenderer(effect, this.adjustments.value)
     // draw thumbnails at default intensity
     renderer.setIntensity(DEFAULT_INTENSITY)
 
@@ -333,5 +342,6 @@ export class ImageSourceInternal {
 
   dispose() {
     this.#scope.stop()
+    this.#adjustColorOp = undefined as never
   }
 }

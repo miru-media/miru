@@ -1,6 +1,5 @@
 import { MediaEditorElement } from './customElements/MediaEditorElement'
 import { MediaEditorFilterMenuElement, MediaEditorPreviewElement } from './customElements/wrapper'
-export { EffectOpType } from 'renderer/constants'
 
 if (typeof customElements !== 'undefined' && 'define' in customElements) {
   customElements.define('media-editor', MediaEditorElement)

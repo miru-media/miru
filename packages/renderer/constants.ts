@@ -2,10 +2,7 @@ import type * as twgl from 'twgl.js'
 
 import * as GL from './GL'
 
-export * as EffectOpType from './EffectOpType'
-
 export const MAX_EFFECT_OPS = 10
-export const MAX_EFFECT_TEXTURES = 7
 
 export const SOURCE_TEX_OPTIONS = {
   target: GL.TEXTURE_2D,

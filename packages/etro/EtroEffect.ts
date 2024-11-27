@@ -3,7 +3,6 @@ import etro from 'etro'
 import { type EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
 import { type Ref, ref } from 'shared/framework/reactivity'
-import { type AdjustmentsState } from 'shared/types'
 
 import { type EtroVideo } from './EtroVideo'
 
@@ -11,7 +10,6 @@ export class EtroEffect extends etro.effect.Visual {
   #renderer: Renderer
   effect: Ref<EffectInternal | undefined>
   intensity = ref(1)
-  adjustments = ref<AdjustmentsState>({ brightness: 0, contrast: 0, saturation: 0 })
 
   // TODO: dispose
 
@@ -29,7 +27,6 @@ export class EtroEffect extends etro.effect.Visual {
     // WIP: render.setSourceTexture(framebufferTextureOrSomething)
     renderer.setEffect(this.effect.value)
     renderer.setIntensity(this.intensity.value)
-    renderer.setAdjustments(this.adjustments.value)
     renderer.draw()
   }
 

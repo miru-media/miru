@@ -9,5 +9,8 @@
     "@reactively/core": "^0.0.8",
     "renderer": "workspace:",
     "throttle-debounce": "catalog:"
+  },
+  "devDependencies": {
+    "twgl.js": "catalog:"
   }
 }

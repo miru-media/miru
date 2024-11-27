@@ -1,5 +1,5 @@
 import { computed, createEffectScope, onScopeDispose, type Ref, ref } from 'shared/framework/reactivity'
-import { AssetType, type ImageSourceOption } from 'shared/types'
+import { type ImageSourceOption } from 'shared/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
 
 import { TRANSITION_DURATION_S } from './constants'
@@ -108,7 +108,7 @@ export class BaseClip {
   }
 
   setMedia(value: ImageSourceOption) {
-    const sourceOption = normalizeSourceOption(value, AssetType.Video)
+    const sourceOption = normalizeSourceOption(value, 'video')
 
     if (sourceOption.source instanceof HTMLVideoElement) this.media.value = sourceOption.source
     else {

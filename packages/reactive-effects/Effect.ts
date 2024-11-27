@@ -1,7 +1,7 @@
-import { MAX_EFFECT_TEXTURES } from 'renderer/constants'
+import { FRAGMENT_SHADERS } from 'renderer/allFragmentShaders'
 import { type Renderer } from 'renderer/Renderer'
 import { computed, type Ref } from 'shared/framework/reactivity'
-import { AssetType, type Effect, type RendererEffectOp } from 'shared/types'
+import { type AssetType, type Effect, type RendererEffectOp } from 'shared/types'
 import { Janitor, normalizeSourceOption } from 'shared/utils'
 
 import { TextureResource } from './TextureResource'
@@ -11,11 +11,10 @@ export class EffectInternal {
   name: string
   ops: RendererEffectOp[]
   isDisposed = false
-  images: WebGLTexture[]
-  luts: WebGLTexture[]
   janitor = new Janitor()
   isLoading: Ref<boolean>
   resources: TextureResource[]
+  shaders: string[] = []
   get promise() {
     return this.resources.length ? Promise.all(this.resources.map((t) => t.promise)) : undefined
   }
@@ -25,47 +24,70 @@ export class EffectInternal {
 
     this.renderer = renderer
     this.name = name
-    const images: WebGLTexture[] = (this.images = [])
-    const luts: WebGLTexture[] = (this.luts = [])
     const resources: TextureResource[] = (this.resources = [])
+    const uniforms: NonNullable<RendererEffectOp['uniforms']> = {}
     this.isLoading = this.isLoading = computed(() => this.resources.some((r) => r.isLoading.value))
 
+    const createTexture = (source: string, type?: AssetType) => {
+      const resource = new TextureResource(normalizeSourceOption(source, type), renderer)
+      resources.push(resource)
+      return resource.texture
+    }
+
     this.ops = ops.map((op) => {
-      let lutIndex = -1
-      let imageIndex = -1
+      let fragmentShader: string
 
-      if (op.image != undefined) {
-        const type = AssetType.Image
-        const resource = new TextureResource(normalizeSourceOption(op.image, type), renderer)
-        resources.push(resource)
+      switch (op.type) {
+        case 'shader':
+          for (const key in op.properties) {
+            const value = op.properties[key]
+            if (typeof value !== 'number' && 'type' in value)
+              uniforms[key] = createTexture(value.source, value.type)
+            else uniforms[key] = value
+          }
 
-        imageIndex = images.length
-        images.push(resource.texture)
+          fragmentShader = op.fragmentShader
+          break
+        case 'lut': {
+          const { lut } = op
+          uniforms.lut = typeof lut === 'string' ? createTexture(lut) : createTexture(lut.source, lut.type)
+          fragmentShader = FRAGMENT_SHADERS.lut
+          break
+        }
+        case 'vignette':
+          fragmentShader = FRAGMENT_SHADERS.vignette
+          break
+        case 'film_grain':
+          fragmentShader = FRAGMENT_SHADERS.film_grain
+          break
+        case 'adjust_color':
+          uniforms.brightness = op.brightness
+          uniforms.contrast = op.contrast
+          uniforms.saturation = op.saturation
+          fragmentShader = FRAGMENT_SHADERS.adjust_color
+          break
+        case 'sepia':
+          fragmentShader = FRAGMENT_SHADERS.sepia
+          break
+        case 'hue_rotate':
+          uniforms.angle = op.angle
+          fragmentShader = FRAGMENT_SHADERS.hue_rotate
+          break
       }
 
-      if (op.lut != undefined) {
-        const type = AssetType.Lut
-        const resource = new TextureResource(normalizeSourceOption(op.lut, type), renderer)
-        resources.push(resource)
-
-        lutIndex = luts.length
-        luts.push(resource.texture)
-      }
+      this.shaders.push(fragmentShader)
 
       return {
-        ...op,
+        programInfo: renderer.getProgram(fragmentShader),
         intensity: op.intensity ?? 1,
-        image: imageIndex,
-        lut: lutIndex,
+        uniforms,
       }
     })
 
-    if (resources.length > MAX_EFFECT_TEXTURES)
-      throw new Error(`[miru] texture count of ${resources.length} exceeds max of ${MAX_EFFECT_TEXTURES}`)
-
     this.janitor.add(() => {
       this.resources.forEach((r) => r.janitor.dispose())
-      this.resources.length = this.images.length = this.luts.length = 0
+      this.shaders.forEach((s) => renderer.dropProgram(s))
+      this.resources.length = this.shaders.length = 0
 
       this.renderer = undefined as never
 

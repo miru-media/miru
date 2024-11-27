@@ -4,22 +4,9 @@ import VideoContext, { type RenderGraph } from 'videocontext'
 import { type EffectInternal } from 'reactive-effects/Effect'
 import { FRAMEBUFFER_TEX_OPTIONS } from 'renderer/constants'
 import * as GL from 'renderer/GL'
-import fragmentShader from 'renderer/glsl/main.frag'
-import vertexShader from 'renderer/glsl/main.vert'
 import { type Renderer } from 'renderer/Renderer'
 import { type AdjustmentsState, type Size } from 'shared/types'
 import { fit, setObjectSize } from 'shared/utils'
-
-export const definition = {
-  title: 'Miru Filter',
-  description: 'Miru image filters',
-  vertexShader,
-  fragmentShader,
-  properties: {
-    u_intensity: { type: 'uniform', value: 1 },
-  },
-  inputs: ['u_image', 'u_image_b'],
-}
 
 export class MiruVideoNode extends VideoContext.NODES.VideoNode {
   #media: HTMLVideoElement
@@ -102,8 +89,7 @@ export class MiruVideoNode extends VideoContext.NODES.VideoNode {
       renderer.setSourceTexture(this.#mediaTexture, gl.canvas, mediaSize, undefined, true, transform)
       renderer.setEffect(this.effect)
       renderer.setIntensity(this.intensity)
-      renderer.setAdjustments(this.adjustments)
-      renderer.draw()
+      renderer.draw(this.#framebuffer)
       this._texture = this.#outTexture
     }
 

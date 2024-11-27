@@ -10,6 +10,7 @@ import { defineConfig } from 'rollup'
 import del from 'rollup-plugin-delete'
 import esbuild from 'rollup-plugin-esbuild-transform'
 import filesize from 'rollup-plugin-filesize'
+import globImport from 'rollup-plugin-glob-import'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
 import postcss from 'rollup-plugin-postcss'
 import autoImport from 'unplugin-auto-import/rollup'
@@ -101,6 +102,7 @@ export default packageOptions.map(
       plugins: [
         clearDist && del({ targets: resolve(dist, '*'), runOnce: true }),
         nodeResolve({ extensions: ['.mjs', '.js', '.json', '.node', '.ts', '.tsx'] }),
+        globImport({ format: 'default' }),
         commonjs(),
         alias(aliases),
         esbuild(esbuildOptions),

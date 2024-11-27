@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import globImport from 'rollup-plugin-glob-import'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
 import { presetIcons, presetUno } from 'unocss'
 import unocss from 'unocss/vite'
@@ -35,6 +36,7 @@ export default defineConfig({
         },
       },
     }),
+    globImport({ format: 'default' }),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
     !!process.env.BASIC_SSL && basicSsl(),
     !!process.env.BUNDLE_ANALYZER && analyzer({ openAnalyzer: false, analyzerPort: 5173 }),

@@ -44,5 +44,8 @@
     "gl-matrix": "catalog:",
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:"
+  },
+  "devDependencies": {
+    "twgl.js": "catalog:"
   }
 }

@@ -22,6 +22,10 @@ export interface MediaEditorOptions {
 export class MediaEditor {
   #scope: EffectScope
   renderer = new Renderer()
+  #adjustColorEffect = new EffectInternal(
+    { name: '_', ops: [{ type: 'adjust_color', brightness: 0, contrast: 0, saturation: 0 }] },
+    this.renderer,
+  )
 
   sourceInputs = ref<ImageSourceOption[]>([])
   sources = ref<ImageSourceInternal[]>([])
@@ -70,6 +74,7 @@ export class MediaEditor {
                 thumbnailSize: ref({ width: 300, height: 300 }),
                 renderer: this.renderer,
                 effects: this.effects,
+                adjustColorOp: this.#adjustColorEffect.ops[0],
                 onRenderPreview: () => onRenderPreview(sourceIndex),
                 onEdit: (state) => onEdit(sourceIndex, state),
               }),

@@ -2,8 +2,7 @@ import { mat4 } from 'gl-matrix'
 import * as twgl from 'twgl.js'
 
 import {
-  type AdjustmentsState,
-  AssetType,
+  type AssetType,
   type Context2D,
   type CropState,
   type RendererEffect,
@@ -13,10 +12,10 @@ import {
 } from 'shared/types'
 import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from 'shared/utils'
 
-import { EffectOpType, LUT_TEX_OPTIONS, MAX_EFFECT_OPS, SOURCE_TEX_OPTIONS } from './constants'
+import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './GL'
-import fs from './glsl/main.frag'
 import vs from './glsl/main.vert'
+import passthrough from './glsl/passthrough.frag'
 
 export interface RendererOptions {
   gl?: WebGL2RenderingContext
@@ -36,17 +35,13 @@ const setTextureParameters = (
 
 export class Renderer {
   #gl: WebGL2RenderingContext
-  #programInfo: twgl.ProgramInfo
+  #passthroughProgram: twgl.ProgramInfo
   #uniforms = {
     u_flipY: true,
     u_resolution: [1, 1],
     u_image: null as WebGLTexture | null,
     u_size: [1, 1],
     u_intensity: 1,
-    u_images: [] as WebGLTexture[],
-    u_luts: [] as WebGLTexture[],
-    u_operations: [] as RendererEffectOp[],
-    u_adjustments: null as AdjustmentsState | null,
     u_matrix: mat4.create(),
     u_textureMatrix: mat4.create(),
   }
@@ -55,11 +50,10 @@ export class Renderer {
   emptyTexture3D: WebGLTexture
   isDisposed = false
 
-  #emptyAdjustments: AdjustmentsState = {
-    brightness: 0,
-    contrast: 0,
-    saturation: 0,
-  }
+  effectOps: RendererEffectOp[] = []
+
+  #fbs: [twgl.FramebufferInfo, twgl.FramebufferInfo]
+  #fragmentsToPrograms = new Map<string, { programInfo: twgl.ProgramInfo; refCount: number }>()
 
   get canvas() {
     return this.#gl.canvas
@@ -69,15 +63,14 @@ export class Renderer {
   constructor({ gl = getWebgl2Context() } = {}) {
     this.#gl = gl
 
-    this.#programInfo = twgl.createProgramInfo(gl, [vs, fs])
+    this.#passthroughProgram = twgl.createProgramInfo(gl, [vs, passthrough])
 
     const unitQuad = new Float32Array([1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0])
 
     ;[
-      { name: 'a_position', data: unitQuad },
-      { name: 'a_texCoord', data: unitQuad },
-    ].forEach(({ name, data }) => {
-      const location = gl.getAttribLocation(this.#programInfo.program, name)
+      unitQuad, // a_position
+      unitQuad, // a_texCoord
+    ].forEach((data, location) => {
       const buffer = gl.createBuffer()!
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
@@ -89,6 +82,13 @@ export class Renderer {
 
     this.emptyTexture = this.createTexture()
     this.emptyTexture3D = this.createTexture(LUT_TEX_OPTIONS)
+
+    const createFb = () =>
+      twgl.createFramebufferInfo(gl, [
+        { format: GL.RGBA, type: GL.UNSIGNED_BYTE, min: GL.LINEAR, wrap: GL.CLAMP_TO_EDGE },
+      ])
+
+    this.#fbs = [createFb(), createFb()]
   }
 
   createTexture(textureOptions: twgl.TextureOptions = SOURCE_TEX_OPTIONS) {
@@ -156,14 +156,24 @@ export class Renderer {
       mat4.scale(u_textureMatrix, u_textureMatrix, [crop.width, crop.height, 1])
     }
 
-    const { canvas } = this.#gl
+    const gl = this.#gl
+    const { canvas } = gl
 
-    canvas.width = resolution.width
-    canvas.height = resolution.height
+    {
+      const { width, height } = resolution
+
+      this.#fbs.forEach((fb) => {
+        gl.bindTexture(GL.TEXTURE_2D, fb.attachments[0])
+        gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, null)
+      })
+
+      canvas.width = width
+      canvas.height = height
+    }
   }
 
   loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut) {
-    const isHald = type === AssetType.HaldLut
+    const isHald = type === 'hald-lut'
     this.#loadLut(texture, imageData, isHald)
   }
 
@@ -215,58 +225,92 @@ export class Renderer {
   }
 
   setEffect(effect?: RendererEffect) {
-    const { images, luts, ops } = effect ?? { images: [], luts: [], ops: [] }
-
-    if (ops.length > MAX_EFFECT_OPS)
-      throw new Error(`[miru] ${ops.length} exeeds the maximum of ${MAX_EFFECT_OPS}`)
-
-    this.#uniforms.u_operations.length = 0
-
-    const paddedOps = []
-    const noop: RendererEffectOp = {
-      type: EffectOpType.NOOP,
-      image: 0,
-      lut: 0,
-      intensity: 0,
-    }
-
-    for (let i = 0; i < MAX_EFFECT_OPS; i++) paddedOps[i] = ops[i] ?? noop
-
-    this.#uniforms.u_images = images
-    this.#uniforms.u_luts = luts
-    this.#uniforms.u_operations = paddedOps
+    this.effectOps = (effect?.ops ?? []).slice()
   }
 
   setIntensity(value: number) {
     this.#uniforms.u_intensity = value
   }
 
-  setAdjustments(value = this.#emptyAdjustments) {
-    this.#uniforms.u_adjustments = value
-  }
-
   clear() {
     this.#gl.clear(GL.COLOR_BUFFER_BIT)
   }
 
-  draw() {
+  getProgram(fragmentShader: string) {
+    const entry = this.#fragmentsToPrograms.get(fragmentShader) ?? {
+      programInfo: twgl.createProgramInfo(this.#gl, [vs, fragmentShader]),
+      refCount: 0,
+    }
+
+    entry.refCount++
+    this.#fragmentsToPrograms.set(fragmentShader, entry)
+    return entry.programInfo
+  }
+
+  dropProgram(fragmentShader: string) {
+    const entry = this.#fragmentsToPrograms.get(fragmentShader)
+    if (!entry) return
+
+    entry.refCount--
+
+    if (entry.refCount <= 0) {
+      this.#gl.deleteProgram(entry.programInfo.program)
+      this.#fragmentsToPrograms.delete(fragmentShader)
+    }
+  }
+
+  draw(targetFrameBuffer: WebGLFramebuffer | null = null) {
     const gl = this.#gl
 
-    gl.useProgram(this.#programInfo.program)
+    gl.useProgram(this.#passthroughProgram.program)
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
     gl.clearColor(0, 0, 0, 1)
     gl.enable(GL.BLEND)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    twgl.setUniforms(this.#passthroughProgram, this.#uniforms)
 
-    twgl.setUniforms(this.#programInfo, this.#uniforms)
+    if (this.effectOps.length === 0) {
+      gl.bindFramebuffer(GL.FRAMEBUFFER, targetFrameBuffer)
+      gl.drawArrays(GL.TRIANGLES, 0, 6)
+    } else {
+      const [width, height] = this.#uniforms.u_resolution
+      const u_matrix = mat4.ortho(mat4.create(), 0, width, height, 0, -1, 1)
+      mat4.scale(u_matrix, u_matrix, [width, height, 1])
+      const u_textureMatrix = mat4.identity(mat4.create())
 
-    gl.drawArrays(GL.TRIANGLES, 0, 6)
+      gl.bindFramebuffer(GL.FRAMEBUFFER, this.#fbs[0].framebuffer)
+      gl.drawArrays(GL.TRIANGLES, 0, 6)
 
-    const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
+      const lastOpIndex = this.effectOps.length - 1
 
-    if (sync == null) return
-    if (gl.getSyncParameter(sync, GL.SYNC_STATUS) !== GL.SIGNALED) gl.clientWaitSync(sync, 0, 0)
-    gl.deleteSync(sync)
+      this.effectOps.forEach((op, i) => {
+        const sourceFbIndex = i % 2
+        const targetFb =
+          i === lastOpIndex ? targetFrameBuffer : this.#fbs[(sourceFbIndex + 1) % 2].framebuffer
+
+        gl.useProgram(op.programInfo.program)
+        gl.bindFramebuffer(GL.FRAMEBUFFER, targetFb)
+
+        twgl.setUniforms(op.programInfo, {
+          ...op.uniforms,
+          ...this.#uniforms,
+          u_flipY: true,
+          u_matrix,
+          u_textureMatrix,
+          u_image: this.#fbs[sourceFbIndex].attachments[0],
+          u_intensity: this.#uniforms.u_intensity * op.intensity,
+        })
+        gl.drawArrays(GL.TRIANGLES, 0, 6)
+      })
+    }
+
+    if (!targetFrameBuffer) {
+      const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
+
+      if (sync == null) return
+      if (gl.getSyncParameter(sync, GL.SYNC_STATUS) !== GL.SIGNALED) gl.clientWaitSync(sync, 0, 0)
+      gl.deleteSync(sync)
+    }
   }
 
   async drawAndTransfer(context: ImageBitmapRenderingContext | Context2D) {
@@ -299,7 +343,7 @@ export class Renderer {
 
   dispose() {
     const gl = this.#gl
-    const programInfo = this.#programInfo
+    const programInfo = this.#passthroughProgram
 
     this.#vertexBuffers.forEach((buffer) => gl.deleteBuffer(buffer))
     this.#vertexBuffers.length = 0
@@ -311,13 +355,21 @@ export class Renderer {
 
     Object.assign(this, { emptyTexture: undefined, emptyTexture3D: undefined })
 
-    this.#uniforms.u_operations.length = 0
+    this.#fbs.forEach((fb) => {
+      gl.deleteTexture(fb.attachments[0])
+      gl.deleteFramebuffer(fb.framebuffer)
+    })
+
+    this.effectOps.length = 0
 
     for (const key in this.#uniforms) (this.#uniforms as any)[key] = null
 
     gl.deleteProgram(programInfo.program)
+    this.#fragmentsToPrograms.forEach(({ programInfo }) => gl.deleteProgram(programInfo.program))
+    this.#fragmentsToPrograms.clear()
+
     gl.getExtension('WEBGL_lose_context')?.loseContext()
-    this.#gl = this.#programInfo = undefined as never
+    this.#gl = this.#passthroughProgram = undefined as never
     this.isDisposed = true
   }
 }
