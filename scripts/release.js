@@ -94,7 +94,7 @@ async function commit() {
     await runUnlessDry('git', ['add', '--all'])
     await runUnlessDry('git', ['commit', '--no-verify', '--message', `release: v${targetVersion}`])
   }
-  await runUnlessDry('git', ['tag', `v${targetVersion}`])
+  await runUnlessDry('git', ['tag', '--no-sign', `v${targetVersion}`])
 }
 
 async function pushAndPublish() {
@@ -108,7 +108,7 @@ async function pushAndPublish() {
     '--recursive',
     ...(cliArgs.tag ? ['--tag', cliArgs.tag] : []),
     ...(cliArgs.registry ? ['--registry', cliArgs.registry] : []),
-    ...(cliArgs.skipGit ? ['--no-git-checks'] : []),
+    ...(cliArgs.skipGit || cliArgs.dryRun ? ['--no-git-checks'] : []),
     ...(cliArgs.dryRun ? ['--dry-run'] : []),
   ])
 }
