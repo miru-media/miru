@@ -35,6 +35,8 @@
     "@interactjs/modifiers": "^1.10.27",
     "filesize": "catalog:",
     "gl-matrix": "catalog:",
+    "mp4-muxer": "catalog:",
+    "mp4box": "catalog:",
     "stats.js": "catalog:",
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:",

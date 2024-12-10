@@ -1,15 +1,12 @@
-import { computed, createEffectScope, onScopeDispose, type Ref, ref } from 'shared/framework/reactivity'
-import { type ImageSourceOption } from 'shared/types'
-import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
+import { computed, createEffectScope, type Ref, ref } from 'shared/framework/reactivity'
 
 import { TRANSITION_DURATION_S } from './constants'
-import { useMediaError, useMediaReadyState } from './utils'
 
 export namespace BaseClip {
   export interface Init {
     sourceStart: number
     duration: number
-    source: ImageSourceOption
+    source: string
     transition?: { type: string }
   }
 }
@@ -20,13 +17,8 @@ export class BaseClip {
 
   sourceStart: Ref<number>
   duration: Ref<number>
-  media = ref<HTMLVideoElement>(undefined as never)
-  latestEvent = ref<Event>()
-  error: Ref<MediaError | undefined>
 
   scope = createEffectScope()
-
-  readyState = useMediaReadyState(this.media)
 
   #transition = ref<{ type: string }>()
   #derivedState = computed(
@@ -102,41 +94,39 @@ export class BaseClip {
   constructor(init: BaseClip.Init) {
     this.sourceStart = ref(init.sourceStart)
     this.duration = ref(init.duration)
-
-    this.setMedia(init.source)
-    this.error = useMediaError(this.media)
   }
 
-  setMedia(value: ImageSourceOption) {
-    const sourceOption = normalizeSourceOption(value, 'video')
+  connect() {
+    // abstract
+  }
+  disconnect() {
+    // abstract
+  }
 
-    if (sourceOption.source instanceof HTMLVideoElement) this.media.value = sourceOption.source
-    else {
-      if (isSyncSource(sourceOption.source)) {
-        throw new Error('[miru] expected video source')
-      }
+  ensureDurationIsPlayable(sourceDuration: number) {
+    const clipTime = this.time
+    const durationOutsideClip = sourceDuration - (clipTime.source + clipTime.duration)
+    this.sourceStart.value += Math.min(0, durationOutsideClip)
+    this.duration.value = Math.min(clipTime.duration, sourceDuration)
+  }
 
-      const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+  getSource() {
+    return ''
+  }
 
-      this.scope.run(() => {
-        onScopeDispose(close)
-      })
+  toObject(): BaseClip.Init {
+    const { time } = this
 
-      this.media.value = media
+    return {
+      sourceStart: time.source,
+      duration: time.duration,
+      source: this.getSource(),
+      transition: this.transition,
     }
   }
 
-  ensureDurationIsPlayable() {
-    const mediaDuration = this.media.value.duration
-    if (!mediaDuration) return
-
-    const clipTime = this.time
-    const durationOutsideClip = mediaDuration - (clipTime.source + clipTime.duration)
-    this.sourceStart.value += Math.min(0, durationOutsideClip)
-    this.duration.value = Math.min(clipTime.duration, mediaDuration)
-  }
-
   dispose() {
+    this.disconnect()
     this.scope.stop()
   }
 }

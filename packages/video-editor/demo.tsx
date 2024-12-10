@@ -1,59 +1,76 @@
-import { filesize } from 'filesize'
 /* eslint-disable import/no-unresolved */
 import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/BigBuckBunnyVideo.mp4'
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
 /* eslint-enable import/no-unresolved */
 
 import { h } from 'shared/framework/jsx-runtime'
-import { ref } from 'shared/framework/reactivity'
 import { type InputEvent } from 'shared/types'
-import { getDefaultFilters } from 'webgl-media-editor/defaultFilters'
 
+import { Clip } from './Clip'
 import * as Actions from './components/Actions'
 import { PlaybackControls } from './components/PlaybackControls'
 import { renderComponentTo } from './components/renderTo'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
+import { Track } from './Track'
 import { VideoEditor } from './VideoEditor'
 
-const filters = getDefaultFilters()
+const demoMovie = {
+  tracks: [
+    {
+      clips: [
+        {
+          sourceStart: 15,
+          duration: 1,
+          source: sampleVideo1,
+          transition: { type: 'HORIZONTAL_WIPE' },
+        },
+        {
+          sourceStart: 14,
+          duration: 2,
+          source: sampleVideo2,
+        },
+        {
+          sourceStart: 10,
+          duration: 2,
+          source: sampleVideo1,
+          transition: { type: 'CROSSFADE' },
+        },
+        {
+          sourceStart: 30,
+          duration: 4,
+          source: sampleVideo2,
+          transition: { type: 'CROSSFADE' },
+        },
+        {
+          sourceStart: 30,
+          duration: 1,
+          source: sampleVideo1,
+          transition: { type: 'DREAMFADE' },
+        },
+        {
+          sourceStart: 13,
+          duration: 3,
+          source: sampleVideo1,
+          transition: { type: 'HORIZONTAL_WIPE' },
+        },
+      ],
+    },
+  ],
+  resolution: { width: 1080, height: 1920 },
+  frameRate: 60,
+}
 
 const Demo = () => {
-  const RESOLUTION = { width: 1080, height: 1920 }
-  const editor = new VideoEditor({
-    tracks: [
-      {
-        clips: import.meta.env.DEV
-          ? [
-              {
-                sourceStart: 5,
-                duration: 3,
-                source: sampleVideo1,
-                transition: { type: 'CROSSFADE' },
-              },
-              {
-                sourceStart: 20,
-                duration: 2.5,
-                source: sampleVideo2,
-                filter: filters[1],
-                transition: { type: 'HORIZONTAL_WIPE' },
-              },
-              {
-                sourceStart: 4,
-                duration: 4,
-                source: sampleVideo1,
-                filter: filters[5],
-              },
-            ]
-          : [],
-      },
-    ],
-    resolution: RESOLUTION,
-    frameRate: 60,
-  })
+  const editor = new VideoEditor()
 
   const { movie } = editor
-  const recordedBlob = ref<Blob>()
+  const loadDemo = () => {
+    movie.resolution = demoMovie.resolution
+    movie.frameRate.value = demoMovie.frameRate
+    movie.tracks.value.forEach((track) => track.dispose())
+    movie.tracks.value = demoMovie.tracks.map((init) => new Track(init, movie, Clip))
+  }
 
   return (
     <div class="video-editor">
@@ -62,8 +79,27 @@ const Demo = () => {
 
       <Settings editor={editor} />
       <PlaybackControls editor={editor} />
-      <Timeline editor={editor} />
+      <Timeline
+        editor={editor}
+        children={{
+          tracks: () =>
+            movie.isEmpty && (
+              <button
+                type="button"
+                class="add-clip"
+                style="left: calc(50% + 1rem); margin-top: 3.5rem;"
+                onClick={loadDemo}
+              >
+                Load sample movie
+              </button>
+            ),
+        }}
+      />
       <Actions.ClipActions editor={editor} />
+      <progress
+        style={() => (editor.exportProgress.value >= 0 ? 'width:100%' : 'display:none')}
+        value={editor.exportProgress}
+      ></progress>
 
       <div
         class="text-body-small"
@@ -75,36 +111,6 @@ const Demo = () => {
         }
       >
         <p style="display:flex;gap:0.25rem">
-          <button
-            style="display:none"
-            type="button"
-            onClick={async () => {
-              movie.pause()
-              recordedBlob.value = undefined
-              try {
-                const blob = await movie.record()
-                if (blob == undefined) throw new Error('no blob')
-
-                recordedBlob.value = blob
-              } catch (error: unknown) {
-                alert(error)
-              }
-            }}
-          >
-            Record
-          </button>
-          {() => {
-            const blob = recordedBlob.value
-            if (blob == undefined) return
-
-            return (
-              <button type="button" onClick={() => window.open(URL.createObjectURL(blob))}>
-                {blob.type}
-                <br />
-                {filesize(blob.size)}
-              </button>
-            )
-          }}
           {() =>
             movie.tracks.value[0].mapClips((clip) => (
               <div style="font-family:monospace">
@@ -146,7 +152,7 @@ const Demo = () => {
                       />
                     </label>
                   </div>
-                  [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}] |{' '}
+                  [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
                   {() => clip.transition?.duration.toFixed(2)}
                 </div>
               </div>

@@ -39,9 +39,9 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
           <select
             class="settings-resolution"
             onInput={(event: InputEvent) => {
-              editor.movie.resolution.value = JSON.parse(event.target.value) as Size
+              editor.movie.resolution = JSON.parse(event.target.value) as Size
             }}
-            value={() => JSON.stringify(editor.movie.resolution.value)}
+            value={() => JSON.stringify(editor.movie.resolution)}
           >
             {resolutionOptions.map(({ value, label }) => (
               <option value={JSON.stringify(value)}>{label}</option>

@@ -15,6 +15,8 @@ export class EffectInternal {
   isLoading: Ref<boolean>
   resources: TextureResource[]
   shaders: string[] = []
+  info: Effect
+
   get promise() {
     return this.resources.length ? Promise.all(this.resources.map((t) => t.promise)) : undefined
   }
@@ -22,6 +24,7 @@ export class EffectInternal {
   constructor(info: Effect, renderer: Renderer) {
     const { name, ops } = info
 
+    this.info = info
     this.renderer = renderer
     this.name = name
     const resources: TextureResource[] = (this.resources = [])
@@ -93,5 +96,9 @@ export class EffectInternal {
 
       this.isDisposed = true
     })
+  }
+
+  toObject() {
+    return this.info
   }
 }

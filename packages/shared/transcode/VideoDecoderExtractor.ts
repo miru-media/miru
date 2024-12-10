@@ -1,4 +1,4 @@
-import { promiseWithResolvers, timeout } from 'shared/utils'
+import { promiseWithResolvers, timeout } from '../utils'
 
 import { type MP4Demuxer } from './demuxer'
 import { FrameExtractor } from './FrameExtractor'
@@ -30,14 +30,17 @@ export class VideoDecoderExtractor extends FrameExtractor {
       output: (frame) => {
         if (!signal.aborted && frame.timestamp <= endTimeUs) {
           this.onImage!(frame, frame.timestamp)
-        }
-        frame.close()
+        } else frame.close()
       },
       error: (error) => p.reject(error),
     }))
 
     decoder.configure(this.config)
-    demuxer.setExtractionOptions(this.track, decoder.decode.bind(decoder), p.resolve)
+    demuxer.setExtractionOptions(
+      this.track,
+      (chunk) => decoder.decode(new EncodedVideoChunk(chunk)),
+      p.resolve,
+    )
 
     await p.promise
     await decoder.flush()

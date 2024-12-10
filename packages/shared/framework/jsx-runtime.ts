@@ -42,7 +42,7 @@ type HNode = JSX.Element
 
 type SingleHNodeChild = HNode | Node | string | number | boolean | Record<string, any>
 type HNodeChild = MaybeArray<SingleHNodeChild>
-type MaybeChild = HNodeChild | null | undefined
+export type MaybeChild = HNodeChild | null | undefined
 
 interface AppendedChild {
   hNode: MaybeChild

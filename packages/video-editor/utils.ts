@@ -1,4 +1,11 @@
-import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'shared/framework/reactivity'
+import {
+  computed,
+  effect,
+  type MaybeRefOrGetter,
+  onScopeDispose,
+  ref,
+  toValue,
+} from 'shared/framework/reactivity'
 import { decodeAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
@@ -43,7 +50,16 @@ export const useMappedUniqueArray = <T extends object, U>(
 export const useMediaReadyState = (media: MaybeRefOrGetter<HTMLMediaElement | undefined>) => {
   const readyState = ref(0)
   const updateValue = () => (readyState.value = toValue(media)?.readyState ?? 0)
-  const events = ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'waiting', 'stalled']
+  const events = [
+    'loadedmetadata',
+    'loadeddata',
+    'canplay',
+    'canplaythrough',
+    'waiting',
+    'stalled',
+    'seeking',
+    'seeked',
+  ]
 
   effect(updateValue)
   events.forEach((type) => useEventListener(media, type, updateValue))
@@ -124,4 +140,11 @@ export const seekAndWait = async (video: HTMLVideoElement, timeS: number, signal
     video.removeEventListener('seeked', onReadyStateChange)
     signal.removeEventListener('abort', onAbort)
   })
+}
+
+export const getImageSize = (image: TexImageSource) => {
+  if ('videoWidth' in image) return { width: image.videoWidth, height: image.videoHeight }
+  if ('naturalWidth' in image) return { width: image.naturalWidth, height: image.naturalHeight }
+  if ('displayWidth' in image) return { width: image.displayWidth, height: image.displayHeight }
+  return { width: image.width, height: image.height }
 }

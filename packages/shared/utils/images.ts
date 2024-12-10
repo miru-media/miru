@@ -38,7 +38,7 @@ const getCanvasContext = (
 
   const context = canvas?.getContext(type, options)
 
-  if (context == undefined) throw new Error(`[miru] Couldn't create WebGL2 context`)
+  if (!context) throw new Error(`[miru] Couldn't create ${type} context`)
 
   return context
 }

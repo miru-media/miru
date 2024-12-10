@@ -71,41 +71,54 @@ declare module 'videocontext' {
   }
 
   class GraphNode {
+    constructor(
+      gl: WebGLRenderingContext,
+      renderGraph: RenderGraph,
+      inputNames: string[],
+      limitConnections: boolean,
+    )
     get inputs(): GraphNode[]
     get outputs(): GraphNode[]
     connect(targetNode: GraphNode, targetPort?: string | number): boolean
     disconnect(targetNode?: GraphNode): boolean
     destroy(): void
-    _gl: WebGLRenderingContext
-    _displayName: string
+    protected _gl: WebGLRenderingContext
+    protected _displayName: string
   }
 
   class DestinationNode extends GraphNode {}
 
   class SourceNode extends GraphNode {
     constructor(
+      src: string | MediaStream | TexImageSource | undefined,
       gl: WebGLRenderingContext,
       renderGraph: RenderGraph,
-      definition: any,
-      inputNames: string[],
-      limitConnections: boolean,
+      currentTime: number,
     )
     get state(): number
-    _currentTime: number
+    get startTime(): number
+    get stopTime(): number
+    start(time: number): boolean
+    startAt(time: number): boolean
+    stop(time: number): boolean
+    stopAt(time: number): boolean
     clearTimelineState(): void
-    _update(currentTime: number, triggerTextureUpdate: boolean): boolean
-    _seek(time: number): void
-    _unload(): void
 
-    _ready: boolean
-    _isElementPlaying: boolean
-    _loadTriggered: boolean
+    protected _element?: MediaStream | TexImageSource
+    protected _currentTime: number
+    protected _startTime: number
+    protected _stopTime: number
+    protected _update(currentTime: number, triggerTextureUpdate: boolean): boolean
+    protected _seek(time: number): void
+    protected _unload(): void
+    protected _ready: boolean
+    protected _isElementPlaying: boolean
+    protected _loadTriggered: boolean
   }
 
   class CanvasNode extends SourceNode {}
   class ImageNode extends SourceNode {}
   class MediaNode extends SourceNode {
-    constructor(...args: any[])
     _sourceOffset: number
   }
 
@@ -115,24 +128,21 @@ declare module 'videocontext' {
       gl: WebGL2RenderingContext,
       renderGraph: RenderGraph,
       currentTime: number,
+      playbackRate?: number,
       sourceOffset?: number,
       preloadTime?: number,
       mediaElementCache?: any,
       options?: Record<string, unknown>,
     )
     get duration(): number
-    start(time: number): boolean
-    startAt(time: number): boolean
-    stop(time: number): boolean
-    stopAt(time: number): boolean
   }
 
   class ProcessorNode<T extends Record<string, unknown>> extends GraphNode {
     setProperty<K extends keyof T>(name: K, value: T[K]): void
     getProperty<K extends keyof T>(name: K): T[K]
-    _update(currentTime: number): void
-    _seek(currentTime: number): void
-    _render(): void
+    protected _update(currentTime: number): void
+    protected _seek(currentTime: number): void
+    protected _render(): void
   }
 
   class CompositingNode<T extends Record<string, unknown>> extends ProcessorNode<T> {}
@@ -162,7 +172,7 @@ declare module 'videocontext' {
 
   export default class VideoContext {
     constructor(
-      canvas: HTMLCanvasElement,
+      canvas: HTMLCanvasElement | OffscreenCanvas,
       initErrorCallback?: () => unknown,
       options?: {
         manualUpdate?: boolean
@@ -184,13 +194,7 @@ declare module 'videocontext' {
       videoElementAttributes?: Record<string, unknown>,
     ): VideoNode
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-    customSourceNode<T extends SourceNode>(
-      CustomSourceNode: typeof T,
-      src: string | HTMLVideoElement | MediaStream,
-      sourceOffset?: number,
-      preloadTime?: number,
-      options?: Record<string, unknown>,
-    ): T
+    customSourceNode<T extends SourceNode>(CustomSourceNode: typeof T, ...args: unkonwn[]): T
     compositor<T extends Record<string, any>>(definition: EffectDefinition): CompositingNode<T>
     transition<T extends Record<string, any>>(...args: any[]): TransitionNode<T>
 
@@ -198,6 +202,7 @@ declare module 'videocontext' {
     play(): boolean
     update(dt: number): void
     registerCallback(type: string, func: (currentTime: number) => unknown): void
+    reset(): void
 
     _update(dt: number): void
 

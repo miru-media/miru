@@ -1,20 +1,21 @@
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
 
-import { IS_LIKE_MAC, IS_SAFARI } from 'shared/userAgent'
-import { Janitor, promiseWithResolvers } from 'shared/utils'
-
 import {
   type DemuxerChunkInfo,
   type MP4BoxAudioTrack,
   type MP4BoxFileInfo,
   type MP4BoxVideoTrack,
   MP4Demuxer,
-} from './demuxer'
-import { type FrameExtractor } from './FrameExtractor'
-import { RvfcExtractor } from './RvfcExtractor'
+} from 'shared/transcode/demuxer'
+import { type FrameExtractor } from 'shared/transcode/FrameExtractor'
+import { RvfcExtractor } from 'shared/transcode/RvfcExtractor'
+import { assertEncoderConfigIsSupported } from 'shared/transcode/utils'
+import { VideoDecoderExtractor } from 'shared/transcode/VideoDecoderExtractor'
+import { IS_LIKE_MAC, IS_SAFARI } from 'shared/userAgent'
+import { Janitor, promiseWithResolvers } from 'shared/utils'
+
 import { type TrimOptions } from './trim'
-import { assertEncoderConfigIsSupported, assertHasRequiredApis } from './utils'
-import { VideoDecoderExtractor } from './VideoDecoderExtractor'
+import { assertHasRequiredApis } from './utils'
 
 type MuxerRotation = [number, number, number, number, number, number, number, number, number]
 
@@ -22,8 +23,6 @@ interface PromiseResolvers {
   resolve: () => void
   reject: (reason: unknown) => void
 }
-
-export namespace Trimmer {}
 
 export class Trimmer {
   url: string
@@ -76,14 +75,14 @@ export class Trimmer {
         sampleRate: audioTrack.audio.sample_rate,
         numberOfChannels: audioTrack.audio.channel_count,
       },
-      fastStart: options.fastStart ?? false,
+      fastStart: options.fastStart ?? 'in-memory',
     })
 
     const videoEncoder = await this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error))
 
     frameExtractor.start((frame, trimmedTimestamp) => {
-      if (videoEncoder.state !== 'configured' || trimmedTimestamp < 0) return
-      videoEncoder.encode(frame)
+      if (videoEncoder.state === 'configured' && trimmedTimestamp >= 0) videoEncoder.encode(frame)
+      frame.close()
     }, abort.signal)
 
     const audioRemuxPromise = promiseWithResolvers()

@@ -177,16 +177,16 @@ export interface DemuxerChunkInfo {
   colorSpace?: VideoColorSpaceInit
   codedWidth: number
   codedHeight: number
+  mediaType: 'audio' | 'video'
 }
 
-export type VideoSampleCallback = (chunk: EncodedVideoChunk) => void
-export type AudioSampleCallback = (chunk: DemuxerChunkInfo) => void
+export type DemuxerSampleCallback = (chunk: DemuxerChunkInfo) => void
 
 interface TrackState {
   track: MP4BoxTrack
   isEnded: boolean
   sampleBytes: number
-  onSample: (chunk: EncodedVideoChunk | DemuxerChunkInfo) => unknown
+  onSample: (chunk: DemuxerChunkInfo) => unknown
   onDone?: () => void
   resolve: () => void
   reject: (reason: any) => void
@@ -196,14 +196,17 @@ export class MP4Demuxer {
   #file = MP4Box.createFile<unknown, TrackState>()
   #inputStream?: ReadableStream<Uint8Array>
   #pipePromise?: Promise<void>
-  #trackConfigs: (
-    | { track: MP4BoxVideoTrack; onSample: VideoSampleCallback; onDone?: () => void }
-    | { track: MP4BoxAudioTrack; onSample: AudioSampleCallback; onDone?: () => void }
-  )[] = []
+  #trackConfigs: {
+    track: MP4BoxVideoTrack | MP4BoxAudioTrack
+    onSample: DemuxerSampleCallback
+    onDone?: () => void
+  }[] = []
   #promise?: Promise<void>
+  #fileAbort = new AbortController()
 
   async init(url: string, requestInit?: RequestInit) {
-    const response = await fetch(url, requestInit)
+    requestInit?.signal?.addEventListener('abort', () => this.#fileAbort.abort(), {once:true})
+    const response = await fetch(url, {...requestInit, signal:this.#fileAbort.signal})
 
     if (!response.ok || !response.body) throw new Error(`Invalid response from "${url}".`)
 
@@ -271,15 +274,17 @@ export class MP4Demuxer {
     }
   }
 
-  setExtractionOptions(track: MP4BoxVideoTrack, onSample: VideoSampleCallback, onDone?: () => void): void
-  setExtractionOptions(track: MP4BoxAudioTrack, onSample: AudioSampleCallback, onDone?: () => void): void
-  setExtractionOptions(track: never, onSample: never, onDone?: () => void) {
+  setExtractionOptions(
+    track: MP4BoxVideoTrack | MP4BoxAudioTrack,
+    onSample: DemuxerSampleCallback,
+    onDone?: () => void,
+  ) {
     this.#trackConfigs.push({ track, onSample, onDone })
   }
 
-  start(_startTimeS = 0, endTimeS?: number) {
-    endTimeS ??= this.#trackConfigs.reduce(
-      (acc, { track }) => Math.min(acc, track.duration / track.timescale),
+  start(_firstFrameTimeS = 0, lastFrameTimeS?: number) {
+    lastFrameTimeS ??= this.#trackConfigs.reduce(
+      (acc, { track }) => Math.min(acc, track.samples_duration / track.timescale),
       Infinity,
     )
     const extractionPromises: Promise<void>[] = []
@@ -317,13 +322,11 @@ export class MP4Demuxer {
         for (let i = 0; i < samplesLength; i++) {
           const { data, is_sync, cts, duration, timescale, description } = samples[i]
           const timeS = cts / timescale
+          const { track } = state
 
           state.sampleBytes += data.byteLength
+          state.isEnded ||= (timeS >= lastFrameTimeS && is_sync) || timeS >= track.duration
 
-          state.isEnded = timeS >= endTimeS
-          if (state.isEnded) break
-
-          const { track } = state
           let codedWidth = 0
           let codedHeight = 0
           let colorSpace: VideoColorSpaceInit | undefined
@@ -348,13 +351,14 @@ export class MP4Demuxer {
             codedWidth,
             codedHeight,
             colorSpace,
+            mediaType: track.type as 'audio' | 'video',
           }
 
-          state.onSample(track.type === 'video' ? new EncodedVideoChunk(chunkInfo) : chunkInfo)
+          state.onSample(chunkInfo)
+          if (state.isEnded) break
         }
 
-        const trak = this.#file.getTrackById(track_id)
-        state.isEnded ||= state.sampleBytes >= trak.samples_size
+        state.isEnded ||= state.sampleBytes >= this.#file.getTrackById(track_id).samples_size
       } catch (error) {
         state.isEnded = true
         state.reject(error)
@@ -364,6 +368,7 @@ export class MP4Demuxer {
       if (state.isEnded) {
         state.onDone?.()
         state.resolve()
+        this.stop()
         return
       }
     }
@@ -382,6 +387,7 @@ export class MP4Demuxer {
 
   stop() {
     this.#file.stop()
+    this.#fileAbort.abort('stopped')
     if (this.#inputStream?.locked === false) this.#inputStream.cancel().catch(() => undefined)
   }
 

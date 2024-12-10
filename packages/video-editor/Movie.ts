@@ -6,6 +6,8 @@ import { computed, createEffectScope, effect, type Ref, ref, watch } from 'share
 import { type Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
+import { Clip } from './Clip'
+import { MovieExporter } from './export/MovieExporter'
 import { Track } from './Track'
 
 export const enum VideoContextState {
@@ -25,12 +27,11 @@ export namespace Movie {
 }
 
 export class Movie {
-  tracks = ref<Track[]>([])
-  resolution: Ref<Size>
+  tracks = ref<Track<Clip>[]>([])
   frameRate: Ref<number>
   displayCanvas = document.createElement('canvas')
-  #gl = getWebgl2Context(this.displayCanvas)
-  renderer = new Renderer({ gl: this.#gl })
+  gl = getWebgl2Context(this.displayCanvas)
+  renderer = new Renderer({ gl: this.gl })
 
   videoContext: VideoContext
 
@@ -40,11 +41,25 @@ export class Movie {
 
   #currentTime = ref(0)
   #duration = computed(() => this.tracks.value.reduce((end, track) => Math.max(track.duration, end), 0))
+  #resolution: Ref<Size>
 
   stats = new Stats()
 
-  get state() {
-    return this.videoContext.state as VideoContextState
+  #state = ref<VideoContextState>(VideoContextState.STALLED)
+
+  get resolution() {
+    return this.#resolution.value
+  }
+
+  set resolution(size) {
+    this.#resolution.value = size
+    setObjectSize(this.displayCanvas, size)
+  }
+
+  get isReady() {
+    const state = this.#state.value
+    if (state === VideoContextState.STALLED || state === VideoContextState.BROKEN) return false
+    return this.tracks.value.every((track) => track.toArray().every((clip) => clip.isReady))
   }
 
   get duration() {
@@ -57,23 +72,19 @@ export class Movie {
 
   constructor({ tracks = [], resolution, frameRate }: Movie.Init) {
     const canvas = this.displayCanvas
-    // force webgl2 context
-    canvas.getContext = ((_id, _options) => this.#gl) as typeof canvas.getContext
 
-    this.resolution = ref(resolution)
+    this.#resolution = ref(resolution)
     this.frameRate = ref(frameRate)
 
-    this.#scope.run(() => {
-      effect(() => {
-        setObjectSize(this.displayCanvas, this.resolution.value)
-      })
-    })
-
+    // force webgl2 context
+    canvas.getContext = ((_id, _options) => this.gl) as typeof canvas.getContext
     const videoContext = (this.videoContext = new VideoContext(this.displayCanvas))
+    delete (canvas as Partial<typeof canvas>).getContext
+
     videoContext.pause()
 
     this.#scope.run(() => {
-      this.tracks.value = tracks.map((t) => new Track(t, this))
+      this.tracks.value = tracks.map((t) => new Track(t, this, Clip))
       watch([() => this.tracks.value.map((t) => t.node.value)], ([trackNodes], _prev, onCleanup) => {
         trackNodes.forEach((node) => node.connect(videoContext.destination))
         onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
@@ -81,14 +92,15 @@ export class Movie {
     })
 
     const updateState = (currentTime: number) => {
-      const { state } = this
+      const state = (this.#state.value = this.videoContext.state as VideoContextState)
       const isEnded = state === VideoContextState.ENDED
       this.isEnded.value = isEnded
       this.isPaused.value = state === VideoContextState.PAUSED || isEnded
       this.#currentTime.value = currentTime
     }
-    videoContext.registerCallback(VideoContext.EVENTS.UPDATE, updateState)
-    videoContext.registerCallback(VideoContext.EVENTS.ENDED, updateState)
+    Object.values(VideoContext.EVENTS).forEach((type) =>
+      this.videoContext.registerCallback(type, updateState),
+    )
 
     this.stats.showPanel(0)
     const _update = videoContext._update.bind(videoContext)
@@ -121,18 +133,44 @@ export class Movie {
     this.tracks.value.forEach((track) => track.forEachClip((clip) => clip.schedule()))
   }
 
+  whenReady() {
+    return new Promise<void>((resolve, reject) => {
+      if (this.isReady) return
+      if (this.#state.value === VideoContextState.BROKEN) reject(new Error('Broken VideoContext state'))
+
+      const stop = effect(() => {
+        if (!this.isReady) return
+        stop()
+        resolve()
+      })
+    })
+  }
+
+  get isEmpty() {
+    return this.tracks.value.every((track) => track.count === 0)
+  }
+
   refresh() {
     this.videoContext.update(0)
   }
 
-  async record() {
+  toObject(): Movie.Init {
+    return {
+      tracks: this.tracks.value.map((t) => t.toObject()),
+      resolution: this.resolution,
+      frameRate: this.frameRate.value,
+    }
+  }
+
+  async export(options: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
+    this.pause()
+    const exporter = new MovieExporter(this)
+
     try {
-      throw new Error('TODO')
-      return await Promise.resolve(new Blob([]))
-    } catch (error: unknown) {
-      alert(error)
+      options.onProgress?.(0)
+      return await exporter.start(options)
     } finally {
-      this.isPaused.value = true
+      exporter.dispose()
     }
   }
 }

@@ -1,7 +1,6 @@
-import { BaseClip } from 'miru-video-editor/BaseClip'
 import { IconButton } from 'miru-video-editor/components/IconButton'
 import { ToggleButton } from 'miru-video-editor/components/ToggleButton'
-import { formatDuration, formatTime, getVideoInfo } from 'miru-video-editor/utils'
+import { formatDuration, formatTime, getVideoInfo, useMediaReadyState } from 'miru-video-editor/utils'
 import { h } from 'shared/framework/jsx-runtime'
 import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 'shared/framework/reactivity'
 import { useElementSize, useEventListener } from 'shared/utils'
@@ -25,31 +24,33 @@ const MIN_CLIP_DURATION_S = 0.25
 const MIN_CLIP_WIDTH_PX = 1
 
 const Clip = ({
-  clip,
+  startTime,
+  endTime,
   pixelsPerSecond,
   mediaDuration,
   seekTo,
+  onResize,
 }: {
-  clip: BaseClip
+  startTime: Ref<number>
+  endTime: Ref<number>
   pixelsPerSecond: Ref<number>
   mediaDuration: Ref<number>
   seekTo: (time: number) => void
+  onResize: (start: number, end: number, edge: 'left' | 'right') => void
 }) => {
   const resizeLeft = ref<HTMLElement>()
   const resizeRight = ref<HTMLElement>()
   const boxEdges = computed(() => {
-    const { time } = clip
-
-    const left = time.source * pixelsPerSecond.value
-    const width = Math.max(MIN_CLIP_WIDTH_PX, time.duration * pixelsPerSecond.value)
-    const right = left + width
+    const pps = pixelsPerSecond.value
+    const left = startTime.value * pps
+    const right = Math.max(endTime.value * pps, left + MIN_CLIP_WIDTH_PX)
 
     return { left, right }
   })
 
   const isResizing = ref<'left' | 'right'>()
   const downCoords = { x: 0, y: 0 }
-  const initialTime = { source: 0, duration: 0 }
+  const initialTime = { start: 0, duration: 0 }
 
   const onPointerDown = (event: PointerEvent) => {
     if (isResizing.value || event.button !== 0) return
@@ -57,7 +58,9 @@ const Clip = ({
 
     downCoords.x = event.pageX
     downCoords.y = event.pageY
-    Object.assign(initialTime, clip.time)
+
+    initialTime.start = startTime.value
+    initialTime.duration = endTime.value - startTime.value
 
     handle.setPointerCapture(event.pointerId)
     isResizing.value = handle === resizeLeft.value ? 'left' : 'right'
@@ -68,30 +71,28 @@ const Clip = ({
 
     const deltaS = (event.pageX - downCoords.x) / pixelsPerSecond.value
 
-    let newSourceTime
+    let newStartTime
     let newDuration
 
     if (isResizing.value === 'left') {
-      newSourceTime = clamp(
-        initialTime.source + deltaS,
+      newStartTime = clamp(
+        initialTime.start + deltaS,
         0,
-        initialTime.source + initialTime.duration - MIN_CLIP_DURATION_S,
+        initialTime.start + initialTime.duration - MIN_CLIP_DURATION_S,
       )
-      newDuration = clip.time.duration + (clip.time.source - newSourceTime)
-      seekTo(newSourceTime)
+      newDuration = endTime.value - startTime.value + (startTime.value - newStartTime)
+      seekTo(newStartTime)
     } else {
-      newSourceTime = clip.time.source
+      newStartTime = startTime.value
       newDuration = clamp(
         initialTime.duration + deltaS,
         MIN_CLIP_DURATION_S,
-        mediaDuration.value - initialTime.source,
+        mediaDuration.value - initialTime.start,
       )
-      seekTo(newSourceTime + newDuration)
+      seekTo(newStartTime + newDuration)
     }
 
-    clip.sourceStart.value = newSourceTime
-    clip.duration.value = newDuration
-    clip.ensureDurationIsPlayable()
+    onResize(newStartTime, newStartTime + newDuration, isResizing.value)
   }
   const onLostPointer = () => {
     isResizing.value = undefined
@@ -134,11 +135,10 @@ export const VideoTrimmerUI = (props: {
 }) => {
   let url = ''
   const media = document.createElement('video')
+  const readyState = useMediaReadyState(media)
   media.playsInline = true
   media.preload = 'auto'
 
-  const clip = ref<BaseClip>()
-  const mediaDuration = ref(0)
   const timelineContainer = ref<HTMLElement>()
   const isScrubbing = ref(false)
   const containerSize = useElementSize(timelineContainer)
@@ -147,15 +147,12 @@ export const VideoTrimmerUI = (props: {
   const hasAudio = ref(false)
   const muteOutput = ref(false)
   const currentTime = ref(0)
-  const startTime = computed(() => clip.value?.time.source ?? 0)
-  const endTime = computed(() => {
-    if (!clip.value) return mediaDuration.value
-
-    const { source, duration } = clip.value.time
-    return source + duration
-  })
   const errorMessage = ref('')
   const unableToDecode = ref(!hasRequiredApis())
+
+  const mediaDuration = ref(0)
+  const startTime = ref(0)
+  const endTime = ref(0)
 
   ;['timeupdate', 'seeking'].forEach((type) =>
     useEventListener(media, type, () => (currentTime.value = media.currentTime)),
@@ -202,20 +199,17 @@ export const VideoTrimmerUI = (props: {
     unableToDecode.value = !hasRequiredApis()
 
     if (source == null || source === '') {
-      clip.value = undefined
       mediaDuration.value = 0
       return
     }
 
     const isStringSource = typeof source === 'string'
     url = isStringSource ? source : URL.createObjectURL(source)
-    let newClip: BaseClip | undefined = undefined
     let isStale = false as boolean
 
     onCleanup(() => {
       isStale = true
       if (!isStringSource) URL.revokeObjectURL(url)
-      newClip?.dispose()
     })
 
     let info
@@ -244,33 +238,23 @@ export const VideoTrimmerUI = (props: {
 
     const stateIn = toValue(props.state)
 
-    let sourceStart
-    let duration
-
     if (unableToDecode.value) {
-      sourceStart = 0
-      duration = info.duration
+      startTime.value = 0
+      endTime.value = info.duration
     } else {
-      duration = stateIn ? stateIn.end - stateIn.start : info.duration
-      sourceStart = stateIn?.start ?? 0
+      startTime.value = stateIn?.start ?? 0
+      endTime.value = stateIn?.end ?? info.duration
     }
 
-    newClip = clip.value = new BaseClip({
-      source: media,
-      sourceStart,
-      duration,
-    })
-
-    props.onLoad({ duration, hasAudio: info.hasAudio })
+    props.onLoad({ duration: info.duration, hasAudio: info.hasAudio })
   })
 
   effect(() => {
-    const $clip = clip.value
-    if (!$clip) return
+    if (!mediaDuration.value) return
 
     if (unableToDecode.value) {
-      $clip.sourceStart.value = 0
-      $clip.duration.value = mediaDuration.value
+      startTime.value = 0
+      endTime.value = mediaDuration.value
       return
     }
 
@@ -278,8 +262,8 @@ export const VideoTrimmerUI = (props: {
     if (!stateIn) return
 
     const newStart = clamp(stateIn.start, 0, mediaDuration.value)
-    $clip.sourceStart.value = newStart
-    $clip.duration.value = clamp(stateIn.end - newStart, 0, mediaDuration.value - newStart)
+    startTime.value = newStart
+    endTime.value = stateIn.end
   })
 
   effect(() => {
@@ -298,15 +282,19 @@ export const VideoTrimmerUI = (props: {
     }
   }
 
+  const onResize = (start: number, end: number, edge: 'left' | 'right') => {
+    startTime.value = start
+    endTime.value = end
+    if (edge === 'left') seekTo(start)
+    else seekTo(end)
+  }
+
   return (
     <div
       class="video-trimmer"
       style={() => `--current-time-offset:${currentTime.value * pixelsPerSecond.value}px`}
     >
-      <div
-        part="viewport"
-        class={() => ['viewport', (clip.value?.readyState.value ?? 0) === 0 && 'is-empty']}
-      >
+      <div part="viewport" class={() => ['viewport', readyState.value === 0 && 'is-empty']}>
         {h(media, { class: 'viewport-canvas' })}
         {() =>
           errorMessage.value && (
@@ -330,7 +318,7 @@ export const VideoTrimmerUI = (props: {
           </ToggleButton>
           <div class="video-trimmer-controls-center">{() => formatTime(currentTime.value, false)}</div>
           <div class="video-trimmer-controls-right">
-            <div>{() => formatDuration(clip.value?.time.duration ?? 0)}</div>
+            <div>{() => formatDuration(endTime.value - startTime.value)}</div>
             {() =>
               unableToDecode.value ? (
                 <div></div>
@@ -362,13 +350,15 @@ export const VideoTrimmerUI = (props: {
                 </div>
                 <div class="video-trimmer-cursor" />
               </>
-            ) : clip.value ? (
+            ) : mediaDuration.value ? (
               <>
                 <Clip
-                  clip={clip.value}
+                  startTime={startTime}
+                  endTime={endTime}
                   mediaDuration={mediaDuration}
                   pixelsPerSecond={pixelsPerSecond}
                   seekTo={seekTo}
+                  onResize={onResize}
                 />
                 <div class="video-trimmer-cursor" />
               </>

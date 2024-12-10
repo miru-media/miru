@@ -44,8 +44,8 @@
     "mp4"
   ],
   "dependencies": {
-    "mp4-muxer": "^5.1.3",
-    "mp4box": "^0.5.3",
+    "mp4-muxer": "catalog:",
+    "mp4box": "catalog:",
     "throttle-debounce": "catalog:"
   }
 }

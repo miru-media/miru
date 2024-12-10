@@ -1,4 +1,4 @@
-import { get2dContext, Janitor } from 'shared/utils'
+import { get2dContext, Janitor } from '../utils'
 
 import { type MP4BoxVideoTrack } from './demuxer'
 
@@ -78,7 +78,6 @@ export abstract class FrameExtractor {
       }
 
       onFrame(frame, trimmedTimeUs)
-      if (frame !== image) frame.close()
     }
 
     this.promise = this._start(this.abort.signal, janitor).finally(() => {

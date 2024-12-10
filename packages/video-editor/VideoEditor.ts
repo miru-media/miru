@@ -3,12 +3,12 @@ import { type Size } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 import { remap0 } from 'shared/utils/math'
 
-import { type Clip } from './Clip'
+import { Clip } from './Clip'
 import { Movie } from './Movie'
 import { Track } from './Track'
 import { getVideoInfo } from './utils'
 
-const getClipAtTime = (track: Track, time: number) => {
+const getClipAtTime = (track: Track<Clip>, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
     const clipTime = clip.time
 
@@ -29,6 +29,8 @@ export class VideoEditor {
   #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
 
   showStats = ref(import.meta.env.DEV)
+  exportedBlob = ref<Blob>()
+  exportProgress = ref(-1)
 
   constructor(
     initialState: Movie.Init = {
@@ -46,12 +48,12 @@ export class VideoEditor {
     effect(() => {
       const { movie } = this
       if (!movie.tracks.value.length) {
-        movie.tracks.value = [new Track({ clips: [] }, movie)]
+        movie.tracks.value = [new Track({ clips: [] }, movie, Clip)]
       }
     })
   }
 
-  async addClip(track: Track, source: string | Blob) {
+  async addClip(track: Track<Clip>, source: string | Blob) {
     const url = this.#incrementMediaSource(source)
 
     const { duration } = await getVideoInfo(source)
@@ -143,6 +145,17 @@ export class VideoEditor {
 
   pixelsToSeconds(offset: number) {
     return offset * this.secondsPerPixel.value
+  }
+
+  async startExport() {
+    this.exportedBlob.value = undefined
+    try {
+      this.exportedBlob.value = await this.movie.export({
+        onProgress: (value) => (this.exportProgress.value = value),
+      })
+    } finally {
+      this.exportProgress.value = -1
+    }
   }
 
   #incrementMediaSource(source: string | Blob) {

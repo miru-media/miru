@@ -1,4 +1,5 @@
-import { computed, effect, ref } from 'shared/framework/reactivity'
+import { type MaybeChild } from 'shared/framework/jsx-runtime'
+import { computed, effect, type MaybeRefOrGetter, ref } from 'shared/framework/reactivity'
 import { type InputEvent } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 
@@ -40,7 +41,13 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
   )
 }
 
-export const Timeline = ({ editor }: { editor: VideoEditor }) => {
+export const Timeline = ({
+  editor,
+  children,
+}: {
+  editor: VideoEditor
+  children?: { tracks?: MaybeRefOrGetter<MaybeChild> }
+}) => {
   const root = ref<HTMLElement>()
   const scrollContainer = ref<HTMLElement>()
   const { movie } = editor
@@ -85,7 +92,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
     )
   }
 
-  const onInputClipFile = async (event: InputEvent, track: Track) => {
+  const onInputClipFile = async (event: InputEvent, track: Track<ClipType>) => {
     const file = event.target.files?.[0]
     if (!file) return
     await editor.addClip(track, file)
@@ -121,7 +128,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                 movie.tracks.value.map((track) => (
                   <div class="track">
                     <ClipList clip={track.head} />
-                    <label type="button" class="add-clip">
+                    <label class="add-clip">
                       {() =>
                         track.count ? (
                           <>
@@ -148,6 +155,7 @@ export const Timeline = ({ editor }: { editor: VideoEditor }) => {
                 <div class="track" />
               )
             }
+            {children?.tracks}
           </div>
         </div>
       </div>

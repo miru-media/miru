@@ -2,13 +2,14 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
-import { effect, ref, type Ref, watch } from 'shared/framework/reactivity'
-import { type Effect } from 'shared/types'
-import { useEventListener } from 'shared/utils'
+import { effect, onScopeDispose, ref, type Ref, watch } from 'shared/framework/reactivity'
+import { type Effect, type ImageSourceOption } from 'shared/types'
+import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
-import { MiruVideoNode } from './custom'
+import { MiruVideoElementNode } from './custom'
 import { type Track } from './Track'
+import { useMediaError, useMediaReadyState } from './utils'
 
 export enum SourceNodeState {
   waiting = 0,
@@ -30,9 +31,14 @@ export namespace Clip {
 export class Clip extends BaseClip {
   filter: Ref<EffectInternal | undefined>
 
-  track: Track
-  node = ref<MiruVideoNode>(undefined as never)
+  track: Track<Clip>
+  media = ref<HTMLVideoElement>(undefined as never)
+  error: Ref<MediaError | undefined>
+  readyState = useMediaReadyState(this.media)
+  node = ref<MiruVideoElementNode>(undefined as never)
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
+  latestEvent = ref<Event>()
+  #isSeeking = ref(false)
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
 
@@ -43,8 +49,16 @@ export class Clip extends BaseClip {
     return this.prev && this.prev.#transitionNode.value
   }
 
-  constructor(init: Clip.Init, context: VideoContext, track: Track, renderer: Renderer) {
+  get isReady() {
+    return this.filter.value?.isLoading.value !== true && this.readyState.value >= 2 && !this.#isSeeking.value
+  }
+
+  constructor(init: Clip.Init, context: VideoContext, track: Track<Clip>, renderer: Renderer) {
     super(init)
+
+    this.setMedia(init.source)
+    this.error = useMediaError(this.media)
+
     this.track = track
     this.filter = ref(init.filter && new EffectInternal(init.filter, renderer))
     this.transition = init.transition
@@ -55,7 +69,6 @@ export class Clip extends BaseClip {
       'canplaythrough',
       'durationchange',
       'emptied',
-      'encrypted',
       'ended',
       'error',
       'loadeddata',
@@ -64,29 +77,56 @@ export class Clip extends BaseClip {
       'pause',
       'play',
       'playing',
-      'progress',
-      'ratechange',
       'seeked',
       'seeking',
       'stalled',
       'suspend',
       'timeupdate',
-      'volumechange',
       'waiting',
     ]
-    allReadyStateEventTypes.forEach((type) =>
-      useEventListener(this.media, type, (event) => (this.latestEvent.value = event)),
-    )
+    allReadyStateEventTypes.forEach((type) => {
+      useEventListener(this.media, type, (event) => {
+        this.latestEvent.value = event
+
+        const { readyState } = this.media.value
+
+        switch (type) {
+          case 'seeking':
+            this.#isSeeking.value = true
+            break
+          case 'seeked':
+            this.#isSeeking.value = readyState < 2
+            break
+          case 'canplay':
+            this.#isSeeking.value = readyState < 2
+            break
+        }
+      })
+    })
+
+    useEventListener(this.media, 'loadedmetadata', () => {
+      const { mediaSize } = this.node.value
+      const media = this.media.value
+      mediaSize.width = media.videoWidth
+      mediaSize.height = media.videoHeight
+    })
 
     this.scope.run(() => {
       watch([this.media], ([media], _prev, onCleanup) => {
         const node = (this.node.value = context.customSourceNode(
-          MiruVideoNode,
+          MiruVideoElementNode,
           media,
+          1,
           this.time.source,
-          undefined,
+          1,
           { renderer },
         ))
+
+        if (media.readyState >= 1) {
+          const { mediaSize } = node
+          mediaSize.width = media.videoWidth
+          mediaSize.height = media.videoHeight
+        }
 
         onCleanup(() => node.destroy())
       })
@@ -100,7 +140,7 @@ export class Clip extends BaseClip {
           // Workaround to recreate processing nodes when the movie resolution changes
           // beacause VideoContext assumes the canvas size is constant
           // TODO
-          track.movie.resolution,
+          () => track.movie.resolution,
         ],
         ([type], _prev, onCleanup) => {
           if (!type || !(type in VideoContext.DEFINITIONS)) return (this.#transitionNode.value = undefined)
@@ -165,15 +205,38 @@ export class Clip extends BaseClip {
     }
   }
 
-  toObject(): Clip.Init {
-    const { time } = this
+  setMedia(value: ImageSourceOption) {
+    const sourceOption = normalizeSourceOption(value, 'video')
 
+    if (sourceOption.source instanceof HTMLVideoElement) this.media.value = sourceOption.source
+    else {
+      if (isSyncSource(sourceOption.source)) {
+        throw new Error('[miru] expected video source')
+      }
+
+      const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+
+      this.scope.run(() => onScopeDispose(close))
+
+      this.media.value = media
+    }
+  }
+
+  ensureDurationIsPlayable() {
+    const mediaDuration = this.media.value.duration
+    if (!mediaDuration) return
+
+    super.ensureDurationIsPlayable(mediaDuration)
+  }
+
+  getSource() {
+    return this.media.value.src
+  }
+
+  toObject(): Clip.Init {
     return {
-      sourceStart: time.source,
-      duration: time.duration,
-      source: this.media.value.src,
-      transition: this.transition,
-      filter: undefined,
+      ...super.toObject(),
+      filter: this.filter.value?.toObject(),
     }
   }
 
