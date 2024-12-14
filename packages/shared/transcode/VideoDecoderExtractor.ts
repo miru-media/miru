@@ -17,7 +17,7 @@ export class VideoDecoderExtractor extends FrameExtractor {
 
   async init() {
     const config = (this.config = this.demuxer.getConfig(this.track))
-    await assertDecoderConfigIsSupported(config)
+    await assertDecoderConfigIsSupported('video', config)
   }
 
   protected async _start(signal: AbortSignal) {

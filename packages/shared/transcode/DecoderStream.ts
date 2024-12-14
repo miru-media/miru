@@ -4,117 +4,209 @@ import { assertCanExtractVideoFrames, assertDecoderConfigIsSupported } from './u
 
 const HIGH_WATER_MARK = 5
 
-interface Options {
+interface Options<T extends VideoFrame | AudioData> {
+  chunks: DemuxerChunkInfo[]
   start: number
   end: number
   mute?: boolean
-  videoConfig: VideoDecoderConfig
+  config: T extends VideoFrame ? VideoDecoderConfig : AudioDecoderConfig
   credentials?: RequestCredentials
   crossOrigin?: 'anonymous' | 'use-credentials' | null
   signal?: AbortSignal
   onError: (error: unknown) => void
 }
 
-export class DecoderStream extends TransformStream<DemuxerChunkInfo, VideoFrame> {
-  samples: DemuxerChunkInfo[]
-  options: Options
-  decoder: VideoDecoder
+abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableStream<T> {
+  chunks: DemuxerChunkInfo[]
+  options: Options<T>
+  decoder: VideoDecoder | AudioDecoder
   done = false
   startUs: number
   endUs: number
-  sampleIndex = 0
-  _controller!: TransformStreamDefaultController<VideoFrame>
-  _writer: WritableStreamDefaultWriter<DemuxerChunkInfo>
-  _reader: ReadableStreamDefaultReader<VideoFrame>
+  chunkIndex = 0
+  _controller!: ReadableStreamDefaultController<T>
+  _reader: ReadableStreamDefaultReader<T>
+  _currentValue?: T
 
-  constructor(samples: DemuxerChunkInfo[], options: Options) {
+  constructor(options: Options<T>, decoder: AudioDecoder | VideoDecoder) {
     assertCanExtractVideoFrames()
-    let _controller!: TransformStreamDefaultController<VideoFrame>
+    let _controller!: ReadableStreamDefaultController<T>
+
+    super(
+      {
+        start: (controller) => (_controller = controller),
+        pull: () => this.enqueueChunks(),
+      },
+      new CountQueuingStrategy({ highWaterMark: HIGH_WATER_MARK }),
+    )
+
+    this.chunks = options.chunks
+    this.options = options
+    this.decoder = decoder
+    this.startUs = options.start * 1e6
+    this.endUs = 1e6 * options.end
+    this._controller = _controller
+    this._reader = this.getReader()
+  }
+
+  _init() {
+    const { decoder } = this
+    const { config } = this.options
+    ;(this.decoder.configure as (config: unknown) => void)(config)
+
+    const { chunks } = this
+    let startKeyframeIndex = 0
+
+    for (let i = 0; i < chunks.length; i++) {
+      const { type, timestamp } = chunks[i]
+      if (timestamp > this.startUs) break
+      if (type === 'key') startKeyframeIndex = i
+    }
+
+    this.chunkIndex = startKeyframeIndex
+
+    decoder.addEventListener('dequeue', () => this.enqueueChunks())
+    this.enqueueChunks()
+
+    return this
+  }
+
+  abstract init(): Promise<this>
+  abstract decode(chunk: DemuxerChunkInfo): void
+
+  enqueueChunks() {
+    const { chunks, decoder, done } = this
+    if (done || decoder.state !== 'configured') return
+
+    const desiredSize = this._controller.desiredSize ?? HIGH_WATER_MARK
+
+    for (
+      let nChunks = desiredSize - decoder.decodeQueueSize;
+      this.chunkIndex < chunks.length && (nChunks > 0 || chunks[this.chunkIndex].type !== 'key');
+      nChunks--
+    )
+      this.decode(chunks[this.chunkIndex++])
+  }
+
+  async read() {
+    if (this.done) return
+
+    this._currentValue?.close()
+    this.enqueueChunks()
+    this._currentValue = (await this._reader.read()).value
+  }
+
+  async flush() {
+    if (this.decoder.state !== 'configured') return
+    await this.decoder.flush()
+  }
+
+  dispose() {
+    this.chunks = []
+    if (this.decoder.state === 'configured') this.decoder.close()
+    this._controller.close()
+    this._currentValue?.close()
+  }
+}
+
+export class VideoDecoderStream extends DecoderStream<VideoFrame> {
+  declare decoder: VideoDecoder
+
+  get currentValue() {
+    return this._currentValue
+  }
+
+  constructor(options: Options<VideoFrame>) {
     const decoder = new VideoDecoder({
-      output: (frame) => {
-        if (frame.timestamp < this.startUs || this.done || options.signal?.aborted) {
-          frame.close()
+      output: (data) => {
+        if (data.timestamp < this.startUs || this.done || options.signal?.aborted) {
+          data.close()
           return
         }
 
-        this._controller.enqueue(frame)
-        this.done = frame.timestamp + frame.duration! >= this.endUs
+        this._controller.enqueue(data)
+        this.done = data.timestamp + data.duration! >= this.endUs
+
+        if (this.done) if (decoder.state === 'configured') decoder.close()
+      },
+      error: options.onError,
+    })
+
+    super(options, decoder)
+  }
+
+  async init() {
+    await assertDecoderConfigIsSupported('video', this.options.config)
+    return super._init()
+  }
+
+  decode(chunk: DemuxerChunkInfo) {
+    this.decoder.decode(new EncodedVideoChunk(chunk))
+  }
+}
+
+export class AudioDecoderStream extends DecoderStream<AudioData> {
+  declare decoder: AudioDecoder
+  currentValue?: {
+    timestamp: number
+    duration: number
+    numberOfFrames: number
+    buffer: AudioBuffer
+  }
+
+  constructor(options: Options<AudioData>) {
+    const decoder = new AudioDecoder({
+      output: (data) => {
+        const dataEndUs = data.timestamp + data.duration
+        if (dataEndUs < this.startUs || this.done || options.signal?.aborted) {
+          data.close()
+          return
+        }
+
+        this._controller.enqueue(data)
+        this.done = dataEndUs >= this.endUs
 
         if (this.done) {
-          this._writer.close().catch(() => undefined)
           if (decoder.state === 'configured') decoder.close()
         }
       },
       error: options.onError,
     })
 
-    super(
-      {
-        start: (controller) => (_controller = controller),
-        transform: (sample) => decoder.decode(new EncodedVideoChunk(sample)),
-      },
-      new CountQueuingStrategy({ highWaterMark: HIGH_WATER_MARK }),
-      new CountQueuingStrategy({ highWaterMark: HIGH_WATER_MARK }),
-    )
-
-    this.samples = samples
-    this.options = options
-    this.decoder = decoder
-    this.startUs = options.start * 1e6
-    this.endUs = 1e6 * options.end
-    this._controller = _controller
-    this._writer = this.writable.getWriter()
-    this._reader = this.readable.getReader()
+    super(options, decoder)
   }
 
   async init() {
-    const { decoder } = this
-    const { videoConfig } = this.options
-    await assertDecoderConfigIsSupported(videoConfig)
-    decoder.configure(videoConfig)
+    await assertDecoderConfigIsSupported('audio', this.options.config)
+    return super._init()
+  }
 
-    const { samples } = this
-    let startKeyframeIndex = 0
+  decode(chunk: DemuxerChunkInfo) {
+    this.decoder.decode(new EncodedAudioChunk(chunk))
+  }
 
-    for (let i = 0; i < samples.length; i++) {
-      const { type, timestamp } = samples[i]
-      if (timestamp > this.startUs) break
-      if (type === 'key') startKeyframeIndex = i
+  async read() {
+    if (this.done) this._currentValue = undefined
+    else await super.read()
+    const audioData = this._currentValue
+
+    if (!audioData) {
+      this.currentValue = undefined
+      return
     }
 
-    this.sampleIndex = startKeyframeIndex
+    const { timestamp, duration, numberOfChannels, numberOfFrames, sampleRate } = audioData
+    const buffer = new AudioBuffer({ length: numberOfFrames, numberOfChannels, sampleRate })
 
-    decoder.addEventListener('dequeue', () => this.enqueueSamples())
-    this.enqueueSamples()
-  }
+    for (let i = 0; i < numberOfChannels; i++) {
+      audioData.copyTo(buffer.getChannelData(i), { planeIndex: i, format: 'f32-planar' })
+    }
 
-  enqueueSamples() {
-    const { samples, decoder, done } = this
-    if (done || decoder.state !== 'configured') return
-
-    const desiredSize = this._controller.desiredSize ?? HIGH_WATER_MARK
-
-    for (
-      let nSamples = desiredSize - decoder.decodeQueueSize;
-      nSamples > 0 && this.sampleIndex < samples.length;
-      nSamples--
-    )
-      this._writer.write(samples[this.sampleIndex++]).catch((error: unknown) => this._controller.error(error))
-  }
-
-  read() {
-    this.enqueueSamples()
-    return this._reader.read()
-  }
-
-  async flush() {
-    if (this.done) return
-    await this.decoder.flush()
-  }
-
-  dispose() {
-    this.samples = []
-    if (this.decoder.state === 'configured') this.decoder.close()
-    this._controller.terminate()
+    this.currentValue = {
+      timestamp,
+      duration,
+      buffer,
+      numberOfFrames,
+    }
   }
 }

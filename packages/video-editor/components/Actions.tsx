@@ -54,17 +54,18 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
       <IconButton class="toolbar-button" icon={IconTablerDownload} onClick={() => editor.startExport()} />
 
       {() => {
-        const blob = editor.exportedBlob.value
-        if (blob == undefined) return
+        const result = editor.exportResult.value
+        if (!result) return
+        const { blob, url } = result
 
         return (
-          <button
-            type="button"
-            onClick={() => window.open(URL.createObjectURL(blob))}
+          <a
+            href={url}
+            target="_blank"
             style="border-radius: 0.5rem; background: var(--gray); padding: 0 1rem; cursor: pointer"
           >
             {blob.type} {filesize(blob.size)}
-          </button>
+          </a>
         )
       }}
     </div>

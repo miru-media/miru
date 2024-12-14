@@ -107,7 +107,7 @@ export class Track<T extends BaseClip> {
     clip.next = undefined
   }
 
-  sliceClip(clip: T) {
+  deleteClip(clip: T) {
     const { head, tail } = this
     const { prev, next } = clip
 
@@ -122,7 +122,7 @@ export class Track<T extends BaseClip> {
   insertClipBefore(clip: T, before: T | undefined) {
     if (clip === before) return
 
-    this.sliceClip(clip)
+    this.deleteClip(clip)
 
     clip.next = before
 

@@ -29,7 +29,7 @@ export class VideoEditor {
   #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
 
   showStats = ref(import.meta.env.DEV)
-  exportedBlob = ref<Blob>()
+  exportResult = ref<{ blob: Blob; url: string }>()
   exportProgress = ref(-1)
 
   constructor(
@@ -119,7 +119,7 @@ export class VideoEditor {
     if (!clip) return
 
     this.#decrementMediaSource(clip.media.value.src)
-    clip.track.sliceClip(clip)
+    clip.track.deleteClip(clip)
     clip.dispose()
   }
 
@@ -148,11 +148,12 @@ export class VideoEditor {
   }
 
   async startExport() {
-    this.exportedBlob.value = undefined
+    this.exportResult.value = undefined
     try {
-      this.exportedBlob.value = await this.movie.export({
+      const blob = await this.movie.export({
         onProgress: (value) => (this.exportProgress.value = value),
       })
+      this.exportResult.value = { blob, url: URL.createObjectURL(blob) }
     } finally {
       this.exportProgress.value = -1
     }

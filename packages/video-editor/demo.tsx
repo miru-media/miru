@@ -1,6 +1,6 @@
 /* eslint-disable import/no-unresolved */
-import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/BigBuckBunnyVideo.mp4'
-import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteelVideo.mp4'
+import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
 /* eslint-enable import/no-unresolved */
 
 import { h } from 'shared/framework/jsx-runtime'
@@ -20,39 +20,34 @@ const demoMovie = {
     {
       clips: [
         {
-          sourceStart: 15,
+          sourceStart: 14,
           duration: 1,
           source: sampleVideo1,
-          transition: { type: 'HORIZONTAL_WIPE' },
         },
         {
-          sourceStart: 14,
+          sourceStart: 20,
           duration: 2,
           source: sampleVideo2,
         },
         {
-          sourceStart: 10,
+          sourceStart: 9,
           duration: 2,
           source: sampleVideo1,
-          transition: { type: 'CROSSFADE' },
         },
         {
-          sourceStart: 30,
+          sourceStart: 45.1,
           duration: 4,
           source: sampleVideo2,
-          transition: { type: 'CROSSFADE' },
         },
         {
           sourceStart: 30,
           duration: 1,
           source: sampleVideo1,
-          transition: { type: 'DREAMFADE' },
         },
         {
           sourceStart: 13,
           duration: 3,
           source: sampleVideo1,
-          transition: { type: 'HORIZONTAL_WIPE' },
         },
       ],
     },

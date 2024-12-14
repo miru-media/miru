@@ -41,5 +41,9 @@
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:",
     "videocontext": "^0.54.0"
+  },
+  "devDependencies": {
+    "@libav.js/variant-opus": "catalog:",
+    "libavjs-webcodecs-polyfill": "catalog:"
   }
 }

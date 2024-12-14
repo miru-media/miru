@@ -6,7 +6,7 @@ import { ref, type Ref } from 'shared/framework/reactivity'
 
 import { BaseClip } from '../BaseClip'
 import { type Clip } from '../Clip'
-import { MiruVideoExtractorNode } from '../custom'
+import { Mp4ExtractorNode } from '../custom'
 import { type Track } from '../Track'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
@@ -16,7 +16,7 @@ export class ExtractorClip extends BaseClip {
   filter: Ref<EffectInternal | undefined>
 
   track: Track<ExtractorClip>
-  node: MiruVideoExtractorNode
+  node: Mp4ExtractorNode
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
@@ -44,7 +44,7 @@ export class ExtractorClip extends BaseClip {
     const { start, end, source: sourceOffset } = this.time
     const { source: url } = init
 
-    this.node = context.customSourceNode(MiruVideoExtractorNode, undefined, {
+    this.node = context.customSourceNode(Mp4ExtractorNode, undefined, {
       renderer,
       url,
       sourceOffset,

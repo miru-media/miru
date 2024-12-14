@@ -263,7 +263,7 @@ const createElementHNode = (type: string | Element, props: ComponentProps): HNod
   return hNode
 }
 
-export const Fragment = (props: { children: HNodeChild[] }) => h('#fragment', props)
+export const Fragment = (props: { children?: HNodeChild[] }) => h('#fragment', props)
 
 export const render = (node: JSX.Element, root: ParentNode): Stop => {
   if ((root as ParentNode | null) == null) throw new Error(`[miru] No root to render into`)

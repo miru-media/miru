@@ -174,7 +174,7 @@ export class Trimmer {
       framerate: extractor.fps,
     }
 
-    await assertEncoderConfigIsSupported(config)
+    await assertEncoderConfigIsSupported('video',config)
 
     const encoder = new VideoEncoder({
       output: (chunk, meta) => {

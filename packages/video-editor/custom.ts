@@ -5,13 +5,12 @@ import { type EffectInternal } from 'reactive-effects/Effect'
 import { FRAMEBUFFER_TEX_OPTIONS } from 'renderer/constants'
 import * as GL from 'renderer/GL'
 import { type Renderer } from 'renderer/Renderer'
-import { DecoderStream } from 'shared/transcode/DecoderStream'
+import { AudioDecoderStream, VideoDecoderStream } from 'shared/transcode/DecoderStream'
 import { type DemuxerChunkInfo } from 'shared/transcode/demuxer'
-import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
 import { type AdjustmentsState, type Size } from 'shared/types'
 import { fit, setObjectSize } from 'shared/utils'
 
-type CustomNode = MiruVideoElementNode | MiruVideoExtractorNode
+type CustomNode = CustomVideoElementNode | Mp4ExtractorNode
 
 function constructor(node: CustomNode, gl: WebGLRenderingContext, { renderer }: { renderer: Renderer }) {
   node.renderer = renderer
@@ -84,7 +83,7 @@ function destroy(node: CustomNode) {
   node.renderer = undefined as never
 }
 
-export class MiruVideoElementNode extends VideoContext.NODES.VideoNode {
+export class CustomVideoElementNode extends VideoContext.NODES.VideoNode {
   src!: HTMLVideoElement
   mediaSize: Size = { width: 1, height: 1 }
   renderer!: Renderer
@@ -135,20 +134,27 @@ export class MiruVideoElementNode extends VideoContext.NODES.VideoNode {
   }
 }
 
-interface VideoDecoderNodeOptions {
+interface ExtractorNodeOptions {
   renderer: Renderer
   url: string
   sourceOffset: number
   start: number
   end: number
-  fps: number
 }
 
-export class MiruVideoExtractorNode extends VideoContext.NODES.SourceNode {
+export namespace Mp4ExtractorNode {
+  export interface AudioInit {
+    config: AudioDecoderConfig
+    chunks: DemuxerChunkInfo[]
+    audioBuffer?: AudioBuffer
+  }
+  export interface VideoInit {
+    config: VideoDecoderConfig & { codedWidth: number; codedHeight: number }
+    chunks: DemuxerChunkInfo[]
+  }
+}
+export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
   url: string
-  samples!: DemuxerChunkInfo[]
-  videoConfig!: VideoDecoderConfig
-  fps!: number
   mediaSize: Size = { width: 1, height: 1 }
   renderer!: Renderer
   mediaTexture!: WebGLTexture
@@ -169,12 +175,27 @@ export class MiruVideoExtractorNode extends VideoContext.NODES.SourceNode {
   _update = _update.bind(null, this)
   _seek = _seek.bind(null, this)
 
-  decoderStream?: DecoderStream
-  lastRead: { done: boolean; value?: VideoFrame | DemuxerChunkInfo } = { done: false, value: undefined }
+  audioInit?: Mp4ExtractorNode.AudioInit
+  videoInit?: Mp4ExtractorNode.VideoInit
+
+  videoStream?: VideoDecoderStream
+  audioStream?: AudioDecoderStream
+  streamInit!: { start: number; end: number; onError: (error: unknown) => void }
+  get currentVideoFrame() {
+    return this.videoStream?.currentValue
+  }
+  get currentAudioData() {
+    const audioBuffer = this.audioInit?.audioBuffer
+
+    if (audioBuffer) return { timestamp: 0, duration: audioBuffer.duration * 1e6, buffer: audioBuffer }
+    return this.audioStream?.currentValue
+  }
+
   onError?: (error: unknown) => void
 
+  _audioReady = false
   get isReady() {
-    return this._ready
+    return this._ready && this._audioReady
   }
 
   constructor(
@@ -182,103 +203,109 @@ export class MiruVideoExtractorNode extends VideoContext.NODES.SourceNode {
     gl: WebGL2RenderingContext,
     renderGraph: RenderGraph,
     currentTime: number,
-    options: VideoDecoderNodeOptions,
+    options: ExtractorNodeOptions,
   ) {
     super(undefined, gl, renderGraph, currentTime)
     constructor(this, gl, options)
     this.url = options.url
     this._sourceOffset = options.sourceOffset
-    this._displayName = 'MiruVideoExtractorNode'
+    this._displayName = 'Mp4ExtractorNode'
   }
 
-  async init({
-    samples,
-    videoConfig,
-    fps,
-    width,
-    height,
-  }: {
-    samples: DemuxerChunkInfo[]
-    videoConfig: VideoDecoderConfig
-    fps: number
-    width: number
-    height: number
-  }) {
-    await assertDecoderConfigIsSupported(videoConfig)
+  init({ audio, video }: { audio?: Mp4ExtractorNode.AudioInit; video?: Mp4ExtractorNode.VideoInit }) {
+    if (audio) this.audioInit = audio
+    if (video) {
+      const { codedWidth, codedHeight } = video.config
 
-    this.samples = samples
-    this.videoConfig = videoConfig
-    this.fps = fps
+      this.videoInit = video
+      this.mediaSize.width = codedWidth
+      this.mediaSize.height = codedHeight
+    }
 
-    this.mediaSize.width = width
-    this.mediaSize.height = height
+    const { startTime, stopTime } = this
+    const start = this._sourceOffset
+    const end = start + (stopTime - startTime)
+    const onError = (error: unknown) => this.onError?.(error)
+    this.streamInit = { start, end, onError }
   }
 
-  async seek(timeS: number) {
-    if (this.lastRead.done) return
+  async seekVideo(timeS: number): Promise<boolean> {
+    this._ready = true
+    if (!this.videoInit || this.videoStream?.done) return false
 
     const { startTime, stopTime } = this
 
     if (timeS < startTime || timeS >= stopTime) {
       this._element = undefined
-      return
+      return false
     }
 
     const sourceTimeUs = (timeS - startTime + this._sourceOffset) * 1e6
 
-    if (this.#hasFrameAtTimeUs(sourceTimeUs)) {
-      this._ready = true
-      return
+    if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
+      this._element = this.currentVideoFrame
+      return true
     }
 
     this._ready = false
-    if (!this.lastRead.value) await this.readNext()
 
-    while (this.lastRead.value) {
-      if (this.#hasFrameAtTimeUs(sourceTimeUs)) {
-        this._element = this.lastRead.value as VideoFrame
+    if (!this.videoStream) {
+      const { chunks, config } = this.videoInit
+      this.videoStream = await new VideoDecoderStream({ chunks, config, ...this.streamInit }).init()
+    }
+
+    if (!this.currentVideoFrame) await this.videoStream.read()
+
+    while (this.currentVideoFrame) {
+      if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
+        this._element = this.currentVideoFrame
         this._ready = true
-        break
+        return true
       }
 
-      if (this.lastRead.done as boolean) break
-
-      await this.readNext()
-    }
-  }
-
-  async readNext() {
-    if (!this.decoderStream) {
-      const { videoConfig, startTime, stopTime } = this
-      const sourceOffset = this._sourceOffset
-
-      this.decoderStream = new DecoderStream(this.samples, {
-        start: sourceOffset,
-        end: sourceOffset + (stopTime - startTime),
-        onError: (error) => this.onError?.(error),
-        videoConfig,
-      })
-
-      await this.decoderStream.init()
+      await this.videoStream.read()
     }
 
-    this.closeCurrentFrame()
-    this.lastRead = await this.decoderStream.read()
+    return false
   }
 
-  closeCurrentFrame() {
-    const frame = this.lastRead.value
-    if (frame && 'close' in frame) frame.close()
+  async seekAudio(timeS: number): Promise<boolean> {
+    if (!this.audioInit || (!this.audioInit.audioBuffer && this.audioStream?.done)) return false
+
+    const { startTime, stopTime } = this
+
+    if (timeS < startTime || timeS >= stopTime) return false
+    if (this.audioInit.audioBuffer) return true
+
+    const sourceTimeUs = (timeS - startTime + this._sourceOffset) * 1e6
+
+    if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
+
+    this._ready = false
+
+    if (!this.audioStream) {
+      const { chunks, config } = this.audioInit
+      this.audioStream = await new AudioDecoderStream({ chunks, config, ...this.streamInit }).init()
+    }
+
+    if (!this.currentAudioData) await this.audioStream.read()
+
+    while (this.currentAudioData) {
+      if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
+      await this.audioStream.read()
+    }
+    return false
   }
 
-  #hasFrameAtTimeUs(sourceTimeUs: number) {
-    const { value } = this.lastRead
+  #hasVideoFrameAtTimeUs(sourceTimeUs: number) {
+    const frame = this.videoStream?.currentValue
+    return !!frame && frame.timestamp + frame.duration! >= sourceTimeUs
+  }
 
-    return (
-      !!value &&
-      value instanceof VideoFrame &&
-      value.timestamp + (value.duration ?? 1e6 / this.fps) >= sourceTimeUs
-    )
+  #hasAudioFrameAtTimeUs(sourceTimeUs: number) {
+    const data = this.audioStream?.currentValue
+    if (!data) return false
+    return data.timestamp <= sourceTimeUs && sourceTimeUs < data.timestamp + data.duration
   }
 
   _superUpdate(currentTime: number, triggerTextureUpdate: boolean) {
@@ -291,8 +318,7 @@ export class MiruVideoExtractorNode extends VideoContext.NODES.SourceNode {
 
   destroy() {
     destroy(this)
-    this.closeCurrentFrame()
-    this.decoderStream?.dispose()
+    this.videoStream?.dispose()
 
     super.destroy()
   }

@@ -2,12 +2,12 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
-import { effect, onScopeDispose, ref, type Ref, watch } from 'shared/framework/reactivity'
-import { type Effect, type ImageSourceOption } from 'shared/types'
+import { effect, ref, type Ref, watch } from 'shared/framework/reactivity'
+import { type Effect } from 'shared/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
-import { MiruVideoElementNode } from './custom'
+import { CustomVideoElementNode } from './custom'
 import { type Track } from './Track'
 import { useMediaError, useMediaReadyState } from './utils'
 
@@ -35,10 +35,11 @@ export class Clip extends BaseClip {
   media = ref<HTMLVideoElement>(undefined as never)
   error: Ref<MediaError | undefined>
   readyState = useMediaReadyState(this.media)
-  node = ref<MiruVideoElementNode>(undefined as never)
+  node = ref<CustomVideoElementNode>(undefined as never)
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
   latestEvent = ref<Event>()
   #isSeeking = ref(false)
+  #closeMedia?: () => void
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
 
@@ -114,7 +115,7 @@ export class Clip extends BaseClip {
     this.scope.run(() => {
       watch([this.media], ([media], _prev, onCleanup) => {
         const node = (this.node.value = context.customSourceNode(
-          MiruVideoElementNode,
+          CustomVideoElementNode,
           media,
           1,
           this.time.source,
@@ -205,21 +206,16 @@ export class Clip extends BaseClip {
     }
   }
 
-  setMedia(value: ImageSourceOption) {
+  setMedia(value: string) {
     const sourceOption = normalizeSourceOption(value, 'video')
 
-    if (sourceOption.source instanceof HTMLVideoElement) this.media.value = sourceOption.source
-    else {
-      if (isSyncSource(sourceOption.source)) {
-        throw new Error('[miru] expected video source')
-      }
+    if (isSyncSource(sourceOption.source)) throw new Error('[miru] expected video source')
 
-      const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+    this.#closeMedia?.()
+    const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
 
-      this.scope.run(() => onScopeDispose(close))
-
-      this.media.value = media
-    }
+    this.media.value = media
+    this.#closeMedia = close
   }
 
   ensureDurationIsPlayable() {
@@ -242,6 +238,7 @@ export class Clip extends BaseClip {
 
   dispose() {
     super.dispose()
+    this.#closeMedia?.()
     this.track = undefined as never
   }
 }

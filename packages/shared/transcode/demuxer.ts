@@ -205,8 +205,8 @@ export class MP4Demuxer {
   #fileAbort = new AbortController()
 
   async init(url: string, requestInit?: RequestInit) {
-    requestInit?.signal?.addEventListener('abort', () => this.#fileAbort.abort(), {once:true})
-    const response = await fetch(url, {...requestInit, signal:this.#fileAbort.signal})
+    requestInit?.signal?.addEventListener('abort', () => this.#fileAbort.abort(), { once: true })
+    const response = await fetch(url, { ...requestInit, signal: this.#fileAbort.signal })
 
     if (!response.ok || !response.body) throw new Error(`Invalid response from "${url}".`)
 
@@ -240,10 +240,24 @@ export class MP4Demuxer {
     })
   }
 
-  getConfig<T extends MP4BoxTrack>(
-    track: T,
-  ): T extends MP4BoxVideoTrack ? VideoDecoderConfig : { codec: string; description: Uint8Array } {
+  getConfig(track: MP4BoxVideoTrack): VideoDecoderConfig& { codedWidth: number; codedHeight: number }
+  getConfig(track: MP4BoxAudioTrack): AudioDecoderConfig
+  getConfig(track: MP4BoxVideoTrack | MP4BoxAudioTrack): VideoDecoderConfig | AudioDecoderConfig {
+    const { codec } = track
     const trak = this.#file.getTrackById(track.id)
+
+    if (track.type === 'audio') {
+      const { audio } = track
+      const mp4aSampleDescription = trak.mdia.minf.stbl.stsd.entries.find(({ type }: any) => type === 'mp4a')
+
+      return {
+        codec,
+        sampleRate: audio.sample_rate,
+        numberOfChannels: audio.channel_count,
+        ...(mp4aSampleDescription == null ? null : parseAudioStsd(mp4aSampleDescription)),
+      }
+    }
+
     let description
 
     for (const entry of trak.mdia.minf.stbl.stsd.entries) {
@@ -257,20 +271,20 @@ export class MP4Demuxer {
       if (box != null) {
         const stream = new MP4Box.DataStream(undefined, 0, MP4Box.DataStream.BIG_ENDIAN)
         box.write(stream)
-        const BOX_HEADER_LENGTH = 8
-        description = new Uint8Array(stream.buffer, BOX_HEADER_LENGTH)
+        description = new Uint8Array(stream.buffer, box.hdr_size)
         break
       }
     }
 
     if (!description) throw new Error('Unsupported format.')
 
-    const { codec } = track
+    const { width, height } = track.video
 
     return {
       codec: codec.startsWith('vp08') ? 'vp8' : codec,
       description,
-      ...('video' in track ? track.video : undefined),
+      codedWidth: width,
+      codedHeight: height,
     }
   }
 
@@ -325,7 +339,6 @@ export class MP4Demuxer {
           const { track } = state
 
           state.sampleBytes += data.byteLength
-          state.isEnded ||= (timeS >= lastFrameTimeS && is_sync) || timeS >= track.duration
 
           let codedWidth = 0
           let codedHeight = 0
@@ -355,6 +368,8 @@ export class MP4Demuxer {
           }
 
           state.onSample(chunkInfo)
+
+          state.isEnded ||= (timeS >= lastFrameTimeS && is_sync) 
           if (state.isEnded) break
         }
 
@@ -368,7 +383,6 @@ export class MP4Demuxer {
       if (state.isEnded) {
         state.onDone?.()
         state.resolve()
-        this.stop()
         return
       }
     }
@@ -388,10 +402,28 @@ export class MP4Demuxer {
   stop() {
     this.#file.stop()
     this.#fileAbort.abort('stopped')
-    if (this.#inputStream?.locked === false) this.#inputStream.cancel().catch(() => undefined)
   }
 
   flush() {
     return Promise.resolve(this.#promise)
   }
+}
+
+const parseAudioStsd = (stsd: any) => {
+  const decoderconfig = stsd.esds.esd.descs[0]?.descs[0]
+  const data = decoderconfig.data as Uint8Array
+  // [
+  //   [5 bits: audioObjectType] [3 bits: samplingFrequencyIndex],
+  //   [1 bit: sampleFrequencyIndex] [4 bits: channelConfiguration] [...],
+  //   ...
+  // ]
+  const samplingFrequencyIndex = ((data[0] & 0b00000111) << 1) + (data[1] >> 7)
+  const channelConfiguration = (data[1] & 0b01111000) >> 3
+
+  const samplingFrequencyMap = [
+    96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350,
+  ]
+  const sampleRate = samplingFrequencyMap[samplingFrequencyIndex]
+
+  return { sampleRate, numberOfChannels: channelConfiguration }
 }

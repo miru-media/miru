@@ -34,6 +34,7 @@
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@types/debug": "^4.1.12",
+    "@types/dom-webcodecs": "^0.1.13",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.7.7",
     "@types/semver": "^7.5.8",
@@ -78,7 +79,7 @@
     "stylelint-config-recess-order": "^5.1.1",
     "stylelint-config-standard": "^36.0.1",
     "terser": "^5.36.0",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "typescript-eslint": "^8.10.0",
     "unocss": "^0.63.4",
     "unplugin-auto-import": "^0.18.3",
@@ -101,7 +102,8 @@
   ],
   "pnpm": {
     "patchedDependencies": {
-      "glsl-tokenizer": "patches/glsl-tokenizer.patch"
+      "glsl-tokenizer": "patches/glsl-tokenizer.patch",
+      "libavjs-webcodecs-polyfill": "patches/libavjs-webcodecs-polyfill.patch"
     }
   }
 }
