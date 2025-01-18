@@ -2,8 +2,6 @@ import type * as twgl from 'twgl.js'
 
 import * as GL from './GL'
 
-export const MAX_EFFECT_OPS = 10
-
 export const SOURCE_TEX_OPTIONS = {
   target: GL.TEXTURE_2D,
   flipY: 0,

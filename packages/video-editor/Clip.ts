@@ -1,9 +1,9 @@
 import { effect, ref, type Ref, watch } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
+import { type Renderer } from 'webgl-effects'
+import { type Effect } from 'webgl-effects'
 
 import { EffectInternal } from 'reactive-effects/Effect'
-import { type Renderer } from 'renderer/Renderer'
-import { type Effect } from 'shared/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'

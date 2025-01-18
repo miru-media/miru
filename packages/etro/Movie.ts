@@ -1,9 +1,9 @@
 import etro from 'etro'
 import { computed, createEffectScope, effect, type Ref, ref } from 'fine-jsx'
 import Stats from 'stats.js'
+import { Renderer } from 'webgl-effects'
 
 import { EffectInternal } from 'reactive-effects/Effect'
-import { Renderer } from 'renderer/Renderer'
 import { type Size } from 'shared/types'
 import { getWebgl2Context } from 'shared/utils'
 import { getDefaultFilters } from 'webgl-media-editor/defaultFilters'
@@ -68,7 +68,7 @@ export class Movie {
 
   async record() {
     const video = document.createElement('video')
-    const type = ['video/webm', 'video/mp4'].find((type) => video.canPlayType(type))
+    const type = ['video/webm', 'video/mp4'].find((type) => !!video.canPlayType(type))
 
     try {
       return await (this.etro as unknown as etro.Movie).record({

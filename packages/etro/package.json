@@ -9,10 +9,9 @@
     "etro": "^0.12.1",
     "filesize": "catalog:",
     "fine-jsx": "catalog:",
-    "webgl-media-editor": "workspace:",
-    "reactive-effects": "workspace:",
-    "renderer": "workspace:",
+    "webgl-effects": "workspace:",
     "shared": "workspace:",
-    "stats.js": "catalog:"
+    "stats.js": "catalog:",
+    "webgl-media-editor": "workspace:"
   }
 }

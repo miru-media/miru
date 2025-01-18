@@ -1,12 +1,7 @@
 import { createEffectScope, effect, ref } from 'fine-jsx'
+import { type Effect } from 'webgl-effects'
 
-import {
-  type Context2D,
-  EditorView,
-  type Effect,
-  type ImageEditState,
-  type ImageSourceOption,
-} from 'shared/types'
+import { type Context2D, EditorView, type ImageEditState, type ImageSourceOption } from 'shared/types'
 import { downloadBlob, win } from 'shared/utils'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'

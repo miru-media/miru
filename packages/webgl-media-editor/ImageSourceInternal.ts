@@ -8,9 +8,10 @@ import {
   toValue,
   watch,
 } from 'fine-jsx'
+import { type Renderer } from 'webgl-effects'
+import { type RendererEffectOp } from 'webgl-effects'
 
 import { type EffectInternal } from 'reactive-effects/Effect'
-import { type Renderer } from 'renderer/Renderer'
 import {
   type AdjustmentsState,
   type Context2D,
@@ -18,7 +19,6 @@ import {
   type DisplayContext,
   type ImageEditState,
   type ImageSourceOption,
-  type RendererEffectOp,
   type Size,
   type SyncImageSource,
 } from 'shared/types'

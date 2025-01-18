@@ -6,8 +6,7 @@
   "module": "dist/media-trimmer.js",
   "main": "dist/media-trimmer.js",
   "files": [
-    "dist",
-    "screenshot.jpg"
+    "dist"
   ],
   "publishConfig": {
     "exports": {

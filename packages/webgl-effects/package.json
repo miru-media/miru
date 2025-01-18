@@ -1,0 +1,52 @@
+{
+  "name": "webgl-effects",
+  "description": "A library for applying filters and effects to images with WebGL2",
+  "version": "0.0.0",
+  "type": "module",
+  "author": "Taye Adeyemi",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./index.ts"
+    },
+    "./fragment-shaders": {
+      "import": "./allFragmentShaders.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/webgl-effects.js"
+      },
+      "./fragment-shaders": {
+        "import": "dist/fragment-shaders.js"
+      }
+    }
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://gitea.com/miru/miru.git",
+    "directory": "packages/webgl-effects"
+  },
+  "keywords": [
+    "WebGL",
+    "effects",
+    "filters",
+    "renderer"
+  ],
+  "dependencies": {
+    "gl-matrix": "catalog:",
+    "glsl-blend": "^1.0.3",
+    "glsl-film-grain": "^1.0.4",
+    "glsl-luma": "^1.0.1",
+    "glsl-noise": "^0.0.0",
+    "glsl-vignette": "^1.1.0",
+    "shared": "workspace:",
+    "twgl.js": "catalog:"
+  }
+}

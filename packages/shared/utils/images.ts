@@ -1,6 +1,7 @@
+import { type AssetType } from 'webgl-effects'
+
 import {
   type AdjustmentsState,
-  type AssetType,
   type AsyncImageSource,
   type Context2D,
   type CropState,

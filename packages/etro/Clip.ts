@@ -1,7 +1,7 @@
 import { createEffectScope, effect, onScopeDispose, ref, type Ref, watch } from 'fine-jsx'
+import { type Renderer } from 'webgl-effects'
 
 import { type EffectInternal } from 'reactive-effects/Effect'
-import { type Renderer } from 'renderer/Renderer'
 import { type ImageSourceOption } from 'shared/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
 

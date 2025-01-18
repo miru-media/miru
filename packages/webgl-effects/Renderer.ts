@@ -1,21 +1,14 @@
 import { mat4 } from 'gl-matrix'
 import * as twgl from 'twgl.js'
 
-import {
-  type AssetType,
-  type Context2D,
-  type CropState,
-  type RendererEffect,
-  type RendererEffectOp,
-  type Size,
-  type SyncImageSource,
-} from 'shared/types'
+import { type Context2D, type CropState, type Size, type SyncImageSource } from 'shared/types'
 import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from 'shared/utils'
 
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './GL'
 import vs from './glsl/main.vert'
 import passthrough from './glsl/passthrough.frag'
+import { type AssetType, type RendererEffect, type RendererEffectOp } from './types'
 
 export interface RendererOptions {
   gl?: WebGL2RenderingContext
@@ -71,6 +64,7 @@ export class Renderer {
       unitQuad, // a_position
       unitQuad, // a_texCoord
     ].forEach((data, location) => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- mismatch between TS and eslint?
       const buffer = gl.createBuffer()!
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
@@ -101,6 +95,7 @@ export class Renderer {
     } = textureOptions
 
     const texture = gl.createTexture()
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mismatch between TS and eslint?
     if (texture == undefined) throw new Error(`[miru] gl.createTexture() failed`)
 
     twgl.setTextureParameters(gl, texture, textureOptions)

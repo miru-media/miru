@@ -1,22 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fs from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
 import { Bumper } from 'conventional-recommended-bump'
-import { globSync } from 'glob'
 import spawn from 'nano-spawn'
 import pico from 'picocolors'
 import * as semver from 'semver'
 
-const ROOT = resolve(import.meta.dirname, '..')
+import { getPublickPackageDirs, ROOT } from './utils'
 
-const allPublicPackageDirs = globSync(join(ROOT, 'packages', '*', 'package.json'))
-  .filter((p) => {
-    const pkg = /** @type {{ private?: boolean }} */ (JSON.parse(fs.readFileSync(p).toString()))
-    return !pkg.private
-  })
-  .map((p) => dirname(p))
+const allPublicPackageDirs = getPublickPackageDirs()
 
 const { values: cliArgs } = parseArgs({
   options: {

@@ -1,8 +1,8 @@
 import { ref, type Ref } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
+import { type Renderer } from 'webgl-effects'
 
 import { EffectInternal } from 'reactive-effects/Effect'
-import { type Renderer } from 'renderer/Renderer'
 
 import { BaseClip } from '../BaseClip'
 import { type Clip } from '../Clip'

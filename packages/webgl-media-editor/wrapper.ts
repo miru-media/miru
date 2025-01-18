@@ -1,6 +1,7 @@
 import { createEffectScope, onScopeDispose, toRef } from 'fine-jsx'
+import { type Effect } from 'webgl-effects'
 
-import { type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
+import { type ImageEditState, type ImageSourceOption } from 'shared/types'
 import { canvasToBlob } from 'shared/utils'
 
 import { getDefaultFilters } from './defaultFilters'

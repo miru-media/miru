@@ -1,7 +1,6 @@
 import { computed, effect, type Ref, ref, watch } from 'fine-jsx'
 import VideoContext, { type CompositingNode } from 'videocontext'
-
-import { type Renderer } from 'renderer/Renderer'
+import { type Renderer } from 'webgl-effects'
 
 import { type BaseClip } from './BaseClip'
 import { type Clip } from './Clip'

@@ -1,6 +1,6 @@
 # A video trimmer in the browser
 
-![Screenshot](./screenshot.jpg)
+![Screenshot](https://demo.miru.media/media-trimmer-screenshot.jpg)
 
 https://demo.miru.media/trim/
 

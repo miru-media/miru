@@ -16,18 +16,22 @@ import postcss from 'rollup-plugin-postcss'
 import autoImport from 'unplugin-auto-import/rollup'
 import icons from 'unplugin-icons/rollup'
 
+import rootPkg from './package.json' assert { type: 'json' }
+import { getPublickPackageDirs } from './scripts/utils.js'
 import { autoImportOptions } from './tools/autoImportOptions.js'
 
 const ROOT = resolve(import.meta.dirname)
 const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
-const ALWAYS_BUNDLE = ['@libav.js/variant-opus']
+const PUBLIC_PACKAGE_DIRS = getPublickPackageDirs()
+const PATCHED_DEPS = Object.keys(rootPkg.pnpm.patchedDependencies)
 
 /**
  * @typedef {{
  *  root: string,
  *  inputs: Record<string, string>
  *  external?: import('rollup').RollupOptions['external']
+ *  alwaysBundle?: string[]
  *  dist?: string
  *  clearDist?: boolean
  * }} Options
@@ -35,6 +39,14 @@ const ALWAYS_BUNDLE = ['@libav.js/variant-opus']
 
 /** @type {Options[]} */
 const packageOptions = [
+  {
+    root: 'packages/webgl-effects',
+    inputs: {
+      'webgl-effects': 'Renderer.ts',
+      'fragment-shaders': 'allFragmentShaders.ts',
+    },
+    alwaysBundle: ['@libav.js/variant-opus'],
+  },
   {
     root: 'packages/webgl-media-editor',
     inputs: {
@@ -105,9 +117,22 @@ export default packageOptions.map(
     inputs,
     dist,
     clearDist = true,
-    external = (id) =>
-      id.includes('/node_modules/') &&
-      !ALWAYS_BUNDLE.some((dep) => id === dep || id.includes(`/node_modules/${dep}/`)),
+    alwaysBundle,
+    external = (id) => {
+      if (
+        [...(alwaysBundle ?? []), ...PATCHED_DEPS].some(
+          (dep) => id === dep || id.includes(`/node_modules/${dep}/`),
+        )
+      )
+        return false
+
+      if (id.includes('/node_modules/')) return true
+
+      const resolvedPath = resolve(ROOT, id)
+      if (resolvedPath.startsWith(resolve(ROOT, inputRoot))) return false
+
+      if (PUBLIC_PACKAGE_DIRS.some((dir) => resolvedPath.startsWith(dir))) return true
+    },
   }) => {
     dist = dist ? resolve(inputRoot, dist) : resolve(inputRoot, 'dist')
 

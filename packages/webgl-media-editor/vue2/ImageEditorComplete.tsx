@@ -1,9 +1,9 @@
 import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
+import { type Effect } from 'webgl-effects'
 
 import {
   type Context2D,
   EditorView,
-  type Effect,
   type ImageEditState,
   type ImageSource,
   type ImageSourceOption,

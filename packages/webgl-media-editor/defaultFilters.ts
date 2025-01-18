@@ -1,3 +1,5 @@
+import { type Effect } from 'webgl-effects'
+
 import Beige from 'shared/assets/luts/01_Warm/Beige.jpg'
 import Fall from 'shared/assets/luts/01_Warm/Fall.jpg'
 import Muted_Warm from 'shared/assets/luts/01_Warm/Muted_Warm.jpg'
@@ -36,7 +38,6 @@ import Toon_Punchy from 'shared/assets/luts/06_Crushed/Toon_Punchy.jpg'
 import Toon_Shadow from 'shared/assets/luts/06_Crushed/Toon_Shadow.jpg'
 import Toon_Sketch from 'shared/assets/luts/06_Crushed/Toon_Sketch.jpg'
 import Violent_Violet from 'shared/assets/luts/06_Crushed/Violent_Violet.jpg'
-import { type Effect } from 'shared/types'
 
 export const getDefaultFilters = (assetsPath?: string): Effect[] => {
   const rebaseAssetUrl = (path: string) =>

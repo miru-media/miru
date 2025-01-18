@@ -1,16 +1,17 @@
 import { mat4 } from 'gl-matrix'
 import VideoContext, { type RenderGraph } from 'videocontext'
+import { FRAMEBUFFER_TEX_OPTIONS } from 'webgl-effects'
+import { type Renderer } from 'webgl-effects'
 
 import { type EffectInternal } from 'reactive-effects/Effect'
-import { FRAMEBUFFER_TEX_OPTIONS } from 'renderer/constants'
-import * as GL from 'renderer/GL'
-import { type Renderer } from 'renderer/Renderer'
 import { AudioDecoderStream, VideoDecoderStream } from 'shared/transcode/DecoderStream'
 import { type DemuxerChunkInfo } from 'shared/transcode/demuxer'
 import { type AdjustmentsState, type Size } from 'shared/types'
-import { fit, setObjectSize } from 'shared/utils'
+import { fit, setObjectSize, win } from 'shared/utils'
 
 type CustomNode = CustomVideoElementNode | Mp4ExtractorNode
+
+const GL = win.WebGL2RenderingContext
 
 function constructor(node: CustomNode, gl: WebGLRenderingContext, { renderer }: { renderer: Renderer }) {
   node.renderer = renderer

@@ -1,8 +1,8 @@
 import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
 import Stats from 'stats.js'
 import VideoContext from 'videocontext'
+import { Renderer } from 'webgl-effects'
 
-import { Renderer } from 'renderer/Renderer'
 import { type Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 

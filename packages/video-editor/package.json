@@ -36,6 +36,7 @@
     "filesize": "catalog:",
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
+    "webgl-effects": "workspace:",
     "mp4-muxer": "catalog:",
     "mp4box": "catalog:",
     "stats.js": "catalog:",

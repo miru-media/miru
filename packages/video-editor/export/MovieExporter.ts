@@ -1,6 +1,6 @@
 import VideoContext from 'videocontext'
+import { Renderer } from 'webgl-effects'
 
-import { Renderer } from 'renderer/Renderer'
 import { type DemuxerChunkInfo, type MP4BoxFileInfo, MP4Demuxer } from 'shared/transcode/demuxer'
 import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
@@ -111,7 +111,7 @@ export class MovieExporter {
             demuxer.setExtractionOptions(audioTrack, (chunk) => chunks.push(chunk))
           } catch {
             const encodedFileData = await fetch(source).then((r) => r.arrayBuffer())
-            entry.audio.audioBuffer = await (audioContext ||= new AudioContext()).decodeAudioData(
+            entry.audio.audioBuffer = await (audioContext ??= new AudioContext()).decodeAudioData(
               encodedFileData,
             )
           }

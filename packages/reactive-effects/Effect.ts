@@ -1,8 +1,7 @@
 import { computed, type Ref } from 'fine-jsx'
+import { type AssetType, type Effect, type Renderer, type RendererEffectOp } from 'webgl-effects'
+import { FRAGMENT_SHADERS } from 'webgl-effects/fragment-shaders'
 
-import { FRAGMENT_SHADERS } from 'renderer/allFragmentShaders'
-import { type Renderer } from 'renderer/Renderer'
-import { type AssetType, type Effect, type RendererEffectOp } from 'shared/types'
 import { Janitor, normalizeSourceOption } from 'shared/utils'
 
 import { TextureResource } from './TextureResource'
