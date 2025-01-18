@@ -21,7 +21,7 @@ import { autoImportOptions } from './tools/autoImportOptions.js'
 const ROOT = resolve(import.meta.dirname)
 const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
-const ALWAYS_BUNDLE = ['@reactively/core']
+const ALWAYS_BUNDLE = ['@libav.js/variant-opus']
 
 /**
  * @typedef {{
@@ -50,12 +50,25 @@ const packageOptions = [
       vue2: 'vue2.ts',
     },
   },
+  {
+    root: 'packages/video-editor',
+    inputs: {
+      // TODO
+      'video-editor': 'VideoEditor.ts',
+    },
+  },
 ]
+
+const opusWasmFile = resolve(
+  ROOT,
+  'node_modules/.pnpm/@libav.js+variant-opus@6.5.7/node_modules/@libav.js/variant-opus/dist/libav-6.5.7.1-opus.wasm.wasm',
+)
 
 const aliases = {
   entries: {
     'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/index.css'),
     'virtual:video-shadow.css': resolve(ROOT, 'packages/video-editor/index.css'),
+    [`${opusWasmFile}?url`]: opusWasmFile,
   },
 }
 
@@ -111,7 +124,11 @@ export default packageOptions.map(
         autoImport(autoImportOptions),
         icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
         glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
-        url({ limit: 0, destDir: resolve(dist, 'assets') }),
+        url({
+          include: ['**/*.svg', '**/*.png', '**/*.jp(e)?g', '**/*.gif', '**/*.webp', '**/*.wasm'],
+          limit: 0,
+          destDir: resolve(dist, 'assets'),
+        }),
         isProd && terser(),
         filesize(),
       ],

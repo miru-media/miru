@@ -42,7 +42,7 @@ patchedDependencies:
     hash: zmua56ll3nsogq7n7h7yfzgwo4
     path: patches/glsl-tokenizer.patch
   libavjs-webcodecs-polyfill:
-    hash: 3wgdexckoq4e3hgmufngpia54y
+    hash: 3y7clsu5aecxqwnff7ycfcb5am
     path: patches/libavjs-webcodecs-polyfill.patch
 
 importers:
@@ -414,7 +414,7 @@ importers:
         version: 6.5.7
       libavjs-webcodecs-polyfill:
         specifier: 'catalog:'
-        version: 0.5.3(patch_hash=3wgdexckoq4e3hgmufngpia54y)
+        version: 0.5.3(patch_hash=3y7clsu5aecxqwnff7ycfcb5am)
 
   packages/webgl-media-editor:
     dependencies:
@@ -8793,7 +8793,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libavjs-webcodecs-polyfill@0.5.3(patch_hash=3wgdexckoq4e3hgmufngpia54y):
+  libavjs-webcodecs-polyfill@0.5.3(patch_hash=3y7clsu5aecxqwnff7ycfcb5am):
     dependencies:
       '@libav.js/types': 6.5.7
       '@ungap/global-this': 0.4.4

@@ -1,12 +1,21 @@
 diff --git a/dist/libavjs-webcodecs-polyfill.mjs b/dist/libavjs-webcodecs-polyfill.mjs
-index d1c8beb8dec1165f780314ba91384cccd69d96cf..82222416dc3b133bf800d7c8a3ec4c5639c6352a 100644
+index d1c8beb8dec1165f780314ba91384cccd69d96cf..c18aec68d2e6f3f1a2bd1a88d158db1bc0f83fa3 100644
 --- a/dist/libavjs-webcodecs-polyfill.mjs
 +++ b/dist/libavjs-webcodecs-polyfill.mjs
-@@ -1769,6 +1769,7 @@ let AudioEncoder$1 = class AudioEncoder extends DequeueEventTarget {
+@@ -1767,8 +1767,15 @@ let AudioEncoder$1 = class AudioEncoder extends DequeueEventTarget {
+             // 2. timestamp
+             let timestamp = libav.i64tof64(packet.pts, packet.ptshi);
              timestamp = Math.floor(timestamp / sampleRate * 1000000);
++
++            let duration
++            if (packet.duration !== undefined && packet.durationhi !== undefined) {
++                duration = libav.i64tof64(packet.duration, packet.durationhi);
++                duration = Math.floor(duration / sampleRate * 1000000);
++            }
++
              const chunk = new EncodedAudioChunk$1({
-                 type, timestamp,
-+                duration: libav.i64tof64(packet.duration, packet.durationhi) / sampleRate * 1000000,
+-                type, timestamp,
++                type, timestamp, duration,
                  data: packet.data
              });
              if (this._outputMetadataFilled)

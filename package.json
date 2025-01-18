@@ -7,9 +7,9 @@
   "scripts": {
     "dev": "vite",
     "dev:slow": "VITE_DEV_SLOW_DOWN_MS=5000 pnpm run dev",
-    "build": "tsc -b --noEmit && NODE_ENV=production rollup --config rollup.config.js",
+    "build": "tsc -b tsconfig.check.json && NODE_ENV=production rollup --config rollup.config.js",
     "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
-    "check": "tsc --incremental",
+    "check": "tsc -b tsconfig.check.json --incremental",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prepare": "husky"
   },

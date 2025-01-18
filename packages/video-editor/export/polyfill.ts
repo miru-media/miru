@@ -1,6 +1,7 @@
 import LibAV from '@libav.js/variant-opus'
 import { AudioData, AudioEncoder, EncodedAudioChunk, load as loadLibAv } from 'libavjs-webcodecs-polyfill'
 
+// @ts-expect-error -- the file isn't exposed in the package's "exports" field or types
 // eslint-disable-next-line import/no-relative-packages
 import factory from '../node_modules/@libav.js/variant-opus/dist/libav-6.5.7.1-opus.wasm.mjs'
 // eslint-disable-next-line import/no-relative-packages
