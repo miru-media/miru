@@ -1,17 +1,28 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fs from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
+import { Bumper } from 'conventional-recommended-bump'
 import { globSync } from 'glob'
 import spawn from 'nano-spawn'
+import pico from 'picocolors'
 import * as semver from 'semver'
 
 const ROOT = resolve(import.meta.dirname, '..')
 
+const allPublicPackageDirs = globSync(join(ROOT, 'packages', '*', 'package.json'))
+  .filter((p) => {
+    const pkg = /** @type {{ private?: boolean }} */ (JSON.parse(fs.readFileSync(p).toString()))
+    return !pkg.private
+  })
+  .map((p) => dirname(p))
+
 const { values: cliArgs } = parseArgs({
   options: {
-    version: { type: 'string' },
+    // the versions of these packages will be bumped, but `pnpm publish --recursive` will try to publish
+    // all packages that have a version that isn't in the registry, not just the packages to be bumped now.
+    bumpPackages: { type: 'string', multiple: true, default: allPublicPackageDirs },
     tag: { type: 'string' },
     registry: { type: 'string' },
     skipGit: { type: 'boolean' },
@@ -21,15 +32,12 @@ const { values: cliArgs } = parseArgs({
   strict: true,
 })
 
-/** @type {string | null} */
-let targetVersion
+const bumpPackages = cliArgs.bumpPackages
+  .map((name) => resolve(ROOT, 'packages', name))
+  .filter((dir) => allPublicPackageDirs.includes(dir))
 
-let packages = globSync(join(ROOT, 'packages', '*', 'package.json'))
-  .filter((p) => {
-    const pkg = /** @type {{ private?: boolean }} */ (JSON.parse(fs.readFileSync(p).toString()))
-    return !pkg.private
-  })
-  .map((p) => dirname(p))
+/** @type {string[]} */
+const newTags = []
 
 try {
   await main()
@@ -40,7 +48,6 @@ try {
 
 async function main() {
   await ensureCleanIndex()
-  getTargetVersion()
   await updateVersions()
   await build()
   await commit()
@@ -61,25 +68,60 @@ async function indexIsDirty() {
   }
 }
 
-/** Bump by or use --version arg */
-function getTargetVersion() {
-  const versionArg = cliArgs.version
-  if (!versionArg) throw new Error('Missing "--version" argument.')
+/**
+ * @param {string} oldVersion
+ * @param {string} bump
+ */
+function getTargetVersion(oldVersion, bump) {
+  if (!oldVersion || !bump)
+    throw new Error(`Missing target version ${JSON.stringify({ prev: oldVersion, newVersion: bump })}`)
 
-  if (versionArg === 'patch' || versionArg === 'minor' || versionArg === 'major') {
-    /** @type {{ version: string }} */
-    const pkg = JSON.parse(fs.readFileSync(resolve(ROOT, 'package.json')).toString())
-    const oldVersion = pkg.version
-    targetVersion = semver.inc(oldVersion, versionArg)
-  } else if (semver.valid(versionArg)) targetVersion = versionArg
-  else throw new Error(`Invalid version "${versionArg}"`)
+  if (bump === 'patch' || bump === 'minor' || bump === 'major')
+    return /** @type {string} */ (semver.inc(oldVersion, bump))
+
+  if (semver.valid(bump)) return bump
+
+  throw new Error(`Invalid version "${bump}"`)
 }
 
 async function updateVersions() {
-  await editPackageJsons((pkg) => {
-    pkg.version = targetVersion
-  })
-  if (!cliArgs.skipChangelog) await run('pnpm', ['run', 'changelog'])
+  await Promise.all(
+    bumpPackages.map(async (packageDir) => {
+      const pkg = await getPackageJson(packageDir)
+      const tagPrefix = `${pkg.name}@`
+      const bumper = new Bumper().loadPreset('angular')
+
+      bumper.tag({ prefix: tagPrefix })
+      bumper.commits({ path: packageDir })
+      const { reason, releaseType } = await bumper.bump()
+
+      console.log(pico.bgBlue(pkg.name), pico.blue(`${reason} - ${releaseType}`))
+
+      if (!releaseType) return
+
+      const targetVersion = getTargetVersion(pkg.version, releaseType)
+      pkg.version = targetVersion
+      await writePackageJson(packageDir, pkg)
+      newTags.push(`${tagPrefix}${targetVersion}`)
+
+      if (!cliArgs.skipChangelog)
+        await run('conventional-changelog', [
+          '--preset',
+          'angular',
+          '--infile',
+          resolve(packageDir, 'CHANGELOG.md'),
+          '--same-file',
+          '--pkg',
+          resolve(packageDir, 'package.json'),
+          '--commit-path',
+          packageDir,
+          '--tag-prefix',
+          tagPrefix,
+        ])
+    }),
+  )
+
+  if (!newTags.length) console.warn(pico.bgYellow('No packages were bumped.'))
 }
 
 async function build() {
@@ -92,14 +134,15 @@ async function commit() {
 
   if (await indexIsDirty()) {
     await runUnlessDry('git', ['add', '--all'])
-    await runUnlessDry('git', ['commit', '--no-verify', '--message', `release: v${targetVersion}`])
+    await runUnlessDry('git', ['commit', '--no-verify', '--message', `release: ${newTags.join(' ')}`])
   }
-  await runUnlessDry('git', ['tag', '--no-sign', `v${targetVersion}`])
 }
 
 async function pushAndPublish() {
   if (!cliArgs.skipGit) {
-    await runUnlessDry('git', ['push', '--no-verify', 'origin', `HEAD:refs/tags/v${targetVersion}`])
+    await Promise.all(
+      newTags.map((tag) => runUnlessDry('git', ['push', '--no-verify', 'origin', `HEAD:refs/tags/${tag}`])),
+    )
     await runUnlessDry('git', ['push', '--no-verify'])
   }
 
@@ -114,17 +157,22 @@ async function pushAndPublish() {
 }
 
 /**
- * @param {(pkg: Record<string, any>) => void} edit
+ * @param {string} packageDir
+ * @returns {Promise<Record<string, any>>}
  */
-async function editPackageJsons(edit) {
-  await Promise.all(
-    ['.', ...packages].map(async (packageDir) => {
-      const filePath = resolve(packageDir, 'package.json')
-      const pkg = JSON.parse((await fs.promises.readFile(filePath)).toString())
-      edit(pkg)
-      await fs.promises.writeFile(filePath, `${JSON.stringify(pkg, null, 2)}\n`)
-    }),
-  )
+async function getPackageJson(packageDir) {
+  const filePath = resolve(packageDir, 'package.json')
+  return JSON.parse((await fs.promises.readFile(filePath)).toString())
+}
+
+/**
+ * @param {string} packageDir
+ * @param {Record<string, any>} pkg
+ * @returns {Promise<void>}
+ */
+async function writePackageJson(packageDir, pkg) {
+  const filePath = resolve(packageDir, 'package.json')
+  await fs.promises.writeFile(filePath, `${JSON.stringify(pkg, null, 2)}\n`)
 }
 
 /**

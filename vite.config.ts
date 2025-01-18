@@ -43,7 +43,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      'virtual:image-shadow.css': resolve(import.meta.dirname, 'packages/media-editor/index.css?inline'),
+      'virtual:image-shadow.css': resolve(import.meta.dirname, 'packages/webgl-media-editor/index.css?inline'),
       'virtual:video-shadow.css': resolve(import.meta.dirname, 'packages/video-editor/index.css?inline'),
     },
   },

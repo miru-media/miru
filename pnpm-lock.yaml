@@ -63,7 +63,7 @@ importers:
         version: link:packages/shared
       webgl-media-editor:
         specifier: 'workspace:'
-        version: link:packages/media-editor
+        version: link:packages/webgl-media-editor
     devDependencies:
       '@eslint/js':
         specifier: ^9.13.0
@@ -125,6 +125,9 @@ importers:
       conventional-changelog-cli:
         specifier: ^5.0.0
         version: 5.0.0(conventional-commits-filter@5.0.0)
+      conventional-recommended-bump:
+        specifier: ^10.0.0
+        version: 10.0.0
       cssnano:
         specifier: ^7.0.6
         version: 7.0.6(postcss@8.4.47)
@@ -283,25 +286,7 @@ importers:
         version: 0.17.0
       webgl-media-editor:
         specifier: 'workspace:'
-        version: link:../media-editor
-
-  packages/media-editor:
-    dependencies:
-      cropperjs:
-        specifier: ^1.6.2
-        version: 1.6.2
-      fine-jsx:
-        specifier: 'catalog:'
-        version: 0.0.5
-      gl-matrix:
-        specifier: 'catalog:'
-        version: 3.4.3
-      throttle-debounce:
-        specifier: 'catalog:'
-        version: 5.0.2
-      twgl.js:
-        specifier: 'catalog:'
-        version: 5.5.4
+        version: link:../webgl-media-editor
 
   packages/media-trimmer:
     dependencies:
@@ -430,6 +415,24 @@ importers:
       libavjs-webcodecs-polyfill:
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=3wgdexckoq4e3hgmufngpia54y)
+
+  packages/webgl-media-editor:
+    dependencies:
+      cropperjs:
+        specifier: ^1.6.2
+        version: 1.6.2
+      fine-jsx:
+        specifier: 'catalog:'
+        version: 0.0.5
+      gl-matrix:
+        specifier: 'catalog:'
+        version: 3.4.3
+      throttle-debounce:
+        specifier: 'catalog:'
+        version: 5.0.2
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
 
 packages:
 
@@ -2330,6 +2333,11 @@ packages:
 
   conventional-commits-parser@6.0.0:
     resolution: {integrity: sha512-TbsINLp48XeMXR8EvGjTnKGsZqBemisPoyWESlpRyR8lif0lcwzqz+NMtYSj1ooF/WYjSuu7wX0CtdeeMEQAmA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  conventional-recommended-bump@10.0.0:
+    resolution: {integrity: sha512-RK/fUnc2btot0oEVtrj3p2doImDSs7iiz/bftFCDzels0Qs1mxLghp+DFHMaOC0qiCI6sWzlTDyBFSYuot6pRA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7360,6 +7368,14 @@ snapshots:
 
   conventional-commits-parser@6.0.0:
     dependencies:
+      meow: 13.2.0
+
+  conventional-recommended-bump@10.0.0:
+    dependencies:
+      '@conventional-changelog/git-client': 1.0.1(conventional-commits-filter@5.0.0)(conventional-commits-parser@6.0.0)
+      conventional-changelog-preset-loader: 5.0.0
+      conventional-commits-filter: 5.0.0
+      conventional-commits-parser: 6.0.0
       meow: 13.2.0
 
   convert-source-map@2.0.0: {}

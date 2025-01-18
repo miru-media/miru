@@ -1,6 +1,6 @@
 {
   "name": "miru",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": "true",
   "packageManager": "pnpm@9.10.0",
   "type": "module",
@@ -43,6 +43,7 @@
     "@unocss/preset-icons": "^0.63.4",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "conventional-changelog-cli": "^5.0.0",
+    "conventional-recommended-bump": "^10.0.0",
     "cssnano": "^7.0.6",
     "esbuild": "^0.24.0",
     "eslint": "^9.13.0",

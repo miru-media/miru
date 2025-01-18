@@ -36,7 +36,7 @@ const ALWAYS_BUNDLE = ['@reactively/core']
 /** @type {Options[]} */
 const packageOptions = [
   {
-    root: 'packages/media-editor',
+    root: 'packages/webgl-media-editor',
     inputs: {
       'webgl-media-editor': 'index.ts',
       vue2: 'vue2/index.ts',
@@ -54,7 +54,7 @@ const packageOptions = [
 
 const aliases = {
   entries: {
-    'virtual:image-shadow.css': resolve(ROOT, 'packages/media-editor/index.css'),
+    'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/index.css'),
     'virtual:video-shadow.css': resolve(ROOT, 'packages/video-editor/index.css'),
   },
 }
