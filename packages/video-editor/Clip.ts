@@ -1,8 +1,8 @@
+import { effect, ref, type Ref, watch } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
-import { effect, ref, type Ref, watch } from 'shared/framework/reactivity'
 import { type Effect } from 'shared/types'
 import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from 'shared/utils'
 

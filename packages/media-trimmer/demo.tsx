@@ -2,8 +2,7 @@
 // eslint-disable-next-line import/no-unresolved
 import 'uno.css'
 
-import { render } from 'shared/framework/jsx-runtime'
-import { createEffectScope, effect, ref } from 'shared/framework/reactivity'
+import { createEffectScope, effect, ref, render } from 'fine-jsx'
 
 import { trim } from '.'
 

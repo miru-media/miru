@@ -49,7 +49,7 @@ export default defineConfig({
   },
   esbuild: {
     jsx: 'automatic',
-    jsxImportSource: 'shared/framework',
+    jsxImportSource: 'fine-jsx',
   },
   base: './',
   build: {

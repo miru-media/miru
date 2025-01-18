@@ -1,5 +1,4 @@
-import { type Component } from 'shared/framework/jsx-runtime'
-import { type MaybeRef, type MaybeRefOrGetter, toRef, toValue, unref } from 'shared/framework/reactivity'
+import { type Component, type MaybeRef, type MaybeRefOrGetter, toRef, toValue, unref } from 'fine-jsx'
 
 import { IconButton } from './IconButton'
 

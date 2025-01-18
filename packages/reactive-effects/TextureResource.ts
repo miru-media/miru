@@ -1,6 +1,7 @@
+import { ref } from 'fine-jsx'
+
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from 'renderer/constants'
 import { type Renderer } from 'renderer/Renderer'
-import { ref } from 'shared/framework/reactivity'
 import { type ImageSourceObject, type SyncImageSource } from 'shared/types'
 import { decodeAsyncImageSource, devSlowDown, getImageData, isSyncSource, Janitor } from 'shared/utils'
 

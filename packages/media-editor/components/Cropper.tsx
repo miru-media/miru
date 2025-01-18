@@ -1,5 +1,6 @@
-import { type Component } from 'shared/framework/jsx-runtime'
-import { toValue } from 'shared/framework/reactivity'
+import { type Component } from 'fine-jsx'
+import { toValue } from 'fine-jsx'
+
 import { type InputEvent } from 'shared/types'
 
 import { type MediaEditor } from '../MediaEditor'

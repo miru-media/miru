@@ -41,6 +41,7 @@
   ],
   "dependencies": {
     "cropperjs": "^1.6.2",
+    "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:"

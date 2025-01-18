@@ -1,5 +1,5 @@
-import { type MaybeChild } from 'shared/framework/jsx-runtime'
-import { computed, effect, type MaybeRefOrGetter, ref } from 'shared/framework/reactivity'
+import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref } from 'fine-jsx'
+
 import { type InputEvent } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 

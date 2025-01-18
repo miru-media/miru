@@ -1,4 +1,5 @@
-import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'shared/framework/reactivity'
+import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
+
 import { type AdjustmentsState, type InputEvent } from 'shared/types'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'

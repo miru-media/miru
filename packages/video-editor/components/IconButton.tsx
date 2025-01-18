@@ -1,5 +1,4 @@
-import { type Component } from 'shared/framework/jsx-runtime'
-import { type MaybeRef, unref } from 'shared/framework/reactivity'
+import { type Component, type MaybeRef, unref } from 'fine-jsx'
 
 export const IconButton = ({
   icon,

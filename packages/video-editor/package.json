@@ -34,6 +34,7 @@
     "@interactjs/interact": "^1.10.27",
     "@interactjs/modifiers": "^1.10.27",
     "filesize": "catalog:",
+    "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "mp4-muxer": "catalog:",
     "mp4box": "catalog:",

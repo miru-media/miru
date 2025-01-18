@@ -1,5 +1,3 @@
-import { type EffectInternal } from 'reactive-effects/Effect'
-import { type Renderer } from 'renderer/Renderer'
 import {
   computed,
   createEffectScope,
@@ -9,7 +7,10 @@ import {
   type Ref,
   toValue,
   watch,
-} from 'shared/framework/reactivity'
+} from 'fine-jsx'
+
+import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Renderer } from 'renderer/Renderer'
 import {
   type AdjustmentsState,
   type Context2D,

@@ -1,14 +1,7 @@
+import { computed, effect, type EffectScope, getCurrentScope, ref, type Ref, watch } from 'fine-jsx'
+
 import { EffectInternal } from 'reactive-effects/Effect'
 import { Renderer } from 'renderer/Renderer'
-import {
-  computed,
-  effect,
-  type EffectScope,
-  getCurrentScope,
-  ref,
-  type Ref,
-  watch,
-} from 'shared/framework/reactivity'
 import { type Context2D, type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
 
 import { ImageSourceInternal } from './ImageSourceInternal'

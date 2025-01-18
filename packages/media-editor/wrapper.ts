@@ -1,4 +1,5 @@
-import { createEffectScope, onScopeDispose, toRef } from 'shared/framework/reactivity'
+import { createEffectScope, onScopeDispose, toRef } from 'fine-jsx'
+
 import { type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
 import { canvasToBlob } from 'shared/utils'
 

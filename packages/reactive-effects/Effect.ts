@@ -1,6 +1,7 @@
+import { computed, type Ref } from 'fine-jsx'
+
 import { FRAGMENT_SHADERS } from 'renderer/allFragmentShaders'
 import { type Renderer } from 'renderer/Renderer'
-import { computed, type Ref } from 'shared/framework/reactivity'
 import { type AssetType, type Effect, type RendererEffectOp } from 'shared/types'
 import { Janitor, normalizeSourceOption } from 'shared/utils'
 

@@ -1,4 +1,4 @@
-import { h, render } from 'shared/framework/jsx-runtime'
+import { h, render } from 'fine-jsx'
 
 import { setShadowStyles } from './setShadowStyles'
 

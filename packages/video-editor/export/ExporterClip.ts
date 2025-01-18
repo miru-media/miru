@@ -1,8 +1,8 @@
+import { ref, type Ref } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { EffectInternal } from 'reactive-effects/Effect'
 import { type Renderer } from 'renderer/Renderer'
-import { ref, type Ref } from 'shared/framework/reactivity'
 
 import { BaseClip } from '../BaseClip'
 import { type Clip } from '../Clip'

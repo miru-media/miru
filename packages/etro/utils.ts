@@ -1,4 +1,5 @@
-import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'shared/framework/reactivity'
+import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'fine-jsx'
+
 import { useEventListener } from 'shared/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(

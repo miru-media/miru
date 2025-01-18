@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     "checkJs": true,
     "jsx": "preserve",
-    "jsxImportSource": "shared/framework",
+    "jsxImportSource": "fine-jsx",
 
     /* Bundler mode */
     "moduleResolution": "bundler",

@@ -1,4 +1,4 @@
-import { createEffectScope, type EffectScope, ref, type Ref } from 'shared/framework/reactivity'
+import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
 
 import { renderComponentTo } from '../components/renderTo'
 import { MediaEditor, type MediaEditor_, unwrap } from '../wrapper'

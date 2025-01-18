@@ -44,6 +44,7 @@
     "mp4"
   ],
   "dependencies": {
+    "fine-jsx": "catalog:",
     "mp4-muxer": "catalog:",
     "mp4box": "catalog:",
     "throttle-debounce": "catalog:"

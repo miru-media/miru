@@ -1,4 +1,4 @@
-import { computed, createEffectScope, type Ref, ref } from 'shared/framework/reactivity'
+import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
 
 import { TRANSITION_DURATION_S } from './constants'
 

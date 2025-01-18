@@ -69,7 +69,7 @@ const esbuildOptions = [
     include: /\.(t|j)sx$/,
     loader: 'tsx',
     jsx: 'automatic',
-    jsxImportSource: 'shared/framework',
+    jsxImportSource: 'fine-jsx',
     jsxDev: false,
   },
 ]

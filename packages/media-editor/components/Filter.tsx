@@ -1,16 +1,7 @@
+import { computed, effect, type MaybeRefOrGetter, ref, type Ref, toRef, toValue, watch } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
 import { EffectInternal } from 'reactive-effects/Effect'
-import {
-  computed,
-  effect,
-  type MaybeRefOrGetter,
-  ref,
-  type Ref,
-  toRef,
-  toValue,
-  watch,
-} from 'shared/framework/reactivity'
 import { type DisplayContext, type InputEvent } from 'shared/types'
 import { createDisplayContext, getCenter, useElementSize } from 'shared/utils'
 

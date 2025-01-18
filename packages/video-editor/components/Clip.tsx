@@ -5,8 +5,8 @@ import '@interactjs/auto-start'
 import { type DragEvent } from '@interactjs/actions/drag/plugin'
 import { type ResizeEvent } from '@interactjs/actions/resize/plugin'
 import interact from '@interactjs/interact'
+import { computed, effect, ref, toRef } from 'fine-jsx'
 
-import { computed, effect, ref, toRef } from 'shared/framework/reactivity'
 import { stringHashCode } from 'shared/utils'
 
 import { type Clip as ClipType } from '../Clip'

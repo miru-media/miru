@@ -6,6 +6,7 @@
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
   "dependencies": {
+    "fine-jsx": "catalog:",
     "renderer": "workspace:",
     "shared": "workspace:"
   }

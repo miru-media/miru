@@ -1,5 +1,5 @@
-import { type Component } from 'shared/framework/jsx-runtime'
-import { toValue } from 'shared/framework/reactivity'
+import { type Component } from 'fine-jsx'
+import { toValue } from 'fine-jsx'
 
 export const RowSlider: Component<{
   [key: string]: unknown

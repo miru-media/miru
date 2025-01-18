@@ -1,4 +1,5 @@
-import { ref } from 'shared/framework/reactivity'
+import { ref } from 'fine-jsx'
+
 import { type InputEvent, type Size } from 'shared/types'
 import { useEventListener } from 'shared/utils'
 

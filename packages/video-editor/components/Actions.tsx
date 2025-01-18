@@ -1,6 +1,6 @@
 import { filesize } from 'filesize'
+import { toRef } from 'fine-jsx'
 
-import { toRef } from 'shared/framework/reactivity'
 import { type InputEvent } from 'shared/types'
 
 import { type VideoEditor } from '../VideoEditor'

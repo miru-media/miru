@@ -1,11 +1,5 @@
-import {
-  computed,
-  getCurrentScope,
-  type MaybeRefOrGetter,
-  ref,
-  type Ref,
-  toRef,
-} from 'shared/framework/reactivity'
+import { computed, getCurrentScope, type MaybeRefOrGetter, ref, type Ref, toRef } from 'fine-jsx'
+
 import { EditorView } from 'shared/types'
 
 import { type ImageSourceInternal } from '../ImageSourceInternal'

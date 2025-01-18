@@ -1,5 +1,12 @@
-import { createEffectScope, effect, ref } from 'shared/framework/reactivity'
-import { type Context2D, EditorView, type Effect, type ImageEditState, type ImageSourceOption } from 'shared/types'
+import { createEffectScope, effect, ref } from 'fine-jsx'
+
+import {
+  type Context2D,
+  EditorView,
+  type Effect,
+  type ImageEditState,
+  type ImageSourceOption,
+} from 'shared/types'
 import { downloadBlob, win } from 'shared/utils'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'

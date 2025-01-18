@@ -1,9 +1,9 @@
+import { h } from 'fine-jsx'
 /* eslint-disable import/no-unresolved */
 import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
 import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
 /* eslint-enable import/no-unresolved */
 
-import { h } from 'shared/framework/jsx-runtime'
 import { type InputEvent } from 'shared/types'
 
 import { Clip } from './Clip'

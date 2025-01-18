@@ -1,4 +1,5 @@
-import { effect, type Ref, ref } from 'shared/framework/reactivity'
+import { effect, type Ref, ref } from 'fine-jsx'
+
 import { type Size } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 import { remap0 } from 'shared/utils/math'

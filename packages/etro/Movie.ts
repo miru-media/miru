@@ -1,9 +1,9 @@
 import etro from 'etro'
+import { computed, createEffectScope, effect, type Ref, ref } from 'fine-jsx'
 import Stats from 'stats.js'
 
 import { EffectInternal } from 'reactive-effects/Effect'
 import { Renderer } from 'renderer/Renderer'
-import { computed, createEffectScope, effect, type Ref, ref } from 'shared/framework/reactivity'
 import { type Size } from 'shared/types'
 import { getWebgl2Context } from 'shared/utils'
 import { getDefaultFilters } from 'webgl-media-editor/defaultFilters'

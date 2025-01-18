@@ -1,11 +1,6 @@
+import { createEffectScope, type EffectScope, onScopeDispose, ref, type Ref } from 'fine-jsx'
+
 import { renderComponentTo } from 'miru-video-editor/components/renderTo'
-import {
-  createEffectScope,
-  type EffectScope,
-  onScopeDispose,
-  ref,
-  type Ref,
-} from 'shared/framework/reactivity'
 
 import { type TrimState, VideoTrimmerUI } from './VideoTrimmerUI'
 

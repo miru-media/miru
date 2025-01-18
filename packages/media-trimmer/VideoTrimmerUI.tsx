@@ -1,8 +1,9 @@
+import { h } from 'fine-jsx'
+import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 'fine-jsx'
+
 import { IconButton } from 'miru-video-editor/components/IconButton'
 import { ToggleButton } from 'miru-video-editor/components/ToggleButton'
 import { formatDuration, formatTime, getVideoInfo, useMediaReadyState } from 'miru-video-editor/utils'
-import { h } from 'shared/framework/jsx-runtime'
-import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 'shared/framework/reactivity'
 import { useElementSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 

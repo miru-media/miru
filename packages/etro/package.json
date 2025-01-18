@@ -8,6 +8,7 @@
   "dependencies": {
     "etro": "^0.12.1",
     "filesize": "catalog:",
+    "fine-jsx": "catalog:",
     "webgl-media-editor": "workspace:",
     "reactive-effects": "workspace:",
     "renderer": "workspace:",

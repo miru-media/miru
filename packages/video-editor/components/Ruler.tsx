@@ -1,4 +1,4 @@
-import { computed } from 'shared/framework/reactivity'
+import { computed } from 'fine-jsx'
 
 import { type VideoEditor } from '../VideoEditor'
 

@@ -1,4 +1,4 @@
-import { ref } from 'shared/framework/reactivity'
+import { ref } from 'fine-jsx'
 
 import { FilterView } from '../components/Filter'
 import { renderComponentTo } from '../components/renderTo'

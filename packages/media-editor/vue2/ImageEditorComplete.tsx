@@ -1,4 +1,5 @@
-import { createEffectScope, type EffectScope, ref, type Ref } from 'shared/framework/reactivity'
+import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
+
 import {
   type Context2D,
   EditorView,
