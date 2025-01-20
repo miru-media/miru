@@ -184,12 +184,14 @@ export class MovieExporter {
               const trimStartS = -Math.min(bufferOffsetS, 0)
               const durationS = duration / 1e6
               const trimEnd = Math.max(0, bufferOffsetS + durationS - clipTime.end)
-              const bufferDurationS = durationS - trimStartS - trimEnd
+              const bufferDurationS = Math.min(durationS - trimStartS - trimEnd, clipTime.duration)
 
               if (bufferDurationS > 0) {
                 const bufferSource = ctx.createBufferSource()
+                const scheduleStartS = clipTime.start + Math.max(0, bufferOffsetS)
+
                 bufferSource.buffer = buffer
-                bufferSource.start(clipTime.start + Math.max(0, bufferOffsetS), trimStartS, bufferDurationS)
+                bufferSource.start(scheduleStartS, trimStartS, bufferDurationS)
                 bufferSource.connect(ctx.destination)
               }
 
