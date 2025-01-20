@@ -301,6 +301,7 @@ export class Renderer {
 
     if (!targetFrameBuffer) {
       const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
+      gl.flush()
 
       if (sync == null) return
       if (gl.getSyncParameter(sync, GL.SYNC_STATUS) !== GL.SIGNALED) gl.clientWaitSync(sync, 0, 0)
