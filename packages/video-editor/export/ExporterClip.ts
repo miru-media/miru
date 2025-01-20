@@ -6,7 +6,7 @@ import { EffectInternal } from 'reactive-effects/Effect'
 
 import { BaseClip } from '../BaseClip'
 import { type Clip } from '../Clip'
-import { Mp4ExtractorNode } from '../custom'
+import { type ExtractorNodeOptions, Mp4ExtractorNode } from '../custom'
 import { type Track } from '../Track'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
@@ -44,13 +44,15 @@ export class ExtractorClip extends BaseClip {
     const { start, end, source: sourceOffset } = this.time
     const { source: url } = init
 
-    this.node = context.customSourceNode(Mp4ExtractorNode, undefined, {
+    const nodeOptions: ExtractorNodeOptions = {
       renderer,
       url,
       sourceOffset,
       start,
       end,
-    })
+      targetFrameRate: track.movie.frameRate.value,
+    }
+    this.node = context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
 
     this.node.effect = this.filter.value
   }

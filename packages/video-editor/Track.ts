@@ -12,7 +12,7 @@ export namespace Track {
   }
 }
 
-type TrackMovie = Pick<Movie, 'videoContext' | 'renderer' | 'resolution'>
+type TrackMovie = Pick<Movie, 'videoContext' | 'renderer' | 'resolution' | 'frameRate'>
 
 export class Track<T extends BaseClip> {
   #head = ref<T>()

@@ -135,12 +135,13 @@ export class CustomVideoElementNode extends VideoContext.NODES.VideoNode {
   }
 }
 
-interface ExtractorNodeOptions {
+export interface ExtractorNodeOptions {
   renderer: Renderer
   url: string
   sourceOffset: number
   start: number
   end: number
+  targetFrameRate: number
 }
 
 export namespace Mp4ExtractorNode {
@@ -182,6 +183,8 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
   videoStream?: VideoDecoderStream
   audioStream?: AudioDecoderStream
   streamInit!: { start: number; end: number; onError: (error: unknown) => void }
+  targetFrameDurationUs: number
+
   get currentVideoFrame() {
     return this.videoStream?.currentValue
   }
@@ -211,6 +214,7 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
     this.url = options.url
     this._sourceOffset = options.sourceOffset
     this._displayName = 'Mp4ExtractorNode'
+    this.targetFrameDurationUs = 1e6 / options.targetFrameRate
   }
 
   init({ audio, video }: { audio?: Mp4ExtractorNode.AudioInit; video?: Mp4ExtractorNode.VideoInit }) {
@@ -232,7 +236,7 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
 
   async seekVideo(timeS: number): Promise<boolean> {
     this._ready = true
-    if (!this.videoInit || this.videoStream?.done) return false
+    if (!this.videoInit || this.videoStream?.doneReading) return false
 
     const { startTime, stopTime } = this
 
@@ -264,6 +268,8 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
         return true
       }
 
+      if (this.videoStream.doneReading) break
+
       await this.videoStream.read()
     }
 
@@ -271,7 +277,7 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
   }
 
   async seekAudio(timeS: number): Promise<boolean> {
-    if (!this.audioInit || (!this.audioInit.audioBuffer && this.audioStream?.done)) return false
+    if (!this.audioInit || (!this.audioInit.audioBuffer && this.audioStream?.doneReading)) return false
 
     const { startTime, stopTime } = this
 
@@ -300,7 +306,11 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
 
   #hasVideoFrameAtTimeUs(sourceTimeUs: number) {
     const frame = this.videoStream?.currentValue
-    return !!frame && frame.timestamp + frame.duration! >= sourceTimeUs
+    if (!frame) return false
+
+    const frameCenter = frame.timestamp + frame.duration! / 2
+    const targetFrameCenter = sourceTimeUs + this.targetFrameDurationUs / 2
+    return frameCenter >= targetFrameCenter - 10 || frame.timestamp + frame.duration! >= sourceTimeUs
   }
 
   #hasAudioFrameAtTimeUs(sourceTimeUs: number) {

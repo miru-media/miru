@@ -186,6 +186,7 @@ interface TrackState {
   track: MP4BoxTrack
   isEnded: boolean
   sampleBytes: number
+  presentationOffsetS: number
   onSample: (chunk: DemuxerChunkInfo) => unknown
   onDone?: () => void
   resolve: () => void
@@ -240,7 +241,7 @@ export class MP4Demuxer {
     })
   }
 
-  getConfig(track: MP4BoxVideoTrack): VideoDecoderConfig& { codedWidth: number; codedHeight: number }
+  getConfig(track: MP4BoxVideoTrack): VideoDecoderConfig & { codedWidth: number; codedHeight: number }
   getConfig(track: MP4BoxAudioTrack): AudioDecoderConfig
   getConfig(track: MP4BoxVideoTrack | MP4BoxAudioTrack): VideoDecoderConfig | AudioDecoderConfig {
     const { codec } = track
@@ -312,6 +313,7 @@ export class MP4Demuxer {
         onSample: onSample as TrackState['onSample'],
         onDone,
         sampleBytes: 0,
+        presentationOffsetS: getTrakEditTimeS(this.#file.getTrackById(track.id)),
         isEnded: false,
         resolve,
         reject,
@@ -335,7 +337,7 @@ export class MP4Demuxer {
       try {
         for (let i = 0; i < samplesLength; i++) {
           const { data, is_sync, cts, duration, timescale, description } = samples[i]
-          const timeS = cts / timescale
+          const timeS = cts / timescale - state.presentationOffsetS
           const { track } = state
 
           state.sampleBytes += data.byteLength
@@ -369,7 +371,7 @@ export class MP4Demuxer {
 
           state.onSample(chunkInfo)
 
-          state.isEnded ||= (timeS >= lastFrameTimeS && is_sync) 
+          state.isEnded ||= timeS >= lastFrameTimeS && is_sync
           if (state.isEnded) break
         }
 
@@ -407,6 +409,13 @@ export class MP4Demuxer {
   flush() {
     return Promise.resolve(this.#promise)
   }
+}
+
+const getTrakEditTimeS = (trak: any) => {
+  const edit = trak.edts?.elst.entries[0]
+  if (edit == null) return 0
+
+  return edit.media_time / trak.mdia.mdhd.timescale
 }
 
 const parseAudioStsd = (stsd: any) => {

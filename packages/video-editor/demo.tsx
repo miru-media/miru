@@ -53,7 +53,7 @@ const demoMovie = {
     },
   ],
   resolution: { width: 1080, height: 1920 },
-  frameRate: 60,
+  frameRate: 24,
 }
 
 const Demo = () => {

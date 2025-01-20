@@ -49,7 +49,7 @@ export class MovieExporter {
     const videoContext = (this.videoContext = new VideoContext(canvas))
     delete (canvas as Partial<typeof canvas>).getContext
 
-    const movieStub = { videoContext, renderer, resolution }
+    const movieStub = { videoContext, renderer, resolution, frameRate: movie.frameRate }
     const movieInit = movie.toObject()
 
     movieInit.tracks.forEach((init) => {
@@ -147,6 +147,7 @@ export class MovieExporter {
     onProgress?.(0)
 
     await Promise.all([
+      // Video
       (async () => {
         const totalFrames = duration * frameRate
         const frameDurationUs = 1e6 / frameRate
@@ -164,6 +165,8 @@ export class MovieExporter {
           frame.close()
         }
       })(),
+
+      // Audio
       (async () => {
         if (!hasAudio) return
 

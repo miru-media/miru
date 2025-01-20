@@ -20,7 +20,8 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
   chunks: DemuxerChunkInfo[]
   options: Options<T>
   decoder: VideoDecoder | AudioDecoder
-  done = false
+  doneDecoding = false
+  doneReading = false
   startUs: number
   endUs: number
   chunkIndex = 0
@@ -75,7 +76,7 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
   abstract decode(chunk: DemuxerChunkInfo): void
 
   enqueueChunks() {
-    const { chunks, decoder, done } = this
+    const { chunks, decoder, doneDecoding: done } = this
     if (done || decoder.state !== 'configured') return
 
     const desiredSize = this._controller.desiredSize ?? HIGH_WATER_MARK
@@ -89,11 +90,14 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
   }
 
   async read() {
-    if (this.done) return
-
     this._currentValue?.close()
+    if (this.doneReading) return
+
     this.enqueueChunks()
-    this._currentValue = (await this._reader.read()).value
+
+    const { value, done } = await this._reader.read()
+    this._currentValue = value
+    this.doneReading = done
   }
 
   async flush() {
@@ -119,15 +123,15 @@ export class VideoDecoderStream extends DecoderStream<VideoFrame> {
   constructor(options: Options<VideoFrame>) {
     const decoder = new VideoDecoder({
       output: (data) => {
-        if (data.timestamp < this.startUs || this.done || options.signal?.aborted) {
+        if (data.timestamp < this.startUs || this.doneDecoding || options.signal?.aborted) {
           data.close()
           return
         }
 
         this._controller.enqueue(data)
-        this.done = data.timestamp + data.duration! >= this.endUs
+        this.doneDecoding = data.timestamp + data.duration! >= this.endUs
 
-        if (this.done) if (decoder.state === 'configured') decoder.close()
+        if (this.doneDecoding) if (decoder.state === 'configured') decoder.close()
       },
       error: options.onError,
     })
@@ -158,15 +162,15 @@ export class AudioDecoderStream extends DecoderStream<AudioData> {
     const decoder = new AudioDecoder({
       output: (data) => {
         const dataEndUs = data.timestamp + data.duration
-        if (dataEndUs < this.startUs || this.done || options.signal?.aborted) {
+        if (dataEndUs < this.startUs || this.doneDecoding || options.signal?.aborted) {
           data.close()
           return
         }
 
         this._controller.enqueue(data)
-        this.done = dataEndUs >= this.endUs
+        this.doneDecoding = dataEndUs >= this.endUs
 
-        if (this.done) {
+        if (this.doneDecoding) {
           if (decoder.state === 'configured') decoder.close()
         }
       },
@@ -186,7 +190,7 @@ export class AudioDecoderStream extends DecoderStream<AudioData> {
   }
 
   async read() {
-    if (this.done) this._currentValue = undefined
+    if (this.doneDecoding) this._currentValue = undefined
     else await super.read()
     const audioData = this._currentValue
 
