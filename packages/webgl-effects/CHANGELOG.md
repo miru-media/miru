@@ -1,3 +1,12 @@
+## [0.0.3](https://gitea.com/miru/miru/compare/webgl-effects@0.0.2...webgl-effects@0.0.3) (2025-01-22)
+
+
+### Bug Fixes
+
+* **webgl-effects:** move glsl-* deps to devDependencies ([d87799b](https://gitea.com/miru/miru/commits/d87799b36816187eb7e96c06c5904fee9c4297c6))
+
+
+
 ## [0.0.2](https://gitea.com/miru/miru/compare/webgl-effects@0.0.1...webgl-effects@0.0.2) (2025-01-22)
 
 
