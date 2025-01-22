@@ -3,7 +3,7 @@ import { type Renderer } from 'webgl-effects'
 
 import { type EffectInternal } from 'reactive-effects/Effect'
 import { type ImageSourceOption } from 'shared/types'
-import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption } from 'shared/utils'
+import { isSyncSource, loadAsyncImageSource, normalizeSourceOption } from 'shared/utils'
 
 import { EtroVideo } from './EtroVideo'
 
@@ -54,13 +54,18 @@ export class Clip {
         throw new Error('[miru] expected video source')
       }
 
-      const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+      const { promise, close } = loadAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
 
       this.#scope.run(() => {
         onScopeDispose(close)
       })
 
-      this.media = ref(media)
+      this.media = ref(document.createElement('video'))
+
+      promise
+        .then((media) => (this.media.value = media))
+        // eslint-disable-next-line no-console
+        .catch(console.error)
     }
 
     this.#scope.run(() => {

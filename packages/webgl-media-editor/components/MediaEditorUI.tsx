@@ -30,7 +30,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
   )
   const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? -1)
   const scope = getCurrentScope()
-  if (scope == undefined) throw new Error(`[miru] must be run in scope`)
+  if (scope == undefined) throw new Error(`[webgl-media-editor] must be run in scope`)
 
   const hasAdjustment = computed(() => {
     const adjustments = currentSource.value?.adjustments.value

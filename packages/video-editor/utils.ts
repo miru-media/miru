@@ -1,6 +1,6 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'fine-jsx'
 
-import { decodeAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
+import { loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
   sourceArrayRef: MaybeRefOrGetter<T[]>,
@@ -96,9 +96,9 @@ export const formatDuration = (durationS: number) => {
 }
 
 export const getVideoInfo = async (source: Blob | string) => {
-  const { media, promise, close } = decodeAsyncImageSource(source, undefined, true)
+  const { promise, close } = loadAsyncImageSource(source, undefined, true)
 
-  await promise
+  const media = await promise
   const duration = media.duration
   const media_: any = media
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions

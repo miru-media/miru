@@ -1,7 +1,7 @@
 import { debounce } from 'throttle-debounce'
 
 import { seekAndWait } from 'miru-video-editor/utils'
-import { decodeAsyncImageSource, type Janitor, promiseWithResolvers } from 'shared/utils'
+import { type Janitor, loadAsyncImageSource, promiseWithResolvers } from 'shared/utils'
 
 import { FrameExtractor } from './FrameExtractor'
 
@@ -15,11 +15,10 @@ export class RvfcExtractor extends FrameExtractor {
   closeVideo?: () => void
 
   async init(url: string, crossOrigin: Options['crossOrigin']) {
-    const { promise, media, close } = decodeAsyncImageSource(url, crossOrigin, true)
+    const { promise, close } = loadAsyncImageSource(url, crossOrigin, true)
 
-    this.video = media
+    this.video = await promise
     this.closeVideo = close
-    await promise
   }
 
   async _start(signal: AbortSignal, janitor: Janitor) {

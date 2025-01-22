@@ -24,7 +24,6 @@ import {
 } from 'shared/types'
 import {
   createDisplayContext,
-  decodeAsyncImageSource,
   devSlowDown,
   drawImage,
   editIsEqualTo,
@@ -32,6 +31,7 @@ import {
   fitToWidth,
   get2dContext,
   isSyncSource,
+  loadAsyncImageSource,
   normalizeSourceOption,
   resizeImageSync,
   useElementSize,
@@ -104,7 +104,8 @@ export class ImageSourceInternal {
     onEdit,
   }: ImageSourceInternalOptions) {
     const currentScope = getCurrentScope()
-    if (currentScope == undefined) throw new Error(`[miru] ImageSource must be created within an EffectScope`)
+    if (currentScope == undefined)
+      throw new Error(`[webgl-media-editor] ImageSource must be created within an EffectScope`)
 
     this.#renderer = renderer
     this.#texture = renderer.createTexture()!
@@ -163,7 +164,7 @@ export class ImageSourceInternal {
           .catch(() => undefined)
       } else this.#original.value = fullSizeImage
     } else {
-      const { promise } = decodeAsyncImageSource(
+      const { promise } = loadAsyncImageSource(
         sourceOption.source,
         sourceOption.crossOrigin,
         sourceOption.type === 'video',

@@ -3,7 +3,7 @@ import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from 'webgl-effects'
 import { type Renderer } from 'webgl-effects'
 
 import { type ImageSourceObject, type SyncImageSource } from 'shared/types'
-import { decodeAsyncImageSource, devSlowDown, getImageData, isSyncSource, Janitor } from 'shared/utils'
+import { devSlowDown, getImageData, isSyncSource, Janitor, loadAsyncImageSource } from 'shared/utils'
 
 export class TextureResource {
   canvas?: HTMLCanvasElement
@@ -41,14 +41,14 @@ export class TextureResource {
     } else {
       this.isLoading.value = true
 
-      const decode = decodeAsyncImageSource(source, crossOrigin, type === 'video')
+      const { promise, close } = loadAsyncImageSource(source, crossOrigin, type === 'video')
 
-      decode.promise
+      promise
         .then(onDecoded)
         .catch((e: unknown) => (this.error.value = e))
         .finally(() => (this.isLoading.value = false))
 
-      this.janitor.add(decode.close)
+      this.janitor.add(close)
     }
 
     this.janitor.add(() => {

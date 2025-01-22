@@ -44,7 +44,7 @@ export class MediaEditor {
 
   constructor({ effects, onRenderPreview, onEdit }: MediaEditorOptions) {
     const scope = getCurrentScope()
-    if (scope == undefined) throw new Error(`[miru] must be run in an EffectScope`)
+    if (scope == undefined) throw new Error(`[webgl-media-editor] must be run in an EffectScope`)
     this.#scope = scope
 
     this.#effectsIn = effects
@@ -92,7 +92,7 @@ export class MediaEditor {
         .run(() => this.#loadEffects((effects as Effect[] | undefined) ?? []))
 
         // eslint-disable-next-line no-console
-        .catch((error: unknown) => console.error(`[miru] couldn't load effects`, error))
+        .catch((error: unknown) => console.error(`[webgl-media-editor] couldn't load effects`, error))
     })
   }
 
@@ -106,7 +106,7 @@ export class MediaEditor {
 
   async toBlob(sourceIndex: number, { type = 'image/jpeg', quality = 0.9 }: ImageEncodeOptions = {}) {
     if (sourceIndex < 0 || sourceIndex >= this.sources.value.length)
-      throw new Error(`[miru] No image at index ${sourceIndex}`)
+      throw new Error(`[webgl-media-editor] No image at index ${sourceIndex}`)
 
     const source = this.sources.value[sourceIndex]
 

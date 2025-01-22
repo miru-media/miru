@@ -148,84 +148,108 @@ export const isOffscreenCanvas = (canvas: HTMLCanvasElement | OffscreenCanvas): 
 
 const isCrossOrigin = (url: string) => new URL(url, location.href).origin !== location.origin
 
-export const decodeAsyncImageSource = <IsVideo extends boolean>(
+export const loadAsyncImageSource = <IsVideo extends boolean>(
   source: AsyncImageSource,
   crossOrigin: CrossOrigin | undefined,
   isVideo: IsVideo | undefined,
 ) => {
   let isClosed = false
   let toRevoke: string | undefined
+  let media: HTMLVideoElement | ImageBitmap | undefined
 
-  if (source instanceof Blob) {
-    source = toRevoke = URL.createObjectURL(source)
-  }
+  const loadPromise =
+    isVideo === true
+      ? loadVideoUrl(
+          source instanceof Blob ? (source = toRevoke = URL.createObjectURL(source)) : source,
+          crossOrigin,
+        )
+      : loadImageUrlOrBlob(source, crossOrigin)
 
-  const { decodePromise, media } =
-    isVideo === true ? decodeVideoUrl(source, crossOrigin) : decodeImageUrl(source, crossOrigin)
-
-  const promise = (devSlowDown != undefined ? devSlowDown(Promise.resolve(decodePromise)) : decodePromise)
+  const promise = (devSlowDown != undefined ? devSlowDown(Promise.resolve(loadPromise)) : loadPromise)
     // reject if already closed
-    .then((result) => (isClosed ? Promise.reject(new Error('[miru] decode source was closed')) : result))
+    .then((result) => {
+      media = result
+
+      if (isClosed) {
+        closeMedia()
+        throw new Error('[miru] decode source was closed')
+      }
+
+      return result
+    }) as Promise<IsVideo extends true ? HTMLVideoElement : ImageBitmap>
+
+  const closeMedia = () => {
+    if (!media) return
+
+    if (media instanceof HTMLElement) {
+      media.removeAttribute('src')
+      media.remove()
+      media.pause()
+    } else media.close()
+
+    media = undefined
+  }
 
   const close = () => {
     isClosed = true
-    media.removeAttribute('src')
-    media.remove()
-    if ('pause' in media) media.pause()
+    closeMedia()
+
     if (toRevoke) URL.revokeObjectURL(toRevoke)
   }
 
-  return { promise, media: media as IsVideo extends true ? HTMLVideoElement : HTMLImageElement, close }
+  return { promise, close }
 }
 
-const decodeImageUrl = (url: string, crossOrigin?: CrossOrigin) => {
-  const img = new Image()
+const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrigin) => {
+  const blob =
+    typeof source === 'string'
+      ? // fetch url source as blob
+        await fetch(source, { credentials: crossOrigin === 'use-credentials' ? 'include' : 'omit' }).then(
+          (res) => res.blob(),
+        )
+      : // use blob source
+        source
 
-  setMediaSrc(img, url, crossOrigin)
-  const decodePromise = url
-    ? img.decode().then(() => img)
-    : Promise.reject(new Error('Empty image source URL'))
-  return { decodePromise, media: img }
+  return createImageBitmap(blob)
 }
 
-const decodeVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
+const loadVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
   const video = document.createElement('video')
   video.preload = 'metadata'
   video.playsInline = true
   video.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
   document.body.appendChild(video)
   setMediaSrc(video, url, crossOrigin)
-  if (url) video.load()
 
-  const decodePromise = url
-    ? new Promise<HTMLVideoElement>((resolve, reject) => {
-        const onLoadedMetadata = () => {
-          resolve(video)
-          removeListeners()
-        }
-        const onAbort = () => {
-          reject(new Error('aborted'))
-          removeListeners()
-        }
-        const onError = (event: ErrorEvent) => {
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(video.error ?? event.error ?? new Error('Unknown video error.'))
-          removeListeners()
-        }
+  if (!url) throw new Error('Empty video source URL')
 
-        const removeListeners = () => {
-          video.removeEventListener('loadedmetadata', onLoadedMetadata)
-          video.removeEventListener('abort', onAbort)
-          video.removeEventListener('abort', onAbort)
-        }
+  video.load()
 
-        video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true })
-        video.addEventListener('abort', onAbort, { once: true })
-        video.addEventListener('error', onError, { once: true })
-      })
-    : Promise.reject(new Error('Empty video source URL'))
+  return new Promise<HTMLVideoElement>((resolve, reject) => {
+    const onLoadedMetadata = () => {
+      resolve(video)
+      removeListeners()
+    }
+    const onAbort = () => {
+      reject(new Error('aborted'))
+      removeListeners()
+    }
+    const onError = (event: ErrorEvent) => {
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+      reject(video.error ?? event.error ?? new Error('Unknown video error.'))
+      removeListeners()
+    }
 
-  return { decodePromise, media: video }
+    const removeListeners = () => {
+      video.removeEventListener('loadedmetadata', onLoadedMetadata)
+      video.removeEventListener('abort', onAbort)
+      video.removeEventListener('abort', onAbort)
+    }
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true })
+    video.addEventListener('abort', onAbort, { once: true })
+    video.addEventListener('error', onError, { once: true })
+  })
 }
 
 const setMediaSrc = (media: HTMLImageElement | HTMLMediaElement, url: string, crossOrigin?: CrossOrigin) => {

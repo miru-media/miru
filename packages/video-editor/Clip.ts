@@ -1,10 +1,9 @@
 import { effect, ref, type Ref, watch } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
-import { type Renderer } from 'webgl-effects'
-import { type Effect } from 'webgl-effects'
+import { type Effect, type Renderer } from 'webgl-effects'
 
 import { EffectInternal } from 'reactive-effects/Effect'
-import { decodeAsyncImageSource, isSyncSource, normalizeSourceOption, useEventListener } from 'shared/utils'
+import { isSyncSource, loadAsyncImageSource, normalizeSourceOption, useEventListener } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
 import { CustomVideoElementNode } from './custom'
@@ -32,13 +31,14 @@ export class Clip extends BaseClip {
   filter: Ref<EffectInternal | undefined>
 
   track: Track<Clip>
-  media = ref<HTMLVideoElement>(undefined as never)
+  media = ref(document.createElement('video'))
   error: Ref<MediaError | undefined>
   readyState = useMediaReadyState(this.media)
   node = ref<CustomVideoElementNode>(undefined as never)
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
   latestEvent = ref<Event>()
   #isSeeking = ref(false)
+  #mediaLoadPromise?: Promise<void>
   #closeMedia?: () => void
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
@@ -211,11 +211,15 @@ export class Clip extends BaseClip {
 
     if (isSyncSource(sourceOption.source)) throw new Error('[miru] expected video source')
 
-    this.#closeMedia?.()
-    const { media, close } = decodeAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+    const { promise, close } = loadAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
 
-    this.media.value = media
-    this.#closeMedia = close
+    const mediaLoadPromise = (this.#mediaLoadPromise = promise.then((media) => {
+      if (this.#mediaLoadPromise !== mediaLoadPromise) return
+
+      this.#closeMedia?.()
+      this.media.value = media
+      this.#closeMedia = close
+    }))
   }
 
   ensureDurationIsPlayable() {
