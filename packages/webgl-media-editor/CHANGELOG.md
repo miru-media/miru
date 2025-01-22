@@ -1,3 +1,12 @@
+## [0.0.5](https://gitea.com/miru/miru/compare/webgl-media-editor@0.0.4...webgl-media-editor@0.0.5) (2025-01-22)
+
+
+### Bug Fixes
+
+* **webgl-media-editor:** use createImageBitmap for textures ([78e4952](https://gitea.com/miru/miru/commits/78e495262989cce62fb247b4d6eac71a356e1229))
+
+
+
 ## [0.0.4](https://gitea.com/miru/miru/compare/webgl-media-editor@0.0.3...webgl-media-editor@0.0.4) (2025-01-22)
 
 
