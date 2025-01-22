@@ -50,16 +50,16 @@ importers:
   .:
     dependencies:
       miru-video-editor:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:packages/video-editor
       reactive-effects:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:packages/reactive-effects
       shared:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:packages/shared
       webgl-media-editor:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:packages/webgl-media-editor
     devDependencies:
       '@eslint/js':
@@ -269,17 +269,14 @@ importers:
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.5
-      shared:
-        specifier: 'workspace:'
-        version: link:../shared
       stats.js:
         specifier: 'catalog:'
         version: 0.17.0
       webgl-effects:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:../webgl-effects
       webgl-media-editor:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:../webgl-media-editor
 
   packages/media-trimmer:
@@ -302,11 +299,8 @@ importers:
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.5
-      shared:
-        specifier: 'workspace:'
-        version: link:../shared
       webgl-effects:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:../webgl-effects
 
   packages/shared:
@@ -324,7 +318,7 @@ importers:
         specifier: 'catalog:'
         version: 5.0.2
       webgl-effects:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:../webgl-effects
     devDependencies:
       twgl.js:
@@ -376,8 +370,11 @@ importers:
         specifier: ^0.54.0
         version: 0.54.0
       webgl-effects:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:../webgl-effects
+      webgl-media-editor:
+        specifier: workspace:^
+        version: link:../webgl-media-editor
     devDependencies:
       '@libav.js/variant-opus':
         specifier: 'catalog:'
@@ -406,9 +403,6 @@ importers:
       glsl-vignette:
         specifier: ^1.1.0
         version: 1.1.0
-      shared:
-        specifier: 'workspace:'
-        version: link:../shared
       twgl.js:
         specifier: 'catalog:'
         version: 5.5.4
@@ -431,7 +425,7 @@ importers:
         specifier: 'catalog:'
         version: 5.5.4
       webgl-effects:
-        specifier: 'workspace:'
+        specifier: workspace:^
         version: link:../webgl-effects
 
 packages:

@@ -16,10 +16,10 @@
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "miru-video-editor": "workspace:",
-    "reactive-effects": "workspace:",
-    "shared": "workspace:",
-    "webgl-media-editor": "workspace:"
+    "miru-video-editor": "workspace:^",
+    "reactive-effects": "workspace:^",
+    "shared": "workspace:^",
+    "webgl-media-editor": "workspace:^"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

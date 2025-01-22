@@ -7,7 +7,6 @@
   "license": "AGPL-3.0-only",
   "dependencies": {
     "fine-jsx": "catalog:",
-    "webgl-effects": "workspace:",
-    "shared": "workspace:"
+    "webgl-effects": "workspace:^"
   }
 }

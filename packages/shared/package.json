@@ -8,7 +8,7 @@
   "dependencies": {
     "@reactively/core": "^0.0.8",
     "fine-jsx": "catalog:",
-    "webgl-effects": "workspace:",
+    "webgl-effects": "workspace:^",
     "mp4box": "catalog:",
     "throttle-debounce": "catalog:"
   },
