@@ -22,7 +22,7 @@
         "import": "./dist/webgl-effects.js"
       },
       "./fragment-shaders": {
-        "import": "dist/fragment-shaders.js"
+        "import": "./dist/fragment-shaders.js"
       }
     }
   },
