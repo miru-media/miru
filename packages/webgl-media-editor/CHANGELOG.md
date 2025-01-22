@@ -1,3 +1,7 @@
+## [0.0.3](https://gitea.com/miru/miru/compare/webgl-media-editor@0.0.2...webgl-media-editor@0.0.3) (2025-01-22)
+
+
+
 ## [0.0.2](https://gitea.com/miru/miru/compare/webgl-media-editor@0.0.1...webgl-media-editor@0.0.2) (2025-01-22)
 
 

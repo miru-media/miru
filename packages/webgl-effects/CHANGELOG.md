@@ -1,3 +1,12 @@
+## [0.0.1](https://gitea.com/miru/miru/compare/webgl-effects@0.0.0...webgl-effects@0.0.1) (2025-01-22)
+
+
+### Bug Fixes
+
+* **webgl-effects:** fix package exports field ([0091d60](https://gitea.com/miru/miru/commits/0091d60ae00b428cbec9759a41a2f773725aaf36))
+
+
+
 ## 0.0.0 (2025-01-22)
 
 
