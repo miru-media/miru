@@ -40,11 +40,13 @@
   ],
   "dependencies": {
     "gl-matrix": "catalog:",
+    "twgl.js": "catalog:"
+  },
+  "devDependencies": {
     "glsl-blend": "^1.0.3",
     "glsl-film-grain": "^1.0.4",
     "glsl-luma": "^1.0.1",
     "glsl-noise": "^0.0.0",
-    "glsl-vignette": "^1.1.0",
-    "twgl.js": "catalog:"
+    "glsl-vignette": "^1.1.0"
   }
 }

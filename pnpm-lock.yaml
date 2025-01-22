@@ -305,9 +305,6 @@ importers:
 
   packages/shared:
     dependencies:
-      '@reactively/core':
-        specifier: ^0.0.8
-        version: 0.0.8
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.5
@@ -388,6 +385,10 @@ importers:
       gl-matrix:
         specifier: 'catalog:'
         version: 3.4.3
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
+    devDependencies:
       glsl-blend:
         specifier: ^1.0.3
         version: 1.0.3
@@ -403,9 +404,6 @@ importers:
       glsl-vignette:
         specifier: ^1.1.0
         version: 1.1.0
-      twgl.js:
-        specifier: 'catalog:'
-        version: 5.5.4
 
   packages/webgl-media-editor:
     dependencies:
