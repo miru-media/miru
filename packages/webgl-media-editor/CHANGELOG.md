@@ -1,3 +1,12 @@
+## [0.0.4](https://gitea.com/miru/miru/compare/webgl-media-editor@0.0.3...webgl-media-editor@0.0.4) (2025-01-22)
+
+
+### Bug Fixes
+
+* workspace dependencies ([5ec5ffb](https://gitea.com/miru/miru/commits/5ec5ffbedc6d22ca97668192dbca45d12db351e4))
+
+
+
 ## [0.0.3](https://gitea.com/miru/miru/compare/webgl-media-editor@0.0.2...webgl-media-editor@0.0.3) (2025-01-22)
 
 

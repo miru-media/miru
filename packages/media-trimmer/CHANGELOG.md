@@ -1,3 +1,7 @@
+## [0.1.1](https://gitea.com/miru/miru/compare/media-trimmer@0.1.0...media-trimmer@0.1.1) (2025-01-22)
+
+
+
 # [0.1.0](https://gitea.com/miru/miru/compare/media-trimmer@0.0.1...media-trimmer@0.1.0) (2025-01-22)
 
 

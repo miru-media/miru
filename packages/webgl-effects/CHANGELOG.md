@@ -1,3 +1,12 @@
+## [0.0.2](https://gitea.com/miru/miru/compare/webgl-effects@0.0.1...webgl-effects@0.0.2) (2025-01-22)
+
+
+### Bug Fixes
+
+* workspace dependencies ([5ec5ffb](https://gitea.com/miru/miru/commits/5ec5ffbedc6d22ca97668192dbca45d12db351e4))
+
+
+
 ## [0.0.1](https://gitea.com/miru/miru/compare/webgl-effects@0.0.0...webgl-effects@0.0.1) (2025-01-22)
 
 
