@@ -8,7 +8,7 @@ import spawn from 'nano-spawn'
 import pico from 'picocolors'
 import * as semver from 'semver'
 
-import { getPublickPackageDirs, ROOT } from './utils'
+import { getPublickPackageDirs, ROOT } from './utils.js'
 
 const allPublicPackageDirs = getPublickPackageDirs()
 
