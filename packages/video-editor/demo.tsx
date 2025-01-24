@@ -1,7 +1,9 @@
 import { h } from 'fine-jsx'
 /* eslint-disable import/no-unresolved */
-import sampleVideo1 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-import sampleVideo2 from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
+import turtle from 'https://assets.miru.media/turtle-PaulsAdventures-pixabay.mp4'
+import waveBreaking from 'https://assets.miru.media/wave-breaking-EclipseChasers-pixabay.mp4'
+import waves from 'https://assets.miru.media/waves-MustaKor-pixabay.mp4'
+import wavesRocks from 'https://assets.miru.media/waves-rocks-McPix22-pixabay.mp4'
 /* eslint-enable import/no-unresolved */
 
 import { type InputEvent } from 'shared/types'
@@ -20,34 +22,29 @@ const demoMovie = {
     {
       clips: [
         {
-          sourceStart: 14,
-          duration: 1,
-          source: sampleVideo1,
-        },
-        {
-          sourceStart: 20,
-          duration: 2,
-          source: sampleVideo2,
-        },
-        {
-          sourceStart: 9,
-          duration: 2,
-          source: sampleVideo1,
-        },
-        {
-          sourceStart: 45.1,
+          sourceStart: 2,
           duration: 4,
-          source: sampleVideo2,
+          source: waves,
         },
         {
-          sourceStart: 30,
-          duration: 1,
-          source: sampleVideo1,
+          sourceStart: 2,
+          duration: 4,
+          source: wavesRocks,
         },
         {
-          sourceStart: 13,
+          sourceStart: 3,
           duration: 3,
-          source: sampleVideo1,
+          source: waveBreaking,
+        },
+        {
+          sourceStart: 22.18,
+          duration: 5,
+          source: turtle,
+        },
+        {
+          sourceStart: 3,
+          duration: 5,
+          source: waves,
         },
       ],
     },
