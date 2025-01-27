@@ -2,7 +2,13 @@ import { mat4 } from 'gl-matrix'
 import * as twgl from 'twgl.js'
 
 import { type Context2D, type CropState, type Size, type SyncImageSource } from 'shared/types'
-import { canvasToBlob, get2dContext, getWebgl2Context, isOffscreenCanvas, setObjectSize } from 'shared/utils'
+import {
+  canvasToBlob,
+  get2dContext,
+  getWebgl2Context,
+  isOffscreenCanvas,
+  setObjectSize,
+} from 'shared/utils/images'
 
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './GL'
