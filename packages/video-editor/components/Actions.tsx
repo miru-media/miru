@@ -6,6 +6,7 @@ import { type InputEvent } from 'shared/types'
 import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'
+import { ToolbarButton } from './ToolbarButton'
 
 export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
   const onInputVideoFile = async (event: InputEvent) => {
@@ -18,29 +19,47 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
 
   return (
     <div class="toolbar safe-padding-x">
-      <IconButton class="toolbar-button" icon={IconTablerCut} onClick={() => editor.splitAtCurrentTime()} />
-      <IconButton class="toolbar-button" icon={IconTablerTrash} onClick={() => editor.delete()} />
-      {import.meta.env.DEV && (
-        <IconButton class="toolbar-button" icon={IconTablerWand} onClick={() => alert('Not implemented.')} />
-      )}
+      <IconButton class="toolbar-button" icon={IconTablerCut} onClick={() => editor.splitAtCurrentTime()}>
+        Split
+      </IconButton>
 
-      <label class="icon-button toolbar-button">
-        <IconTablerExchange />
-        <input
-          type="file"
-          accept="video/*"
-          disabled={() => !editor.selected.value}
-          onInput={onInputVideoFile}
-          hidden
-        />
-        <span class="sr-only">Change video</span>
-      </label>
+      {() =>
+        editor.selected.value && (
+          <>
+            <IconButton class="toolbar-button" icon={IconTablerTrash} onClick={() => editor.delete()}>
+              Delete
+            </IconButton>
+            {import.meta.env.DEV && (
+              <IconButton
+                class="toolbar-button"
+                icon={IconTablerWand}
+                onClick={() => alert('Not implemented.')}
+              >
+                Effects
+              </IconButton>
+            )}
+
+            <ToolbarButton tag="label" icon={IconTablerExchange}>
+              <input
+                type="file"
+                accept="video/*"
+                disabled={() => !editor.selected.value}
+                onInput={onInputVideoFile}
+                hidden
+              />
+              Change video
+            </ToolbarButton>
+          </>
+        )
+      }
 
       <IconButton
         class="toolbar-button"
         icon={toRef(() => (editor.showStats.value ? IconTablerGraphFilled : IconTablerGraph))}
         onClick={() => (editor.showStats.value = !editor.showStats.value)}
-      />
+      >
+        Debug
+      </IconButton>
 
       {import.meta.env.DEV && (
         <IconButton
@@ -48,10 +67,14 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
           icon={IconTablerCodeDots}
           // eslint-disable-next-line no-console
           onClick={() => console.info(editor.movie.tracks.value.map((t) => t.toObject()))}
-        />
+        >
+          Log state
+        </IconButton>
       )}
 
-      <IconButton class="toolbar-button" icon={IconTablerDownload} onClick={() => editor.startExport()} />
+      <IconButton class="toolbar-button" icon={IconTablerDownload} onClick={() => editor.startExport()}>
+        Export
+      </IconButton>
 
       {() => {
         const result = editor.exportResult.value

@@ -86,14 +86,13 @@
 .playback-controls {
   display: flex;
   justify-content: space-between;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
 }
 
 .toolbar {
   display: flex;
   flex-shrink: 0;
   gap: 0.5rem;
+  align-items: flex-start;
 
   width: 100%;
   padding-top: 0.675rem;
@@ -103,18 +102,24 @@
 }
 
 .toolbar-button {
-  width: 2.5rem;
-  height: 2.5rem;
-  font-size: 1.5rem;
-  cursor: pointer;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: flex-start;
+  text-align: center;
+  width: 3rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  .icon {
+    font-size: 1.5rem;
+  }
 }
 
 .playback-play {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   font-size: 1.25rem;
 }
 

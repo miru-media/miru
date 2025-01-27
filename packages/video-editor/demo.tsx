@@ -14,16 +14,17 @@ import { PlaybackControls } from './components/PlaybackControls'
 import { renderComponentTo } from './components/renderTo'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
+import { type Movie } from './Movie'
 import { Track } from './Track'
 import { VideoEditor } from './VideoEditor'
 
-const demoMovie = {
+const demoMovie: Movie.Init = {
   tracks: [
     {
       clips: [
         {
           sourceStart: 2,
-          duration: 4,
+          duration: 3,
           source: waves,
         },
         {
@@ -42,8 +43,8 @@ const demoMovie = {
           source: turtle,
         },
         {
-          sourceStart: 3,
-          duration: 5,
+          sourceStart: 0,
+          duration: 2,
           source: waves,
         },
       ],

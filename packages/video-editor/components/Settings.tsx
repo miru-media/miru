@@ -29,6 +29,7 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
       <IconButton
         icon={IconTablerSettings}
         class="settings-button"
+        title="Settings"
         onClick={() => (isOpen.value = !isOpen.value)}
       >
         <span class="sr-only">Settings</span>

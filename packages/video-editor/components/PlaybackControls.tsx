@@ -10,6 +10,7 @@ const MIN_PPS = 0.005
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
   const { movie } = editor
   const maxPps = () => Math.max(0.2, (movie.duration / editor.timelineSize.value.width) * 2)
+  const playOrPause = () => (movie.isPaused.value ? 'Play' : 'Pause')
 
   return (
     <div class="playback-controls safe-padding-x">
@@ -17,6 +18,7 @@ export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
         activeIcon={IconTablerPlayerPlay}
         inactiveIcon={IconTablerPlayerPause}
         class="playback-play"
+        title={playOrPause}
         isActive={movie.isPaused}
         onToggle={(shouldPause) => {
           if (shouldPause) movie.pause()
@@ -26,19 +28,29 @@ export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
           }
         }}
       >
-        <span class="sr-only">{() => (movie.isPaused.value ? 'Play' : 'Pause')}</span>
+        <span class="sr-only">{playOrPause}</span>
       </ToggleButton>
 
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="any"
-        value={() => remap(editor.secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
-        onInput={(event: InputEvent) => {
-          editor.secondsPerPixel.value = remap(Math.sqrt(event.target.valueAsNumber), 1, 0, MIN_PPS, maxPps())
-        }}
-      />
+      <label>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="any"
+          title="Timeline zoom"
+          value={() => remap(editor.secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
+          onInput={(event: InputEvent) => {
+            editor.secondsPerPixel.value = remap(
+              Math.sqrt(event.target.valueAsNumber),
+              1,
+              0,
+              MIN_PPS,
+              maxPps(),
+            )
+          }}
+        />
+        <span class="sr-only">Timeline zoom</span>
+      </label>
     </div>
   )
 }
