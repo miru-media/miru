@@ -105,10 +105,11 @@
   flex-direction: column;
   align-self: stretch;
   justify-content: flex-start;
-  text-align: center;
   width: 3rem;
   padding: 0.5rem;
   font-size: 0.75rem;
+  text-align: center;
+
   .icon {
     font-size: 1.5rem;
   }
@@ -229,7 +230,7 @@
   border: dashed;
   border-color: rgb(255 255 255 / 12%);
   border-radius: 0.625rem;
-  translate: var(--movie-width);
+  translate: var(--track-width);
 }
 
 .ruler {

@@ -19,6 +19,7 @@ interface SourceEntry {
   info?: MP4BoxFileInfo
   audio?: Mp4ExtractorNode.AudioInit
   video?: Mp4ExtractorNode.VideoInit
+  isAudioOnly: boolean
 }
 
 let audioContext: AudioContext | undefined
@@ -72,8 +73,11 @@ export class MovieExporter {
             info: undefined,
             video: undefined,
             audio: undefined,
+            isAudioOnly: track.type === 'audio',
           }
           this.sources.set(source, sourceEntry)
+        } else {
+          sourceEntry.isAudioOnly &&= track.type === 'audio'
         }
 
         sourceEntry.start = Math.min(sourceEntry.start, sourceStart)
@@ -84,12 +88,38 @@ export class MovieExporter {
     let hasAudio = false as boolean
     await Promise.all(
       Array.from(this.sources.entries()).map(async ([source, entry]) => {
+        const getAudioBuffer = async () => {
+          const encodedFileData = await fetch(source).then((r) => r.arrayBuffer())
+          return await (audioContext ??= new AudioContext()).decodeAudioData(encodedFileData)
+        }
+
         const { start, end, demuxer } = entry
-        const info = (entry.info = await demuxer.init(source))
+        let info: MP4BoxFileInfo
+
+        try {
+          info = entry.info = await demuxer.init(source)
+        } catch (error) {
+          // If the source can't be demuxed, decode with an AudioContext
+          if (entry.isAudioOnly) {
+            hasAudio = true
+            const audioBuffer = await getAudioBuffer()
+            const { numberOfChannels, sampleRate } = audioBuffer
+
+            entry.audio = {
+              config: { codec: 'unused', numberOfChannels: numberOfChannels, sampleRate },
+              audioBuffer,
+              chunks: [],
+            }
+            return
+          }
+
+          throw error
+        }
+
         const videoTrack = info.videoTracks[0]
         const audioTrack = info.audioTracks[0] as (typeof info.audioTracks)[number] | undefined
 
-        {
+        if (!entry.isAudioOnly) {
           const chunks: DemuxerChunkInfo[] = []
           const config = demuxer.getConfig(videoTrack)
           await assertDecoderConfigIsSupported('video', config)
@@ -110,10 +140,8 @@ export class MovieExporter {
 
             demuxer.setExtractionOptions(audioTrack, (chunk) => chunks.push(chunk))
           } catch {
-            const encodedFileData = await fetch(source).then((r) => r.arrayBuffer())
-            entry.audio.audioBuffer = await (audioContext ??= new AudioContext()).decodeAudioData(
-              encodedFileData,
-            )
+            // If decoding the audio with WebCodecs isn't supported, decode with an AudioContext instead
+            entry.audio.audioBuffer = await getAudioBuffer()
           }
         }
 

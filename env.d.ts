@@ -136,6 +136,9 @@ declare module 'videocontext' {
     )
     get duration(): number
   }
+  class AudioNode extends MediaNode {
+    get duration(): number
+  }
 
   class ProcessorNode<T extends Record<string, unknown>> extends GraphNode {
     setProperty<K extends keyof T>(name: K, value: T[K]): void
@@ -193,6 +196,12 @@ declare module 'videocontext' {
       preloadTime?: number,
       videoElementAttributes?: Record<string, unknown>,
     ): VideoNode
+    audio(
+      src: string | HTMLAudioElement | MediaStream,
+      sourceOffset?: number,
+      preloadTime?: number,
+      audioElementAttributes?: Record<string, unknown>,
+    ): AudioNode
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     customSourceNode<T extends SourceNode>(CustomSourceNode: typeof T, ...args: unkonwn[]): T
     compositor<T extends Record<string, any>>(definition: EffectDefinition): CompositingNode<T>

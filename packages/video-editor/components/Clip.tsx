@@ -203,7 +203,7 @@ export const Clip = ({
       }
     >
       <div ref={mainContainer} class="clip-box" onClick={() => editor.selectClip(clip)}>
-        Clip {() => clip.index}
+        {clip.track.type === 'audio' ? 'Audio' : 'Clip'} {() => clip.index + 1}
         <div class="clip-controls">
           <div class="clip-resize-left">
             <IconTablerChevronLeft />
@@ -217,10 +217,13 @@ export const Clip = ({
         <IconButton
           icon={toRef(() => (clip.transition ? IconTablerChevronsRight : IconTablerChevronRight))}
           class="clip-transition"
+          title="Transition"
           onClick={() => {
             alert('Not implemented.')
           }}
-        />
+        >
+          <span class="sr-only">Transition</span>
+        </IconButton>
       )}
     </div>
   )

@@ -1,7 +1,9 @@
 import { h } from 'fine-jsx'
 /* eslint-disable import/no-unresolved */
 import turtle from 'https://assets.miru.media/turtle-PaulsAdventures-pixabay.mp4'
+import underwaterAudio from 'https://assets.miru.media/underwater-ambience-freesound_community-pixabay.mp3'
 import waveBreaking from 'https://assets.miru.media/wave-breaking-EclipseChasers-pixabay.mp4'
+import wavesAudio from 'https://assets.miru.media/waves-breaking-Dia_Pazon-pixabay.mp3'
 import waves from 'https://assets.miru.media/waves-MustaKor-pixabay.mp4'
 import wavesRocks from 'https://assets.miru.media/waves-rocks-McPix22-pixabay.mp4'
 /* eslint-enable import/no-unresolved */
@@ -21,6 +23,7 @@ import { VideoEditor } from './VideoEditor'
 const demoMovie: Movie.Init = {
   tracks: [
     {
+      type: 'video',
       clips: [
         {
           sourceStart: 2,
@@ -46,6 +49,26 @@ const demoMovie: Movie.Init = {
           sourceStart: 0,
           duration: 2,
           source: waves,
+        },
+      ],
+    },
+    {
+      type: 'audio',
+      clips: [
+        {
+          sourceStart: 19,
+          duration: 10,
+          source: wavesAudio,
+        },
+        {
+          sourceStart: 0,
+          duration: 5,
+          source: underwaterAudio,
+        },
+        {
+          sourceStart: 16,
+          duration: 2,
+          source: wavesAudio,
         },
       ],
     },

@@ -6,8 +6,12 @@ import { type BaseClip } from './BaseClip'
 import { type Clip } from './Clip'
 import { type Movie } from './Movie'
 
+type TrackType = 'video' | 'audio'
+
 export namespace Track {
+  export type Type = TrackType
   export interface Init {
+    type: TrackType
     clips: Clip.Init[]
   }
 }
@@ -18,6 +22,7 @@ export class Track<T extends BaseClip> {
   #head = ref<T>()
   #tail = ref<T>()
 
+  type: TrackType
   node: Ref<CompositingNode<never>>
   movie: TrackMovie
 
@@ -53,6 +58,7 @@ export class Track<T extends BaseClip> {
   }
 
   constructor(init: Track.Init, movie: TrackMovie, ClipConstructor: Track<T>['ClipConstructor']) {
+    this.type = init.type
     this.movie = movie
     this.ClipConstructor = ClipConstructor
     this.node = ref(undefined as never)
@@ -142,6 +148,7 @@ export class Track<T extends BaseClip> {
 
   toObject(): Track.Init {
     return {
+      type: this.type,
       clips: this.mapClips((clip) => clip.toObject()),
     }
   }

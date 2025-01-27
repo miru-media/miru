@@ -92,6 +92,8 @@ export const Timeline = ({
     )
   }
 
+  const totalClips = computed(() => movie.tracks.value.reduce((acc, track) => acc + track.count, 0))
+
   const onInputClipFile = async (event: InputEvent, track: Track<ClipType>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -125,20 +127,25 @@ export const Timeline = ({
           <div class="track-list">
             {() =>
               movie.tracks.value.length ? (
-                movie.tracks.value.map((track) => (
-                  <div class="track">
+                movie.tracks.value.map((track, trackIndex) => (
+                  <div
+                    class="track"
+                    style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
+                  >
                     <ClipList clip={track.head} />
-                    <label class="add-clip">
+                    <label class="add-clip" hidden={totalClips.value === 0 && trackIndex !== 0}>
                       {() =>
                         track.count ? (
                           <>
                             <IconTablerPlus />
-                            <span class="sr-only">Add a clip</span>
+                            <span class="sr-only">{track.type === 'audio' ? 'Add audio' : 'Add a clip'}</span>
                           </>
                         ) : (
                           <>
                             <IconTablerVideo />
-                            <span class="text-body">Click to add a clip</span>
+                            <span class="text-body">
+                              {track.type === 'audio' ? 'Click to add audio' : 'Click to add a clip'}
+                            </span>
                           </>
                         )
                       }

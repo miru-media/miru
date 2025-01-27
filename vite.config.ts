@@ -22,7 +22,7 @@ export default defineConfig({
       awaitDownload: true,
       rules: [
         {
-          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4))(?=[`'")\]])/gi,
+          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3))(?=[`'")\]])/gi,
         },
       ],
     }),
@@ -43,7 +43,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      'virtual:image-shadow.css': resolve(import.meta.dirname, 'packages/webgl-media-editor/index.css?inline'),
+      'virtual:image-shadow.css': resolve(
+        import.meta.dirname,
+        'packages/webgl-media-editor/index.css?inline',
+      ),
       'virtual:video-shadow.css': resolve(import.meta.dirname, 'packages/video-editor/index.css?inline'),
     },
   },

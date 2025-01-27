@@ -31,10 +31,12 @@ export class Clip extends BaseClip {
   filter: Ref<EffectInternal | undefined>
 
   track: Track<Clip>
-  media = ref(document.createElement('video'))
+  media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   error: Ref<MediaError | undefined>
   readyState = useMediaReadyState(this.media)
-  node = ref<CustomVideoElementNode>(undefined as never)
+  node = ref<CustomVideoElementNode | InstanceType<(typeof VideoContext)['NODES']['AudioNode']>>(
+    undefined as never,
+  )
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
   latestEvent = ref<Event>()
   #isSeeking = ref(false)
@@ -106,34 +108,36 @@ export class Clip extends BaseClip {
     })
 
     useEventListener(this.media, 'loadedmetadata', () => {
-      const { mediaSize } = this.node.value
       const media = this.media.value
+      if (!('mediaSize' in this.node.value) || !('videoWidth' in media)) return
+
+      const { mediaSize } = this.node.value
       mediaSize.width = media.videoWidth
       mediaSize.height = media.videoHeight
     })
 
     this.scope.run(() => {
       watch([this.media], ([media], _prev, onCleanup) => {
-        const node = (this.node.value = context.customSourceNode(
-          CustomVideoElementNode,
-          media,
-          1,
-          this.time.source,
-          1,
-          { renderer },
-        ))
+        const node = (this.node.value =
+          this.track.type === 'video'
+            ? context.customSourceNode(CustomVideoElementNode, media, 1, this.time.source, 1, {
+                renderer,
+              })
+            : this.track.context.audio(media, 1, this.time.source))
 
-        if (media.readyState >= 1) {
-          const { mediaSize } = node
-          mediaSize.width = media.videoWidth
-          mediaSize.height = media.videoHeight
+        if ('mediaSize' in node && 'videoWidth' in media) {
+          if (media.readyState >= 1) {
+            const { mediaSize } = node
+            mediaSize.width = media.videoWidth
+            mediaSize.height = media.videoHeight
+          }
         }
 
         onCleanup(() => node.destroy())
       })
 
       effect(() => this.schedule())
-      effect(() => (this.node.value.effect = this.filter.value))
+      effect(() => 'effect' in this.node.value && (this.node.value.effect = this.filter.value))
 
       watch(
         [
@@ -174,7 +178,7 @@ export class Clip extends BaseClip {
     node.clearTimelineState()
     node.startAt(time.start)
     node.stopAt(time.end)
-    node._seek(this.track.context.currentTime)
+    ;(node as { _seek(time: number): void })._seek(this.track.context.currentTime)
   }
 
   connect() {

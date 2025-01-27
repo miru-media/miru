@@ -29,7 +29,7 @@ export class VideoEditor {
   drag = ref({ isDragging: false, x: 0 })
   #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
 
-  showStats = ref(import.meta.env.DEV)
+  showStats = ref(false)
   exportResult = ref<{ blob: Blob; url: string }>()
   exportProgress = ref(-1)
 
