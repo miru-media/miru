@@ -1,14 +1,15 @@
 import { createEffectScope, onScopeDispose, toRef } from 'fine-jsx'
-import { type Effect } from 'webgl-effects'
+import { type EffectDefinition, type Renderer } from 'webgl-effects'
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { type ImageEditState, type ImageSourceOption } from 'shared/types'
 import { canvasToBlob } from 'shared/utils'
 
-import { getDefaultFilters } from './defaultFilters'
 import { MediaEditor as MediaEditor_ } from './MediaEditor'
 
 interface MediaEditorProps {
-  effects?: Effect[] | (() => Effect[])
+  effects?: EffectDefinition[] | (() => EffectDefinition[])
+  renderer?: Renderer
   onRenderPreview?: (sourceIndex: number, previewUrl: string) => unknown
   onEdit?: (index: number, state: ImageEditState) => unknown
 }
@@ -27,7 +28,8 @@ export class MediaEditor {
       onScopeDispose(() => (this.#editor = undefined as never))
 
       return new MediaEditor_({
-        effects: toRef(props.effects ?? getDefaultFilters()),
+        effects: toRef(props.effects ?? getDefaultFilterDefinitions()),
+        renderer: props.renderer,
         onRenderPreview: async (sourceIndex) => {
           const source = this.#editor.sources.value[sourceIndex]
 

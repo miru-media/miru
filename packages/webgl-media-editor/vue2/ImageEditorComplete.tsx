@@ -1,5 +1,6 @@
 import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
-import { type Effect } from 'webgl-effects'
+import { type EffectDefinition } from 'webgl-effects'
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import {
   type Context2D,
@@ -11,7 +12,6 @@ import {
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'
-import { getDefaultFilters } from '../defaultFilters'
 import { MediaEditor, unwrap } from '../wrapper'
 
 interface VueInstance {
@@ -19,8 +19,8 @@ interface VueInstance {
   sources?: ImageSource[]
   view?: EditorView
   _view: Ref<EditorView>
-  effects?: Effect[]
-  _effects: Ref<Effect[]>
+  effects?: EffectDefinition[]
+  _effects: Ref<EffectDefinition[]>
   assetsPath?: string
   editStates: ImageEditState[]
   scope: EffectScope
@@ -103,8 +103,8 @@ export default {
       immediate: true,
     },
     effects: {
-      handler(this: VueInstance, value?: Effect[]) {
-        this._effects.value = value ?? getDefaultFilters(this.assetsPath)
+      handler(this: VueInstance, value?: EffectDefinition[]) {
+        this._effects.value = value ?? getDefaultFilterDefinitions(this.assetsPath)
       },
       immediate: true,
     },

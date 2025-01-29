@@ -11,7 +11,7 @@ import {
 import { type Renderer } from 'webgl-effects'
 import { type RendererEffectOp } from 'webgl-effects'
 
-import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Effect } from 'reactive-effects/Effect'
 import {
   type AdjustmentsState,
   type Context2D,
@@ -44,7 +44,7 @@ interface ImageSourceInternalOptions {
   sourceOption: ImageSourceOption
   thumbnailSize: Ref<Size>
   renderer: Renderer
-  effects: Ref<EffectInternal[]>
+  effects: Ref<Effect[]>
   adjustColorOp: RendererEffectOp
   onRenderPreview: () => void
   onEdit: (state: ImageEditState) => void
@@ -59,7 +59,7 @@ export class ImageSourceInternal {
   #thumbnailSize!: Ref<Size>
   #isLoading = ref(true)
   #error = ref()
-  #effects: Ref<EffectInternal[]>
+  #effects: Ref<Effect[]>
   #adjustColorOp: RendererEffectOp
 
   previewKey = ref(0)
@@ -270,7 +270,7 @@ export class ImageSourceInternal {
     this.crop.value = crop
   }
 
-  #applyEditValuesToRenderer(effect?: EffectInternal, adjustments?: AdjustmentsState) {
+  #applyEditValuesToRenderer(effect?: Effect, adjustments?: AdjustmentsState) {
     const renderer = this.#renderer
 
     const ops = effect?.ops.slice() ?? []
@@ -327,7 +327,7 @@ export class ImageSourceInternal {
     this.onRenderPreview?.()
   }
 
-  async drawThumbnail(effect: EffectInternal, context: DisplayContext) {
+  async drawThumbnail(effect: Effect, context: DisplayContext) {
     const rotated = this.#rotated.value
     if (this.isLoading || rotated == undefined) return
 

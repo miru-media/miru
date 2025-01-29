@@ -2,7 +2,7 @@ import { ref, type Ref } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 import { type Renderer } from 'webgl-effects'
 
-import { EffectInternal } from 'reactive-effects/Effect'
+import { Effect } from 'reactive-effects/Effect'
 
 import { BaseClip } from '../BaseClip'
 import { type Clip } from '../Clip'
@@ -13,7 +13,7 @@ type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export class ExtractorClip extends BaseClip {
   source: string
-  filter: Ref<EffectInternal | undefined>
+  filter: Ref<Effect | undefined>
 
   track: Track<ExtractorClip>
   node: Mp4ExtractorNode
@@ -38,7 +38,7 @@ export class ExtractorClip extends BaseClip {
     this.source = init.source
     this.track = track
     this.context = context
-    this.filter = ref(init.filter && new EffectInternal(init.filter, renderer))
+    this.filter = ref(init.filter && new Effect(init.filter, renderer))
     this.transition = init.transition
 
     const { start, end, source: sourceOffset } = this.time

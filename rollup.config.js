@@ -43,7 +43,6 @@ const packageOptions = [
     root: 'packages/webgl-effects',
     inputs: {
       'webgl-effects': 'Renderer.ts',
-      'fragment-shaders': 'allFragmentShaders.ts',
     },
     alwaysBundle: ['@libav.js/variant-opus'],
   },

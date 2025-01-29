@@ -2,18 +2,18 @@ import etro from 'etro'
 import { type Ref, ref } from 'fine-jsx'
 import { type Renderer } from 'webgl-effects'
 
-import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Effect } from 'reactive-effects/Effect'
 
 import { type EtroVideo } from './EtroVideo'
 
 export class EtroEffect extends etro.effect.Visual {
   #renderer: Renderer
-  effect: Ref<EffectInternal | undefined>
+  effect: Ref<Effect | undefined>
   intensity = ref(1)
 
   // TODO: dispose
 
-  constructor({ effect, renderer }: { effect: EffectInternal; renderer: Renderer }) {
+  constructor({ effect, renderer }: { effect: Effect; renderer: Renderer }) {
     super()
     this.#renderer = renderer
     this.effect = ref(effect)
@@ -31,7 +31,7 @@ export class EtroEffect extends etro.effect.Visual {
   }
 
   get ready() {
-    return this.effect.value?.isLoading.value === false
+    return this.effect.value?.isLoading === false
   }
 
   async whenReady() {

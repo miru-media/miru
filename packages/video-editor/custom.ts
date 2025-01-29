@@ -3,7 +3,7 @@ import VideoContext, { type RenderGraph } from 'videocontext'
 import { FRAMEBUFFER_TEX_OPTIONS } from 'webgl-effects'
 import { type Renderer } from 'webgl-effects'
 
-import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Effect } from 'reactive-effects/Effect'
 import { AudioDecoderStream, VideoDecoderStream } from 'shared/transcode/DecoderStream'
 import { type DemuxerChunkInfo } from 'shared/transcode/demuxer'
 import { type AdjustmentsState, type Size } from 'shared/types'
@@ -97,7 +97,7 @@ export class CustomVideoElementNode extends VideoContext.NODES.VideoNode {
   declare _gl: WebGL2RenderingContext
   declare _startTime: number
 
-  effect?: EffectInternal
+  effect?: Effect
   intensity = 1
   adjustments: AdjustmentsState = { brightness: 0, contrast: 0, saturation: 0 }
 
@@ -169,7 +169,7 @@ export class Mp4ExtractorNode extends VideoContext.NODES.SourceNode {
 
   _sourceOffset: number
 
-  effect?: EffectInternal
+  effect?: Effect
   intensity = 1
   adjustments: AdjustmentsState = { brightness: 0, contrast: 0, saturation: 0 }
 

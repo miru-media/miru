@@ -1,4 +1,4 @@
-@import url('webgl-media-editor/css/reset.css');
+@import url('shared/css/reset.css');
 @import url('./untility.css');
 
 .viewport {
@@ -31,10 +31,11 @@
   padding: 0;
   cursor: pointer;
   border-radius: 0.5rem;
-  
+
   &:hover {
     background-color: var(--white-1);
   }
+
   &:active {
     background-color: var(--white-2);
   }

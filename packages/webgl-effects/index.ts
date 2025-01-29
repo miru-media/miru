@@ -1,3 +1,5 @@
 export { Renderer } from './Renderer'
+export { Effect } from './Effect'
+export * from './defaultFilters'
 export * from './constants'
 export type * from './types'

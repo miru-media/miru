@@ -1,27 +1,28 @@
-import { ref } from 'fine-jsx'
-import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from 'webgl-effects'
-import { type Renderer } from 'webgl-effects'
-
 import { type ImageSourceObject, type SyncImageSource } from 'shared/types'
-import { devSlowDown, getImageData, isSyncSource, Janitor, loadAsyncImageSource } from 'shared/utils'
+import { getImageData, isSyncSource, Janitor, loadAsyncImageSource } from 'shared/utils'
+
+import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
+import { type Renderer } from './Renderer'
 
 export class TextureResource {
   canvas?: HTMLCanvasElement
   context?: ImageBitmapRenderingContext
   promise?: Promise<void>
-  isLoading
-  error
+  isLoading = false
+  error: unknown
   janitor = new Janitor()
   texture: WebGLTexture
 
-  constructor({ source, type, crossOrigin }: ImageSourceObject, renderer: Renderer) {
+  constructor(
+    { source, type, crossOrigin }: ImageSourceObject,
+    renderer: Renderer,
+    onStateChange: (textureResource: TextureResource) => void,
+  ) {
     this.canvas = document.createElement('canvas')
     this.context = this.canvas.getContext('bitmaprenderer') ?? undefined
     this.texture = renderer.createTexture(
       type === 'lut' || type === 'hald-lut' ? LUT_TEX_OPTIONS : SOURCE_TEX_OPTIONS,
     )
-    this.isLoading = ref(false)
-    this.error = ref()
 
     const onDecoded = (decodedImage: SyncImageSource) => {
       if (type === 'lut' || type === 'hald-lut') {
@@ -32,21 +33,22 @@ export class TextureResource {
       }
     }
 
-    if (isSyncSource(source)) {
-      if (devSlowDown != undefined)
-        devSlowDown()
-          .then(() => onDecoded(source))
-          .catch(() => undefined)
-      else onDecoded(source)
-    } else {
-      this.isLoading.value = true
+    if (isSyncSource(source)) onDecoded(source)
+    else {
+      this.isLoading = true
 
       const { promise, close } = loadAsyncImageSource(source, crossOrigin, type === 'video')
 
       promise
         .then(onDecoded)
-        .catch((e: unknown) => (this.error.value = e))
-        .finally(() => (this.isLoading.value = false))
+        .catch((e: unknown) => {
+          this.error = e
+          onStateChange(this)
+        })
+        .finally(() => {
+          this.isLoading = false
+          onStateChange(this)
+        })
 
       this.janitor.add(close)
     }
@@ -55,5 +57,11 @@ export class TextureResource {
       this.context = this.canvas = undefined
       renderer.deleteTexture(this.texture)
     })
+
+    onStateChange(this)
+  }
+
+  dispose() {
+    this.janitor.dispose()
   }
 }

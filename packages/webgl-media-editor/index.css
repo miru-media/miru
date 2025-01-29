@@ -1,4 +1,4 @@
-@import url('css/reset');
+@import url('shared/css/reset');
 @import url('cropperjs/dist/cropper.css');
 @import url('css/basics');
 @import url('css/layout');

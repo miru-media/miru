@@ -2,7 +2,7 @@ import etro from 'etro'
 import { ref, type Ref } from 'fine-jsx'
 import { type Renderer } from 'webgl-effects'
 
-import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Effect } from 'reactive-effects/Effect'
 import { useEventListener } from 'shared/utils'
 
 import { EtroEffect } from './EtroEffect'
@@ -35,7 +35,7 @@ export class EtroVideo extends etro.layer.Video {
     return this.readyState.value >= 3 || super.ready
   }
 
-  constructor(options: etro.layer.VideoOptions, effects: Ref<EffectInternal[]>, renderer: Renderer) {
+  constructor(options: etro.layer.VideoOptions, effects: Ref<Effect[]>, renderer: Renderer) {
     super(options)
 
     // Object.assign(this.source.style, { width: '200px', height: '200px', border: 'solid' })

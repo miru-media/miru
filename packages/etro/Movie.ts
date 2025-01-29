@@ -1,12 +1,11 @@
 import etro from 'etro'
 import { computed, createEffectScope, effect, type Ref, ref } from 'fine-jsx'
 import Stats from 'stats.js'
-import { Renderer } from 'webgl-effects'
+import { getDefaultFilterDefinitions, Renderer } from 'webgl-effects'
 
-import { EffectInternal } from 'reactive-effects/Effect'
+import { Effect } from 'reactive-effects/Effect'
 import { type Size } from 'shared/types'
 import { getWebgl2Context } from 'shared/utils'
-import { getDefaultFilters } from 'webgl-media-editor/defaultFilters'
 
 import { Clip } from './Clip'
 import { useMappedUniqueArray } from './utils'
@@ -30,7 +29,7 @@ export class Movie {
   #renderer = new Renderer({ gl: getWebgl2Context(this.displayCanvas) })
   // etro = new etro.Movie({ canvas: this.displayCanvas })
   etro = new EtroMovie(this.#renderer)
-  effects = ref(getDefaultFilters().map((e) => new EffectInternal(e, this.#renderer)))
+  effects = ref(getDefaultFilterDefinitions().map((e) => new Effect(e, this.#renderer)))
 
   isPaused = ref(true)
   #scope = createEffectScope()

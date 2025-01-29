@@ -35,7 +35,7 @@ export class VideoEditor {
 
   constructor(
     initialState: Movie.Init = {
-      tracks: [{ clips: [] }],
+      tracks: [],
       resolution: { width: 1280, height: 720 },
       frameRate: 60,
     },
@@ -49,7 +49,7 @@ export class VideoEditor {
     effect(() => {
       const { movie } = this
       if (!movie.tracks.value.length) {
-        movie.tracks.value = [new Track({ clips: [] }, movie, Clip)]
+        movie.tracks.value = [new Track({ type: 'video', clips: [] }, movie, Clip)]
       }
     })
   }

@@ -72,7 +72,7 @@ export type EffectOp =
   | EffectOp.Sepia
   | EffectOp.HueRotate
 
-export interface Effect {
+export interface EffectDefinition {
   name: string
   ops: EffectOp[]
 }

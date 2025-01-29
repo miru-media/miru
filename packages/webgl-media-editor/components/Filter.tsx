@@ -1,7 +1,7 @@
 import { computed, effect, type MaybeRefOrGetter, ref, type Ref, toRef, toValue, watch } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
-import { EffectInternal } from 'reactive-effects/Effect'
+import { Effect } from 'reactive-effects/Effect'
 import { type DisplayContext, type InputEvent } from 'shared/types'
 import { createDisplayContext, getCenter, useElementSize } from 'shared/utils'
 
@@ -22,7 +22,7 @@ const FilterItem = ({
   onClick,
 }: {
   source: Ref<ImageSourceInternal | undefined>
-  effect: EffectInternal
+  effect: Effect
   index: number
   context: MaybeRefOrGetter<DisplayContext | undefined>
   class: unknown
@@ -31,7 +31,7 @@ const FilterItem = ({
 }) => {
   // render effect preview thumbnails
   watch(
-    [effect.isLoading, source, toRef(context), () => source.value?.thumbnailKey.value],
+    [() => effect.isLoading, source, toRef(context), () => source.value?.thumbnailKey.value],
     ([isLoading, source, context]) => {
       if (!isLoading && source != undefined && context != undefined)
         source.drawThumbnail(effect, context).catch(() => undefined)
@@ -66,7 +66,7 @@ export const FilterView = ({
   const container = ref<HTMLElement>()
   const scrolledEffectIndex = ref(-1)
 
-  const ORIGINAL_EFFECT: EffectInternal = new EffectInternal({ name: 'Original', ops: [] }, editor.renderer)
+  const ORIGINAL_EFFECT = new Effect({ name: 'Original', ops: [] }, editor.renderer)
 
   const onInputIntensity = (event: InputEvent) => {
     if (source.value == null) return
@@ -154,7 +154,7 @@ export const FilterView = ({
                   onClick={() => onClickFilter(effectIndex)}
                   class={[
                     () => scrolledEffectIndex.value === effectIndex && 'miru--hov',
-                    () => ((source.value?.isLoading ?? true) || effect.isLoading.value) && 'miru--loading',
+                    () => ((source.value?.isLoading ?? true) || effect.isLoading) && 'miru--loading',
                   ]}
                 ></FilterItem>
               )

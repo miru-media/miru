@@ -1,33 +1,31 @@
 import { computed, effect, type EffectScope, getCurrentScope, ref, type Ref, watch } from 'fine-jsx'
 import { Renderer } from 'webgl-effects'
-import { type Effect } from 'webgl-effects'
+import { type EffectDefinition } from 'webgl-effects'
 
-import { EffectInternal } from 'reactive-effects/Effect'
+import { Effect } from 'reactive-effects/Effect'
 import { type Context2D, type ImageEditState, type ImageSourceOption } from 'shared/types'
 
 import { ImageSourceInternal } from './ImageSourceInternal'
 
 export interface MediaEditorOptions {
-  effects: Ref<Effect[]>
+  effects: Ref<EffectDefinition[]>
+  renderer?: Renderer
   onRenderPreview: (index: number) => unknown
   onEdit: (index: number, state: ImageEditState) => unknown
 }
 
 export class MediaEditor {
   #scope: EffectScope
-  renderer = new Renderer()
-  #adjustColorEffect = new EffectInternal(
-    { name: '_', ops: [{ type: 'adjust_color', brightness: 0, contrast: 0, saturation: 0 }] },
-    this.renderer,
-  )
+  renderer: Renderer
+  #adjustColorEffect: Effect
 
   sourceInputs = ref<ImageSourceOption[]>([])
   sources = ref<ImageSourceInternal[]>([])
   editStatesIn = ref<(ImageEditState | undefined)[]>()
-  #effectsIn: Ref<Effect[]>
-  readonly effects = ref<EffectInternal[]>([])
+  #effectsIn: Ref<EffectDefinition[]>
+  readonly effects = ref<Effect[]>([])
   #isLoadingSource = computed(() => this.sources.value.some((s) => s.isLoading))
-  #isLoadingEffects = computed(() => this.effects.value.some((e) => e.isLoading.value))
+  #isLoadingEffects = computed(() => this.effects.value.some((e) => e.isLoading))
   #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
 
   get isLoadingSource() {
@@ -42,11 +40,16 @@ export class MediaEditor {
     return this.#isLoading.value
   }
 
-  constructor({ effects, onRenderPreview, onEdit }: MediaEditorOptions) {
+  constructor({ effects, renderer = new Renderer(), onRenderPreview, onEdit }: MediaEditorOptions) {
     const scope = getCurrentScope()
     if (scope == undefined) throw new Error(`[webgl-media-editor] must be run in an EffectScope`)
     this.#scope = scope
 
+    this.renderer = renderer
+    this.#adjustColorEffect = new Effect(
+      { name: '_', ops: [{ type: 'adjust_color', brightness: 0, contrast: 0, saturation: 0 }] },
+      this.renderer,
+    )
     this.#effectsIn = effects
     watch([this.sourceInputs], ([sourceOptions], [prevSourceOptions]) => {
       const prevSources = this.sources.value
@@ -89,7 +92,7 @@ export class MediaEditor {
 
     watch([this.#effectsIn], ([effects]) => {
       this.#scope
-        .run(() => this.#loadEffects((effects as Effect[] | undefined) ?? []))
+        .run(() => this.#loadEffects((effects as EffectDefinition[] | undefined) ?? []))
 
         // eslint-disable-next-line no-console
         .catch((error: unknown) => console.error(`[webgl-media-editor] couldn't load effects`, error))
@@ -115,12 +118,12 @@ export class MediaEditor {
     return this.renderer.toBlob({ type, quality })
   }
 
-  async #loadEffects(effects: Effect[]) {
-    this.effects.value.forEach((effect) => effect.janitor.dispose())
+  async #loadEffects(effects: EffectDefinition[]) {
+    this.effects.value.forEach((effect) => effect.dispose())
     this.effects.value.length = 0
 
     this.effects.value = effects.map((effectInfo) => {
-      const effect = new EffectInternal(effectInfo, this.renderer)
+      const effect = new Effect(effectInfo, this.renderer)
 
       return effect
     })

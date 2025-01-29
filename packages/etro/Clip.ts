@@ -1,7 +1,7 @@
 import { createEffectScope, effect, onScopeDispose, ref, type Ref, watch } from 'fine-jsx'
 import { type Renderer } from 'webgl-effects'
 
-import { type EffectInternal } from 'reactive-effects/Effect'
+import { type Effect } from 'reactive-effects/Effect'
 import { type ImageSourceOption } from 'shared/types'
 import { isSyncSource, loadAsyncImageSource, normalizeSourceOption } from 'shared/utils'
 
@@ -15,7 +15,7 @@ export namespace Clip {
     width: number
     height: number
     source: ImageSourceOption
-    effects: EffectInternal[]
+    effects: Effect[]
   }
 }
 
@@ -32,7 +32,7 @@ export class Clip {
   width: Ref<number>
   height: Ref<number>
   media: Ref<HTMLVideoElement>
-  effects: Ref<EffectInternal[]>
+  effects: Ref<Effect[]>
 
   etro = ref<EtroVideo>(undefined as never)
 

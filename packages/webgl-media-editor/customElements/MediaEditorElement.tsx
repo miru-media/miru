@@ -1,12 +1,12 @@
 import { createEffectScope, effect, ref } from 'fine-jsx'
-import { type Effect } from 'webgl-effects'
+import { type EffectDefinition } from 'webgl-effects'
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { type Context2D, EditorView, type ImageEditState, type ImageSourceOption } from 'shared/types'
 import { downloadBlob, win } from 'shared/utils'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'
-import { getDefaultFilters } from '../defaultFilters'
 import { MediaEditor } from '../MediaEditor'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
@@ -19,7 +19,7 @@ export class MediaEditorElement extends HTMLElement {
 
   #scope = createEffectScope()
   #editor: MediaEditor
-  #effects = ref<Effect[]>([])
+  #effects = ref<EffectDefinition[]>([])
   #unmount: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   #view = ref(EditorView.Crop)
@@ -41,7 +41,7 @@ export class MediaEditorElement extends HTMLElement {
   get effects() {
     return this.#effects.value
   }
-  set effects(value: Effect[] | null | undefined) {
+  set effects(value: EffectDefinition[] | null | undefined) {
     this.#effects.value = value ?? []
   }
 
@@ -68,7 +68,7 @@ export class MediaEditorElement extends HTMLElement {
           onRenderPreview: () => undefined,
         }),
     )
-    this.#effects.value = getDefaultFilters(import.meta.env.ASSETS_PATH)
+    this.#effects.value = getDefaultFilterDefinitions(import.meta.env.ASSETS_PATH)
 
     this.#unmount = this.#scope.run(() =>
       renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
@@ -90,7 +90,7 @@ export class MediaEditorElement extends HTMLElement {
 
       this.sources = newValue ? [newValue] : []
     } else if (name === 'effects') this.#effects.value = newValue && JSON.parse(newValue)
-    else if (name === 'assetsPath') this.#effects.value = getDefaultFilters(newValue || undefined)
+    else if (name === 'assetsPath') this.#effects.value = getDefaultFilterDefinitions(newValue || undefined)
     else this[name] = newValue as any
   }
 

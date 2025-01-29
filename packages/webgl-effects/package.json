@@ -11,18 +11,12 @@
   "exports": {
     ".": {
       "import": "./index.ts"
-    },
-    "./fragment-shaders": {
-      "import": "./allFragmentShaders.ts"
     }
   },
   "publishConfig": {
     "exports": {
       ".": {
         "import": "./dist/webgl-effects.js"
-      },
-      "./fragment-shaders": {
-        "import": "./dist/fragment-shaders.js"
       }
     }
   },

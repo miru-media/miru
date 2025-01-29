@@ -9,4 +9,4 @@ if (typeof customElements !== 'undefined' && 'define' in customElements) {
 
 export { MediaEditorElement }
 export { MediaEditor } from './wrapper'
-export { getDefaultFilters } from './defaultFilters'
+export { getDefaultFilterDefinitions } from 'webgl-effects'

@@ -1,8 +1,8 @@
 import { effect, ref, type Ref, watch } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
-import { type Effect, type Renderer } from 'webgl-effects'
+import { type EffectDefinition, type Renderer } from 'webgl-effects'
 
-import { EffectInternal } from 'reactive-effects/Effect'
+import { Effect } from 'reactive-effects/Effect'
 import { isSyncSource, loadAsyncImageSource, normalizeSourceOption, useEventListener } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
@@ -23,12 +23,12 @@ type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export namespace Clip {
   export interface Init extends BaseClip.Init {
-    filter?: Effect
+    filter?: EffectDefinition
   }
 }
 
 export class Clip extends BaseClip {
-  filter: Ref<EffectInternal | undefined>
+  filter: Ref<Effect | undefined>
 
   track: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
@@ -53,7 +53,7 @@ export class Clip extends BaseClip {
   }
 
   get isReady() {
-    return this.filter.value?.isLoading.value !== true && this.readyState.value >= 2 && !this.#isSeeking.value
+    return this.filter.value?.isLoading !== true && this.readyState.value >= 2 && !this.#isSeeking.value
   }
 
   constructor(init: Clip.Init, context: VideoContext, track: Track<Clip>, renderer: Renderer) {
@@ -63,7 +63,7 @@ export class Clip extends BaseClip {
     this.error = useMediaError(this.media)
 
     this.track = track
-    this.filter = ref(init.filter && new EffectInternal(init.filter, renderer))
+    this.filter = ref(init.filter && new Effect(init.filter, renderer))
     this.transition = init.transition
 
     const allReadyStateEventTypes = [
