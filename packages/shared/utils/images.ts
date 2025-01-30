@@ -215,7 +215,7 @@ const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrig
 
 const loadVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
   const video = document.createElement('video')
-  video.preload = 'metadata'
+  video.preload = 'auto'
   video.playsInline = true
   video.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
   document.body.appendChild(video)

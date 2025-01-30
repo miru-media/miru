@@ -79,7 +79,7 @@ export const useEventListener = <T extends Event>(
   targetRef: MaybeRefOrGetter<EventTarget | undefined>,
   type: string,
   listener: (event: T) => void,
-  options?: EventListenerOptions,
+  options?: AddEventListenerOptions,
 ) =>
   effect((onCleanup) => {
     const target = toValue(targetRef)

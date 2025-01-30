@@ -1,4 +1,5 @@
 import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent'
+import { win } from '../utils'
 
 export const hasVideoDecoder = () => typeof VideoDecoder === 'function'
 export const hasAudioDecoder = () => typeof AudioDecoder === 'function'
@@ -12,10 +13,7 @@ export const assertDecoderConfigIsSupported = async (
 ) => {
   if (type === 'audio') {
     if (!hasAudioDecoder()) throw new Error('Missing AudioDecoder API.')
-  } else {
-    if (!hasVideoDecoder()) throw new Error('Missing VideoDecoder API.')
-    if (IS_SAFARI_16 && IS_LIKE_MAC) throw new Error(`VideoEncoder doesn't work on Safari 16.`)
-  }
+  } else if (!hasVideoDecoder()) throw new Error('Missing VideoDecoder API.')
 
   const support = await (type === 'audio'
     ? AudioDecoder.isConfigSupported(config as AudioDecoderConfig)
@@ -33,9 +31,13 @@ export const assertCanExtractVideoFrames = () => {
 export const assertEncoderConfigIsSupported = async (
   type: 'audio' | 'video',
   config: AudioEncoderConfig | VideoEncoderConfig,
-  Encoder = type === 'audio' ? AudioEncoder : VideoEncoder,
+  Encoder = type === 'audio' ? win.AudioEncoder : win.VideoEncoder,
 ) => {
+  if (typeof Encoder === 'undefined')
+    throw new Error(`Missing ${type === 'audio' ? 'Audio' : 'Video'}Decoder API.`)
+
   const support = await Encoder.isConfigSupported(config as any)
+  if (IS_SAFARI_16 && IS_LIKE_MAC) throw new Error(`VideoEncoder doesn't work on Safari 16.`)
 
   if (!support.supported)
     throw new Error(`Encoding ${type} config '${JSON.stringify(config)}' is not supported by the user agent.`)

@@ -27,6 +27,8 @@
 
   background-color: var(--clip-color);
   border-radius: 0.5rem;
+
+  transition: background-color 0.25s;
 }
 
 .clip-transition {
@@ -43,8 +45,8 @@
   background: var(--black);
   border-radius: 0.5rem;
   opacity: 0.7;
-  transition: transform 0.2s;
   transform: translate(-50%, -50%);
+  transition: transform 0.2s;
 }
 
 .clip.is-selected .clip-transition {
@@ -76,6 +78,7 @@
 .clip-resize-right {
   position: absolute;
   display: flex;
+  visibility: hidden;
   align-items: center;
   justify-content: center;
   width: var(--clip-resize-handle-width);
@@ -83,7 +86,6 @@
   color: black;
   touch-action: none;
   cursor: ew-resize;
-  visibility: hidden;
   background-color: var(--yellow);
 }
 

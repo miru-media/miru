@@ -4,6 +4,7 @@ import { type EffectDefinition, type Renderer } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/Effect'
 import { isSyncSource, loadAsyncImageSource, normalizeSourceOption, useEventListener } from 'shared/utils'
+import { clamp } from 'shared/utils/math'
 
 import { BaseClip } from './BaseClip'
 import { CustomVideoElementNode } from './custom'
@@ -27,6 +28,15 @@ export namespace Clip {
   }
 }
 
+enum VideoContextMediaStates {
+  waiting = 0,
+  sequenced = 1,
+  playing = 2,
+  paused = 3,
+  ended = 4,
+  error = 5,
+}
+
 export class Clip extends BaseClip {
   filter: Ref<Effect | undefined>
 
@@ -34,10 +44,11 @@ export class Clip extends BaseClip {
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   error: Ref<MediaError | undefined>
   readyState = useMediaReadyState(this.media)
+  everHadEnoughData = ref(false)
   node = ref<CustomVideoElementNode | InstanceType<(typeof VideoContext)['NODES']['AudioNode']>>(
     undefined as never,
   )
-  nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
+  nodeState = ref('waiting')
   latestEvent = ref<Event>()
   #isSeeking = ref(false)
   #mediaLoadPromise?: Promise<void>
@@ -53,7 +64,7 @@ export class Clip extends BaseClip {
   }
 
   get isReady() {
-    return this.filter.value?.isLoading !== true && this.readyState.value >= 2 && !this.#isSeeking.value
+    return this.filter.value?.isLoading !== true && this.readyState.value >= 4 && !this.#isSeeking.value
   }
 
   constructor(init: Clip.Init, context: VideoContext, track: Track<Clip>, renderer: Renderer) {
@@ -91,29 +102,36 @@ export class Clip extends BaseClip {
       useEventListener(this.media, type, (event) => {
         this.latestEvent.value = event
 
-        const { readyState } = this.media.value
+        this.#isSeeking.value = type === 'seeking' ? true : this.media.value.readyState < 3
 
-        switch (type) {
-          case 'seeking':
-            this.#isSeeking.value = true
-            break
-          case 'seeked':
-            this.#isSeeking.value = readyState < 2
-            break
-          case 'canplay':
-            this.#isSeeking.value = readyState < 2
-            break
-        }
+        this.nodeState.value = VideoContextMediaStates[(this.node.value as any)._state]
       })
     })
+    ;['canplay', 'suspend'].forEach((type) =>
+      useEventListener(
+        this.media,
+        type,
+        () => {
+          const media = this.media.value
+          if (!('mediaSize' in this.node.value) || !('videoWidth' in media)) return
 
-    useEventListener(this.media, 'loadedmetadata', () => {
-      const media = this.media.value
-      if (!('mediaSize' in this.node.value) || !('videoWidth' in media)) return
+          const { mediaSize } = this.node.value
+          mediaSize.width = media.videoWidth
+          mediaSize.height = media.videoHeight
 
-      const { mediaSize } = this.node.value
-      mediaSize.width = media.videoWidth
-      mediaSize.height = media.videoHeight
+          const time = this.time
+          const { currentTime } = media
+
+          const start = time.source
+          const end = start + time.duration
+          if (currentTime < start || currentTime > end) media.currentTime = clamp(currentTime, start, end)
+        },
+        { once: true },
+      ),
+    )
+
+    watch([this.readyState], ([readyState]) => {
+      if (readyState >= 4) this.everHadEnoughData.value = true
     })
 
     this.scope.run(() => {
@@ -215,6 +233,7 @@ export class Clip extends BaseClip {
 
     if (isSyncSource(sourceOption.source)) throw new Error('[miru] expected video source')
 
+    this.everHadEnoughData.value = false
     const { promise, close } = loadAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
 
     const mediaLoadPromise = (this.#mediaLoadPromise = promise.then((media) => {

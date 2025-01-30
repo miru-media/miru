@@ -1,24 +1,33 @@
 import { h } from 'fine-jsx'
 /* eslint-disable import/no-unresolved */
-import turtle from 'https://assets.miru.media/turtle-PaulsAdventures-pixabay.mp4'
-import underwaterAudio from 'https://assets.miru.media/underwater-ambience-freesound_community-pixabay.mp3'
-import waveBreaking from 'https://assets.miru.media/wave-breaking-EclipseChasers-pixabay.mp4'
-import wavesAudio from 'https://assets.miru.media/waves-breaking-Dia_Pazon-pixabay.mp3'
-import waves from 'https://assets.miru.media/waves-MustaKor-pixabay.mp4'
-import wavesRocks from 'https://assets.miru.media/waves-rocks-McPix22-pixabay.mp4'
+import underwaterAudio from 'https://assets.miru.media/audio/underwater-ambience-freesound_community-pixabay.mp3'
+import wavesAudio from 'https://assets.miru.media/audio/waves-breaking-Dia_Pazon-pixabay.mp3'
+import turtle from 'https://assets.miru.media/fragmented-video/turtle-PaulsAdventures-pixabay.mp4'
+import waveBreaking from 'https://assets.miru.media/fragmented-video/wave-breaking-EclipseChasers-pixabay.mp4'
+import waves from 'https://assets.miru.media/fragmented-video/waves-MustaKor-pixabay.mp4'
+import wavesRocks from 'https://assets.miru.media/fragmented-video/waves-rocks-McPix22-pixabay.mp4'
 /* eslint-enable import/no-unresolved */
 
+import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
 import { type InputEvent } from 'shared/types'
 
 import { Clip } from './Clip'
 import * as Actions from './components/Actions'
+import { LoadingOverlay } from './components/LoadingOverlay'
 import { PlaybackControls } from './components/PlaybackControls'
 import { renderComponentTo } from './components/renderTo'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
+import { EXPORT_VIDEO_CODEC } from './cosntants'
 import { type Movie } from './Movie'
 import { Track } from './Track'
 import { VideoEditor } from './VideoEditor'
+
+if (!hasVideoDecoder()) alert(`Your browser doesn't have the WebCodec APIs needed to export videos!`)
+else
+  assertEncoderConfigIsSupported('video', { codec: EXPORT_VIDEO_CODEC, width: 1920, height: 1080 }).catch(
+    (error: unknown) => alert(String((error as any)?.message)),
+  )
 
 const demoMovie: Movie.Init = {
   tracks: [
@@ -91,7 +100,10 @@ const Demo = () => {
   return (
     <div class="video-editor">
       {() => editor.showStats.value && movie.stats.dom}
-      <div class="viewport">{h(movie.displayCanvas, { class: 'viewport-canvas' })}</div>
+      <div class="viewport">
+        {h(movie.displayCanvas, { class: 'viewport-canvas' })}
+        <LoadingOverlay loading={() => !movie.isReady} />
+      </div>
 
       <Settings editor={editor} />
       <PlaybackControls editor={editor} />
@@ -136,7 +148,7 @@ const Demo = () => {
                 <div>
                   {() => (
                     <>
-                      state: {clip.node.value.state}, error?: {clip.error.value?.code}
+                      state: {clip.nodeState.value}, error?: {clip.error.value?.code}
                     </>
                   )}
                 </div>

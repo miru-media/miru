@@ -119,6 +119,7 @@ export class Movie {
   }
 
   play() {
+    this.#scheduleClips()
     this.videoContext.play()
   }
 
@@ -129,6 +130,10 @@ export class Movie {
 
   seekTo(time: number) {
     this.videoContext.currentTime = this.#currentTime.value = time
+    this.#scheduleClips()
+  }
+
+  #scheduleClips() {
     // reschedule playback of VideoContext source nodes
     this.tracks.value.forEach((track) => track.forEachClip((clip) => clip.schedule()))
   }
