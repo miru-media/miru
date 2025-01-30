@@ -165,21 +165,6 @@ const Demo = () => {
                       onInput={(event: InputEvent) => (clip.sourceStart.value = event.target.valueAsNumber)}
                     />
                   </label>
-                  <div>
-                    <label>
-                      source
-                      <input
-                        type="file"
-                        accept="video"
-                        onInput={(event: InputEvent) => {
-                          const file = event.target.files?.[0]
-                          if (!file) return
-
-                          clip.setMedia(URL.createObjectURL(file))
-                        }}
-                      />
-                    </label>
-                  </div>
                   [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
                   {() => clip.transition?.duration.toFixed(2)}
                 </div>

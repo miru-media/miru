@@ -7,7 +7,7 @@ import { remap0 } from 'shared/utils/math'
 import { Clip } from './Clip'
 import { Movie } from './Movie'
 import { Track } from './Track'
-import { getVideoInfo } from './utils'
+import { checkAndWarnVideoFile, getMediaInfo } from './utils'
 
 const getClipAtTime = (track: Track<Clip>, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -55,9 +55,11 @@ export class VideoEditor {
   }
 
   async addClip(track: Track<Clip>, source: string | Blob) {
+    if (typeof source !== 'string' && !checkAndWarnVideoFile(track.type, source)) return
+
     const url = this.#incrementMediaSource(source)
 
-    const { duration } = await getVideoInfo(source)
+    const { duration } = await getMediaInfo(source)
 
     const clip = track.createClip({
       sourceStart: 0,
@@ -70,9 +72,11 @@ export class VideoEditor {
   }
 
   async replaceClipSource(source: string | Blob) {
-    const { duration } = await getVideoInfo(source)
     const clip = this.selected.value
     if (!clip) return
+    if (typeof source !== 'string' && !checkAndWarnVideoFile(clip.track.type, source)) return
+
+    const { duration } = await getMediaInfo(source)
 
     const url = this.#incrementMediaSource(source)
     this.#decrementMediaSource(clip.media.value.src)

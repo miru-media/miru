@@ -3,6 +3,7 @@ import { toRef } from 'fine-jsx'
 
 import { type InputEvent } from 'shared/types'
 
+import { ACCEPT_VIDEO_FILE_TYPES } from '../cosntants'
 import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'
@@ -42,7 +43,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
             <ToolbarButton tag="label" icon={IconTablerExchange}>
               <input
                 type="file"
-                accept="video/*"
+                accept={ACCEPT_VIDEO_FILE_TYPES}
                 disabled={() => !editor.selected.value}
                 onInput={onInputVideoFile}
                 hidden

@@ -212,7 +212,7 @@ export class MP4Demuxer {
     if (!response.ok || !response.body) throw new Error(`Invalid response from "${url}".`)
 
     const contentType = response.headers.get('content-type')
-    if (contentType && !/video\/(mp4|mpeg|mov|quicktime)/.test(contentType))
+    if (contentType && !/video\/(mp4|mov|quicktime)/.test(contentType))
       throw new Error(`Unexpected content-type: "${contentType}"`)
 
     this.#inputStream = response.body

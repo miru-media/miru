@@ -4,6 +4,7 @@ import { type InputEvent } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 
 import { type Clip as ClipType } from '../Clip'
+import { ACCEPT_VIDEO_FILE_TYPES } from '../cosntants'
 import { type Track } from '../Track'
 import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
@@ -152,7 +153,7 @@ export const Timeline = ({
                       <input
                         type="file"
                         hidden
-                        accept="video/*"
+                        accept={ACCEPT_VIDEO_FILE_TYPES}
                         onInput={(event: InputEvent) => onInputClipFile(event, track)}
                       />
                     </label>

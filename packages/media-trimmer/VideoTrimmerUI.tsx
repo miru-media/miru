@@ -3,7 +3,7 @@ import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 
 
 import { IconButton } from 'miru-video-editor/components/IconButton'
 import { ToggleButton } from 'miru-video-editor/components/ToggleButton'
-import { formatDuration, formatTime, getVideoInfo, useMediaReadyState } from 'miru-video-editor/utils'
+import { formatDuration, formatTime, getMediaInfo, useMediaReadyState } from 'miru-video-editor/utils'
 import { useElementSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
@@ -221,7 +221,7 @@ export const VideoTrimmerUI = (props: {
       props.onError(error)
 
       try {
-        info = await getVideoInfo(url)
+        info = await getMediaInfo(url)
       } catch {
         media.src = ''
         mediaDuration.value = 0

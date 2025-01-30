@@ -95,7 +95,7 @@ export const formatDuration = (durationS: number) => {
   return `${minutes ? `${minutes}m ` : ''}${seconds % 60}s`
 }
 
-export const getVideoInfo = async (source: Blob | string) => {
+export const getMediaInfo = async (source: Blob | string) => {
   const { promise, close } = loadAsyncImageSource(source, undefined, true)
 
   const media = await promise
@@ -141,4 +141,16 @@ export const getImageSize = (image: TexImageSource) => {
   if ('naturalWidth' in image) return { width: image.naturalWidth, height: image.naturalHeight }
   if ('displayWidth' in image) return { width: image.displayWidth, height: image.displayHeight }
   return { width: image.width, height: image.height }
+}
+
+export const checkAndWarnVideoFile = (type: 'audio' | 'video', file: Blob) => {
+  if (!document.createElement(type).canPlayType(file.type)) {
+    alert(`Your browser can't play this file type (${file.type})`)
+    return false
+  }
+
+  if (!/video\/(mp4|mov|quicktime)/.test(file.type))
+    alert('Export is currently only supported for MP4 source videos!')
+
+  return true
 }
