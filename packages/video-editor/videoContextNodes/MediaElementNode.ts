@@ -64,8 +64,8 @@ export class MediaElementNode extends CustomSourceNode {
       watch([options.movieIsPaused], () => (this.mediaTime.value = media.currentTime))
 
       watch([this.shouldPlay], ([shouldPlay]) => {
-        if (!shouldPlay) media.pause()
-        else media.play().catch(() => undefined)
+        if (shouldPlay) this._play()
+        else media.pause()
       })
 
       // seek to the media source starting time before the clip is scheduled to play
@@ -90,12 +90,14 @@ export class MediaElementNode extends CustomSourceNode {
   }
 
   _pause() {
+    this.media.muted = true
     this.media.pause()
   }
 
   _play() {
     if (!this.media.paused || !this.shouldPlay.value || this.mediaState.isSeeking.value) return
 
+    this.media.muted = false
     this.media.play().catch(() => undefined)
   }
 
