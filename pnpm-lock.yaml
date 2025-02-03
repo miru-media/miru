@@ -261,27 +261,6 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0(vite@6.0.7(@types/node@22.10.7)(jiti@2.4.2)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))
 
-  packages/etro:
-    dependencies:
-      etro:
-        specifier: ^0.12.1
-        version: 0.12.1
-      filesize:
-        specifier: 'catalog:'
-        version: 10.1.6
-      fine-jsx:
-        specifier: 'catalog:'
-        version: 0.0.7
-      stats.js:
-        specifier: 'catalog:'
-        version: 0.17.0
-      webgl-effects:
-        specifier: workspace:^
-        version: link:../webgl-effects
-      webgl-media-editor:
-        specifier: workspace:^
-        version: link:../webgl-media-editor
-
   packages/media-trimmer:
     dependencies:
       fine-jsx:
@@ -2674,9 +2653,6 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
-
-  etro@0.12.1:
-    resolution: {integrity: sha512-vQcubmdVw8fEDUi6mzwef1ITR/FG4UJcLPE+I1PWYXSPasUPBU+WGmkY4a8t4eAC19yGScmvvy3XRMEuXU4uUQ==}
 
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
@@ -7890,8 +7866,6 @@ snapshots:
       '@types/estree': 1.0.6
 
   esutils@2.0.3: {}
-
-  etro@0.12.1: {}
 
   eventemitter3@4.0.7: {}
 

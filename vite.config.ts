@@ -62,7 +62,6 @@ export default defineConfig({
       input: {
         index: resolve(import.meta.dirname, 'index.html'),
         imageeditor: resolve(import.meta.dirname, 'image/index.html'),
-        etro: resolve(import.meta.dirname, 'etro.html'),
         videoeditor: resolve(import.meta.dirname, 'video/index.html'),
         videotrimmer: resolve(import.meta.dirname, 'trim/index.html'),
       },
