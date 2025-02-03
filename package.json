@@ -103,7 +103,8 @@
   "pnpm": {
     "patchedDependencies": {
       "glsl-tokenizer": "patches/glsl-tokenizer.patch",
-      "libavjs-webcodecs-polyfill": "patches/libavjs-webcodecs-polyfill.patch"
+      "libavjs-webcodecs-polyfill": "patches/libavjs-webcodecs-polyfill.patch",
+      "videocontext": "patches/videocontext.patch"
     }
   }
 }

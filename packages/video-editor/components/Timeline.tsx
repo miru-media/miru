@@ -4,7 +4,7 @@ import { type InputEvent } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 
 import { type Clip as ClipType } from '../Clip'
-import { ACCEPT_VIDEO_FILE_TYPES } from '../cosntants'
+import { ACCEPT_VIDEO_FILE_TYPES } from '../constants'
 import { type Track } from '../Track'
 import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'

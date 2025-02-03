@@ -29,7 +29,7 @@ export class VideoEditor {
   drag = ref({ isDragging: false, x: 0 })
   #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
 
-  showStats = ref(false)
+  showStats = ref(import.meta.env.DEV)
   exportResult = ref<{ blob: Blob; url: string }>()
   exportProgress = ref(-1)
 
@@ -159,6 +159,10 @@ export class VideoEditor {
         onProgress: (value) => (this.exportProgress.value = value),
       })
       this.exportResult.value = { blob, url: URL.createObjectURL(blob) }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error)
+      alert(`Encountered an error while exporting: ${String(error)}`)
     } finally {
       this.exportProgress.value = -1
     }

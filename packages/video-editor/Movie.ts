@@ -119,23 +119,18 @@ export class Movie {
   }
 
   play() {
-    this.#scheduleClips()
+    this.isPaused.value = false
     this.videoContext.play()
+    this.isPaused.value = this.videoContext.state !== 0
   }
 
   pause() {
-    this.videoContext.pause()
     this.isPaused.value = true
+    this.videoContext.pause()
   }
 
   seekTo(time: number) {
     this.videoContext.currentTime = this.#currentTime.value = time
-    this.#scheduleClips()
-  }
-
-  #scheduleClips() {
-    // reschedule playback of VideoContext source nodes
-    this.tracks.value.forEach((track) => track.forEachClip((clip) => clip.schedule()))
   }
 
   whenReady() {
@@ -174,10 +169,6 @@ export class Movie {
     try {
       options.onProgress?.(0)
       return await exporter.start(options)
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error)
-      alert(`Encountered an error while exporting: ${String(error)}`)
     } finally {
       exporter.dispose()
     }

@@ -4,7 +4,7 @@ import { type Renderer } from 'webgl-effects'
 
 import { type BaseClip } from './BaseClip'
 import { type Clip } from './Clip'
-import { type Movie } from './Movie'
+import { type TrackMovie } from './types'
 
 type TrackType = 'video' | 'audio'
 
@@ -15,8 +15,6 @@ export namespace Track {
     clips: Clip.Init[]
   }
 }
-
-type TrackMovie = Pick<Movie, 'videoContext' | 'renderer' | 'resolution' | 'frameRate'>
 
 export class Track<T extends BaseClip> {
   #head = ref<T>()

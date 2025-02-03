@@ -2,7 +2,7 @@ import { type DemuxerChunkInfo } from 'shared/transcode/demuxer'
 
 import { assertCanExtractVideoFrames, assertDecoderConfigIsSupported } from './utils'
 
-const HIGH_WATER_MARK = 5
+const HIGH_WATER_MARK = 16
 
 interface Options<T extends VideoFrame | AudioData> {
   chunks: DemuxerChunkInfo[]

@@ -1,0 +1,89 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 085cf8c538e3bce76ba011bcecf0f20954726e1f..0000000000000000000000000000000000000000
+diff --git a/dist/videocontext.js b/dist/videocontext.js
+index 9c49efe609802d7340f481ae983841aef133731a..6d9033eefe3548f5de50bba30e94bb86ce2f4952 100644
+--- a/dist/videocontext.js
++++ b/dist/videocontext.js
+@@ -1627,6 +1627,12 @@ var DestinationNode = function (_ProcessingNode) {
+             gl.clear(gl.COLOR_BUFFER_BIT);
+ 
+             this.inputs.forEach(function (node) {
++                // skip nodes that don't contain the current time
++                if ('_startTime' in node && '_stopTime' in node) {
++                  const currentTime = _this2._currentTime
++                  if (currentTime < node._startTime || currentTime > node._stopTime + 1/60) return
++                }
++
+                 _get(DestinationNode.prototype.__proto__ || Object.getPrototypeOf(DestinationNode.prototype), "_render", _this2).call(_this2);
+                 //map the input textures input the node
+                 var texture = node._texture;
+@@ -1751,6 +1757,13 @@ var CompositingNode = function (_ProcessingNode) {
+ 
+             this.inputs.forEach(function (node) {
+                 if (node === undefined) return;
++
++                // skip nodes that don't contain the current time
++                if ('_startTime' in node && '_stopTime' in node) {
++                  const currentTime = _this2._currentTime
++                  if (currentTime < node._startTime || currentTime > node._stopTime + 1/60) return
++                }
++
+                 _get(CompositingNode.prototype.__proto__ || Object.getPrototypeOf(CompositingNode.prototype), "_render", _this2).call(_this2);
+ 
+                 //map the input textures input the node
+@@ -2403,29 +2416,28 @@ var TransitionNode = function (_EffectNode) {
+         value: function _update(currentTime) {
+             _get(TransitionNode.prototype.__proto__ || Object.getPrototypeOf(TransitionNode.prototype), "_update", this).call(this, currentTime);
+             for (var propertyName in this._transitions) {
+-                var value = this[propertyName];
+-                if (this._transitions[propertyName].length > 0) {
+-                    value = this._transitions[propertyName][0].current;
+-                }
+-                var transitionActive = false;
++
++                // use transition start value if before the start time
++                // and use end value if after the end time
+ 
+                 for (var i = 0; i < this._transitions[propertyName].length; i++) {
+                     var transition = this._transitions[propertyName][i];
++                    if (currentTime < transition.start) {
++                        this[propertyName] = transition.current;
++                        continue;
++                    }
+                     if (currentTime > transition.end) {
+-                        value = transition.target;
++                        this[propertyName] = transition.target;
+                         continue;
+                     }
+ 
+                     if (currentTime > transition.start && currentTime < transition.end) {
+                         var difference = transition.target - transition.current;
+                         var progress = (this._currentTime - transition.start) / (transition.end - transition.start);
+-                        transitionActive = true;
+                         this[propertyName] = transition.current + difference * progress;
+                         break;
+                     }
+                 }
+-
+-                if (!transitionActive) this[propertyName] = value;
+             }
+         }
+     }]);
+@@ -3160,6 +3172,11 @@ var NODES = {
+     VideoNode: _videonode2.default
+ };
+ 
++// Allow creating custom nodes that directly extend GraphNode
++var _graphnode = __webpack_require__("./src/graphnode.js");
++var _graphnode2 = _interopRequireDefault(_graphnode);
++NODES.GraphNode = _graphnode2.default
++
+ exports.default = NODES;
+ module.exports = exports.default;
+ 
+@@ -7234,4 +7251,3 @@ module.exports = exports.default;
+ 
+ /******/ });
+ });
+-//# sourceMappingURL=videocontext.js.map

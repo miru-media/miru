@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import * as twgl from 'twgl.js'
 
-import { type Context2D, type CropState, type Size, type SyncImageSource } from 'shared/types'
+import { type Context2D, type CropState, type Size } from 'shared/types'
 import {
   canvasToBlob,
   get2dContext,
@@ -116,7 +116,7 @@ export class Renderer {
 
   loadImage(
     texture: WebGLTexture,
-    source: SyncImageSource,
+    source: TexImageSource,
     textureOptions: Omit<twgl.TextureOptions, 'width' | 'height'> = SOURCE_TEX_OPTIONS,
   ) {
     const gl = this.#gl

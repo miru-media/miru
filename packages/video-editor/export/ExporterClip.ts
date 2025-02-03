@@ -6,8 +6,9 @@ import { Effect } from 'reactive-effects/Effect'
 
 import { BaseClip } from '../BaseClip'
 import { type Clip } from '../Clip'
-import { type ExtractorNodeOptions, Mp4ExtractorNode } from '../custom'
 import { type Track } from '../Track'
+
+import { type ExtractorNodeOptions, Mp4ExtractorNode } from './Mp4ExtractorNode'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
@@ -30,7 +31,7 @@ export class ExtractorClip extends BaseClip {
   }
 
   get isReady() {
-    return this.node.isReady
+    return this.node._isReady()
   }
 
   constructor(init: Clip.Init, context: VideoContext, track: Track<ExtractorClip>, renderer: Renderer) {
@@ -41,15 +42,13 @@ export class ExtractorClip extends BaseClip {
     this.filter = ref(init.filter && new Effect(init.filter, renderer))
     this.transition = init.transition
 
-    const { start, end, source: sourceOffset } = this.time
     const { source: url } = init
 
     const nodeOptions: ExtractorNodeOptions = {
       renderer,
+      movieIsPaused: ref(false),
+      getClipTime: () => this.time,
       url,
-      sourceOffset,
-      start,
-      end,
       targetFrameRate: track.movie.frameRate.value,
     }
     this.node = context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
@@ -58,10 +57,7 @@ export class ExtractorClip extends BaseClip {
   }
 
   connect() {
-    const { node, time } = this
-    node._sourceOffset = time.source
-    node.startAt(time.start)
-    node.stopAt(time.end)
+    const { node } = this
 
     const transitionType = this.transition?.type
     if (transitionType && transitionType in VideoContext.DEFINITIONS) {

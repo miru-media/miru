@@ -18,7 +18,7 @@ import { PlaybackControls } from './components/PlaybackControls'
 import { renderComponentTo } from './components/renderTo'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
-import { EXPORT_VIDEO_CODEC } from './cosntants'
+import { EXPORT_VIDEO_CODEC, ReadyState, SourceNodeState } from './constants'
 import { type Movie } from './Movie'
 import { Track } from './Track'
 import { VideoEditor } from './VideoEditor'
@@ -140,36 +140,46 @@ const Demo = () => {
       >
         <p style="display:flex;gap:0.25rem">
           {() =>
-            movie.tracks.value[0].mapClips((clip) => (
-              <div style="font-family:monospace">
-                <div>
-                  {() => [clip.media.value.currentTime.toFixed(2), clip.latestEvent.value?.type].join(' ')}
-                </div>
-                <div>
-                  {() => (
-                    <>
-                      state: {clip.nodeState.value}, error?: {clip.error.value?.code}
-                    </>
-                  )}
-                </div>
+            movie.tracks.value.map((track) =>
+              track.mapClips((clip) => {
+                const node = clip.node.value
+                const { mediaState } = node
 
-                <div>
-                  <label>
-                    source time
-                    <input
-                      type="number"
-                      min="0"
-                      max="20"
-                      step="0.25"
-                      value={clip.sourceStart}
-                      onInput={(event: InputEvent) => (clip.sourceStart.value = event.target.valueAsNumber)}
-                    />
-                  </label>
-                  [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
-                  {() => clip.transition?.duration.toFixed(2)}
-                </div>
-              </div>
-            ))
+                return (
+                  <div style="font-family:monospace">
+                    <div>
+                      {() => [mediaState.time.value.toFixed(2), mediaState.latestEvent.value?.type].join(' ')}
+                    </div>
+                    <div>
+                      {() => (
+                        <>
+                          {ReadyState[mediaState.readyState.value]} | {SourceNodeState[node.state]} |{' '}
+                          {clip.error.value?.code}
+                        </>
+                      )}
+                    </div>
+
+                    <div>
+                      <label>
+                        source time
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          step="0.25"
+                          value={clip.sourceStart}
+                          onInput={(event: InputEvent) =>
+                            (clip.sourceStart.value = event.target.valueAsNumber)
+                          }
+                        />
+                      </label>
+                      [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
+                      {() => clip.transition?.duration.toFixed(2)}
+                    </div>
+                  </div>
+                )
+              }),
+            )
           }
         </p>
       </div>

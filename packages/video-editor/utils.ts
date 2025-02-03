@@ -1,4 +1,4 @@
-import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'fine-jsx'
+import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
 
 import { loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
@@ -153,4 +153,37 @@ export const checkAndWarnVideoFile = (type: 'audio' | 'video', file: Blob) => {
     alert('Export is currently only supported for MP4 source videos!')
 
   return true
+}
+
+export const useRafLoop = (
+  callback: (timestamp: number) => void,
+  options?: { active?: MaybeRefOrGetter<boolean> },
+) => {
+  return watch([() => toValue(options?.active) ?? true], ([active], _prev, onCleanup) => {
+    if (!active) return
+
+    let id = 0
+
+    const loop = (t: number) => {
+      callback(t)
+      id = requestAnimationFrame(loop)
+    }
+    id = requestAnimationFrame(loop)
+
+    onCleanup(() => cancelAnimationFrame(id))
+  })
+}
+
+export const useInterval = (
+  callback: () => unknown,
+  interval: number,
+  options?: { active?: MaybeRefOrGetter<boolean> },
+) => {
+  effect((onCleanup) => {
+    const active = toValue(options?.active) ?? true
+    if (!active) return
+
+    const id = setInterval(callback, interval)
+    onCleanup(() => clearInterval(id))
+  })
 }

@@ -1,6 +1,7 @@
 import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
 
 import { TRANSITION_DURATION_S } from './constants'
+import { type ClipTime } from './types'
 
 export namespace BaseClip {
   export interface Init {
@@ -42,19 +43,12 @@ export class BaseClip {
     },
   )
 
-  #time = computed(
-    (): {
-      start: number
-      source: number
-      duration: number
-      end: number
-    } => {
-      const { start, end } = this.#derivedState.value
-      const duration = this.duration.value
-      const source = this.sourceStart.value
-      return { start, source, duration, end }
-    },
-  )
+  #time = computed((): ClipTime => {
+    const { start, end } = this.#derivedState.value
+    const duration = this.duration.value
+    const source = this.sourceStart.value
+    return { start, source, duration, end }
+  })
 
   get transition(): { duration: number; type: string } | undefined {
     const value = this.#transition.value

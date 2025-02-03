@@ -1,3 +1,4 @@
+import { ref } from 'fine-jsx'
 import VideoContext from 'videocontext'
 import { Renderer } from 'webgl-effects'
 
@@ -5,12 +6,13 @@ import { type DemuxerChunkInfo, type MP4BoxFileInfo, MP4Demuxer } from 'shared/t
 import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
-import { type Mp4ExtractorNode } from '../custom'
 import { type Movie } from '../Movie'
 import { Track } from '../Track'
+import { type TrackMovie } from '../types'
 
 import { AVEncoder } from './AVEncoder'
 import { ExtractorClip } from './ExporterClip'
+import { type Mp4ExtractorNode } from './Mp4ExtractorNode'
 
 interface SourceEntry {
   start: number
@@ -47,10 +49,16 @@ export class MovieExporter {
     const { canvas } = this.gl
 
     canvas.getContext = () => this.gl as any
-    const videoContext = (this.videoContext = new VideoContext(canvas))
+    const videoContext = (this.videoContext = new VideoContext(canvas, undefined, { manualUpdate: true }))
     delete (canvas as Partial<typeof canvas>).getContext
 
-    const movieStub = { videoContext, renderer, resolution, frameRate: movie.frameRate }
+    const movieStub: TrackMovie = {
+      videoContext,
+      renderer,
+      resolution,
+      frameRate: movie.frameRate,
+      isPaused: ref(false),
+    }
     const movieInit = movie.toObject()
 
     movieInit.tracks.forEach((init) => {
@@ -187,7 +195,8 @@ export class MovieExporter {
             avEncoder.whenReadyForVideo(),
           ])
 
-          videoContext.update(timeS - videoContext.currentTime)
+          videoContext.currentTime = timeS
+          videoContext.update(0)
           const frame = new VideoFrame(canvas, { timestamp: 1e6 * timeS, duration: frameDurationUs })
           avEncoder.encodeVideoFrame(frame)
           frame.close()

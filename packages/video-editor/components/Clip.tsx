@@ -36,7 +36,7 @@ export const Clip = ({
 }) => {
   const mainContainer = ref<HTMLElement>()
   const clipColor = computed(() => {
-    if (!clip.everHadEnoughData.value) return 'var(--gray)'
+    if (!clip.everHadEnoughData) return 'var(--gray)'
 
     const hash = stringHashCode(clip.media.value.src)
     return CLIP_COLORS[Math.abs(hash) % CLIP_COLORS.length]

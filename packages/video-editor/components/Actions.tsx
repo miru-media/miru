@@ -3,7 +3,7 @@ import { toRef } from 'fine-jsx'
 
 import { type InputEvent } from 'shared/types'
 
-import { ACCEPT_VIDEO_FILE_TYPES } from '../cosntants'
+import { ACCEPT_VIDEO_FILE_TYPES } from '../constants'
 import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'

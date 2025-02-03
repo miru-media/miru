@@ -108,10 +108,11 @@ declare module 'videocontext' {
     protected _currentTime: number
     protected _startTime: number
     protected _stopTime: number
-    protected _update(currentTime: number, triggerTextureUpdate: boolean): boolean
-    protected _seek(time: number): void
+    _isReady(): boolean
+    _update(currentTime: number, triggerTextureUpdate: boolean): boolean
+    _seek(time: number): void
     protected _unload(): void
-    protected _ready: boolean
+    _ready: boolean
     protected _isElementPlaying: boolean
     protected _loadTriggered: boolean
   }
@@ -119,12 +120,8 @@ declare module 'videocontext' {
   class CanvasNode extends SourceNode {}
   class ImageNode extends SourceNode {}
   class MediaNode extends SourceNode {
-    _sourceOffset: number
-  }
-
-  class VideoNode extends MediaNode {
     constructor(
-      src: string | HTMLVideoElement | MediaStream,
+      src: string | HTMLMediaElement | MediaStream,
       gl: WebGL2RenderingContext,
       renderGraph: RenderGraph,
       currentTime: number,
@@ -134,6 +131,11 @@ declare module 'videocontext' {
       mediaElementCache?: any,
       options?: Record<string, unknown>,
     )
+    src: string | HTMLMediaElement | MediaStream
+    _sourceOffset: number
+  }
+
+  class VideoNode extends MediaNode {
     get duration(): number
   }
   class AudioNode extends MediaNode {
@@ -143,8 +145,8 @@ declare module 'videocontext' {
   class ProcessorNode<T extends Record<string, unknown>> extends GraphNode {
     setProperty<K extends keyof T>(name: K, value: T[K]): void
     getProperty<K extends keyof T>(name: K): T[K]
-    protected _update(currentTime: number): void
-    protected _seek(currentTime: number): void
+    _update(currentTime: number): void
+    _seek(currentTime: number): void
     protected _render(): void
   }
 
@@ -202,8 +204,11 @@ declare module 'videocontext' {
       preloadTime?: number,
       audioElementAttributes?: Record<string, unknown>,
     ): AudioNode
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-    customSourceNode<T extends SourceNode>(CustomSourceNode: typeof T, ...args: unkonwn[]): T
+    customSourceNode<T extends GraphNode>(
+      // eslint-disable-next-line @typescript-eslint/prefer-function-type
+      CustomSourceNode: { new (...args: any[]): T },
+      ...args: unkonwn[]
+    ): T
     compositor<T extends Record<string, any>>(definition: EffectDefinition): CompositingNode<T>
     transition<T extends Record<string, any>>(...args: any[]): TransitionNode<T>
 
@@ -230,6 +235,8 @@ declare module 'videocontext' {
       MediaNode,
       SourceNode,
       VideoNode,
+      // patched
+      GraphNode,
     }
 
     static DEFINITIONS: {

@@ -3,22 +3,13 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 import { type EffectDefinition, type Renderer } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/Effect'
-import { isSyncSource, loadAsyncImageSource, normalizeSourceOption, useEventListener } from 'shared/utils'
-import { clamp } from 'shared/utils/math'
+import { isSyncSource, loadAsyncImageSource, normalizeSourceOption } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
-import { CustomVideoElementNode } from './custom'
 import { type Track } from './Track'
+import { type CustomSourceNodeOptions } from './types'
 import { useMediaError, useMediaReadyState } from './utils'
-
-export enum SourceNodeState {
-  waiting = 0,
-  sequenced = 1,
-  playing = 2,
-  paused = 3,
-  ended = 4,
-  error = 5,
-}
+import { AudioElementNode, VideoElementNode } from './videoContextNodes'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
@@ -28,15 +19,6 @@ export namespace Clip {
   }
 }
 
-enum VideoContextMediaStates {
-  waiting = 0,
-  sequenced = 1,
-  playing = 2,
-  paused = 3,
-  ended = 4,
-  error = 5,
-}
-
 export class Clip extends BaseClip {
   filter: Ref<Effect | undefined>
 
@@ -44,13 +26,7 @@ export class Clip extends BaseClip {
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   error: Ref<MediaError | undefined>
   readyState = useMediaReadyState(this.media)
-  everHadEnoughData = ref(false)
-  node = ref<CustomVideoElementNode | InstanceType<(typeof VideoContext)['NODES']['AudioNode']>>(
-    undefined as never,
-  )
-  nodeState = ref('waiting')
-  latestEvent = ref<Event>()
-  #isSeeking = ref(false)
+  node = ref<VideoElementNode | AudioElementNode>(undefined as never)
   #mediaLoadPromise?: Promise<void>
   #closeMedia?: () => void
 
@@ -64,97 +40,38 @@ export class Clip extends BaseClip {
   }
 
   get isReady() {
-    return this.filter.value?.isLoading !== true && this.readyState.value >= 4 && !this.#isSeeking.value
+    return this.node.value._isReady()
+  }
+
+  get everHadEnoughData() {
+    return this.node.value.mediaState.wasEverPlayable.value
   }
 
   constructor(init: Clip.Init, context: VideoContext, track: Track<Clip>, renderer: Renderer) {
     super(init)
 
+    this.track = track
     this.setMedia(init.source)
     this.error = useMediaError(this.media)
 
-    this.track = track
     this.filter = ref(init.filter && new Effect(init.filter, renderer))
     this.transition = init.transition
 
-    const allReadyStateEventTypes = [
-      'abort',
-      'canplay',
-      'canplaythrough',
-      'durationchange',
-      'emptied',
-      'ended',
-      'error',
-      'loadeddata',
-      'loadedmetadata',
-      'loadstart',
-      'pause',
-      'play',
-      'playing',
-      'seeked',
-      'seeking',
-      'stalled',
-      'suspend',
-      'timeupdate',
-      'waiting',
-    ]
-    allReadyStateEventTypes.forEach((type) => {
-      useEventListener(this.media, type, (event) => {
-        this.latestEvent.value = event
-
-        this.#isSeeking.value = type === 'seeking' ? true : this.media.value.readyState < 3
-
-        this.nodeState.value = VideoContextMediaStates[(this.node.value as any)._state]
-      })
-    })
-    ;['canplay', 'suspend'].forEach((type) =>
-      useEventListener(
-        this.media,
-        type,
-        () => {
-          const media = this.media.value
-          if (!('mediaSize' in this.node.value) || !('videoWidth' in media)) return
-
-          const { mediaSize } = this.node.value
-          mediaSize.width = media.videoWidth
-          mediaSize.height = media.videoHeight
-
-          const time = this.time
-          const { currentTime } = media
-
-          const start = time.source
-          const end = start + time.duration
-          if (currentTime < start || currentTime > end) media.currentTime = clamp(currentTime, start, end)
-        },
-        { once: true },
-      ),
-    )
-
-    watch([this.readyState], ([readyState]) => {
-      if (readyState >= 4) this.everHadEnoughData.value = true
-    })
-
     this.scope.run(() => {
       watch([this.media], ([media], _prev, onCleanup) => {
-        const node = (this.node.value =
-          this.track.type === 'video'
-            ? context.customSourceNode(CustomVideoElementNode, media, 1, this.time.source, 1, {
-                renderer,
-              })
-            : this.track.context.audio(media, 1, this.time.source))
-
-        if ('mediaSize' in node && 'videoWidth' in media) {
-          if (media.readyState >= 1) {
-            const { mediaSize } = node
-            mediaSize.width = media.videoWidth
-            mediaSize.height = media.videoHeight
-          }
+        const customNodeOptions: CustomSourceNodeOptions = {
+          getClipTime: () => this.time,
+          renderer,
+          movieIsPaused: track.movie.isPaused,
         }
-
+        const node = (this.node.value = context.customSourceNode(
+          this.track.type === 'video' ? VideoElementNode : AudioElementNode,
+          media,
+          customNodeOptions,
+        ))
         onCleanup(() => node.destroy())
       })
 
-      effect(() => this.schedule())
       effect(() => 'effect' in this.node.value && (this.node.value.effect = this.filter.value))
 
       watch(
@@ -186,17 +103,6 @@ export class Clip extends BaseClip {
         transitionNode.transitionAt(time.end - transition.duration, time.end, 0, 1, 'mix')
       })
     })
-  }
-
-  schedule() {
-    const node = this.node.value
-    const { time } = this
-
-    node._sourceOffset = time.source
-    node.clearTimelineState()
-    node.startAt(time.start)
-    node.stopAt(time.end)
-    ;(node as { _seek(time: number): void })._seek(this.track.context.currentTime)
   }
 
   connect() {
@@ -233,7 +139,22 @@ export class Clip extends BaseClip {
 
     if (isSyncSource(sourceOption.source)) throw new Error('[miru] expected video source')
 
-    this.everHadEnoughData.value = false
+    if (this.track.type === 'audio') {
+      const audio = document.createElement('audio')
+      audio.preload = 'auto'
+      audio.src = value
+      audio.load()
+      document.body.appendChild(audio)
+
+      this.media.value = audio
+      this.#closeMedia = () => {
+        audio.removeAttribute('src')
+        audio.remove()
+      }
+      this.#mediaLoadPromise = Promise.resolve()
+      return
+    }
+
     const { promise, close } = loadAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
 
     const mediaLoadPromise = (this.#mediaLoadPromise = promise.then((media) => {
