@@ -43,17 +43,11 @@ export const Clip = ({
   })
 
   const boxEdges = computed(() => {
-    const { time, prev, next, transition } = clip
+    const { time } = clip
     const drag = editor.drag.value
 
-    // start, end offsets meeting at the centers of transition overlaps
-    const startPx = isSelected() && drag.isDragging ? drag.x : editor.secondsToPixels(time.start)
-    const left = startPx + editor.secondsToPixels((prev?.transition?.duration ?? 0) / 2)
-    const width = Math.max(
-      MIN_CLIP_WIDTH_PX,
-      editor.secondsToPixels(time.duration - (next && transition ? transition.duration : 0) / 2),
-    )
-    const right = Math.max(left + MIN_CLIP_WIDTH_PX, startPx + width)
+    const left = isSelected() && drag.isDragging ? drag.x : editor.secondsToPixels(time.start)
+    const right = left + Math.max(MIN_CLIP_WIDTH_PX, editor.secondsToPixels(time.duration))
 
     return { left, right }
   })
@@ -93,7 +87,7 @@ export const Clip = ({
             },
             inner: () => {
               const { time } = clip
-              const minDuration = MIN_CLIP_DURATION_S + (clip.transition?.duration ?? 0)
+              const minDuration = MIN_CLIP_DURATION_S
 
               return {
                 left: editor.secondsToPixels(time.end - minDuration),
@@ -125,7 +119,7 @@ export const Clip = ({
 
             if (edges?.right === true) clip.ensureDurationIsPlayable()
 
-            if (prev) prev.duration.value = newStart - prev.time.start + (prev.transition?.duration ?? 0)
+            if (prev) prev.duration.value = newStart - prev.time.start
           },
           end() {
             editor.resize.value = undefined

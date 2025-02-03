@@ -11,6 +11,10 @@ import { clamp } from 'shared/utils/math'
 import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants'
 import { type ClipTime, type CustomSourceNodeOptions } from '../types'
 
+const rangeContainsTime = (range: { start: number; end: number }, time: number) => {
+  return range.start <= time && time < range.end
+}
+
 export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   declare media?: TexImageSource | HTMLAudioElement
   mediaSize: Size = { width: 1, height: 1 }
@@ -25,13 +29,14 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   adjustments: AdjustmentsState = { brightness: 0, contrast: 0, saturation: 0 }
 
   getClipTime: () => ClipTime
+  getPresentationTime: () => ClipTime
   movieIsPaused: Ref<boolean>
   movieTime = ref(0)
   abstract mediaTime: Ref<number>
 
   expectedMediaTime = computed(() => {
-    const { clipTime } = this
-    return clamp(this.movieTime.value, clipTime.start, clipTime.end) - clipTime.start + clipTime.source
+    const { start, end, source } = this.playableTime
+    return clamp(this.movieTime.value, start, end) - start + source
   })
 
   abstract everHadEnoughData: boolean
@@ -39,24 +44,30 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   get clipTime() {
     return this.getClipTime()
   }
+  get presentationTime() {
+    return this.getPresentationTime()
+  }
+  get playableTime() {
+    const time = this.getPresentationTime()
+    if (time.source >= 0) return time
 
-  movieTimeIsInClip = computed(() => {
-    const { start, end } = this.clipTime
-    const movieTime = this.movieTime.value
-    return start <= movieTime && movieTime < end
-  })
+    const { start, end, source, duration } = time
+    return { start: start - source, source: 0, duration: duration + source, end }
+  }
 
   isInPreloadTime = computed(() => {
     const movieTime = this.movieTime.value
-
-    const { start } = this.clipTime
+    const { start } = this.presentationTime
     return start - VIDEO_PRESEEK_TIME_S < movieTime && movieTime < start
   })
+  isInPresentationTime = computed(() => rangeContainsTime(this.presentationTime, this.movieTime.value))
+  isInPlayableTime = computed(() => rangeContainsTime(this.playableTime, this.movieTime.value))
+  isInClipTime = computed(() => rangeContainsTime(this.clipTime, this.movieTime.value))
 
-  shouldPlay = computed(() => this.movieTimeIsInClip.value && !this.movieIsPaused.value)
+  shouldPlay = computed(() => this.isInPlayableTime.value && !this.movieIsPaused.value)
 
   get shouldRender() {
-    return this.movieTimeIsInClip.value || this.isInPreloadTime.value
+    return this.isInPresentationTime.value
   }
 
   get _texture() {
@@ -65,11 +76,11 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
 
   computedState = computed(() => {
     const movieTime = this.movieTime.value
-    const { clipTime } = this
+    const { presentationTime } = this
 
-    if (movieTime >= clipTime.end) return SourceNodeState.ended
+    if (movieTime >= presentationTime.end) return SourceNodeState.ended
 
-    if (!this.everHadEnoughData || movieTime < clipTime.start) return SourceNodeState.sequenced
+    if (!this.everHadEnoughData || movieTime < presentationTime.start) return SourceNodeState.sequenced
 
     if (!this.shouldPlay.value) return SourceNodeState.paused
 
@@ -83,10 +94,10 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
     return this.computedState.value
   }
   get _startTime() {
-    return this.clipTime.start
+    return this.presentationTime.start
   }
   get _stopTime() {
-    return this.clipTime.end
+    return this.presentationTime.end
   }
 
   constructor(
@@ -100,6 +111,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
     super(gl, renderGraph, [], true)
 
     this.getClipTime = options.getClipTime
+    this.getPresentationTime = options.getPresentationTime
     this.movieIsPaused = options.movieIsPaused
     this.movieTime.value = currentTime
 

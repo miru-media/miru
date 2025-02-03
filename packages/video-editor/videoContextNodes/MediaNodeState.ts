@@ -15,10 +15,15 @@ export class MediaNodeState {
   wasEverPlayable = ref(false)
   isSeeking = ref(false)
   isReady = computed(() => this.readyState.value >= ReadyState.HAVE_CURRENT_DATA && !this.isSeeking.value)
+  isPaused = ref(true)
   time = ref(0)
 
   constructor(node: MediaElementNode, movieIsPaused: Ref<boolean>) {
     const media = node.media
+
+    this.isPaused.value = media.paused
+    useEventListener(media, 'play', () => (this.isPaused.value = false))
+    useEventListener(media, 'pause', () => (this.isPaused.value = true))
 
     this.scope.run(() => {
       this.readyState = useMediaReadyState(media)
@@ -67,14 +72,14 @@ export class MediaNodeState {
           () => {
             if (!('mediaSize' in node) || !('videoWidth' in media)) return
 
-            const { mediaSize, clipTime } = node
+            const { mediaSize, playableTime } = node
             mediaSize.width = media.videoWidth
             mediaSize.height = media.videoHeight
 
             const { currentTime } = media
 
-            const start = clipTime.source
-            const end = start + clipTime.duration
+            const start = playableTime.source
+            const end = start + playableTime.duration
             if (currentTime < start || currentTime > end) media.currentTime = clamp(currentTime, start, end)
           },
           { once: true },

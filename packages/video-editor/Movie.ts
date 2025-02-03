@@ -37,6 +37,7 @@ export class Movie {
 
   isEnded = ref(false)
   isPaused = ref(true)
+  isStalled = ref(false)
   #scope = createEffectScope()
 
   #currentTime = ref(0)
@@ -96,6 +97,7 @@ export class Movie {
       const isEnded = state === VideoContextState.ENDED
       this.isEnded.value = isEnded
       this.isPaused.value = state === VideoContextState.PAUSED || isEnded
+      this.isStalled.value = state === VideoContextState.STALLED
       this.#currentTime.value = currentTime
     }
     Object.values(VideoContext.EVENTS).forEach((type) =>

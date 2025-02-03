@@ -25,7 +25,9 @@ export class MediaElementNode extends CustomSourceNode {
 
   get shouldRender() {
     return (
-      this.mediaState.isReady.value && super.shouldRender && this.media.currentTime >= this.clipTime.source
+      this.mediaState.isReady.value &&
+      super.shouldRender &&
+      this.media.currentTime >= this.presentationTime.source
     )
   }
 
@@ -61,14 +63,14 @@ export class MediaElementNode extends CustomSourceNode {
 
       watch([options.movieIsPaused], () => (this.mediaTime.value = media.currentTime))
 
-      watch([options.movieIsPaused, this.movieTimeIsInClip], ([movieIsPaused, isInClip]) => {
-        if (movieIsPaused || !isInClip) media.pause()
+      watch([this.shouldPlay], ([shouldPlay]) => {
+        if (!shouldPlay) media.pause()
         else media.play().catch(() => undefined)
       })
 
       // seek to the media source starting time before the clip is scheduled to play
       watch([this.isInPreloadTime], ([isInPreloadTime]) => {
-        if (isInPreloadTime) this._seek(this.clipTime.start)
+        if (isInPreloadTime) this._seek(this.movieTime.value)
       })
     })
 
@@ -76,7 +78,7 @@ export class MediaElementNode extends CustomSourceNode {
   }
 
   _isReady() {
-    return this.mediaState.isReady.value || !this.movieTimeIsInClip.value
+    return this.mediaState.isReady.value || !this.isInPresentationTime.value
   }
 
   _seek(movieTime: number) {

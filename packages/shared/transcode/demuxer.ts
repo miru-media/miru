@@ -322,7 +322,6 @@ export class MP4Demuxer {
 
     this.#file.onSamples = (track_id, state, samples) => {
       if (state.isEnded) return
-      let chunksSinceEndOfGop = 0
 
       const samplesLength = samples.length
       const PRIMARIES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<
@@ -373,11 +372,6 @@ export class MP4Demuxer {
           state.onSample(chunkInfo)
 
           state.isEnded ||= timeS >= lastFrameTimeS && is_sync
-
-          if (state.isEnded) {
-            chunksSinceEndOfGop++
-            if (chunksSinceEndOfGop > 10) break
-          }
         }
 
         state.isEnded ||= state.sampleBytes >= this.#file.getTrackById(track_id).samples_size

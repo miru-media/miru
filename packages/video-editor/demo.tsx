@@ -35,7 +35,7 @@ const demoMovie: Movie.Init = {
       type: 'video',
       clips: [
         {
-          sourceStart: 2,
+          sourceStart: 3,
           duration: 3,
           source: waves,
         },
@@ -55,7 +55,7 @@ const demoMovie: Movie.Init = {
           source: turtle,
         },
         {
-          sourceStart: 0,
+          sourceStart: 1,
           duration: 2,
           source: waves,
         },

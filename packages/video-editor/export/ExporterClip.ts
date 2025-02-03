@@ -47,7 +47,10 @@ export class ExtractorClip extends BaseClip {
     const nodeOptions: ExtractorNodeOptions = {
       renderer,
       movieIsPaused: ref(false),
+      movieIsStalled: ref(false),
       getClipTime: () => this.time,
+      getPresentationTime: () => this.presentationTime,
+      getPlayableTime: () => this.playableTime,
       url,
       targetFrameRate: track.movie.frameRate.value,
     }

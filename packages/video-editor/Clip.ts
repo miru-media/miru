@@ -60,9 +60,12 @@ export class Clip extends BaseClip {
     this.scope.run(() => {
       watch([this.media], ([media], _prev, onCleanup) => {
         const customNodeOptions: CustomSourceNodeOptions = {
-          getClipTime: () => this.time,
           renderer,
           movieIsPaused: track.movie.isPaused,
+          movieIsStalled: track.movie.isStalled,
+          getClipTime: () => this.time,
+          getPresentationTime: () => this.presentationTime,
+          getPlayableTime: () => this.playableTime,
         }
         const node = (this.node.value = context.customSourceNode(
           this.track.type === 'video' ? VideoElementNode : AudioElementNode,

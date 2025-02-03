@@ -11,9 +11,12 @@ export interface ClipTime {
 }
 
 export interface CustomSourceNodeOptions {
-  getClipTime: () => ClipTime
   renderer: Renderer
   movieIsPaused: Ref<boolean>
+  movieIsStalled: Ref<boolean>
+  getClipTime: () => ClipTime
+  getPresentationTime: () => ClipTime
+  getPlayableTime: () => ClipTime
 }
 
-export type TrackMovie = Pick<Movie, 'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused'>
+export type TrackMovie = Pick<Movie, 'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'>

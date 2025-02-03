@@ -38,11 +38,6 @@ export class Mp4ExtractorNode extends CustomSourceNode {
   everHadEnoughData = false
   mediaTime = ref(0)
 
-  get shouldRender() {
-    // don't render in pre-seek time
-    return super.shouldRender && this.movieTimeIsInClip.value
-  }
-
   get currentVideoFrame() {
     return this.videoStream?.currentValue
   }
@@ -83,9 +78,9 @@ export class Mp4ExtractorNode extends CustomSourceNode {
       this.mediaSize.height = codedHeight
     }
 
-    const { clipTime } = this
-    const start = clipTime.source
-    const end = start + clipTime.duration
+    const { playableTime } = this
+    const start = playableTime.source
+    const end = start + playableTime.duration
     const onError = (error: unknown) => this.onError?.(error)
     this.streamInit = { start, end, onError }
 
@@ -98,14 +93,14 @@ export class Mp4ExtractorNode extends CustomSourceNode {
 
     if (!this.videoInit || this.videoStream?.doneReading) return false
 
-    const { clipTime } = this
+    const { presentationTime } = this
 
-    if (timeS < clipTime.start || timeS >= clipTime.end) {
+    if (timeS < presentationTime.start || timeS >= presentationTime.end) {
       this.media = undefined
       return false
     }
 
-    const sourceTimeUs = (timeS - clipTime.start + clipTime.source) * 1e6
+    const sourceTimeUs = this.expectedMediaTime.value * 1e6
 
     if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
       this.media = this.currentVideoFrame
@@ -139,12 +134,12 @@ export class Mp4ExtractorNode extends CustomSourceNode {
   async seekAudio(timeS: number): Promise<boolean> {
     if (!this.audioInit || (!this.audioInit.audioBuffer && this.audioStream?.doneReading)) return false
 
-    const { clipTime } = this
+    const { playableTime } = this
 
-    if (timeS < clipTime.start || timeS >= clipTime.end) return false
+    if (timeS < playableTime.start || timeS >= playableTime.end) return false
     if (this.audioInit.audioBuffer) return true
 
-    const sourceTimeUs = (timeS - clipTime.start + clipTime.source) * 1e6
+    const sourceTimeUs = (timeS - playableTime.start + playableTime.source) * 1e6
 
     if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
 

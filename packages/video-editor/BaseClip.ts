@@ -37,9 +37,9 @@ export class BaseClip {
         }
 
       const prevTime = prev.time
-      const startTime = prevTime.start + prevTime.duration - (prev.transition?.duration ?? 0)
+      const start = prevTime.start + prevTime.duration
 
-      return { start: startTime, end: startTime + this.duration.value, index: prev.index + 1 }
+      return { start, end: start + this.duration.value, index: prev.index + 1 }
     },
   )
 
@@ -49,16 +49,28 @@ export class BaseClip {
     const source = this.sourceStart.value
     return { start, source, duration, end }
   })
+  #presentationTime = computed((): ClipTime => {
+    const { time } = this
+    const inTransitionDuration = this.prev?.transition?.duration ?? 0
+
+    const start = time.start - inTransitionDuration
+    const source = time.source - inTransitionDuration
+    const duration = time.duration + inTransitionDuration
+
+    return { start, source, duration, end: time.end }
+  })
+  #playableTime = computed((): ClipTime => {
+    const presentation = this.#presentationTime.value
+    if (presentation.source >= 0) return presentation
+
+    const { start, end, source, duration } = presentation
+    return { start: start - source, source: 0, duration: duration + source, end }
+  })
 
   get transition(): { duration: number; type: string } | undefined {
     const value = this.#transition.value
 
-    return (
-      value && {
-        duration: Math.min(TRANSITION_DURATION_S, this.duration.value, this.next?.duration.value ?? Infinity),
-        ...value,
-      }
-    )
+    return value && { duration: TRANSITION_DURATION_S, ...value }
   }
   set transition(transition: BaseClip.Init['transition'] | undefined) {
     this.#transition.value = transition && { type: transition.type }
@@ -79,6 +91,12 @@ export class BaseClip {
 
   get time() {
     return this.#time.value
+  }
+  get presentationTime() {
+    return this.#presentationTime.value
+  }
+  get playableTime() {
+    return this.#playableTime.value
   }
 
   get index() {
