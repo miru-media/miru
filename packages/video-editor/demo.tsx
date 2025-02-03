@@ -1,11 +1,11 @@
 import { h } from 'fine-jsx'
 /* eslint-disable import/no-unresolved */
-import underwaterAudio from 'https://assets.miru.media/audio/underwater-ambience-freesound_community-pixabay.mp3'
-import wavesAudio from 'https://assets.miru.media/audio/waves-breaking-Dia_Pazon-pixabay.mp3'
-import turtle from 'https://assets.miru.media/fragmented-video/turtle-PaulsAdventures-pixabay.mp4'
-import waveBreaking from 'https://assets.miru.media/fragmented-video/wave-breaking-EclipseChasers-pixabay.mp4'
-import waves from 'https://assets.miru.media/fragmented-video/waves-MustaKor-pixabay.mp4'
-import wavesRocks from 'https://assets.miru.media/fragmented-video/waves-rocks-McPix22-pixabay.mp4'
+import turtle from 'https://assets.miru.media/demo/turtle-PaulsAdventures-pixabay.mp4'
+import underwaterAudio from 'https://assets.miru.media/demo/underwater-ambience-freesound_community-pixabay.mp3'
+import waveBreaking from 'https://assets.miru.media/demo/wave-breaking-EclipseChasers-pixabay.mp4'
+import wavesAudio from 'https://assets.miru.media/demo/waves-breaking-Dia_Pazon-pixabay.mp3'
+import waves from 'https://assets.miru.media/demo/waves-MustaKor-pixabay.mp4'
+import wavesRocks from 'https://assets.miru.media/demo/waves-rocks-McPix22-pixabay.mp4'
 /* eslint-enable import/no-unresolved */
 
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
@@ -50,7 +50,7 @@ const demoMovie: Movie.Init = {
           source: waveBreaking,
         },
         {
-          sourceStart: 22.18,
+          sourceStart: 2.18,
           duration: 5,
           source: turtle,
         },
