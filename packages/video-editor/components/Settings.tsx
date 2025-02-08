@@ -50,6 +50,20 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
             ))}
           </select>
         </label>
+        <label>
+          Frame rate
+          <select
+            class="settings-frame-rate"
+            onInput={(event: InputEvent) => {
+              editor.movie.frameRate.value = parseInt(event.target.value)
+            }}
+            value={() => JSON.stringify(editor.movie.frameRate.value)}
+          >
+            {[24, 25, 30, 48, 50, 60].map((value) => (
+              <option value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
       </div>
     </div>
   )
