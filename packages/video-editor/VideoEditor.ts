@@ -134,6 +134,7 @@ export class VideoEditor {
     const clip = this.selected.value
     if (!clip) return
 
+    this.selected.value = undefined
     this.#decrementMediaSource(clip.media.value.src)
     clip.track.deleteClip(clip)
     clip.dispose()
