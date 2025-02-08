@@ -19,7 +19,7 @@ export namespace AVEncoder {
 }
 
 export class AVEncoder {
-  video: Required<AVEncoder.VideoOptions> & {
+  video?: Required<AVEncoder.VideoOptions> & {
     config: VideoEncoderConfig
     encoder?: VideoEncoder
   }
@@ -27,7 +27,7 @@ export class AVEncoder {
     encoder?: AudioEncoder
   }
   muxer: Muxer<ArrayBufferTarget>
-  onOutput?: (timestamp: number) => void
+  onOutput?: (type: 'audio' | 'video', timestamp: number) => void
   onError: (error: unknown) => void
   firstVideoFrameTimeUs?: number
 
@@ -35,22 +35,22 @@ export class AVEncoder {
   AudioData = win.AudioData
 
   constructor(options: {
-    video: AVEncoder.VideoOptions
+    video?: AVEncoder.VideoOptions
     audio?: AVEncoder.AudioOptions
-    onOutput?: (timestamp: number) => void
+    onOutput?: (type: 'audio' | 'video', timestamp: number) => void
     onError: (error: unknown) => void
   }) {
     const { video, audio } = options
-    const { width, height, fps } = video
 
     this.onOutput = options.onOutput
     this.onError = options.onError
 
-    {
-      const { codec = `avc1.4200${(40).toString(16)}`, bitrate = 1e7 } = options.video.config ?? {}
+    if (video) {
+      const { width, height, fps } = video
+      const { codec = `avc1.4200${(40).toString(16)}`, bitrate = 1e7 } = video.config ?? {}
 
       this.video = {
-        ...options.video,
+        ...video,
         config: { codec, width, height, bitrate, framerate: fps },
       }
     }
@@ -64,10 +64,10 @@ export class AVEncoder {
 
     this.muxer = new Muxer({
       target: new ArrayBufferTarget(),
-      video: {
+      video: video && {
         codec: 'avc',
-        width,
-        height,
+        width: video.width,
+        height: video.height,
       },
       audio: this.audio?.config,
       fastStart: 'in-memory',
@@ -77,16 +77,18 @@ export class AVEncoder {
   async init() {
     const { audio, video } = this
 
-    await assertEncoderConfigIsSupported('video', video.config)
-    video.encoder = new VideoEncoder({
-      output: (chunk, meta) => {
-        if (this.firstVideoFrameTimeUs === undefined) this.firstVideoFrameTimeUs = chunk.timestamp
-        this.muxer.addVideoChunk(chunk, meta, chunk.timestamp - this.firstVideoFrameTimeUs)
-        this.onOutput?.(chunk.timestamp)
-      },
-      error: this.onError,
-    })
-    video.encoder.configure(video.config)
+    if (video) {
+      await assertEncoderConfigIsSupported('video', video.config)
+      video.encoder = new VideoEncoder({
+        output: (chunk, meta) => {
+          if (this.firstVideoFrameTimeUs === undefined) this.firstVideoFrameTimeUs = chunk.timestamp
+          this.muxer.addVideoChunk(chunk, meta, chunk.timestamp - this.firstVideoFrameTimeUs)
+          this.onOutput?.('video', chunk.timestamp)
+        },
+        error: this.onError,
+      })
+      video.encoder.configure(video.config)
+    }
 
     if (audio) {
       const isPolyfill = (this.AudioEncoder as unknown) == null || (this.AudioData as unknown) == null
@@ -116,7 +118,7 @@ export class AVEncoder {
             const data = (chunk as EncodedAudioChunkPolyfill)._libavGetData()
             this.muxer.addAudioChunkRaw(data, chunk.type, timestamp, chunk.duration!, meta)
           } else this.muxer.addAudioChunk(chunk, meta, timestamp)
-          this.onOutput?.(chunk.timestamp)
+          this.onOutput?.('audio', chunk.timestamp)
         },
         error: this.onError,
       })
@@ -126,15 +128,15 @@ export class AVEncoder {
   }
 
   encodeVideoFrame(frame: VideoFrame, options?: VideoEncoderEncodeOptions) {
-    this.video.encoder!.encode(frame, options)
+    this.video!.encoder!.encode(frame, options)
   }
 
   encodeAudioData(data: AudioData) {
-    this.audio?.encoder!.encode(data)
+    this.audio!.encoder!.encode(data)
   }
 
   async whenReadyForVideo() {
-    const { encoder } = this.video
+    const encoder = this.video?.encoder
     if (!encoder) throw new Error('VideoEncoder is not initialized')
 
     if (encoder.encodeQueueSize >= 20)

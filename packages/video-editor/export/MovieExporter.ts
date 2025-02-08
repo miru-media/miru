@@ -95,6 +95,8 @@ export class MovieExporter {
     })
 
     let hasAudio = false as boolean
+    let hasVideo = false as boolean
+
     await Promise.all(
       Array.from(this.sources.entries()).map(async ([source, entry]) => {
         const getAudioBuffer = async () => {
@@ -129,6 +131,7 @@ export class MovieExporter {
         const audioTrack = info.audioTracks[0] as (typeof info.audioTracks)[number] | undefined
 
         if (!entry.isAudioOnly) {
+          hasVideo = true
           const chunks: DemuxerChunkInfo[] = []
           const config = demuxer.getConfig(videoTrack)
           await assertDecoderConfigIsSupported('video', config)
@@ -174,9 +177,11 @@ export class MovieExporter {
       codec: 'opus',
     } as const
     const avEncoder = (this.avEncoder = await new AVEncoder({
-      video: { ...resolution, fps: frameRate },
+      video: hasVideo ? { ...resolution, fps: frameRate } : undefined,
       audio: hasAudio ? { config: audioEncoderConfig } : undefined,
-      onOutput: (timestamp) => onProgress?.(timestamp / durationUs),
+      onOutput: (type, timestamp) => {
+        if (type === 'video' || !hasVideo) onProgress?.(timestamp / durationUs)
+      },
       onError: (error) => (encoderError = error),
     }).init())
 
@@ -186,6 +191,7 @@ export class MovieExporter {
     await Promise.all([
       // Video
       (async () => {
+        if (!hasVideo) return
         const totalFrames = duration * frameRate
         const frameDurationUs = 1e6 / frameRate
 
