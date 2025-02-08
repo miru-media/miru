@@ -58,6 +58,7 @@ export class MovieExporter {
       resolution,
       frameRate: movie.frameRate,
       isPaused: ref(false),
+      isStalled: ref(false),
     }
     const movieInit = movie.toObject()
 

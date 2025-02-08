@@ -6,6 +6,7 @@ import { TextureResource } from './TextureResource'
 import { type AssetType, type EffectDefinition, type RendererEffectOp } from './types'
 
 export class Effect {
+  id?: string
   name: string
   ops: RendererEffectOp[]
   isDisposed = false
@@ -20,9 +21,10 @@ export class Effect {
   }
 
   constructor(definition: EffectDefinition, renderer: Renderer, onStateChange?: (effect: Effect) => void) {
-    const { name, ops } = definition
+    const { id, name, ops } = definition
 
     this.definition = definition
+    this.id = id
     this.name = name
     const resources: TextureResource[] = (this.resources = [])
     const uniforms: NonNullable<RendererEffectOp['uniforms']> = {}
@@ -100,7 +102,7 @@ export class Effect {
     })
   }
 
-  toObject() {
+  toObject(): EffectDefinition {
     return this.definition
   }
 

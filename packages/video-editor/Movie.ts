@@ -42,7 +42,7 @@ export class Movie {
 
   #currentTime = ref(0)
   #duration = computed(() => this.tracks.value.reduce((end, track) => Math.max(track.duration, end), 0))
-  #resolution: Ref<Size>
+  #resolution = ref({ width: 400, height: 400 / (9 / 16) })
 
   stats = new Stats()
 
@@ -74,7 +74,7 @@ export class Movie {
   constructor({ tracks = [], resolution, frameRate }: Movie.Init) {
     const canvas = this.displayCanvas
 
-    this.#resolution = ref(resolution)
+    this.resolution = resolution
     this.frameRate = ref(frameRate)
 
     // force webgl2 context
@@ -108,6 +108,11 @@ export class Movie {
     const _update = videoContext._update.bind(videoContext)
     this.videoContext._update = (dt) => {
       const isPlaying = !this.isPaused.value
+      const { displayCanvas } = this
+      const { width, height } = this.resolution
+
+      if (displayCanvas.width !== width) displayCanvas.width = width
+      if (displayCanvas.height !== height) displayCanvas.height = height
 
       if (isPlaying) this.stats.begin()
       _update(dt)

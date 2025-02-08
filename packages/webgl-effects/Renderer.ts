@@ -2,8 +2,10 @@ import { mat4 } from 'gl-matrix'
 import * as twgl from 'twgl.js'
 
 import { type Context2D, type CropState, type Size } from 'shared/types'
+import { timeout } from 'shared/utils'
 import {
   canvasToBlob,
+  drawImage,
   get2dContext,
   getWebgl2Context,
   isOffscreenCanvas,
@@ -14,12 +16,7 @@ import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './GL'
 import vs from './glsl/main.vert'
 import passthrough from './glsl/passthrough.frag'
-import { type AssetType, type RendererEffect, type RendererEffectOp } from './types'
-
-export interface RendererOptions {
-  gl?: WebGL2RenderingContext
-  canvas?: HTMLCanvasElement | OffscreenCanvas
-}
+import { type AssetType, type RendererDrawOptions, type RendererEffect, type RendererEffectOp } from './types'
 
 const setTextureParameters = (
   gl: WebGL2RenderingContext,
@@ -114,6 +111,19 @@ export class Renderer {
     return texture
   }
 
+  createFramebufferAndTexture(size?: Size) {
+    const gl = this.#gl
+    const texture = this.createTexture()
+    if (size) this.resizeTexture(texture, size)
+
+    const framebuffer = gl.createFramebuffer()!
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, framebuffer)
+    gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
+
+    return { framebuffer, texture }
+  }
+
   loadImage(
     texture: WebGLTexture,
     source: TexImageSource,
@@ -158,7 +168,6 @@ export class Renderer {
     }
 
     const gl = this.#gl
-    const { canvas } = gl
 
     {
       const { width, height } = resolution
@@ -167,9 +176,6 @@ export class Renderer {
         gl.bindTexture(GL.TEXTURE_2D, fb.attachments[0])
         gl.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, null)
       })
-
-      canvas.width = width
-      canvas.height = height
     }
   }
 
@@ -233,8 +239,26 @@ export class Renderer {
     this.#uniforms.u_intensity = value
   }
 
-  clear() {
-    this.#gl.clear(GL.COLOR_BUFFER_BIT)
+  resizeTexture(
+    texture: WebGLTexture,
+    size: Size,
+    {
+      target = GL.TEXTURE_2D,
+      level = 0,
+      internalFormat = GL.RGBA,
+      format = GL.RGBA,
+      type = GL.UNSIGNED_BYTE,
+    }: twgl.TextureOptions = SOURCE_TEX_OPTIONS,
+  ) {
+    const gl = this.#gl
+    gl.bindTexture(target, texture)
+    gl.texImage2D(target, level, internalFormat, size.width, size.height, 0, format, type, null)
+  }
+
+  clear(color: ArrayLike<number> = [0, 0, 0, 1]) {
+    const gl = this.#gl
+    gl.clearColor(color[0], color[1], color[2], color[3])
+    gl.clear(GL.COLOR_BUFFER_BIT)
   }
 
   getProgram(fragmentShader: string) {
@@ -260,21 +284,51 @@ export class Renderer {
     }
   }
 
-  draw(targetFrameBuffer: WebGLFramebuffer | null = null) {
+  draw(options: RendererDrawOptions = {}) {
     const gl = this.#gl
 
-    gl.useProgram(this.#passthroughProgram.program)
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
-    gl.clearColor(0, 0, 0, 1)
+    const { framebuffer: outFramebuffer = null } = options
+    const { u_resolution } = this.#uniforms
+    const resolution = { width: u_resolution[0], height: u_resolution[1] }
+
+    const viewport = [
+      options.x ?? 0,
+      options.y ?? 0,
+      options.width ?? resolution.width,
+      options.height ?? resolution.height,
+    ] as const
+
+    const setViewport = () => {
+      gl.viewport(...viewport)
+      gl.scissor(...viewport)
+    }
+
+    // if drawing directly to the canvas, update its size
+    if (!outFramebuffer) {
+      const [width, height] = this.#uniforms.u_resolution
+      const { canvas } = gl
+      canvas.width = width
+      canvas.height = height
+    }
+
     gl.enable(GL.BLEND)
+    gl.enable(gl.SCISSOR_TEST)
+
+    gl.useProgram(this.#passthroughProgram.program)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    gl.viewport(0, 0, resolution.width, resolution.height)
+    gl.scissor(0, 0, resolution.width, resolution.height)
+
     twgl.setUniforms(this.#passthroughProgram, this.#uniforms)
 
     if (this.effectOps.length === 0) {
-      gl.bindFramebuffer(GL.FRAMEBUFFER, targetFrameBuffer)
+      gl.bindFramebuffer(GL.FRAMEBUFFER, outFramebuffer)
+      setViewport()
+      if (options.clear) this.clear()
+
       gl.drawArrays(GL.TRIANGLES, 0, 6)
     } else {
-      const [width, height] = this.#uniforms.u_resolution
+      const { width, height } = resolution
       const u_matrix = mat4.ortho(mat4.create(), 0, width, height, 0, -1, 1)
       mat4.scale(u_matrix, u_matrix, [width, height, 1])
       const u_textureMatrix = mat4.identity(mat4.create())
@@ -286,11 +340,16 @@ export class Renderer {
 
       this.effectOps.forEach((op, i) => {
         const sourceFbIndex = i % 2
-        const targetFb =
-          i === lastOpIndex ? targetFrameBuffer : this.#fbs[(sourceFbIndex + 1) % 2].framebuffer
+        const isLast = i === lastOpIndex
+        const targetFb = isLast ? outFramebuffer : this.#fbs[(sourceFbIndex + 1) % 2].framebuffer
 
         gl.useProgram(op.programInfo.program)
         gl.bindFramebuffer(GL.FRAMEBUFFER, targetFb)
+
+        if (isLast) {
+          setViewport()
+          if (options.clear) this.clear()
+        }
 
         twgl.setUniforms(op.programInfo, {
           ...op.uniforms,
@@ -305,34 +364,97 @@ export class Renderer {
       })
     }
 
-    if (!targetFrameBuffer) {
-      const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
-      gl.flush()
-
-      if (sync == null) return
-      if (gl.getSyncParameter(sync, GL.SYNC_STATUS) !== GL.SIGNALED) gl.clientWaitSync(sync, 0, 0)
-      gl.deleteSync(sync)
-    }
+    if (!outFramebuffer) this.waitSync()
   }
 
-  async drawAndTransfer(context: ImageBitmapRenderingContext | Context2D) {
-    this.draw()
+  #flushWaitSync() {
+    const gl = this.#gl
+    const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
+    gl.flush()
 
+    const status = sync && gl.clientWaitSync(sync, 0, 0)
+
+    // eslint-disable-next-line no-console
+    if (status === GL.WAIT_FAILED) console.warn('[webgl-effects] gl.clientWaitSync() failed!')
+
+    return { sync, status }
+  }
+
+  waitSync() {
+    const gl = this.#gl
+    const { sync } = this.#flushWaitSync()
+
+    if (sync) gl.deleteSync(sync)
+  }
+
+  async waitAsync(intervalMs = 10) {
+    const gl = this.#gl
+    const { sync, status } = this.#flushWaitSync()
+
+    if (!sync) return
+
+    let waitRes = status
+    while (waitRes === GL.TIMEOUT_EXPIRED) {
+      await timeout(intervalMs)
+      waitRes = gl.clientWaitSync(sync, 0, 0)
+    }
+
+    gl.deleteSync(sync)
+
+    if (status === GL.WAIT_FAILED) throw new Error('[webgl-effects] gl.clientWaitSync() failed!')
+  }
+
+  async drawAndTransfer(options: RendererDrawOptions & { context: Context2D | ImageBitmapRenderingContext }) {
+    this.draw(options)
+
+    const gl = this.#gl
+    const { context } = options
     const { canvas } = context
-    setObjectSize(canvas, this.#gl.canvas)
+    const { u_resolution } = this.#uniforms
+
+    const size = {
+      width: options.width ?? u_resolution[0],
+      height: options.height ?? u_resolution[1],
+    }
+    setObjectSize(canvas, size)
+
+    const image = options.framebuffer ? await this.getImageData(options.framebuffer, size) : gl.canvas
 
     if (context instanceof ImageBitmapRenderingContext) {
-      const bitmapOrPromise = this.toImageBitmap()
+      const bitmapOrPromise = isOffscreenCanvas(gl.canvas)
+        ? gl.canvas.transferToImageBitmap()
+        : createImageBitmap(gl.canvas)
       context.transferFromImageBitmap('then' in bitmapOrPromise ? await bitmapOrPromise : bitmapOrPromise)
     } else {
-      context.drawImage(this.#gl.canvas, 0, 0)
+      drawImage(context, image, 0, 0)
     }
   }
 
-  toImageBitmap() {
-    const { canvas } = this.#gl
-    if (isOffscreenCanvas(canvas)) return canvas.transferToImageBitmap()
-    else return createImageBitmap(canvas)
+  async getImageData(framebuffer: WebGLFramebuffer, size: Size) {
+    const gl = this.#gl
+    const pbo = gl.createBuffer()
+    const image = new ImageData(size.width, size.height)
+    const { byteLength } = image.data
+
+    gl.bindBuffer(GL.PIXEL_PACK_BUFFER, pbo)
+    gl.bufferData(GL.PIXEL_PACK_BUFFER, byteLength, GL.STREAM_READ)
+
+    gl.bindFramebuffer(GL.READ_FRAMEBUFFER, framebuffer)
+    gl.readPixels(0, 0, size.width, size.height, GL.RGBA, GL.UNSIGNED_BYTE, 0)
+
+    gl.bindBuffer(GL.PIXEL_PACK_BUFFER, null)
+    gl.bindFramebuffer(GL.READ_FRAMEBUFFER, null)
+
+    try {
+      await this.waitAsync()
+      gl.bindBuffer(GL.PIXEL_PACK_BUFFER, pbo)
+      gl.getBufferSubData(GL.PIXEL_PACK_BUFFER, 0, image.data, 0, byteLength)
+    } finally {
+      gl.bindBuffer(GL.PIXEL_PACK_BUFFER, null)
+      gl.deleteBuffer(pbo)
+    }
+
+    return image
   }
 
   toBlob(options?: ImageEncodeOptions) {
@@ -341,6 +463,9 @@ export class Renderer {
 
   deleteTexture(texture: WebGLTexture) {
     this.#gl.deleteTexture(texture)
+  }
+  deleteFramebuffer(framebuffer: WebGLFramebuffer) {
+    this.#gl.deleteFramebuffer(framebuffer)
   }
 
   dispose() {

@@ -25,10 +25,10 @@ export class MediaEditorElement extends HTMLElement {
   #view = ref(EditorView.Crop)
 
   get sources(): ImageSourceOption[] {
-    return this.#editor.sourceInputs.value
+    return this.#editor.sourceInputs
   }
   set sources(value: ImageSourceOption[] | undefined) {
-    this.#editor.sourceInputs.value = value ?? []
+    this.#editor.setSources(value ?? [])
   }
 
   get editStates() {

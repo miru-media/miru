@@ -73,6 +73,21 @@ export type EffectOp =
   | EffectOp.HueRotate
 
 export interface EffectDefinition {
+  id?: string
   name: string
   ops: EffectOp[]
+}
+
+export interface RendererOptions {
+  gl?: WebGL2RenderingContext
+  canvas?: HTMLCanvasElement | OffscreenCanvas
+}
+
+export interface RendererDrawOptions {
+  framebuffer?: WebGLFramebuffer | null
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  clear?: boolean
 }

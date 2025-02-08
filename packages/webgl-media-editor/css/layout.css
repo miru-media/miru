@@ -66,49 +66,36 @@
   /* MENU BUTTON ROW */
   .miru--menu__row {
     position: relative;
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
     align-items: center;
     justify-content: space-around;
     height: var(--height-menu-row);
     overflow-y: hidden;
+  }
 
-    /* &:first-child .miru--button{
-        border-top-left-radius: 0% !important;
-        border-top-right-radius: 0% !important;
-      }
-      &:last-child .miru--button{
-        border-bottom-left-radius: 0% !important;
-        border-bottom-right-radius: 0% !important;
-      } */
+  .miru--menu__slider-row {
+    grid-template-columns: 1fr 4fr 1fr;
   }
 
   /* MENU BUTTON ROW SCROLLABLE */
   .miru--menu__row--scroll {
+    grid-auto-columns: 1fr;
     gap: var(--gap-default);
     justify-content: unset;
     height: var(--height-menu-row-scroll);
+    padding-left: 50%;
+    padding-right: 50%;
     padding-top: var(--gap-default);
     padding-bottom: calc(0.5rem + var(--gap-default)) !important;
     overflow: scroll hidden !important;
     scroll-snap-type: x proximity;
     scroll-behavior: smooth;
 
-    /* &.miru--menu__scroll-pending{
-        pointer-events: none;
-      } */
-
     .miru--button {
       flex-shrink: 0;
       scroll-snap-align: center;
-
-      &:last-child {
-        margin-right: 50%;
-      }
-
-      &:first-child {
-        margin-left: 50%;
-      }
     }
   }
 }

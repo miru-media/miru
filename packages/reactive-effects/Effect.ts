@@ -6,6 +6,9 @@ export class Effect {
   #isLoading = ref(false)
   shaders: string[] = []
 
+  get id() {
+    return this.#effect.id
+  }
   get name() {
     return this.#effect.name
   }

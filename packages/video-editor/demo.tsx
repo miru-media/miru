@@ -38,6 +38,19 @@ const demoMovie: Movie.Init = {
           sourceStart: 3,
           duration: 3,
           source: waves,
+          filter: {
+            id: 'Contrast',
+            name: 'Contrast',
+            ops: [
+              {
+                type: 'adjust_color',
+                brightness: 0,
+                contrast: 0.65,
+                saturation: 0,
+                intensity: 0.5,
+              },
+            ],
+          },
         },
         {
           sourceStart: 2,
@@ -58,6 +71,18 @@ const demoMovie: Movie.Init = {
           sourceStart: 1,
           duration: 2,
           source: waves,
+          filter: {
+            name: 'Contrast',
+            ops: [
+              {
+                type: 'adjust_color',
+                brightness: 0,
+                contrast: 0.65,
+                saturation: 0,
+                intensity: 0.5,
+              },
+            ],
+          },
         },
       ],
     },

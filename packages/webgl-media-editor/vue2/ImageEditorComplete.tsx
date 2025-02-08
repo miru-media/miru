@@ -91,7 +91,7 @@ export default {
           (value === prev || value.every((v, i) => prev[i] === v))
         )
           return
-        unwrap(this.editor).sourceInputs.value = value ?? []
+        unwrap(this.editor).setSources(value ?? [])
       },
       immediate: true,
       deep: true,

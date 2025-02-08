@@ -10,6 +10,7 @@ import { MediaEditor as MediaEditor_ } from './MediaEditor'
 interface MediaEditorProps {
   effects?: EffectDefinition[] | (() => EffectDefinition[])
   renderer?: Renderer
+  manualUpdate?: boolean
   onRenderPreview?: (sourceIndex: number, previewUrl: string) => unknown
   onEdit?: (index: number, state: ImageEditState) => unknown
 }
@@ -30,6 +31,7 @@ export class MediaEditor {
       return new MediaEditor_({
         effects: toRef(props.effects ?? getDefaultFilterDefinitions()),
         renderer: props.renderer,
+        manualUpdate: props.manualUpdate,
         onRenderPreview: async (sourceIndex) => {
           const source = this.#editor.sources.value[sourceIndex]
 
@@ -48,7 +50,7 @@ export class MediaEditor {
   }
 
   setSources(sources: ImageSourceOption[]) {
-    this.#editor.sourceInputs.value = [...sources]
+    this.#editor.setSources([...sources])
   }
 
   setEditState(sourceIndex: number, state: ImageEditState) {

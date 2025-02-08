@@ -7,7 +7,7 @@ export const RowSlider: Component<{
   label: string
 }> = ({ label, value, ...inputProps }) => {
   return (
-    <p class="miru--menu__row">
+    <p class="miru--menu__row miru--menu__slider-row">
       <button class="miru--button miru--small" disabled>
         <label class="miru--button__label">{label}</label>
       </button>

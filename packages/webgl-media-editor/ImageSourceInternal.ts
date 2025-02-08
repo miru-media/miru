@@ -8,15 +8,13 @@ import {
   toValue,
   watch,
 } from 'fine-jsx'
-import { type Renderer } from 'webgl-effects'
-import { type RendererEffectOp } from 'webgl-effects'
+import { type Renderer, type RendererDrawOptions, type RendererEffectOp } from 'webgl-effects'
 
 import { type Effect } from 'reactive-effects/Effect'
 import {
   type AdjustmentsState,
   type Context2D,
   type CropState,
-  type DisplayContext,
   type ImageEditState,
   type ImageSourceOption,
   type Size,
@@ -44,8 +42,9 @@ interface ImageSourceInternalOptions {
   sourceOption: ImageSourceOption
   thumbnailSize: Ref<Size>
   renderer: Renderer
-  effects: Ref<Effect[]>
+  effects: Ref<Map<string, Effect>>
   adjustColorOp: RendererEffectOp
+  manualUpdate: boolean
   onRenderPreview: () => void
   onEdit: (state: ImageEditState) => void
 }
@@ -59,14 +58,14 @@ export class ImageSourceInternal {
   #thumbnailSize!: Ref<Size>
   #isLoading = ref(true)
   #error = ref()
-  #effects: Ref<Effect[]>
+  #effects: Ref<Map<string, Effect>>
   #adjustColorOp: RendererEffectOp
 
   previewKey = ref(0)
   thumbnailKey = ref(0)
 
-  context: ReturnType<typeof createDisplayContext>
-  effect = ref(-1)
+  context: CanvasRenderingContext2D
+  effect = ref<string>()
   intensity = ref(DEFAULT_INTENSITY)
   crop = ref<CropState>()
   adjustments = ref<AdjustmentsState>()
@@ -94,12 +93,25 @@ export class ImageSourceInternal {
     return this.#original.value
   }
 
+  get rotated() {
+    return this.#rotated.value
+  }
+
+  get texture() {
+    return this.#texture
+  }
+
+  get thunmbnailSize() {
+    return this.#thumbnailSize.value
+  }
+
   constructor({
     sourceOption,
     thumbnailSize,
     renderer,
     effects,
     adjustColorOp,
+    manualUpdate,
     onRenderPreview,
     onEdit,
   }: ImageSourceInternalOptions) {
@@ -207,7 +219,7 @@ export class ImageSourceInternal {
             return
           }
 
-          const context = get2dContext()
+          const context = renderer.scratchPad2d
           const { canvas } = context
 
           if ((rotation / 90) % 2 === 0) {
@@ -242,7 +254,7 @@ export class ImageSourceInternal {
         () => this.previewKey.value++,
       )
 
-      watch([this.previewKey], () => this.drawPreview())
+      if (!manualUpdate) watch([this.previewKey], () => this.drawPreview())
 
       watch(
         [this.#rotated, this.#thumbnailSize, this.adjustments, this.crop, this.#isLoading, this.pausePreview],
@@ -303,7 +315,10 @@ export class ImageSourceInternal {
       const size = crop ?? rotated
       renderer.setSourceTexture(tempTexture, size, size)
       renderer.loadImage(tempTexture, cropped)
-      this.#applyEditValuesToRenderer(this.#effects.value[this.effect.value], this.adjustments.value)
+      this.#applyEditValuesToRenderer(
+        this.#effects.value.get(this.effect.value ?? ''),
+        this.adjustments.value,
+      )
 
       renderer.clear()
       renderer.draw()
@@ -312,34 +327,38 @@ export class ImageSourceInternal {
     }
   }
 
-  async drawPreview(context: ImageBitmapRenderingContext | Context2D = this.context) {
+  setPreviewSourceTexture() {
+    const rotated = this.#rotated.value
+    if (this.isLoading || rotated == undefined) return
+    this.#renderer.setSourceTexture(this.#texture, this.#previewSize.value, rotated, this.crop.value)
+  }
+
+  async drawPreview(context: Context2D | ImageBitmapRenderingContext = this.context) {
     const rotated = this.#rotated.value
     if (this.isLoading || rotated == undefined) return
 
     const renderer = this.#renderer
     renderer.setSourceTexture(this.#texture, this.#previewSize.value, rotated, this.crop.value)
-    this.#applyEditValuesToRenderer(this.#effects.value[this.effect.value], this.adjustments.value)
+    this.#applyEditValuesToRenderer(this.#effects.value.get(this.effect.value ?? ''), this.adjustments.value)
 
     renderer.clear()
-    await renderer.drawAndTransfer(context)
+    await renderer.drawAndTransfer({ context })
     if (!this.#scope.active) return
 
     this.onRenderPreview?.()
   }
 
-  async drawThumbnail(effect: Effect, context: DisplayContext) {
+  drawThumbnail(effect: Effect, options: Required<RendererDrawOptions>) {
     const rotated = this.#rotated.value
     if (this.isLoading || rotated == undefined) return
 
     const renderer = this.#renderer
 
-    renderer.setSourceTexture(this.#texture, this.#thumbnailSize.value, rotated, this.crop.value)
     this.#applyEditValuesToRenderer(effect, this.adjustments.value)
     // draw thumbnails at default intensity
     renderer.setIntensity(DEFAULT_INTENSITY)
 
-    renderer.clear()
-    await renderer.drawAndTransfer(context)
+    renderer.draw(options)
   }
 
   dispose() {

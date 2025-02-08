@@ -1,5 +1,7 @@
 import { effect, type Ref, ref } from 'fine-jsx'
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
+import { Effect } from 'reactive-effects/Effect'
 import { type Size } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 import { remap0 } from 'shared/utils/math'
@@ -28,8 +30,9 @@ export class VideoEditor {
   resize = ref<{ movieDuration: number }>()
   drag = ref({ isDragging: false, x: 0 })
   #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
+  effects: Ref<Map<string, Effect>>
 
-  showStats = ref(import.meta.env.DEV)
+  showStats = ref(false)
   exportResult = ref<{ blob: Blob; url: string }>()
   exportProgress = ref(-1)
 
@@ -45,6 +48,14 @@ export class VideoEditor {
       track.forEachClip((clip) => this.#incrementMediaSource(clip.media.value.src)),
     )
     this.canvasSize = useElementSize(this.movie.displayCanvas)
+    this.effects = ref(
+      new Map(
+        getDefaultFilterDefinitions().map((def, i) => {
+          const { id = i.toString() } = def
+          return [id, new Effect({ ...def, id }, this.movie.renderer)]
+        }),
+      ),
+    )
 
     effect(() => {
       const { movie } = this

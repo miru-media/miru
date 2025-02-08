@@ -15,7 +15,6 @@
 .miru--button {
   position: relative;
   flex-grow: 1;
-  flex-basis: 10%;
   height: 100%;
   overflow: hidden;
   cursor: pointer;
@@ -32,7 +31,8 @@
   }
 
   &.miru--small {
-    flex: 0 0 var(--height-menu-row);
+    flex-grow:0;
+    flex-shrink: 0;
   }
 
   /* BUTTON ICON */
@@ -77,8 +77,6 @@
 
   /* BUTTON LABEL */
   .miru--button__label {
-    flex-basis: calc(1em + var(--gap-default));
-    width: calc(100% - 1em);
     margin: auto;
     margin-top: 0.2em;
 

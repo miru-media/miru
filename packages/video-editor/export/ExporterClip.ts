@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'fine-jsx'
+import { type Ref, ref, toRef } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 import { type Renderer } from 'webgl-effects'
 
@@ -48,6 +48,7 @@ export class ExtractorClip extends BaseClip {
       renderer,
       movieIsPaused: ref(false),
       movieIsStalled: ref(false),
+      movieResolution: toRef(() => track.movie.resolution),
       getClipTime: () => this.time,
       getPresentationTime: () => this.presentationTime,
       getPlayableTime: () => this.playableTime,
@@ -56,7 +57,8 @@ export class ExtractorClip extends BaseClip {
     }
     this.node = context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
 
-    this.node.effect = this.filter.value
+    this.node.videoEffect = this.filter
+    this.node.videoEffectIntensity = ref(init.filterIntensity ?? 1)
   }
 
   connect() {

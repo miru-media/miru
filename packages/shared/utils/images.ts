@@ -6,7 +6,6 @@ import {
   type Context2D,
   type CropState,
   type CrossOrigin,
-  type DisplayContext as DisplayContext,
   type ImageEditState,
   type ImageSource,
   type ImageSourceObject,
@@ -48,16 +47,16 @@ export const getWebgl2Context = (canvas?: HTMLCanvasElement | OffscreenCanvas, o
   return getCanvasContext(canvas, 'webgl2', options) as WebGL2RenderingContext
 }
 
-export const get2dContext = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: unknown) => {
-  return getCanvasContext(canvas, '2d', options) as
-    | CanvasRenderingContext2D
-    | OffscreenCanvasRenderingContext2D
+export const get2dContext = <T extends HTMLCanvasElement | OffscreenCanvas>(
+  canvas?: T,
+  options?: unknown,
+) => {
+  return getCanvasContext(canvas, '2d', options) as T extends HTMLCanvasElement
+    ? CanvasRenderingContext2D
+    : OffscreenCanvasRenderingContext2D
 }
 
-export const createDisplayContext = () => {
-  const canvas = document.createElement('canvas')
-  return canvas.getContext('bitmaprenderer') as DisplayContext
-}
+export const createDisplayContext = () => get2dContext(document.createElement('canvas'))
 
 export const getImageData = (
   source: SyncImageSource,

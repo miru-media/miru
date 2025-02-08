@@ -40,7 +40,7 @@
   background-color: var(--primary-bg);
 
   .viewport {
-    max-height: min(60vh, calc(100vh - 19rem));
+    max-height: min(60vh, calc(100vh - 22rem));
     padding: 0.25rem;
   }
 
@@ -88,7 +88,14 @@
   justify-content: space-between;
 }
 
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+
 .toolbar {
+  position: relative;
   display: flex;
   flex-shrink: 0;
   gap: 0.5rem;
@@ -110,9 +117,20 @@
   font-size: 0.75rem;
   text-align: center;
 
+  &.active {
+    color: var(--yellow);
+  }
+
   .icon {
     font-size: 1.5rem;
   }
+}
+
+.filters-menu {
+  --color-bg-button: var(--gray);
+  --color-fnt-acc: var(--yellow);
+  --gap-default: 0.25rem;
+  --gap-top: 0.5rem;
 }
 
 .playback-play {
@@ -269,12 +287,14 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
+  pointer-events: none;
 
-  transition: opacity 0.5s;
+  transition: opacity 0.25s;
 
   &.loading {
     opacity: 1;
     animation: loading-spinner 2s linear infinite;
+    transition-delay: 0.25s;
   }
 
   .icon {

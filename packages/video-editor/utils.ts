@@ -144,7 +144,8 @@ export const getImageSize = (image: TexImageSource) => {
 }
 
 export const checkAndWarnVideoFile = (type: 'audio' | 'video', file: Blob) => {
-  if (!document.createElement(type).canPlayType(file.type)) {
+  const mime = file.type.replace('quicktime', 'mp4')
+  if (!document.createElement(type).canPlayType(mime)) {
     alert(`Your browser can't play this file type (${file.type})`)
     return false
   }

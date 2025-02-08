@@ -24,15 +24,17 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   framebuffer!: WebGLFramebuffer
   framebufferSize: Size = { width: 1, height: 1 }
 
-  effect?: Effect
-  intensity = 1
+  videoEffect?: Ref<Effect | undefined>
+  videoEffectIntensity?: Ref<number>
   adjustments: AdjustmentsState = { brightness: 0, contrast: 0, saturation: 0 }
 
+  abstract mediaTime: Ref<number>
+  movieTime = ref(0)
+
+  movieIsPaused: Ref<boolean>
+  movieResolution: Ref<Size>
   getClipTime: () => ClipTime
   getPresentationTime: () => ClipTime
-  movieIsPaused: Ref<boolean>
-  movieTime = ref(0)
-  abstract mediaTime: Ref<number>
 
   expectedMediaTime = computed(() => {
     const { start, end, source } = this.playableTime
@@ -110,28 +112,30 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   ) {
     super(gl, renderGraph, [], true)
 
-    this.getClipTime = options.getClipTime
-    this.getPresentationTime = options.getPresentationTime
-    this.movieIsPaused = options.movieIsPaused
     this.movieTime.value = currentTime
 
+    this.videoEffect = options.videoEffect
+    this.videoEffectIntensity = options.videoEffectIntensity
+    this.movieIsPaused = options.movieIsPaused
+    this.movieResolution = options.movieResolution
+    this.getClipTime = options.getClipTime
+    this.getPresentationTime = options.getPresentationTime
+
     const { renderer } = options
+    const { framebuffer, texture } = renderer.createFramebufferAndTexture()
+
     this.renderer = renderer
     this.mediaTexture = renderer.createTexture(FRAMEBUFFER_TEX_OPTIONS)
-    this.outTexture = renderer.createTexture(FRAMEBUFFER_TEX_OPTIONS)
+    this.framebuffer = framebuffer
+    this.outTexture = texture
     this.updateSize()
-
-    this.framebuffer = gl.createFramebuffer()!
-    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.framebuffer)
-    gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.outTexture, 0)
-    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
 
     this._displayName = 'video-editor:CustomSourceNode'
   }
 
   updateSize() {
     const gl = this._gl
-    const { width, height } = gl.canvas
+    const { width, height } = this.movieResolution.value
 
     if (width === this.framebufferSize.width && height === this.framebufferSize.height) return
 
@@ -152,28 +156,29 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   _update(movieTime: number): boolean {
     this.movieTime.value = movieTime
 
-    const { renderer, media } = this
+    const { media } = this
 
     if (!this.shouldRender || !media || ('nodeName' in media && media.nodeName === 'AUDIO')) return false
 
     this.updateSize()
 
+    const { renderer } = this
     renderer.loadImage(this.mediaTexture, media as Exclude<typeof media, HTMLAudioElement>)
 
     const gl = this._gl as WebGL2RenderingContext
-    const coverSize = fit(this.mediaSize, gl.canvas, 'cover')
+    const resolution = this.movieResolution.value
+    const coverSize = fit(this.mediaSize, resolution, 'cover')
     const transform = mat4.fromScaling(new Float32Array(16), [
-      coverSize.width / gl.canvas.width,
-      coverSize.height / gl.canvas.height,
+      coverSize.width / resolution.width,
+      coverSize.height / resolution.height,
       1,
     ])
 
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.framebuffer)
-    renderer.setSourceTexture(this.mediaTexture, gl.canvas, this.mediaSize, undefined, false, transform)
-    renderer.setEffect(this.effect)
-    renderer.setIntensity(this.intensity)
-    renderer.draw(this.framebuffer)
-
+    renderer.setSourceTexture(this.mediaTexture, resolution, this.mediaSize, undefined, false, transform)
+    renderer.setEffect(this.videoEffect?.value)
+    renderer.setIntensity(this.videoEffectIntensity?.value ?? 1)
+    renderer.draw({ framebuffer: this.framebuffer })
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
 
     return true

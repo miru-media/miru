@@ -1,4 +1,4 @@
-import { effect, ref, type Ref, watch } from 'fine-jsx'
+import { effect, ref, type Ref, toRef, watch } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 import { type EffectDefinition, type Renderer } from 'webgl-effects'
 
@@ -16,11 +16,13 @@ type TransitionType = keyof typeof VideoContext.DEFINITIONS
 export namespace Clip {
   export interface Init extends BaseClip.Init {
     filter?: EffectDefinition
+    filterIntensity?: number
   }
 }
 
 export class Clip extends BaseClip {
   filter: Ref<Effect | undefined>
+  filterIntensity: Ref<number>
 
   track: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
@@ -55,14 +57,19 @@ export class Clip extends BaseClip {
     this.error = useMediaError(this.media)
 
     this.filter = ref(init.filter && new Effect(init.filter, renderer))
+    this.filterIntensity = ref(init.filterIntensity ?? 1)
     this.transition = init.transition
 
     this.scope.run(() => {
       watch([this.media], ([media], _prev, onCleanup) => {
+        const { movie } = track
         const customNodeOptions: CustomSourceNodeOptions = {
+          videoEffect: this.filter,
+          videoEffectIntensity: this.filterIntensity,
           renderer,
-          movieIsPaused: track.movie.isPaused,
-          movieIsStalled: track.movie.isStalled,
+          movieIsPaused: movie.isPaused,
+          movieIsStalled: movie.isStalled,
+          movieResolution: toRef(() => movie.resolution),
           getClipTime: () => this.time,
           getPresentationTime: () => this.presentationTime,
           getPlayableTime: () => this.playableTime,
@@ -74,8 +81,6 @@ export class Clip extends BaseClip {
         ))
         onCleanup(() => node.destroy())
       })
-
-      effect(() => 'effect' in this.node.value && (this.node.value.effect = this.filter.value))
 
       watch(
         [
@@ -184,6 +189,7 @@ export class Clip extends BaseClip {
     return {
       ...super.toObject(),
       filter: this.filter.value?.toObject(),
+      filterIntensity: this.filterIntensity.value,
     }
   }
 

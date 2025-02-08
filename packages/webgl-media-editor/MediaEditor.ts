@@ -10,6 +10,7 @@ import { ImageSourceInternal } from './ImageSourceInternal'
 export interface MediaEditorOptions {
   effects: Ref<EffectDefinition[]>
   renderer?: Renderer
+  manualUpdate?: boolean
   onRenderPreview: (index: number) => unknown
   onEdit: (index: number, state: ImageEditState) => unknown
 }
@@ -18,15 +19,18 @@ export class MediaEditor {
   #scope: EffectScope
   renderer: Renderer
   #adjustColorEffect: Effect
+  manualUpdate: boolean
 
-  sourceInputs = ref<ImageSourceOption[]>([])
+  sourceInputs: ImageSourceOption[] = []
   sources = ref<ImageSourceInternal[]>([])
   editStatesIn = ref<(ImageEditState | undefined)[]>()
   #effectsIn: Ref<EffectDefinition[]>
-  readonly effects = ref<Effect[]>([])
+  readonly effects = ref(new Map<string, Effect>())
   #isLoadingSource = computed(() => this.sources.value.some((s) => s.isLoading))
-  #isLoadingEffects = computed(() => this.effects.value.some((e) => e.isLoading))
+  #isLoadingEffects = computed(() => Array.from(this.effects.value.values()).some((e) => e.isLoading))
   #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
+  #onRenderPreview: MediaEditorOptions['onRenderPreview']
+  #onEdit: MediaEditorOptions['onEdit']
 
   get isLoadingSource() {
     return this.#isLoadingSource.value
@@ -40,51 +44,21 @@ export class MediaEditor {
     return this.#isLoading.value
   }
 
-  constructor({ effects, renderer = new Renderer(), onRenderPreview, onEdit }: MediaEditorOptions) {
+  constructor(options: MediaEditorOptions) {
     const scope = getCurrentScope()
     if (scope == undefined) throw new Error(`[webgl-media-editor] must be run in an EffectScope`)
     this.#scope = scope
 
-    this.renderer = renderer
+    this.renderer = options.renderer ?? new Renderer()
     this.#adjustColorEffect = new Effect(
       { name: '_', ops: [{ type: 'adjust_color', brightness: 0, contrast: 0, saturation: 0 }] },
       this.renderer,
     )
-    this.#effectsIn = effects
-    watch([this.sourceInputs], ([sourceOptions], [prevSourceOptions]) => {
-      const prevSources = this.sources.value
-      const prevSourcesByOption = (prevSourceOptions ?? []).reduce((acc, so, i) => {
-        if (!acc.has(so)) acc.set(so, [])
-        const list = acc.get(so)!
-        list.push(prevSources[i])
-        return acc
-      }, new Map<ImageSourceOption, ImageSourceInternal[]>())
+    this.#effectsIn = options.effects
+    this.manualUpdate = options.manualUpdate ?? false
 
-      const newSources = new Set<ImageSourceInternal>()
-
-      this.#scope.run(() => {
-        sourceOptions.forEach((sourceOption, sourceIndex) => {
-          newSources.add(
-            prevSourcesByOption.get(sourceOption)?.shift() ??
-              new ImageSourceInternal({
-                sourceOption,
-                thumbnailSize: ref({ width: 300, height: 300 }),
-                renderer: this.renderer,
-                effects: this.effects,
-                adjustColorOp: this.#adjustColorEffect.ops[0],
-                onRenderPreview: () => onRenderPreview(sourceIndex),
-                onEdit: (state) => onEdit(sourceIndex, state),
-              }),
-          )
-        })
-      })
-
-      this.sources.value = Array.from(newSources)
-
-      prevSources.forEach((s) => !newSources.has(s) && s.dispose())
-      prevSources.length = 0
-      prevSourcesByOption.clear()
-    })
+    this.#onRenderPreview = options.onRenderPreview
+    this.#onEdit = options.onEdit
 
     watch([this.sources, this.editStatesIn], ([sources, states]) => {
       states?.forEach((state, index) => state != undefined && sources[index]?.setState(state))
@@ -99,12 +73,45 @@ export class MediaEditor {
     })
   }
 
-  renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
-    return this.sources.value[sourceIndex]?.drawPreview(context)
+  setSources(sourceOptions: ImageSourceOption[]) {
+    const prevSources = this.sources.value
+    const prevSourcesByOption = this.sourceInputs.reduce((acc, so, i) => {
+      if (!acc.has(so)) acc.set(so, [])
+      const list = acc.get(so)!
+      list.push(prevSources[i])
+      return acc
+    }, new Map<ImageSourceOption, ImageSourceInternal[]>())
+
+    const newSources = new Set<ImageSourceInternal>()
+
+    this.#scope.run(() => {
+      sourceOptions.forEach((sourceOption, sourceIndex) => {
+        newSources.add(
+          prevSourcesByOption.get(sourceOption)?.shift() ??
+            new ImageSourceInternal({
+              sourceOption,
+              thumbnailSize: ref({ width: 300, height: 300 }),
+              renderer: this.renderer,
+              effects: this.effects,
+              adjustColorOp: this.#adjustColorEffect.ops[0],
+              manualUpdate: this.manualUpdate,
+              onRenderPreview: () => this.#onRenderPreview(sourceIndex),
+              onEdit: (state) => this.#onEdit(sourceIndex, state),
+            }),
+        )
+      })
+    })
+
+    this.sources.value = Array.from(newSources)
+    this.sourceInputs = sourceOptions
+
+    prevSources.forEach((s) => !newSources.has(s) && s.dispose())
+    prevSources.length = 0
+    prevSourcesByOption.clear()
   }
 
-  async exportToImageBitmap() {
-    return this.renderer.toImageBitmap()
+  renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
+    return this.sources.value[sourceIndex]?.drawPreview(context)
   }
 
   async toBlob(sourceIndex: number, { type = 'image/jpeg', quality = 0.9 }: ImageEncodeOptions = {}) {
@@ -118,17 +125,20 @@ export class MediaEditor {
     return this.renderer.toBlob({ type, quality })
   }
 
-  async #loadEffects(effects: EffectDefinition[]) {
+  async #loadEffects(definitions: EffectDefinition[]) {
     this.effects.value.forEach((effect) => effect.dispose())
-    this.effects.value.length = 0
+    this.effects.value.clear()
 
-    this.effects.value = effects.map((effectInfo) => {
-      const effect = new Effect(effectInfo, this.renderer)
+    this.effects.value = new Map(
+      definitions.map((def, index) => {
+        const { id = index.toString() } = def
+        const effect = new Effect({ ...def, id }, this.renderer)
 
-      return effect
-    })
+        return [id, effect]
+      }),
+    )
 
-    await Promise.all(this.effects.value.map((e) => e.promise))
+    await Promise.all(Array.from(this.effects.value.values()).map((e) => e.promise))
   }
 
   watch: typeof watch = (source, callback) => this.#scope.run(() => watch(source, callback))
@@ -140,7 +150,7 @@ export class MediaEditor {
 
   dispose() {
     this.renderer.dispose()
-    this.#effectsIn.value.length = this.sourceInputs.value.length = 0
+    this.#effectsIn.value.length = this.sourceInputs.length = 0
     this.renderer = undefined as never
   }
 }

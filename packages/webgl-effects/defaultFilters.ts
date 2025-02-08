@@ -45,8 +45,13 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
 
   return [
     // SORT IN
-    { name: 'Contrast', ops: [{ type: 'adjust_color', brightness: 0, contrast: 0.65, saturation: 0 }] },
     {
+      id: 'Contrast',
+      name: 'Contrast',
+      ops: [{ type: 'adjust_color', brightness: 0, contrast: 0.65, saturation: 0 }],
+    },
+    {
+      id: 'Vintage',
       name: 'Vintage',
       ops: [
         { type: 'sepia' },
@@ -55,6 +60,7 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Black',
       name: 'Black',
       ops: [
         { type: 'adjust_color', brightness: 0, contrast: 0.9, saturation: -1 },
@@ -63,6 +69,7 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Black Soft',
       name: 'Black Soft',
       ops: [
         { type: 'adjust_color', brightness: 0, contrast: 0.65, saturation: -1 },
@@ -73,6 +80,7 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
 
     // ### C1 Warm ###
     {
+      id: 'Fall',
       name: 'Fall',
       ops: [
         { type: 'vignette', intensity: 0.3 },
@@ -80,53 +88,68 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Muted Warm',
       name: 'Muted Warm',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Muted_Warm), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Beige',
       name: 'Beige',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Beige), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Pinky',
       name: 'Pinky',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Pinky), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Romantic',
       name: 'Romantic',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Romantic), type: 'hald-lut' }, intensity: 1.0 }],
     },
     // ### C2 Bright ###
     {
+      id: 'Bleach',
       name: 'Bleach',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Bleach), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Bleach Blue',
       name: 'Bleach Blue',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Bleach_Blue), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Stocky',
       name: 'Stocky',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Stocky), type: 'hald-lut' }, intensity: 1.0 }],
     },
     // ### C3 Cyan ###
     {
+      id: 'Bright Cyan',
       name: 'Bright Cyan',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Bright_Cyan), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Crispy Cyan',
       name: 'Crispy Cyan',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Crispy_Cyan), type: 'hald-lut' }, intensity: 1.0 }],
     },
     // ### C4 Color ###
     {
+      id: 'Green → Red',
       name: 'Green → Red',
       ops: [
         { type: 'vignette', intensity: 0.25 },
         { type: 'lut', lut: rebaseAssetUrl(Green_to_Red), intensity: 0.75 },
       ],
     },
-    { name: 'Blue → Yellow', ops: [{ type: 'lut', lut: rebaseAssetUrl(Blue_to_Yellow) }] },
     {
+      id: 'Blue → Yellow',
+      name: 'Blue → Yellow',
+      ops: [{ type: 'lut', lut: rebaseAssetUrl(Blue_to_Yellow) }],
+    },
+    {
+      id: 'Purple Sky',
       name: 'Purple Sky',
       ops: [
         // { type: 'film_grain', intensity:4 },
@@ -134,43 +157,52 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Orange Cyan',
       name: 'Orange Cyan',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Orange_Cyan), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Red',
       name: 'Red',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Red), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Pink',
       name: 'Pink',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Pink), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Purple Dream',
       name: 'Purple Dream',
       ops: [
         { type: 'lut', lut: { source: rebaseAssetUrl(Purple_Dreams), type: 'hald-lut' }, intensity: 1.0 },
       ],
     },
     {
+      id: 'Puple Please',
       name: 'Puple Please',
       ops: [
         { type: 'lut', lut: { source: rebaseAssetUrl(Purple_Please), type: 'hald-lut' }, intensity: 1.0 },
       ],
     },
     {
+      id: 'Bruce Banner',
       name: 'Bruce Banner',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Bruce_Banner), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Skin',
       name: 'Skin',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Skin), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Metallic',
       name: 'Metallic',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Metallic), type: 'hald-lut' }, intensity: 1.0 }],
     },
     // ### C5 Dark ###
     {
+      id: 'Dark Contrast',
       name: 'Dark Contrast',
       ops: [
         // { type: 'film_grain', intensity:4 },
@@ -178,6 +210,7 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Green & Purple',
       name: 'Green & Purple',
       ops: [
         // { type: 'film_grain', intensity:4 },
@@ -185,10 +218,12 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Retro Warm',
       name: 'Retro Warm',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Retro_Warm), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Doomsday',
       name: 'Doomsday',
       ops: [
         // { type: 'film_grain', intensity:4 },
@@ -196,57 +231,70 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
       ],
     },
     {
+      id: 'Late Sunset',
       name: 'Late Sunset',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Late_Sunset), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Moonlight',
       name: 'Moonlight',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Moonlight), type: 'hald-lut' }, intensity: 1.0 }],
     },
     // ### C6 Crushed ###
     {
+      id: 'Cartoon',
       name: 'Cartoon',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Cartoon), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Violent Violet',
       name: 'Violent Violet',
       ops: [
         { type: 'lut', lut: { source: rebaseAssetUrl(Violent_Violet), type: 'hald-lut' }, intensity: 1.0 },
       ],
     },
     {
+      id: 'Neon',
       name: 'Neon',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Neon), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Ice',
       name: 'Ice',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Ice), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Toon Burnt',
       name: 'Toon Burnt',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Toon_Burnt), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Toon Pale',
       name: 'Toon Pale',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Toon_Pale), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Toon Sketch',
       name: 'Toon Sketch',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Toon_Sketch), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Toon Shadow',
       name: 'Toon Shadow',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Toon_Shadow), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Toon Punchy',
       name: 'Toon Punchy',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Toon_Punchy), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'Toon Goblin',
       name: 'Toon Goblin',
       ops: [{ type: 'lut', lut: { source: rebaseAssetUrl(Toon_Goblin), type: 'hald-lut' }, intensity: 1.0 }],
     },
     {
+      id: 'GB Color',
       name: 'GB Color',
       ops: [
         { type: 'lut', lut: { source: rebaseAssetUrl(Gameboy_Color), type: 'hald-lut' }, intensity: 1.0 },

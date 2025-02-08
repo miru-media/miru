@@ -47,7 +47,7 @@ export interface AdjustmentsState {
 }
 
 export interface ImageEditState {
-  effect: number
+  effect: string | undefined
   intensity: number
   crop?: CropState
   adjustments?: AdjustmentsState
@@ -69,5 +69,3 @@ export const enum EditorView {
 export type MaybeArray<T> = T | T[]
 
 export type InputEvent = Event & { target: HTMLInputElement }
-
-export type DisplayContext = ImageBitmapRenderingContext & { canvas: HTMLCanvasElement }
