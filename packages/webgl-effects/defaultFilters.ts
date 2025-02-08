@@ -77,6 +77,11 @@ export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefiniti
         { type: 'vignette', intensity: 0.2 },
       ],
     },
+    {
+      id: 'Chromatic',
+      name: 'Chromatic',
+      ops: [{ type: 'chromatic_aberration', red: 10, blue: -10, green: 0 }],
+    },
 
     // ### C1 Warm ###
     {

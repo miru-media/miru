@@ -14,7 +14,7 @@ export const RowSlider: Component<{
 
       <input
         type="range"
-        step="0.01"
+        step="any"
         class="miru--slider"
         {...inputProps}
         value={value}

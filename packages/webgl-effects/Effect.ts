@@ -82,6 +82,12 @@ export class Effect {
           uniforms.angle = op.angle
           fragmentShader = FRAGMENT_SHADERS.hue_rotate
           break
+        case 'chromatic_aberration':
+          uniforms.red = op.red
+          uniforms.blue = op.blue
+          uniforms.green = op.green
+          fragmentShader = FRAGMENT_SHADERS.chromatic_aberration
+          break
       }
 
       this.shaders.push(fragmentShader)

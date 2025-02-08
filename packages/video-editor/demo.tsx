@@ -7,6 +7,7 @@ import wavesAudio from 'https://assets.miru.media/demo/waves-breaking-Dia_Pazon-
 import waves from 'https://assets.miru.media/demo/waves-MustaKor-pixabay.mp4'
 import wavesRocks from 'https://assets.miru.media/demo/waves-rocks-McPix22-pixabay.mp4'
 /* eslint-enable import/no-unresolved */
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
 import { type InputEvent } from 'shared/types'
@@ -29,6 +30,8 @@ else
     (error: unknown) => alert(String((error as any)?.message)),
   )
 
+const filters = new Map(getDefaultFilterDefinitions().map((filter) => [filter.id, filter]))
+
 const demoMovie: Movie.Init = {
   tracks: [
     {
@@ -38,51 +41,36 @@ const demoMovie: Movie.Init = {
           sourceStart: 3,
           duration: 3,
           source: waves,
-          filter: {
-            id: 'Contrast',
-            name: 'Contrast',
-            ops: [
-              {
-                type: 'adjust_color',
-                brightness: 0,
-                contrast: 0.65,
-                saturation: 0,
-                intensity: 0.5,
-              },
-            ],
-          },
+          filter: filters.get('Chromatic'),
+          filterIntensity: 0.3,
         },
         {
           sourceStart: 2,
           duration: 4,
           source: wavesRocks,
+          filter: filters.get('Crispy Cyan'),
+          filterIntensity: 0.5,
         },
         {
           sourceStart: 3,
           duration: 3,
           source: waveBreaking,
+          filter: filters.get('Chromatic'),
+          filterIntensity: 0.75,
         },
         {
           sourceStart: 2.18,
           duration: 5,
           source: turtle,
+          filter: filters.get('Vintage'),
+          filterIntensity: 0.3,
         },
         {
           sourceStart: 1,
           duration: 2,
           source: waves,
-          filter: {
-            name: 'Contrast',
-            ops: [
-              {
-                type: 'adjust_color',
-                brightness: 0,
-                contrast: 0.65,
-                saturation: 0,
-                intensity: 0.5,
-              },
-            ],
-          },
+          filter: filters.get('Chromatic'),
+          filterIntensity: 0.3,
         },
       ],
     },

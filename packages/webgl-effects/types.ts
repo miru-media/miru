@@ -61,6 +61,14 @@ export namespace EffectOp {
     angle: number
     intensity?: number
   }
+
+  export interface ChromaticAbberation {
+    type: 'chromatic_aberration'
+    red: number
+    blue: number
+    green: number
+    intensity?: number
+  }
 }
 
 export type EffectOp =
@@ -71,6 +79,7 @@ export type EffectOp =
   | EffectOp.AdjustColor
   | EffectOp.Sepia
   | EffectOp.HueRotate
+  | EffectOp.ChromaticAbberation
 
 export interface EffectDefinition {
   id?: string
