@@ -39,8 +39,22 @@
   &:active {
     background-color: var(--white-2);
   }
-}
 
-.icon-button[disabled] {
-  cursor: default;
+  &.overlay {
+    background-color: var(--primary-bg-05);
+
+    &:hover {
+      background-color: var(--black-3);
+    }
+
+    &:active {
+      background-color: var(--black-3);
+    }
+  }
+
+  &[disabled] {
+    cursor: default;
+    background-color: transparent;
+    opacity: 0.625;
+  }
 }

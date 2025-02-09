@@ -1,10 +1,12 @@
 import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
+import { uid } from 'uid'
 
 import { TRANSITION_DURATION_S } from './constants'
 import { type ClipTime } from './types'
 
 export namespace BaseClip {
   export interface Init {
+    id?: string
     sourceStart: number
     duration: number
     source: string
@@ -13,6 +15,8 @@ export namespace BaseClip {
 }
 
 export class BaseClip {
+  id: string
+
   #prev = ref<typeof this>()
   #next = ref<typeof this>()
 
@@ -104,6 +108,7 @@ export class BaseClip {
   }
 
   constructor(init: BaseClip.Init) {
+    this.id = init.id ?? uid()
     this.sourceStart = ref(init.sourceStart)
     this.duration = ref(init.duration)
   }

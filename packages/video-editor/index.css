@@ -84,8 +84,29 @@
 }
 
 .playback-controls {
+  position: absolute;
+  bottom: 1rem;
   display: flex;
   justify-content: space-between;
+  width: 100%;
+}
+
+.secondary-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.secondary-toolbar-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.secondary-toolbar-button {
+  padding: 0.25rem;
+  font-size: 1.5rem;
 }
 
 .actions {
@@ -286,15 +307,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
   pointer-events: none;
+  opacity: 0;
 
   transition: opacity 0.25s;
 
   &.loading {
     opacity: 1;
-    animation: loading-spinner 2s linear infinite;
     transition-delay: 0.25s;
+    animation: loading-spinner 2s linear infinite;
   }
 
   .icon {

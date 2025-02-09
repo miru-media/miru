@@ -13,16 +13,16 @@ import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcod
 import { type InputEvent } from 'shared/types'
 import { isElement, useEventListener } from 'shared/utils'
 
-import { Clip } from './Clip'
+import { type Clip } from './Clip'
 import * as Actions from './components/Actions'
 import { LoadingOverlay } from './components/LoadingOverlay'
 import { PlaybackControls } from './components/PlaybackControls'
 import { renderComponentTo } from './components/renderTo'
+import { SecondaryToolbar } from './components/SecondaryToolbar'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
 import { EXPORT_VIDEO_CODEC, ReadyState, SourceNodeState } from './constants'
 import { type Movie } from './Movie'
-import { Track } from './Track'
 import { VideoEditor } from './VideoEditor'
 
 if (!hasVideoDecoder()) alert(`Your browser doesn't have the WebCodec APIs needed to export videos!`)
@@ -104,18 +104,27 @@ const Demo = () => {
   const editor = new VideoEditor()
 
   const { movie } = editor
-  const loadDemo = () => {
-    movie.resolution = demoMovie.resolution
-    movie.frameRate.value = demoMovie.frameRate
-    movie.tracks.value.forEach((track) => track.dispose())
-    movie.tracks.value = demoMovie.tracks.map((init) => new Track(init, movie, Clip))
-  }
-
   useEventListener(window, 'keydown', (event: KeyboardEvent) => {
     const target = event.composedPath()[0]
 
     if (isElement(target) && target.closest('select,input,textarea,[contenteditable=true]')) return
-    if (event.ctrlKey || event.shiftKey || event.metaKey) return
+
+    if (event.ctrlKey) {
+      switch (event.code) {
+        case 'KeyZ': {
+          if (event.shiftKey) editor.redo()
+          else editor.undo()
+          event.preventDefault()
+          break
+        }
+        case 'KeyY': {
+          editor.redo()
+          event.preventDefault()
+          break
+        }
+      }
+      return
+    }
 
     const selectClip = (clip?: Clip) => {
       if (!clip) return
@@ -162,10 +171,12 @@ const Demo = () => {
       <div class="viewport">
         {h(movie.displayCanvas, { class: 'viewport-canvas' })}
         <LoadingOverlay loading={() => !movie.isReady} />
+        <PlaybackControls editor={editor} />
       </div>
 
+      <SecondaryToolbar editor={editor} />
+
       <Settings editor={editor} />
-      <PlaybackControls editor={editor} />
       <Timeline
         editor={editor}
         children={{
@@ -175,7 +186,7 @@ const Demo = () => {
                 type="button"
                 class="add-clip"
                 style="left: calc(50% + 1rem); margin-top: 3.5rem;"
-                onClick={loadDemo}
+                onClick={() => editor.replaceMovie(demoMovie)}
               >
                 Load sample movie
               </button>

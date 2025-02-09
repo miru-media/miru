@@ -6,6 +6,8 @@
 // biome-ignore lint: disable
 export {}
 declare global {
+  const IconTablerArrowBackUp: typeof import('~icons/tabler/arrow-back-up.jsx')['default']
+  const IconTablerArrowForwardUp: typeof import('~icons/tabler/arrow-forward-up.jsx')['default']
   const IconTablerChevronLeft: typeof import('~icons/tabler/chevron-left.jsx')['default']
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx')['default']
   const IconTablerChevronsRight: typeof import('~icons/tabler/chevrons-right.jsx')['default']

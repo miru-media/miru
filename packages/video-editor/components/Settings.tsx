@@ -28,7 +28,7 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
     <div ref={root} class={() => ['settings-controls safe-padding-x', isOpen.value && 'is-open']}>
       <IconButton
         icon={IconTablerSettings}
-        class="settings-button"
+        class="settings-button overlay"
         title="Settings"
         onClick={() => (isOpen.value = !isOpen.value)}
       >

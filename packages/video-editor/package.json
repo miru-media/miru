@@ -41,6 +41,7 @@
     "stats.js": "catalog:",
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:",
+    "uid": "^2.0.2",
     "videocontext": "^0.54.0",
     "webgl-effects": "workspace:^",
     "webgl-media-editor": "workspace:^"

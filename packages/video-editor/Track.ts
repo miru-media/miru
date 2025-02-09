@@ -1,4 +1,5 @@
 import { computed, effect, type Ref, ref, watch } from 'fine-jsx'
+import { uid } from 'uid'
 import VideoContext, { type CompositingNode } from 'videocontext'
 import { type Renderer } from 'webgl-effects'
 
@@ -11,12 +12,14 @@ type TrackType = 'video' | 'audio'
 export namespace Track {
   export type Type = TrackType
   export interface Init {
+    id?: string
     type: TrackType
     clips: Clip.Init[]
   }
 }
 
 export class Track<T extends BaseClip> {
+  id: string
   #head = ref<T>()
   #tail = ref<T>()
 
@@ -56,6 +59,7 @@ export class Track<T extends BaseClip> {
   }
 
   constructor(init: Track.Init, movie: TrackMovie, ClipConstructor: Track<T>['ClipConstructor']) {
+    this.id = init.id ?? uid()
     this.type = init.type
     this.movie = movie
     this.ClipConstructor = ClipConstructor
@@ -81,6 +85,15 @@ export class Track<T extends BaseClip> {
 
   createClip(init: Clip.Init) {
     return new this.ClipConstructor(init, this.context, this, this.renderer)
+  }
+
+  positionClipAt(clip: T, index: number) {
+    if (clip.index !== index) {
+      let other = this.head
+      for (; other && other.index < index; other = other.next);
+
+      this.insertClipBefore(clip, other)
+    }
   }
 
   forEachClip(fn: (clip: T, index: number) => unknown) {

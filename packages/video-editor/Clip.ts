@@ -3,11 +3,11 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 import { type EffectDefinition, type Renderer } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/Effect'
-import { isSyncSource, loadAsyncImageSource, normalizeSourceOption } from 'shared/utils'
+import { loadAsyncImageSource } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
 import { type Track } from './Track'
-import { type CustomSourceNodeOptions } from './types'
+import { type ClipSnapshot, type CustomSourceNodeOptions } from './types'
 import { useMediaError, useMediaReadyState } from './utils'
 import { AudioElementNode, VideoElementNode } from './videoContextNodes'
 
@@ -30,6 +30,7 @@ export class Clip extends BaseClip {
   readyState = useMediaReadyState(this.media)
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
   #mediaLoadPromise?: Promise<void>
+  url = ''
   #closeMedia?: () => void
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
@@ -142,15 +143,14 @@ export class Clip extends BaseClip {
     }
   }
 
-  setMedia(value: string) {
-    const sourceOption = normalizeSourceOption(value, 'video')
-
-    if (isSyncSource(sourceOption.source)) throw new Error('[miru] expected video source')
+  setMedia(url: string) {
+    if (this.url && url === this.url) return
+    this.url = url
 
     if (this.track.type === 'audio') {
       const audio = document.createElement('audio')
       audio.preload = 'auto'
-      audio.src = value
+      audio.src = url
       audio.load()
       document.body.appendChild(audio)
 
@@ -163,7 +163,7 @@ export class Clip extends BaseClip {
       return
     }
 
-    const { promise, close } = loadAsyncImageSource(sourceOption.source, sourceOption.crossOrigin, true)
+    const { promise, close } = loadAsyncImageSource(url, undefined, true)
 
     const mediaLoadPromise = (this.#mediaLoadPromise = promise.then((media) => {
       if (this.#mediaLoadPromise !== mediaLoadPromise) return
@@ -182,15 +182,29 @@ export class Clip extends BaseClip {
   }
 
   getSource() {
-    return this.media.value.src
+    return this.url
   }
 
   toObject(): Clip.Init {
     return {
       ...super.toObject(),
+      id: this.id,
       filter: this.filter.value?.toObject(),
       filterIntensity: this.filterIntensity.value,
     }
+  }
+
+  restoreFromSnapshot({ clip: init, index }: ClipSnapshot, effects: Map<string, Effect>) {
+    this.setMedia(init.source)
+    this.sourceStart.value = init.sourceStart
+    this.duration.value = init.duration
+    this.filter.value = effects.get(init.filter?.id ?? '')
+    this.filterIntensity.value = init.filterIntensity ?? 1
+    this.track.positionClipAt(this, index)
+  }
+
+  getSnapshot(): ClipSnapshot {
+    return { clip: this.toObject(), id: this.id, trackId: this.track.id, index: this.index }
   }
 
   dispose() {
