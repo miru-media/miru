@@ -11,6 +11,7 @@ import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
 import { type InputEvent } from 'shared/types'
+import { isElement, useEventListener } from 'shared/utils'
 
 import { Clip } from './Clip'
 import * as Actions from './components/Actions'
@@ -109,6 +110,51 @@ const Demo = () => {
     movie.tracks.value.forEach((track) => track.dispose())
     movie.tracks.value = demoMovie.tracks.map((init) => new Track(init, movie, Clip))
   }
+
+  useEventListener(window, 'keydown', (event: KeyboardEvent) => {
+    const target = event.composedPath()[0]
+
+    if (isElement(target) && target.closest('select,input,textarea,[contenteditable=true]')) return
+    if (event.ctrlKey || event.shiftKey || event.metaKey) return
+
+    const selectClip = (clip?: Clip) => {
+      if (!clip) return
+      editor.selectClip(clip)
+
+      const { start, end } = clip.time
+      if (movie.currentTime < start) movie.seekTo(start)
+      else if (movie.currentTime >= end) movie.seekTo(end - 1 / movie.frameRate.value)
+
+      event.preventDefault()
+    }
+
+    switch (event.code) {
+      case 'Space':
+      case 'MediaPlayPause':
+        if (event.repeat) break
+        if (movie.isPaused.value) movie.play()
+        else movie.pause()
+        event.preventDefault()
+        break
+
+      case 'Delete':
+        editor.delete()
+        break
+
+      case 'KeyS':
+        if (event.repeat) break
+        editor.splitAtCurrentTime()
+        break
+
+      case 'ArrowLeft':
+        selectClip(editor.selected.value?.prev)
+        break
+
+      case 'ArrowRight':
+        selectClip(editor.selected.value?.next)
+        break
+    }
+  })
 
   return (
     <div class="video-editor">
