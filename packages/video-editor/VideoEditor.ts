@@ -8,6 +8,7 @@ import { useElementSize } from 'shared/utils'
 import { remap0 } from 'shared/utils/math'
 
 import { Clip } from './Clip'
+import { MIN_CLIP_DURATION_S } from './constants'
 import { Movie } from './Movie'
 import { Track } from './Track'
 import { type HistoryOp } from './types'
@@ -17,7 +18,7 @@ const getClipAtTime = (track: Track<Clip>, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
     const clipTime = clip.time
 
-    if (clipTime.start < time && time < clipTime.end) return clip
+    if (clipTime.start <= time && time < clipTime.end) return clip
   }
 }
 
@@ -236,10 +237,12 @@ export class VideoEditor {
     }
 
     if (!clip) return
+    const prevClipTime = clip.time
+    const delta = currentTime - prevClipTime.start
+
+    if (delta < MIN_CLIP_DURATION_S) return
 
     const undoFrom = clip.getSnapshot()
-    const delta = currentTime - clip.time.start
-    const prevClipTime = clip.time
 
     this.#addClip(
       clip.track,
@@ -248,7 +251,6 @@ export class VideoEditor {
         id: uid(),
         sourceStart: prevClipTime.source + delta,
         duration: prevClipTime.duration - delta,
-        source: clip.media.value.src,
       },
       clip.next?.index,
     )
