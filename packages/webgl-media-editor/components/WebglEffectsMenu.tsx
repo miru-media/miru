@@ -123,16 +123,24 @@ export const WebglEffectsMenu = (props: {
     onScroll.cancel({ upcomingOnly: true })
   })
 
+  let scrollTimeoutId: number
+
   effect((onCleanup) => {
     const scrolledId = scrolledEffectId.value
     if (scrolledId === currentEffect.value) return
 
-    let handle = setTimeout(() => {
+    scrollTimeoutId = setTimeout(() => {
       selectFilter(scrolledId, DEFAULT_INTENSITY)
-      handle = 0
+      scrollTimeoutId = 0
     }, SCROLL_SELECT_TIMEOUT_MS) as unknown as number
 
-    onCleanup(() => clearTimeout(handle))
+    onCleanup(() => clearTimeout(scrollTimeoutId))
+  })
+
+  // cancel scroll update on effect prop change
+  watch([toRef(props.effect)], ([effectId]) => {
+    clearTimeout(scrollTimeoutId)
+    if (scrolledEffectId.value !== effectId) scrollToEffect(effectId, 'smooth')
   })
 
   const onClickFilter = (

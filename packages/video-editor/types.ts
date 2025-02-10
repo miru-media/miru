@@ -39,9 +39,9 @@ export interface ClipSnapshot {
 }
 
 export type HistoryOp =
-  // create
-  | { type: 'clip:update'; from: undefined; to: ClipSnapshot }
+  // upsert
+  | { type: 'clip:update'; group?: string; from: undefined; to: ClipSnapshot }
   // upate
-  | { type: 'clip:update'; from: ClipSnapshot; to: ClipSnapshot }
+  | { type: 'clip:update'; group?: string; from: ClipSnapshot; to: ClipSnapshot }
   // delete
-  | { type: 'clip:update'; from: ClipSnapshot; to: undefined }
+  | { type: 'clip:update'; group?: string; from: ClipSnapshot; to: undefined }

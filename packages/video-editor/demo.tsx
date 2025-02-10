@@ -128,7 +128,7 @@ const Demo = () => {
 
     const selectClip = (clip?: Clip) => {
       if (!clip) return
-      editor.selectClip(clip)
+      editor.select(clip)
 
       const { start, end } = clip.time
       if (movie.currentTime < start) movie.seekTo(start)
@@ -156,11 +156,11 @@ const Demo = () => {
         break
 
       case 'ArrowLeft':
-        selectClip(editor.selected.value?.prev)
+        selectClip(editor.selected?.prev)
         break
 
       case 'ArrowRight':
-        selectClip(editor.selected.value?.next)
+        selectClip(editor.selected?.next)
         break
     }
   })

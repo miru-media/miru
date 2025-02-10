@@ -11,7 +11,7 @@ import { Clip } from './Clip'
 import { MIN_CLIP_DURATION_S } from './constants'
 import { Movie } from './Movie'
 import { Track } from './Track'
-import { type HistoryOp } from './types'
+import { type ClipSnapshot, type HistoryOp } from './types'
 import { checkAndWarnVideoFile, getMediaInfo } from './utils'
 
 const getClipAtTime = (track: Track<Clip>, time: number) => {
@@ -25,13 +25,22 @@ const getClipAtTime = (track: Track<Clip>, time: number) => {
 export class VideoEditor {
   movie: Movie
 
-  selected = ref<Clip>()
+  #selected = ref<Clip>()
   secondsPerPixel = ref(0.01)
   timelineSize = ref<Size>({ width: 1, height: 1 })
   canvasSize: Ref<Size>
 
-  resize = ref<{ movieDuration: number }>()
-  drag = ref({ isDragging: false, x: 0 })
+  resize = ref<{
+    movieDuration: number
+    from: [prev: ClipSnapshot | undefined, cur: ClipSnapshot, next: ClipSnapshot | undefined]
+  }>()
+  drag = {
+    from: undefined as
+      | [prev: ClipSnapshot | undefined, cur: ClipSnapshot, next: ClipSnapshot | undefined]
+      | undefined,
+    isDragging: ref(false),
+    x: ref(0),
+  }
   #mediaSources = new Map<string, { refCount: 0; blob?: Blob }>()
   effects: Ref<Map<string, Effect>>
 
@@ -48,7 +57,7 @@ export class VideoEditor {
     noTrack: false,
     canUndo: ref(false),
     canRedo: ref(false),
-    transaction: (fn: () => void) => {
+    batch: (fn: () => void) => {
       if (this.#history.pending) {
         fn()
         return
@@ -60,7 +69,7 @@ export class VideoEditor {
       if (ops.length) this.#history.add(ops)
     },
     add: (ops: HistoryOp[]) => {
-      const { pending, noTrack, canUndo, canRedo } = this.#history
+      const { pending, noTrack } = this.#history
       if (noTrack) return
 
       if (pending) {
@@ -68,7 +77,20 @@ export class VideoEditor {
         return
       }
 
-      const { actions, index } = this.#history
+      const { actions, index, canUndo, canRedo } = this.#history
+
+      if (ops.length === 1 && canUndo.value) {
+        const op = ops[0]
+        const prevAction = actions[actions.length - 1]
+        const prevOp = prevAction[prevAction.length - 1]
+
+
+        if (op.to && op.group && op.group === prevOp.group && op.to.id === prevOp.to?.id) {
+          prevOp.to = op.to
+          return
+        }
+      }
+
       this.#history.index++
       const removedOps = actions.splice(index + 1, Infinity, ops).flat()
 
@@ -132,6 +154,10 @@ export class VideoEditor {
     return this.#history.canRedo.value
   }
 
+  get selected() {
+    return this.#selected.value
+  }
+
   constructor(
     initialState: Movie.Init = {
       tracks: [],
@@ -185,7 +211,7 @@ export class VideoEditor {
     if (typeof source !== 'string' && !checkAndWarnVideoFile(track.type, source)) return
 
     const { duration } = await getMediaInfo(source)
-    this.#history.transaction(() => {
+    this.#history.batch(() => {
       this.#addClip(track, { id: uid(), source, sourceStart: 0, duration })
     })
   }
@@ -205,25 +231,28 @@ export class VideoEditor {
   }
 
   async replaceClipSource(source: string | Blob) {
-    const clip = this.selected.value
+    const clip = this.selected
     if (!clip) return
     if (typeof source !== 'string' && !checkAndWarnVideoFile(clip.track.type, source)) return
 
     const { duration } = await getMediaInfo(source)
 
+    const from = clip.getSnapshot()
     const url = this.#incrementMediaSource(source)
     this.#decrementMediaSource(clip.media.value.src)
     clip.duration.value = Math.min(duration, clip.duration.value)
     clip.setMedia(url)
+
+    this.#history.add([{ type: 'clip:update', from, to: clip.getSnapshot() }])
   }
 
   splitAtCurrentTime() {
-    this.#history.transaction(() => this.#splitAtCurrentTime())
+    this.#history.batch(() => this.#splitAtCurrentTime())
   }
 
   #splitAtCurrentTime() {
     const { currentTime } = this.movie
-    const trackOfSelectedClip = this.selected.value?.track
+    const trackOfSelectedClip = this.selected?.track
 
     // first search the track that contains a selected clip
     let clip = trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
@@ -259,7 +288,7 @@ export class VideoEditor {
     clip.duration.value = delta
 
     this.#incrementMediaSource(clip.media.value.src)
-    this.selectClip(clip)
+    this.select(clip)
 
     this.#history.add([{ type: 'clip:update', from: undoFrom, to: clip.getSnapshot() }])
   }
@@ -267,7 +296,7 @@ export class VideoEditor {
   #deleteClip(clip: Clip) {
     this.#history.add([{ type: 'clip:update', from: clip.getSnapshot(), to: undefined }])
 
-    this.selected.value = undefined
+    this.#selected.value = undefined
     this.#decrementMediaSource(clip.media.value.src)
     this.#objects.delete(clip.id)
     clip.track.deleteClip(clip)
@@ -275,7 +304,7 @@ export class VideoEditor {
   }
 
   delete() {
-    const clip = this.selected.value
+    const clip = this.selected
     if (!clip) return
 
     this.#deleteClip(clip)
@@ -292,8 +321,66 @@ export class VideoEditor {
     this.movie.seekTo(time)
   }
 
-  selectClip(clip: Clip | undefined) {
-    this.selected.value = clip
+  select(clip: Clip | undefined) {
+    this.#selected.value = clip
+  }
+
+  startDrag(clip: Clip) {
+    this.drag.isDragging.value = true
+    this.drag.from = [clip.prev?.getSnapshot(), clip.getSnapshot(), clip.next?.getSnapshot()]
+  }
+  endDrag() {
+    const { isDragging, x, from } = this.drag
+    isDragging.value = false
+
+    const ops: HistoryOp[] = []
+    from?.forEach(
+      (snapshot) =>
+        snapshot &&
+        ops.push({
+          type: 'clip:update',
+          from: snapshot,
+          to: (this.#objects.get(snapshot.id) as Clip).getSnapshot(),
+        }),
+    )
+
+    this.#history.add(ops)
+    x.value = 0
+  }
+
+  startResize(clip: Clip) {
+    const { movie } = this
+    movie.pause()
+
+    this.resize.value = {
+      movieDuration: movie.duration,
+      from: [clip.prev?.getSnapshot(), clip.getSnapshot(), clip.next?.getSnapshot()],
+    }
+  }
+  endResize() {
+    const resize = this.resize.value
+    if (!resize) return
+
+    const ops: HistoryOp[] = []
+    resize.from.forEach(
+      (snapshot) =>
+        snapshot &&
+        ops.push({
+          type: 'clip:update',
+          from: snapshot,
+          to: (this.#objects.get(snapshot.id) as Clip).getSnapshot(),
+        }),
+    )
+    this.#history.add(ops)
+
+    this.resize.value = undefined
+  }
+
+  setFilter(clip: Clip, filter: Effect | undefined, intensity: number) {
+    const from = clip.getSnapshot()
+    clip.filter.value = filter
+    clip.filterIntensity.value = intensity
+    this.#history.add([{ type: 'clip:update', group: 'filter', from, to: clip.getSnapshot() }])
   }
 
   secondsToPixels(time: number) {

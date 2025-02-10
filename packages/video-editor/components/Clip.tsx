@@ -44,9 +44,9 @@ export const Clip = ({
 
   const boxEdges = computed(() => {
     const { time } = clip
-    const drag = editor.drag.value
+    const { isDragging, x } = editor.drag
 
-    const left = isSelected() && drag.isDragging ? drag.x : editor.secondsToPixels(time.start)
+    const left = isSelected() && isDragging.value ? x.value : editor.secondsToPixels(time.start)
     const right = left + Math.max(MIN_CLIP_WIDTH_PX, editor.secondsToPixels(time.duration))
 
     return { left, right }
@@ -100,10 +100,7 @@ export const Clip = ({
         ],
         listeners: {
           start() {
-            editor.movie.pause()
-            editor.resize.value = {
-              movieDuration: editor.movie.duration,
-            }
+            editor.startResize(clip)
           },
           move({ rect, edges }: ResizeEvent) {
             const { prev } = clip
@@ -122,7 +119,7 @@ export const Clip = ({
             if (prev) prev.duration.value = newStart - prev.time.start
           },
           end() {
-            editor.resize.value = undefined
+            editor.endResize()
           },
         },
       },
@@ -141,11 +138,12 @@ export const Clip = ({
               interaction.stop()
               return
             }
-            editor.drag.value = { x: rect.left, isDragging: true }
-            editor.selectClip(clip)
+
+            editor.startDrag(clip)
+            editor.drag.x.value = rect.left
           },
           move({ rect }: DragEvent) {
-            editor.drag.value = { x: rect.left, isDragging: true }
+            editor.drag.x.value = rect.left
             const newStartTime = editor.pixelsToSeconds(rect.left)
             const newCenterTime = newStartTime + clip.time.duration / 2
 
@@ -175,7 +173,7 @@ export const Clip = ({
             }
           },
           end() {
-            editor.drag.value = { x: 0, isDragging: false }
+            editor.endDrag()
           },
         },
       },
@@ -190,15 +188,15 @@ export const Clip = ({
     <div
       class={() => [
         'clip',
-        isSelected() && ['is-selected', editor.drag.value.isDragging && 'is-dragging'],
+        isSelected() && ['is-selected', editor.drag.isDragging.value && 'is-dragging'],
         clip.prev && 'can-resize-left',
-        clip.next && editor.selected.value === clip.next && 'next-is-selected',
+        clip.next && editor.selected === clip.next && 'next-is-selected',
       ]}
       style={() =>
-        `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--drag-offset:${editor.drag.value.x};--clip-color:${clipColor.value}`
+        `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--drag-offset:${editor.drag.x.value};--clip-color:${clipColor.value}`
       }
     >
-      <div ref={mainContainer} class="clip-box" onClick={() => editor.selectClip(clip)}>
+      <div ref={mainContainer} class="clip-box" onClick={() => editor.select(clip)}>
         {clip.track.type === 'audio' ? 'Audio' : 'Clip'} {() => clip.index + 1}
         <div class="clip-controls">
           <div class="clip-resize-left">

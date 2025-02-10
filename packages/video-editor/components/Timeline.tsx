@@ -85,7 +85,7 @@ export const Timeline = ({
     // TODO: allow returning null
     return clip ? (
       <>
-        <Clip editor={editor} clip={clip} isSelected={() => editor.selected.value === clip} />
+        <Clip editor={editor} clip={clip} isSelected={() => editor.selected === clip} />
         <ClipList clip={clip.next} />
       </>
     ) : (
@@ -102,7 +102,7 @@ export const Timeline = ({
   }
 
   const onPointerdownScroller = (event: Event) => {
-    if (!(event.target as HTMLElement).closest('.clip')) editor.selectClip(undefined)
+    if (!(event.target as HTMLElement).closest('.clip')) editor.select(undefined)
   }
 
   return (

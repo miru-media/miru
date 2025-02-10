@@ -90,7 +90,7 @@ export class Track<T extends BaseClip> {
   positionClipAt(clip: T, index: number) {
     if (clip.index !== index) {
       let other = this.head
-      for (; other && other.index < index; other = other.next);
+      for (; (other && other.index < index) || other === clip; other = other.next);
 
       this.insertClipBefore(clip, other)
     }

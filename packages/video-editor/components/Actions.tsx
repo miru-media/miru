@@ -19,12 +19,12 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
     await editor.replaceClipSource(file)
   }
 
-  const getSelectedType = () => editor.selected.value?.track.type
+  const getSelectedType = () => editor.selected?.track.type
 
   const showFiltersMenu = ref(false)
 
   effect(() => {
-    if (editor.selected.value?.track.type !== 'video') showFiltersMenu.value = false
+    if (editor.selected?.track.type !== 'video') showFiltersMenu.value = false
   })
 
   return (
@@ -37,7 +37,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
         </IconButton>
 
         {() =>
-          editor.selected.value && (
+          editor.selected && (
             <>
               <IconButton class="toolbar-button" icon={IconTablerTrash} onClick={() => editor.delete()}>
                 Delete
@@ -45,10 +45,8 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
 
               {getSelectedType() === 'video' && (
                 <IconButton
-                  class={() => ['toolbar-button', editor.selected.value?.filter.value && 'active']}
-                  icon={toRef(() =>
-                    showFiltersMenu.value ? IconTablerFiltersFilled : IconTablerFilters,
-                  )}
+                  class={() => ['toolbar-button', editor.selected?.filter.value && 'active']}
+                  icon={toRef(() => (showFiltersMenu.value ? IconTablerFiltersFilled : IconTablerFilters))}
                   onClick={() => (showFiltersMenu.value = !showFiltersMenu.value)}
                 >
                   Filter
@@ -59,7 +57,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
                 <input
                   type="file"
                   accept={getSelectedType() === 'audio' ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES}
-                  disabled={() => !editor.selected.value}
+                  disabled={() => !editor.selected}
                   onInput={onInputVideoFile}
                   hidden
                 />
