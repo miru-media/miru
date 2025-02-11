@@ -11,6 +11,8 @@ export namespace AVEncoder {
     width: number
     height: number
     fps: number
+    /** @internal */
+    rotation?: number
   }
 
   export interface AudioOptions {
@@ -68,6 +70,7 @@ export class AVEncoder {
         codec: 'avc',
         width: video.width,
         height: video.height,
+        rotation: video.rotation,
       },
       audio: this.audio?.config,
       fastStart: 'in-memory',

@@ -83,6 +83,7 @@ declare module 'videocontext' {
     )
     get inputs(): GraphNode[]
     get outputs(): GraphNode[]
+    get destroyed(): boolean
     connect(targetNode: GraphNode, targetPort?: string | number): boolean
     disconnect(targetNode?: GraphNode): boolean
     destroy(): void

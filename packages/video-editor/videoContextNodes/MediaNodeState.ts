@@ -1,10 +1,10 @@
 import { computed, EffectScope, ref, type Ref, watch } from 'fine-jsx'
 
-import { useEventListener } from 'shared/utils'
+import { setObjectSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
 import { ReadyState } from '../constants'
-import { useMediaReadyState, useRafLoop } from '../utils'
+import { getImageSize, useMediaReadyState, useRafLoop } from '../utils'
 
 import { type MediaElementNode } from './MediaElementNode'
 
@@ -73,8 +73,7 @@ export class MediaNodeState {
             if (!('mediaSize' in node) || !('videoWidth' in media)) return
 
             const { mediaSize, playableTime } = node
-            mediaSize.width = media.videoWidth
-            mediaSize.height = media.videoHeight
+            setObjectSize(mediaSize, getImageSize(media))
 
             const { currentTime } = media
 

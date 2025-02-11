@@ -1,5 +1,6 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
 
+import { type Size } from 'shared/types'
 import { loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
@@ -136,10 +137,10 @@ export const seekAndWait = async (video: HTMLVideoElement, timeS: number, signal
   })
 }
 
-export const getImageSize = (image: TexImageSource) => {
+export const getImageSize = (image: TexImageSource): Size => {
   if ('videoWidth' in image) return { width: image.videoWidth, height: image.videoHeight }
   if ('naturalWidth' in image) return { width: image.naturalWidth, height: image.naturalHeight }
-  if ('displayWidth' in image) return { width: image.displayWidth, height: image.displayHeight }
+  if ('codedWidth' in image) return { width: image.codedWidth, height: image.codedHeight }
   return { width: image.width, height: image.height }
 }
 

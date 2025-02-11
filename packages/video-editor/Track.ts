@@ -70,7 +70,7 @@ export class Track<T extends BaseClip> {
     // TODO
     watch([() => movie.resolution], (_cur, _prev, onCleanup) => {
       const node = (this.node.value = this.context.compositor(VideoContext.DEFINITIONS.COMBINE))
-      onCleanup(() => node.destroy())
+      onCleanup(() => !node.destroyed && node.destroy())
     })
 
     init.clips.forEach((c) => this.pushSingleClip(this.createClip(c)))

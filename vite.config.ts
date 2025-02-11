@@ -64,6 +64,7 @@ export default defineConfig({
         imageeditor: resolve(import.meta.dirname, 'image/index.html'),
         videoeditor: resolve(import.meta.dirname, 'video/index.html'),
         videotrimmer: resolve(import.meta.dirname, 'trim/index.html'),
+        videotest: resolve(import.meta.dirname, 'video/test.html'),
       },
     },
   },

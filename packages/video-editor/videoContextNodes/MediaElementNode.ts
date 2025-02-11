@@ -5,7 +5,7 @@ import { useEventListener } from 'shared/utils'
 
 import { MEDIA_SYNC_INTERVAL_MS, MEDIA_SYNC_TOLERANCE_S } from '../constants'
 import { type CustomSourceNodeOptions } from '../types'
-import { useInterval } from '../utils'
+import { getImageSize, useInterval } from '../utils'
 
 import { CustomSourceNode } from './CustomSourceNode'
 import { MediaNodeState } from './MediaNodeState'
@@ -119,13 +119,14 @@ export class VideoElementNode extends MediaElementNode {
     super(media, gl, renderGraph, currentTime, options)
 
     this.scope.run(() => {
-      const getVideoSize = () => {
+      const updateVideoSize = () => {
         const { mediaSize } = this
-        mediaSize.width = media.videoWidth || 1
-        mediaSize.height = media.videoHeight || 1
+        const { width, height } = getImageSize(media)
+        mediaSize.width = width || 1
+        mediaSize.height = height || 1
       }
-      getVideoSize()
-      useEventListener(media, 'loadedmetadata', getVideoSize)
+      updateVideoSize()
+      useEventListener(media, 'loadedmetadata', updateVideoSize)
     })
   }
 }
