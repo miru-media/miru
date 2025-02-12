@@ -14,9 +14,14 @@ export interface ClipTime {
   end: number
 }
 
+export interface ClipMediaMetadata {
+  rotation: number
+}
+
 export interface CustomSourceNodeOptions {
   videoEffect?: Ref<Effect | undefined>
   videoEffectIntensity?: Ref<number>
+  mediaMetadata: ClipMediaMetadata
   renderer: Renderer
   movieIsPaused: Ref<boolean>
   movieIsStalled: Ref<boolean>
@@ -45,3 +50,10 @@ export type HistoryOp =
   | { type: 'clip:update'; group?: string; from: ClipSnapshot; to: ClipSnapshot }
   // delete
   | { type: 'clip:update'; group?: string; from: ClipSnapshot; to: undefined }
+
+export interface MediaElementInfo {
+  duration: number
+  hasAudio: boolean
+  width: number
+  height: number
+}

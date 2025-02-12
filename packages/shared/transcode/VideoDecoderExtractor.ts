@@ -7,7 +7,6 @@ import { assertDecoderConfigIsSupported } from './utils'
 export class VideoDecoderExtractor extends FrameExtractor {
   rvfcHandle = 0
   decoder?: VideoDecoder
-  config!: VideoDecoderConfig
   demuxer: MP4Demuxer
 
   constructor(demuxer: MP4Demuxer, options: FrameExtractor.Options) {
@@ -16,8 +15,7 @@ export class VideoDecoderExtractor extends FrameExtractor {
   }
 
   async init() {
-    const config = (this.config = this.demuxer.getConfig(this.track))
-    await assertDecoderConfigIsSupported('video', config)
+    await assertDecoderConfigIsSupported('video', this.videoInfo)
   }
 
   protected async _start(signal: AbortSignal) {
@@ -35,9 +33,9 @@ export class VideoDecoderExtractor extends FrameExtractor {
       error: (error) => p.reject(error),
     }))
 
-    decoder.configure(this.config)
+    decoder.configure(this.videoInfo)
     demuxer.setExtractionOptions(
-      this.track,
+      this.videoInfo.track,
       (chunk) => decoder.decode(new EncodedVideoChunk(chunk)),
       p.resolve,
     )

@@ -10,6 +10,7 @@ import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
 import { Clip } from './Clip'
+import { LoadingOverlay } from './LoadingOverlay'
 import { Ruler } from './Ruler'
 
 const Playhead = ({ editor }: { editor: VideoEditor }) => {
@@ -165,6 +166,8 @@ export const Timeline = ({
             }
             {children?.tracks}
           </div>
+
+          <LoadingOverlay loading={() => editor.isLoading} />
         </div>
       </div>
     </>

@@ -21,6 +21,7 @@ export namespace Mp4ExtractorNode {
   export interface VideoInit {
     config: VideoDecoderConfig & { codedWidth: number; codedHeight: number }
     chunks: DemuxerChunkInfo[]
+    rotation?: number
   }
 }
 export class Mp4ExtractorNode extends CustomSourceNode {
@@ -74,8 +75,8 @@ export class Mp4ExtractorNode extends CustomSourceNode {
       const { codedWidth, codedHeight } = video.config
 
       this.videoInit = video
-      this.mediaSize.width = codedWidth
-      this.mediaSize.height = codedHeight
+      ;[this.mediaSize.width, this.mediaSize.height] =
+        this.mediaMetadata.rotation % 180 ? [codedHeight, codedWidth] : [codedWidth, codedHeight]
     }
 
     const { playableTime } = this

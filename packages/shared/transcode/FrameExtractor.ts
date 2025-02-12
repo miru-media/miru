@@ -1,13 +1,13 @@
 import { get2dContext, Janitor } from '../utils'
 
-import { type MP4BoxVideoTrack } from './demuxer'
+import { type DemuxerVideoInfo } from './demuxer'
 
 export namespace FrameExtractor {
   export type OnFrame = (frame: VideoFrame | ImageBitmap, sourceTimestamp: number) => void
   export interface Options {
     start: number
     end: number
-    track: MP4BoxVideoTrack
+    videoInfo: DemuxerVideoInfo
     angle: number
   }
 }
@@ -22,7 +22,7 @@ export abstract class FrameExtractor {
   private abort: AbortController | undefined
   private promise?: Promise<void>
   private context = get2dContext(new OffscreenCanvas(0, 0))
-  track: MP4BoxVideoTrack
+  videoInfo: DemuxerVideoInfo
   startTimeS: number
   endTimeS: number
   angle: number
@@ -33,14 +33,14 @@ export abstract class FrameExtractor {
   firstFrameTimeUs = -1
 
   constructor(options: FrameExtractor.Options) {
-    this.track = options.track
+    this.videoInfo = options.videoInfo
     this.startTimeS = options.start
     this.endTimeS = options.end
     this.angle = options.angle
     this.has90DegreeRotation = Math.abs(options.angle % 180) !== 0
 
-    const { nb_samples, duration, timescale } = this.track
-    this.fps = nb_samples / (duration / timescale)
+    const { fps } = this.videoInfo
+    this.fps = fps
     this.frameDurationS = 1 / this.fps
   }
 
@@ -53,7 +53,7 @@ export abstract class FrameExtractor {
     const startTimeUs = this.startTimeS * 1e6
     const duration = this.frameDurationS * 1e6
     const { angle } = this
-    const { width, height } = this.track.video
+    const { codedWidth: width, codedHeight: height } = this.videoInfo
     const trackIsLandscape = width > height
 
     this.onImage = function (image, sourceTimeUs: number) {

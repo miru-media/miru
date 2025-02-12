@@ -1,8 +1,9 @@
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
 
 import {
+  type DemuxerAudioInfo,
   type DemuxerChunkInfo,
-  type MP4BoxAudioTrack,
+  type DemuxerVideoInfo,
   type MP4BoxFileInfo,
   type MP4BoxVideoTrack,
   MP4Demuxer,
@@ -27,7 +28,7 @@ interface PromiseResolvers {
 export class Trimmer {
   url: string
   options: TrimOptions
-  angle!: number
+  rotation!: number
   janitor?: Janitor
 
   constructor(url: string, options: TrimOptions) {
@@ -57,23 +58,22 @@ export class Trimmer {
     })
 
     const { demuxer, mp4Info } = await this.initDemuxer(abort)
-    const { videoTrack, audioTrack, rotation, angle } = this.getTracks(mp4Info)
-    this.angle = angle
-    const frameExtractor = await this.createFrameExtractor(demuxer, videoTrack)
+    const { video, audio } = mp4Info
+    this.rotation = video?.rotation ?? 0
+    const frameExtractor = await this.createFrameExtractor(demuxer, video!)
 
-    const { width, height } = videoTrack.video
     const muxer = new Muxer({
       target: new ArrayBufferTarget(),
-      video: {
+      video: video && {
         codec: 'avc',
-        width,
-        height,
-        rotation,
+        width: video.codedWidth,
+        height: video.codedHeight,
+        rotation: video.matrix,
       },
-      audio: audioTrack && {
+      audio: audio && {
         codec: 'aac',
-        sampleRate: audioTrack.audio.sample_rate,
-        numberOfChannels: audioTrack.audio.channel_count,
+        sampleRate: audio.sampleRate,
+        numberOfChannels: audio.numberOfChannels,
       },
       fastStart: options.fastStart ?? 'in-memory',
     })
@@ -86,8 +86,8 @@ export class Trimmer {
     }, abort.signal)
 
     const audioRemuxPromise = promiseWithResolvers()
-    if (audioTrack) {
-      this.setAudioRemuxing(demuxer, muxer, audioTrack, {
+    if (audio) {
+      this.setAudioRemuxing(demuxer, muxer, audio, {
         resolve: audioRemuxPromise.resolve,
         reject: (error) => {
           audioRemuxPromise.reject(error)
@@ -137,9 +137,9 @@ export class Trimmer {
     return { videoTrack, audioTrack, rotation, angle }
   }
 
-  async createFrameExtractor(demuxer: MP4Demuxer, track: MP4BoxVideoTrack) {
-    const { angle } = this
-    const options = { ...this.options, track, angle }
+  async createFrameExtractor(demuxer: MP4Demuxer, videoInfo: DemuxerVideoInfo) {
+    const { rotation: angle } = this
+    const options = { ...this.options, videoInfo, angle }
     let extractor
 
     try {
@@ -159,22 +159,22 @@ export class Trimmer {
   async createVideoEncoder(extractor: FrameExtractor, muxer: Muxer<any>, onError: (error: unknown) => void) {
     const { options } = this
     const endTimeUs = options.end * 1_000_000
-    const { width, height } = extractor.track.video
+    const { codedWidth, codedHeight } = extractor.videoInfo
     const MAX_AREA_LEVEL_30 = 1280 * 720
     const {
-      codec = `avc1.4200${(width * height > MAX_AREA_LEVEL_30 ? 40 : 31).toString(16)}`,
+      codec = `avc1.4200${(codedWidth * codedHeight > MAX_AREA_LEVEL_30 ? 40 : 31).toString(16)}`,
       bitrate = 1e6,
     } = options.encoderConfig ?? {}
 
     const config: VideoEncoderConfig = {
       codec,
-      width,
-      height,
+      width: codedWidth,
+      height: codedHeight,
       bitrate,
       framerate: extractor.fps,
     }
 
-    await assertEncoderConfigIsSupported('video',config)
+    await assertEncoderConfigIsSupported('video', config)
 
     const encoder = new VideoEncoder({
       output: (chunk, meta) => {
@@ -196,14 +196,14 @@ export class Trimmer {
   setAudioRemuxing(
     demuxer: MP4Demuxer,
     muxer: Muxer<ArrayBufferTarget>,
-    audioTrack: MP4BoxAudioTrack,
+    audio: DemuxerAudioInfo,
     { resolve, reject }: PromiseResolvers,
   ) {
     const startTimeUs = this.options.start * 1_000_000
     let firstAudioChunkTimestamp = -1
 
     demuxer.setExtractionOptions(
-      audioTrack,
+      audio.track,
       (chunk: DemuxerChunkInfo) => {
         const { timestamp } = chunk
         if (timestamp < startTimeUs) return

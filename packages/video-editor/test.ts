@@ -9,19 +9,25 @@ import { AVEncoder } from './export/AVEncoder'
 const test = async () => {
   document.body.appendChild(document.createElement('br'))
 
-  const testImageWidth = 40
+  const testImageWidth = 400
   const size = { width: testImageWidth, height: testImageWidth * 2 }
   const red = [0xff, 0, 0, 0xff]
   const green = [0, 0xff, 0, 0xff]
+  const blue = [0, 0, 0xff, 0xff]
   const byteLength = size.width * size.height * 4
 
   const testBytes = new Uint8ClampedArray(byteLength)
   for (let i = 0; i < byteLength; i += 4) {
-    testBytes.set(i < byteLength / 2 ? red : green, i)
+    const { width, height } = size
+    const x = Math.floor(i / 4) % width
+    const y = Math.floor(i / width / 4)
+
+    if (Math.abs(x / width - 0.5) < 0.125 && Math.abs(y / height - 0.5) < 0.365) testBytes.set(blue, i)
+    else testBytes.set(y < height / 2 ? red : green, i)
   }
   const testImage = new ImageData(testBytes, size.width)
 
-  const fps = 60
+  const fps = 1
   const rotatedSize = { width: size.height, height: size.width }
   const config = { codec: `avc1.4200${(40).toString(16)}`, ...size }
   const av = new AVEncoder({
@@ -31,7 +37,7 @@ const test = async () => {
   await av.init()
 
   const bitmap = await createImageBitmap(testImage)
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 10; i++) {
     const frame = new VideoFrame(bitmap, { duration: 1e6, timestamp: (i * 1e6) / fps })
     av.encodeVideoFrame(frame)
     frame.close()
@@ -56,14 +62,12 @@ const test = async () => {
   })
     .then(() => videoEl.play())
     .then(() => new Promise((r) => setTimeout(r, 200)))
-  const info = await demuxer.init(url)
+  const videoInfo = (await demuxer.init(url)).video!
 
   let sample!: DemuxerChunkInfo | undefined
-  demuxer.setExtractionOptions(info.videoTracks[0], (s) => (sample ??= s))
+  demuxer.setExtractionOptions(videoInfo.track, (s) => (sample ??= s))
   demuxer.start()
   await demuxer.flush()
-
-  const demuxerConfig = demuxer.getConfig(info.videoTracks[0])
 
   if (!sample) throw new Error(`Demuxer didn't extract any samples`)
   const chunk = new EncodedVideoChunk(sample)
@@ -74,7 +78,7 @@ const test = async () => {
     error: (e) => console.error(e),
   })
   decoder.configure({
-    ...demuxerConfig,
+    ...videoInfo,
     ...config,
     hardwareAcceleration: 'prefer-software',
   })
@@ -98,7 +102,7 @@ const test = async () => {
     bitmapOfVideoFrameHasRotatedSize: videoFrameBitmap.width === rotatedSize.width, // always false
     videoFrameOfVideoElementHasRotatedSize: videoElBitmap.width === rotatedSize.width, // true only on safari
     bitmapRotatesVideoFrame: checkImage(videoFrameBitmap, 'bitmap VideoFrame'), // always false
-    bitmapRotatesVideoElement: checkImage(videoElBitmap, 'bitmap <video>'), // false on firefox
+    bitmapRotatesVideoElement: checkImage(videoElBitmap, 'bitmap <video>'), // false only on firefox
     videoFrameRotatesVideoElement: checkImage(videoElVideoFrame, 'videoFrame VideoFrame'), // matches bitmap <video>
     context2dRotatesVideoFrame: checkImage(decodedFrame, '2d VideoFrame'), // always false
     context2dRotatesVideoElement: checkImage(videoEl, '2d <video>'), // alwasy true
@@ -124,6 +128,10 @@ const test = async () => {
     renderer.draw()
 
     renderer.waitSync()
+
+    renderer.deleteTexture(texture)
+    renderer.deleteFramebuffer(fb.framebuffer)
+    renderer.deleteTexture(fb.texture)
   }
 
   function checkImage(image: CanvasImageSource, label: string) {

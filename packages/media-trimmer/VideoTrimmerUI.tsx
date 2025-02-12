@@ -3,11 +3,17 @@ import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 
 
 import { IconButton } from 'miru-video-editor/components/IconButton'
 import { ToggleButton } from 'miru-video-editor/components/ToggleButton'
-import { formatDuration, formatTime, getMediaInfo, useMediaReadyState } from 'miru-video-editor/utils'
+import {
+  formatDuration,
+  formatTime,
+  getContainerInfo,
+  getMediaElementInfo,
+  useMediaReadyState,
+} from 'miru-video-editor/utils'
 import { useElementSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
-import { getMediaInfo, hasRequiredApis } from './utils'
+import { hasRequiredApis } from './utils'
 
 export interface LoadInfo {
   duration: number
@@ -215,13 +221,13 @@ export const VideoTrimmerUI = (props: {
 
     let info
     try {
-      info = await getMediaInfo(url)
+      info = await getContainerInfo(url)
     } catch (error) {
       unableToDecode.value = true
       props.onError(error)
 
       try {
-        info = await getMediaInfo(url)
+        info = await getMediaElementInfo(url)
       } catch {
         media.src = ''
         mediaDuration.value = 0
@@ -235,7 +241,7 @@ export const VideoTrimmerUI = (props: {
     media.src = url
     media.load()
     mediaDuration.value = info.duration
-    hasAudio.value = info.hasAudio
+    hasAudio.value = 'hasAudio' in info ? info.hasAudio : !!info.audio
 
     const stateIn = toValue(props.state)
 
@@ -247,7 +253,7 @@ export const VideoTrimmerUI = (props: {
       endTime.value = stateIn?.end ?? info.duration
     }
 
-    props.onLoad({ duration: info.duration, hasAudio: info.hasAudio })
+    props.onLoad({ duration: info.duration, hasAudio: hasAudio.value })
   })
 
   effect(() => {

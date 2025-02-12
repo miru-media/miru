@@ -2,7 +2,7 @@ import { ref } from 'fine-jsx'
 import VideoContext from 'videocontext'
 import { Renderer } from 'webgl-effects'
 
-import { type DemuxerChunkInfo, type MP4BoxFileInfo, MP4Demuxer } from 'shared/transcode/demuxer'
+import { type DemuxerChunkInfo, type Mp4ContainerInfo, MP4Demuxer } from 'shared/transcode/demuxer'
 import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
@@ -18,7 +18,7 @@ interface SourceEntry {
   start: number
   end: number
   demuxer: MP4Demuxer
-  info?: MP4BoxFileInfo
+  info?: Mp4ContainerInfo
   audio?: Mp4ExtractorNode.AudioInit
   video?: Mp4ExtractorNode.VideoInit
   isAudioOnly: boolean
@@ -105,7 +105,7 @@ export class MovieExporter {
         }
 
         const { start, end, demuxer } = entry
-        let info: MP4BoxFileInfo
+        let info: Mp4ContainerInfo
 
         try {
           info = entry.info = await demuxer.init(source)
@@ -127,30 +127,27 @@ export class MovieExporter {
           throw error
         }
 
-        const videoTrack = info.videoTracks[0]
-        const audioTrack = info.audioTracks[0] as (typeof info.audioTracks)[number] | undefined
-
         if (!entry.isAudioOnly) {
           hasVideo = true
           const chunks: DemuxerChunkInfo[] = []
-          const config = demuxer.getConfig(videoTrack)
-          await assertDecoderConfigIsSupported('video', config)
+          const videoInfo = info.video!
+          await assertDecoderConfigIsSupported('video', videoInfo)
 
-          entry.video = { config, chunks }
-          demuxer.setExtractionOptions(videoTrack, (chunk) => chunks.push(chunk))
+          entry.video = { config: videoInfo, chunks }
+          demuxer.setExtractionOptions(videoInfo.track, (chunk) => chunks.push(chunk))
         }
 
-        if (audioTrack) {
+        const audioInfo = info.audio
+        if (audioInfo) {
           hasAudio = true
           const chunks: DemuxerChunkInfo[] = []
-          const config = demuxer.getConfig(audioTrack)
 
-          entry.audio = { config, chunks }
+          entry.audio = { config: audioInfo, chunks }
 
           try {
-            await assertDecoderConfigIsSupported('audio', config)
+            await assertDecoderConfigIsSupported('audio', audioInfo)
 
-            demuxer.setExtractionOptions(audioTrack, (chunk) => chunks.push(chunk))
+            demuxer.setExtractionOptions(audioInfo.track, (chunk) => chunks.push(chunk))
           } catch {
             // If decoding the audio with WebCodecs isn't supported, decode with an AudioContext instead
             entry.audio.audioBuffer = await getAudioBuffer()

@@ -167,6 +167,23 @@ export interface MP4BoxFileInfo {
   audioTracks: MP4BoxAudioTrack[]
 }
 
+export type DemuxerVideoInfo = VideoDecoderConfig & {
+  duration: number
+  fps: number
+  codedWidth: number
+  codedHeight: number
+  matrix: [number, number, number, number, number, number, number, number, number]
+  rotation: number
+  track: MP4BoxVideoTrack
+}
+export type DemuxerAudioInfo = AudioDecoderConfig & { duration: number; track: MP4BoxAudioTrack }
+
+export interface Mp4ContainerInfo {
+  duration: number
+  video?: DemuxerVideoInfo
+  audio?: DemuxerAudioInfo
+}
+
 const MP4Box = MP4Box_ as { createFile<S = unknown, E = unknown>(): MP4BoxFile<S, E>; DataStream: any }
 
 export interface DemuxerChunkInfo {
@@ -205,7 +222,7 @@ export class MP4Demuxer {
   #promise?: Promise<void>
   #fileAbort = new AbortController()
 
-  async init(url: string, requestInit?: RequestInit) {
+  async init(url: string, requestInit?: RequestInit): Promise<Mp4ContainerInfo> {
     requestInit?.signal?.addEventListener('abort', () => this.#fileAbort.abort(), { once: true })
     const response = await fetch(url, { ...requestInit, signal: this.#fileAbort.signal })
 
@@ -218,8 +235,9 @@ export class MP4Demuxer {
     this.#inputStream = response.body
     let fileOffset = 0
 
-    return new Promise<MP4BoxFileInfo>((resolve, reject) => {
-      this.#file.onReady = (info: MP4BoxFileInfo) => resolve(info)
+    return new Promise((resolve, reject) => {
+      this.#file.onReady = (info: MP4BoxFileInfo) => resolve(this.getContainerAndTrackInfo(info))
+
       this.#file.onError = reject
 
       this.#pipePromise = this.#inputStream!.pipeTo(
@@ -241,11 +259,24 @@ export class MP4Demuxer {
     })
   }
 
-  getConfig(track: MP4BoxVideoTrack): VideoDecoderConfig & { codedWidth: number; codedHeight: number }
-  getConfig(track: MP4BoxAudioTrack): AudioDecoderConfig
-  getConfig(track: MP4BoxVideoTrack | MP4BoxAudioTrack): VideoDecoderConfig | AudioDecoderConfig {
+  getContainerAndTrackInfo(info: MP4BoxFileInfo): Mp4ContainerInfo {
+    const videoTrack = info.videoTracks[0] as MP4BoxVideoTrack | undefined
+    const audioTrack = info.audioTracks[0] as MP4BoxAudioTrack | undefined
+
+    return {
+      duration: info.duration / info.timescale,
+      video: videoTrack && this.getConfig(videoTrack),
+      audio: audioTrack && this.getConfig(audioTrack),
+    }
+  }
+
+  getConfig(track: MP4BoxVideoTrack): DemuxerVideoInfo
+  getConfig(track: MP4BoxAudioTrack): DemuxerAudioInfo
+  getConfig(track: MP4BoxVideoTrack | MP4BoxAudioTrack): DemuxerVideoInfo | DemuxerAudioInfo {
     const { codec } = track
     const trak = this.#file.getTrackById(track.id)
+    // TODO: use track.samples_duration?
+    const duration = track.duration / track.timescale
 
     if (track.type === 'audio') {
       const { audio } = track
@@ -253,8 +284,10 @@ export class MP4Demuxer {
 
       return {
         codec,
+        duration,
         sampleRate: audio.sample_rate,
         numberOfChannels: audio.channel_count,
+        track,
         ...(mp4aSampleDescription == null ? null : parseAudioStsd(mp4aSampleDescription)),
       }
     }
@@ -281,11 +314,21 @@ export class MP4Demuxer {
 
     const { width, height } = track.video
 
+    const matrix = Array.from(track.matrix).map(
+      (n, i) => n / (i % 3 === 2 ? 2 ** 30 : 2 ** 16),
+    ) as DemuxerVideoInfo['matrix']
+    const rotation = Math.atan2(matrix[3], matrix[0]) * (180 / Math.PI)
+
     return {
       codec: codec.startsWith('vp08') ? 'vp8' : codec,
+      duration,
+      fps: track.nb_samples / duration,
       description,
       codedWidth: width,
       codedHeight: height,
+      matrix,
+      rotation,
+      track,
     }
   }
 

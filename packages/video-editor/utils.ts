@@ -1,5 +1,6 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
 
+import { MP4Demuxer } from 'shared/transcode/demuxer'
 import { type Size } from 'shared/types'
 import { loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
@@ -96,7 +97,7 @@ export const formatDuration = (durationS: number) => {
   return `${minutes ? `${minutes}m ` : ''}${seconds % 60}s`
 }
 
-export const getMediaInfo = async (source: Blob | string) => {
+export const getMediaElementInfo = async (source: Blob | string) => {
   const { promise, close } = loadAsyncImageSource(source, undefined, true)
 
   const media = await promise
@@ -112,6 +113,19 @@ export const getMediaInfo = async (source: Blob | string) => {
     hasAudio,
     width: media.videoWidth,
     height: media.videoHeight,
+  }
+}
+
+export const getContainerInfo = async (source: Blob | string) => {
+  const demuxer = new MP4Demuxer()
+  const isBlob = typeof source !== 'string'
+  const url = isBlob ? URL.createObjectURL(source) : source
+
+  try {
+    return await demuxer.init(url)
+  } finally {
+    demuxer.stop()
+    if (isBlob) URL.revokeObjectURL(url)
   }
 }
 

@@ -1,4 +1,4 @@
-import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
+import { ArrayBufferTarget, Muxer, type MuxerOptions } from 'mp4-muxer'
 
 import { assertEncoderConfigIsSupported } from 'shared/transcode/utils'
 import { win } from 'shared/utils'
@@ -12,7 +12,7 @@ export namespace AVEncoder {
     height: number
     fps: number
     /** @internal */
-    rotation?: number
+    rotation?: Required<MuxerOptions<ArrayBufferTarget>>['video']['rotation']
   }
 
   export interface AudioOptions {
@@ -21,7 +21,7 @@ export namespace AVEncoder {
 }
 
 export class AVEncoder {
-  video?: Required<AVEncoder.VideoOptions> & {
+  video?: AVEncoder.VideoOptions & {
     config: VideoEncoderConfig
     encoder?: VideoEncoder
   }

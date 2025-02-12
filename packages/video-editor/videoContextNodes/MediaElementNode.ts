@@ -12,6 +12,7 @@ import { MediaNodeState } from './MediaNodeState'
 
 export class MediaElementNode extends CustomSourceNode {
   media: HTMLVideoElement | HTMLAudioElement
+  textureRotation: number
 
   declare _gl: WebGL2RenderingContext
 
@@ -44,6 +45,7 @@ export class MediaElementNode extends CustomSourceNode {
     super(gl, renderGraph, currentTime, options)
 
     this.media = media
+    this.textureRotation = options.mediaMetadata.rotation
     this.mediaState = new MediaNodeState(this, options.movieIsPaused)
     this.mediaTime = this.mediaState.time
 

@@ -181,7 +181,8 @@ const Demo = () => {
         editor={editor}
         children={{
           tracks: () =>
-            movie.isEmpty && (
+            movie.isEmpty &&
+            !editor.isLoading && (
               <button
                 type="button"
                 class="add-clip"

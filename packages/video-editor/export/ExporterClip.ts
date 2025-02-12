@@ -45,6 +45,9 @@ export class ExtractorClip extends BaseClip {
     const { source: url } = init
 
     const nodeOptions: ExtractorNodeOptions = {
+      videoEffect: this.filter,
+      videoEffectIntensity: ref(init.filterIntensity ?? 1),
+      mediaMetadata: init.sourceMetadata ?? { rotation: 0 },
       renderer,
       movieIsPaused: ref(false),
       movieIsStalled: ref(false),
@@ -56,9 +59,6 @@ export class ExtractorClip extends BaseClip {
       targetFrameRate: track.movie.frameRate.value,
     }
     this.node = context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
-
-    this.node.videoEffect = this.filter
-    this.node.videoEffectIntensity = ref(init.filterIntensity ?? 1)
   }
 
   connect() {

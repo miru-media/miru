@@ -7,7 +7,7 @@ import { loadAsyncImageSource } from 'shared/utils'
 
 import { BaseClip } from './BaseClip'
 import { type Track } from './Track'
-import { type ClipSnapshot, type CustomSourceNodeOptions } from './types'
+import { type ClipMediaMetadata, type ClipSnapshot, type CustomSourceNodeOptions } from './types'
 import { useMediaError, useMediaReadyState } from './utils'
 import { AudioElementNode, VideoElementNode } from './videoContextNodes'
 
@@ -15,6 +15,7 @@ type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export namespace Clip {
   export interface Init extends BaseClip.Init {
+    sourceMetadata?: ClipMediaMetadata
     filter?: EffectDefinition
     filterIntensity?: number
   }
@@ -31,6 +32,7 @@ export class Clip extends BaseClip {
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
   #mediaLoadPromise?: Promise<void>
   url = ''
+  mediaMetadata: ClipMediaMetadata = { rotation: 0 }
   #closeMedia?: () => void
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
@@ -54,7 +56,7 @@ export class Clip extends BaseClip {
     super(init)
 
     this.track = track
-    this.setMedia(init.source)
+    this.setMedia(init.source, init.sourceMetadata)
     this.error = useMediaError(this.media)
 
     this.filter = ref(init.filter && new Effect(init.filter, renderer))
@@ -67,6 +69,7 @@ export class Clip extends BaseClip {
         const customNodeOptions: CustomSourceNodeOptions = {
           videoEffect: this.filter,
           videoEffectIntensity: this.filterIntensity,
+          mediaMetadata: this.mediaMetadata,
           renderer,
           movieIsPaused: movie.isPaused,
           movieIsStalled: movie.isStalled,
@@ -143,9 +146,11 @@ export class Clip extends BaseClip {
     }
   }
 
-  setMedia(url: string) {
+  setMedia(url: string, options?: { rotation: number }) {
     if (this.url && url === this.url) return
+
     this.url = url
+    this.mediaMetadata.rotation = options?.rotation ?? 0
 
     if (this.track.type === 'audio') {
       const audio = document.createElement('audio')
@@ -191,11 +196,12 @@ export class Clip extends BaseClip {
       id: this.id,
       filter: this.filter.value?.toObject(),
       filterIntensity: this.filterIntensity.value,
+      sourceMetadata: this.mediaMetadata,
     }
   }
 
   restoreFromSnapshot({ clip: init, index }: ClipSnapshot, effects: Map<string, Effect>) {
-    this.setMedia(init.source)
+    this.setMedia(init.source, init.sourceMetadata)
     this.sourceStart.value = init.sourceStart
     this.duration.value = init.duration
     this.filter.value = effects.get(init.filter?.id ?? '')
@@ -204,7 +210,12 @@ export class Clip extends BaseClip {
   }
 
   getSnapshot(): ClipSnapshot {
-    return { clip: this.toObject(), id: this.id, trackId: this.track.id, index: this.index }
+    return {
+      clip: this.toObject(),
+      id: this.id,
+      trackId: this.track.id,
+      index: this.index,
+    }
   }
 
   dispose() {
