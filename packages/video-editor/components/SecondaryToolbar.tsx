@@ -1,4 +1,5 @@
 import { type InputEvent } from 'shared/types'
+import { useI18n } from 'shared/utils'
 import { remap } from 'shared/utils/math'
 
 import { type VideoEditor } from '../VideoEditor'
@@ -9,6 +10,7 @@ const MIN_PPS = 0.005
 
 export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
   const { movie } = editor
+  const { t } = useI18n()
   const maxPps = () => Math.max(0.2, (movie.duration / editor.timelineSize.value.width) * 2)
 
   return (
@@ -17,21 +19,21 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
         <IconButton
           icon={IconTablerArrowBackUp}
           class="secondary-toolbar-button"
-          title="Undo"
+          title={t('Undo')}
           disabled={() => !editor.canUndo}
           onClick={() => editor.undo()}
         >
-          <span class="sr-only">Undo</span>
+          <span class="sr-only">{t('Undo')}</span>
         </IconButton>
 
         <IconButton
           icon={IconTablerArrowForwardUp}
           class="secondary-toolbar-button"
-          title="Redo"
+          title={t('Redo')}
           disabled={() => !editor.canRedo}
           onClick={() => editor.redo()}
         >
-          <span class="sr-only">Redo</span>
+          <span class="sr-only">{t('Redo')}</span>
         </IconButton>
       </div>
 
@@ -41,7 +43,7 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
           min="0"
           max="1"
           step="any"
-          title="Timeline zoom"
+          title={t('Timeline zoom')}
           value={() => remap(editor.secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
           onInput={(event: InputEvent) => {
             editor.secondsPerPixel.value = remap(
@@ -53,7 +55,7 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
             )
           }}
         />
-        <span class="sr-only">Timeline zoom</span>
+        <span class="sr-only">{t('Timeline zoom')}</span>
       </label>
     </div>
   )

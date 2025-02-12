@@ -1,13 +1,15 @@
 import { ref } from 'fine-jsx'
 
 import { type InputEvent, type Size } from 'shared/types'
-import { useEventListener } from 'shared/utils'
+import { useEventListener, useI18n } from 'shared/utils'
 
 import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'
 
 export const Settings = ({ editor }: { editor: VideoEditor }) => {
+  const { t } = useI18n()
+
   const isOpen = ref(false)
   const root = ref<HTMLElement>()
   const resolutionOptions = [
@@ -29,15 +31,15 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
       <IconButton
         icon={IconTablerSettings}
         class="settings-button overlay"
-        title="Settings"
+        title={t('Settings')}
         onClick={() => (isOpen.value = !isOpen.value)}
       >
-        <span class="sr-only">Settings</span>
+        <span class="sr-only">{t('Settings')}</span>
       </IconButton>
 
       <div class="settings-content">
         <label>
-          Resolution
+          {t('Resolution')}
           <select
             class="settings-resolution"
             onInput={(event: InputEvent) => {
@@ -51,7 +53,7 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
           </select>
         </label>
         <label>
-          Frame rate
+          {t('Frame rate')}
           <select
             class="settings-frame-rate"
             onInput={(event: InputEvent) => {

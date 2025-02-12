@@ -1,8 +1,13 @@
 import { computed } from 'fine-jsx'
 
+import { useI18n } from 'shared/utils'
+
+import { formatDuration } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
 export const Ruler = ({ editor }: { editor: VideoEditor }) => {
+  const { languages } = useI18n()
+
   const intervalS = computed(() => {
     const range = editor.secondsPerPixel.value
     const exponent = Math.floor(Math.log2(range))
@@ -42,12 +47,12 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
       fromS = fromS - (fromS % labelIntervalS)
 
       for (let i = 0; i < nLabels; i++) {
-        const time = fromS + i * labelIntervalS
+        const timeS = fromS + i * labelIntervalS
 
-        const left = editor.secondsToPixels(time) + timelineWidth / 2
+        const left = editor.secondsToPixels(timeS) + timelineWidth / 2
         children.push(
           <div class="ruler-label text-small" style={`translate:calc(${left}px - 50%)`}>
-            {time}s
+            {formatDuration(timeS, languages.value)}
           </div>,
         )
       }

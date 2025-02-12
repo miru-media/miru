@@ -1,7 +1,7 @@
 import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref } from 'fine-jsx'
 
 import { type InputEvent } from 'shared/types'
-import { useElementSize } from 'shared/utils'
+import { useElementSize, useI18n } from 'shared/utils'
 
 import { type Clip as ClipType } from '../Clip'
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants'
@@ -50,6 +50,7 @@ export const Timeline = ({
   editor: VideoEditor
   children?: { tracks?: MaybeRefOrGetter<MaybeChild> }
 }) => {
+  const { t } = useI18n()
   const root = ref<HTMLElement>()
   const scrollContainer = ref<HTMLElement>()
   const { movie } = editor
@@ -140,13 +141,15 @@ export const Timeline = ({
                         track.count ? (
                           <>
                             <IconTablerPlus />
-                            <span class="sr-only">{track.type === 'audio' ? 'Add audio' : 'Add a clip'}</span>
+                            <span class="sr-only">
+                              {track.type === 'audio' ? t('Add audio') : t('Add a clip')}
+                            </span>
                           </>
                         ) : (
                           <>
                             <IconTablerVideo />
                             <span class="text-body">
-                              {track.type === 'audio' ? 'Click to add audio' : 'Click to add a clip'}
+                              {track.type === 'audio' ? t('Click to add audio') : t('Click to add a clip')}
                             </span>
                           </>
                         )

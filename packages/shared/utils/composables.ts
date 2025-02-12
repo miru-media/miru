@@ -1,4 +1,15 @@
-import { effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
+import {
+  computed,
+  effect,
+  inject,
+  type MaybeRefOrGetter,
+  onScopeDispose,
+  provide,
+  ref,
+  toRef,
+  toValue,
+  watch,
+} from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
 import { win } from './window'
@@ -113,4 +124,33 @@ export const useHoverCoords = (targetRef: MaybeRefOrGetter<EventTarget | undefin
   )
 
   return coords
+}
+
+interface I18nOptions {
+  translations: Record<string, Record<string, string>>
+  languages?: MaybeRefOrGetter<string[]>
+}
+
+export const createI18n = (options: I18nOptions) => {
+  const languages = toRef(options.languages ?? (navigator.languages as string[]))
+  const messages = computed(() => {
+    const { translations } = options
+    const language = languages.value.find((l) => l in translations)
+
+    return language === undefined ? undefined : translations[language]
+  })
+
+  const t = (key: string) => messages.value?.[key] ?? key
+
+  return { t, messages, languages }
+}
+
+export const provideI18n = (options: I18nOptions) => {
+  const i18n = createI18n(options)
+  provide('i18n', i18n)
+  return i18n
+}
+
+export const useI18n = () => {
+  return inject<ReturnType<typeof createI18n>>('i18n')!
 }

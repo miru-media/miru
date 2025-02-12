@@ -2,6 +2,7 @@ import { filesize } from 'filesize'
 import { effect, ref, toRef } from 'fine-jsx'
 
 import { type InputEvent } from 'shared/types'
+import { useI18n } from 'shared/utils'
 
 import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES } from '../constants'
 import { type VideoEditor } from '../VideoEditor'
@@ -11,6 +12,7 @@ import { ToolbarButton } from './ToolbarButton'
 import { VideoFilterMenu } from './VideoFilterMenu'
 
 export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
+  const { t } = useI18n()
   const onInputVideoFile = async (event: InputEvent) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -33,14 +35,14 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
 
       <div class="toolbar safe-padding-x">
         <IconButton class="toolbar-button" icon={IconTablerCut} onClick={() => editor.splitAtCurrentTime()}>
-          Split
+          {t('Split')}
         </IconButton>
 
         {() =>
           editor.selected && (
             <>
               <IconButton class="toolbar-button" icon={IconTablerTrash} onClick={() => editor.delete()}>
-                Delete
+                {t('Delete')}
               </IconButton>
 
               {getSelectedType() === 'video' && (
@@ -49,7 +51,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
                   icon={toRef(() => (showFiltersMenu.value ? IconTablerFiltersFilled : IconTablerFilters))}
                   onClick={() => (showFiltersMenu.value = !showFiltersMenu.value)}
                 >
-                  Filter
+                  {t('Filter')}
                 </IconButton>
               )}
 
@@ -61,7 +63,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
                   onInput={onInputVideoFile}
                   hidden
                 />
-                Change {getSelectedType()}
+                {t(`Change ${getSelectedType() ?? ''}`)}
               </ToolbarButton>
             </>
           )
@@ -72,7 +74,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
           icon={toRef(() => (editor.showStats.value ? IconTablerGraphFilled : IconTablerGraph))}
           onClick={() => (editor.showStats.value = !editor.showStats.value)}
         >
-          Debug
+          {t('Debug')}
         </IconButton>
 
         {import.meta.env.DEV && (
@@ -82,12 +84,12 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
             // eslint-disable-next-line no-console
             onClick={() => console.info(editor.movie.tracks.value.map((t) => t.toObject()))}
           >
-            Log state
+            {t('Log state')}
           </IconButton>
         )}
 
         <IconButton class="toolbar-button" icon={IconTablerDownload} onClick={() => editor.startExport()}>
-          Export
+          {t('Export')}
         </IconButton>
 
         {() => {

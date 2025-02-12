@@ -7,7 +7,7 @@ import { type ResizeEvent } from '@interactjs/actions/resize/plugin'
 import interact from '@interactjs/interact'
 import { computed, effect, ref, toRef } from 'fine-jsx'
 
-import { stringHashCode } from 'shared/utils'
+import { stringHashCode, useI18n } from 'shared/utils'
 
 import { type Clip as ClipType } from '../Clip'
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants'
@@ -34,6 +34,7 @@ export const Clip = ({
   editor: VideoEditor
   isSelected: () => boolean
 }) => {
+  const { t } = useI18n()
   const mainContainer = ref<HTMLElement>()
   const clipColor = computed(() => {
     if (!clip.everHadEnoughData) return 'var(--gray)'
@@ -197,7 +198,7 @@ export const Clip = ({
       }
     >
       <div ref={mainContainer} class="clip-box" onClick={() => editor.select(clip)}>
-        {clip.track.type === 'audio' ? 'Audio' : 'Clip'} {() => clip.index + 1}
+        {clip.track.type === 'audio' ? t('Audio') : t('Clip')} {() => clip.index + 1}
         <div class="clip-controls">
           <div class="clip-resize-left">
             <IconTablerChevronLeft />
@@ -211,9 +212,9 @@ export const Clip = ({
         <IconButton
           icon={toRef(() => (clip.transition ? IconTablerChevronsRight : IconTablerChevronRight))}
           class="clip-transition"
-          title="Transition"
+          title={t('Transition')}
           onClick={() => {
-            alert('Not implemented.')
+            alert(t('Not implemented.'))
           }}
         >
           <span class="sr-only">Transition</span>

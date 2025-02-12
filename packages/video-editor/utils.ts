@@ -90,11 +90,31 @@ export const formatTime = (timeS: number, withSubSeconds = true) => {
   return `${hours === '00' ? '' : `${hours}:`}${minutes}:${seconds}${withSubSeconds ? `.${subSeconds}` : ''}`
 }
 
-export const formatDuration = (durationS: number) => {
-  const seconds = Math.round(durationS)
-  const minutes = Math.trunc(seconds / 60)
+const { DurationFormat } = Intl as unknown as {
+  DurationFormat?: new (...args: unknown[]) => { format(...args: unknown[]): string }
+}
 
-  return `${minutes ? `${minutes}m ` : ''}${seconds % 60}s`
+export const formatDuration = (durationS: number, languages = navigator.languages) => {
+  const secondsFormat = new Intl.NumberFormat(languages, {
+    style: 'unit',
+    unit: 'second',
+    unitDisplay: 'narrow',
+  })
+  if (!durationS) return secondsFormat.format(0)
+
+  const seconds = Math.trunc(durationS % 60)
+  const minutes = Math.trunc(durationS / 60)
+
+  if (DurationFormat) return new DurationFormat(languages, { style: 'narrow' }).format({ minutes, seconds })
+
+  const minutesFormat = new Intl.NumberFormat(languages, {
+    style: 'unit',
+    unit: 'minute',
+    unitDisplay: 'narrow',
+  })
+
+  if (!seconds) return minutesFormat.format(minutes)
+  return `${minutes ? `${minutesFormat.format(minutes)} ` : ''}${secondsFormat.format(seconds)}s`
 }
 
 export const getMediaElementInfo = async (source: Blob | string) => {
@@ -158,15 +178,19 @@ export const getImageSize = (image: TexImageSource): Size => {
   return { width: image.width, height: image.height }
 }
 
-export const checkAndWarnVideoFile = (type: 'audio' | 'video', file: Blob) => {
+export const checkAndWarnVideoFile = (
+  type: 'audio' | 'video',
+  file: Blob,
+  translate = (text: string) => text,
+) => {
   const mime = file.type.replace('quicktime', 'mp4')
   if (!document.createElement(type).canPlayType(mime)) {
-    alert(`Your browser can't play this file type (${file.type})`)
+    alert(`${translate(`Your browser can't play this file type`)} (${file.type})`)
     return false
   }
 
   if (!/video\/(mp4|mov|quicktime)/.test(file.type))
-    alert('Export is currently only supported for MP4 source videos!')
+    alert(translate('Export is currently only supported for MP4 source videos!'))
 
   return true
 }

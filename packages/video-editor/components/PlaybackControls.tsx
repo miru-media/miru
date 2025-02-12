@@ -1,10 +1,13 @@
+import { useI18n } from 'shared/utils'
+
 import { type VideoEditor } from '../VideoEditor'
 
 import { ToggleButton } from './ToggleButton'
 
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
   const { movie } = editor
-  const playOrPause = () => (movie.isPaused.value ? 'Play' : 'Pause')
+  const { t } = useI18n()
+  const playOrPause = () => (movie.isPaused.value ? t('Play') : t('Pause'))
 
   return (
     <div class="playback-controls safe-padding-x">

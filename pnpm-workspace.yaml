@@ -4,7 +4,7 @@ packages:
 catalog:
   '@libav.js/variant-opus': '^6.5.7'
   filesize: '^10.1.6'
-  fine-jsx: '^0.0.9'
+  fine-jsx: '^0.0.10'
   gl-matrix: '^3.4.3'
   libavjs-webcodecs-polyfill: '^0.5.3'
   mp4-muxer: '^5.1.3'

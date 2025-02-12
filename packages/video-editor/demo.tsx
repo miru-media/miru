@@ -11,7 +11,7 @@ import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
 import { type InputEvent } from 'shared/types'
-import { isElement, useEventListener } from 'shared/utils'
+import { isElement, provideI18n, useEventListener } from 'shared/utils'
 
 import { type Clip } from './Clip'
 import * as Actions from './components/Actions'
@@ -22,14 +22,9 @@ import { SecondaryToolbar } from './components/SecondaryToolbar'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
 import { EXPORT_VIDEO_CODEC, ReadyState, SourceNodeState } from './constants'
+import de from './locales/de.json'
 import { type Movie } from './Movie'
 import { VideoEditor } from './VideoEditor'
-
-if (!hasVideoDecoder()) alert(`Your browser doesn't have the WebCodec APIs needed to export videos!`)
-else
-  assertEncoderConfigIsSupported('video', { codec: EXPORT_VIDEO_CODEC, width: 1920, height: 1080 }).catch(
-    (error: unknown) => alert(String((error as any)?.message)),
-  )
 
 const filters = new Map(getDefaultFilterDefinitions().map((filter) => [filter.id, filter]))
 
@@ -101,6 +96,18 @@ const demoMovie: Movie.Init = {
 }
 
 const Demo = () => {
+  const { t } = provideI18n({ translations: { de } })
+
+  if (!hasVideoDecoder()) alert(t(`Your browser doesn't have the WebCodec APIs needed to export videos!`))
+  else
+    assertEncoderConfigIsSupported('video', { codec: EXPORT_VIDEO_CODEC, width: 1920, height: 1080 }).catch(
+      (error: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error(error)
+        alert(`${t(`Your browser can't export videos in the format that we use.`)} (${EXPORT_VIDEO_CODEC})`)
+      },
+    )
+
   const editor = new VideoEditor()
 
   const { movie } = editor
@@ -189,7 +196,7 @@ const Demo = () => {
                 style="left: calc(50% + 1rem); margin-top: 3.5rem;"
                 onClick={() => editor.replaceMovie(demoMovie)}
               >
-                Load sample movie
+                {t('Load sample movie')}
               </button>
             ),
         }}

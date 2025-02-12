@@ -69,3 +69,8 @@ export const enum EditorView {
 export type MaybeArray<T> = T | T[]
 
 export type InputEvent = Event & { target: HTMLInputElement }
+
+export interface I18nOptions {
+  locales: Record<string, Record<string, string>>
+  defaultLocale?: string
+}
