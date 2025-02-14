@@ -1,11 +1,12 @@
 import { type Ref } from 'fine-jsx'
 import { type Renderer } from 'webgl-effects'
 
-import { type Effect } from 'reactive-effects/Effect'
 import { type Size } from 'shared/types'
 
-import { type Clip } from './Clip'
-import { type Movie } from './Movie'
+import { type Clip, type Track } from './nodes'
+import { type MediaAsset, type VideoEffectAsset } from './nodes/Asset'
+import { type Movie } from './nodes/Movie'
+import type * as Schema from './nodes/schema'
 
 export interface ClipTime {
   start: number
@@ -14,14 +15,10 @@ export interface ClipTime {
   end: number
 }
 
-export interface ClipMediaMetadata {
-  rotation: number
-}
-
 export interface CustomSourceNodeOptions {
-  videoEffect?: Ref<Effect | undefined>
+  videoEffect?: Ref<VideoEffectAsset | undefined>
   videoEffectIntensity?: Ref<number>
-  mediaMetadata: ClipMediaMetadata
+  source: Schema.AvMediaAsset
   renderer: Renderer
   movieIsPaused: Ref<boolean>
   movieIsStalled: Ref<boolean>
@@ -33,11 +30,11 @@ export interface CustomSourceNodeOptions {
 
 export type TrackMovie = Pick<
   Movie,
-  'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
+  'id' | 'nodes' | 'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
 >
 
 export interface ClipSnapshot {
-  clip: Clip.Init
+  clip: Schema.Clip
   id: string
   trackId: string
   index: number
@@ -56,4 +53,13 @@ export interface MediaElementInfo {
   hasAudio: boolean
   width: number
   height: number
+}
+
+export type AnyNode = Movie | Track<Clip> | Clip | MediaAsset | VideoEffectAsset
+
+export interface NodeMap {
+  map: Map<string, AnyNode>
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+  get<T extends AnyNode>(id: string): T
+  set(node: AnyNode): void
 }

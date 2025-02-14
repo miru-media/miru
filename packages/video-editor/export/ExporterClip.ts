@@ -1,20 +1,16 @@
 import { type Ref, ref, toRef } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
-import { type Renderer } from 'webgl-effects'
 
-import { Effect } from 'reactive-effects/Effect'
-
-import { BaseClip } from '../BaseClip'
-import { type Clip } from '../Clip'
-import { type Track } from '../Track'
+import { type Schema, type Track } from '../nodes'
+import { type VideoEffectAsset } from '../nodes/Asset'
+import { BaseClip } from '../nodes/BaseClip'
 
 import { type ExtractorNodeOptions, Mp4ExtractorNode } from './Mp4ExtractorNode'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export class ExtractorClip extends BaseClip {
-  source: string
-  filter: Ref<Effect | undefined>
+  filter: Ref<VideoEffectAsset | undefined>
 
   track: Track<ExtractorClip>
   node: Mp4ExtractorNode
@@ -34,31 +30,31 @@ export class ExtractorClip extends BaseClip {
     return this.node._isReady()
   }
 
-  constructor(init: Clip.Init, context: VideoContext, track: Track<ExtractorClip>, renderer: Renderer) {
+  constructor(init: Schema.Clip, track: Track<ExtractorClip>) {
     super(init)
-    this.source = init.source
-    this.track = track
-    this.context = context
-    this.filter = ref(init.filter && new Effect(init.filter, renderer))
-    this.transition = init.transition
 
-    const { source: url } = init
+    const { renderer, root } = track
+
+    this.source = root.nodes.get(init.source.assetId)
+    this.track = track
+    this.context = track.context
+    this.filter = ref(init.filter && root.nodes.get<VideoEffectAsset>(init.filter.assetId))
+    this.transition = init.transition
 
     const nodeOptions: ExtractorNodeOptions = {
       videoEffect: this.filter,
-      videoEffectIntensity: ref(init.filterIntensity ?? 1),
-      mediaMetadata: init.sourceMetadata ?? { rotation: 0 },
+      videoEffectIntensity: ref(init.filter?.intensity ?? 1),
+      source: this.source,
       renderer,
       movieIsPaused: ref(false),
       movieIsStalled: ref(false),
-      movieResolution: toRef(() => track.movie.resolution),
+      movieResolution: toRef(() => track.parent.resolution),
       getClipTime: () => this.time,
       getPresentationTime: () => this.presentationTime,
       getPlayableTime: () => this.playableTime,
-      url,
-      targetFrameRate: track.movie.frameRate.value,
+      targetFrameRate: track.parent.frameRate.value,
     }
-    this.node = context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
+    this.node = track.context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
   }
 
   connect() {

@@ -7,7 +7,7 @@ export class Effect {
   shaders: string[] = []
 
   get id() {
-    return this.#effect.id
+    return this.#effect.id ?? ''
   }
   get name() {
     return this.#effect.name

@@ -66,6 +66,19 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
             ))}
           </select>
         </label>
+
+        <IconButton
+          icon={IconTablerTrash}
+          type="button"
+          onClick={() => {
+            if (!window.confirm(t(`Are you sure you want to delete your video? \n\nThis can't be undone.`)))
+              return
+            return editor.movie.clearAllContent(true)
+          }}
+          disabled={() => editor.movie.isEmpty}
+        >
+          &nbsp;{t('Delete all content')}
+        </IconButton>
       </div>
     </div>
   )

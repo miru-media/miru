@@ -1,4 +1,14 @@
-import { effect, type MaybeRefOrGetter, onScopeDispose, type Ref, ref, toRef, toValue, watch } from 'fine-jsx'
+import {
+  computed,
+  effect,
+  type MaybeRefOrGetter,
+  onScopeDispose,
+  type Ref,
+  ref,
+  toRef,
+  toValue,
+  watch,
+} from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 import { type Renderer, type RendererEffectOp } from 'webgl-effects'
 
@@ -71,16 +81,14 @@ export const WebglEffectsMenu = (props: {
   onChange: (effectId: string | undefined, intensity: number) => void
 }) => {
   const { renderer, showIntensity, onChange } = props
-  const currentEffect = toRef(props.effect)
+  const currentEffect = computed(() => toValue(props.effect) ?? '')
 
   const container = ref<HTMLElement>()
   const scrolledEffectId = ref<string>()
   const scrollToEffect = (filterId: string | undefined, scrollBehaviour: ScrollBehavior = 'smooth') => {
     scrolledEffectId.value = filterId
-    ;(filterId == undefined
-      ? container.value?.firstElementChild
-      : container.value?.querySelector(`[data-id="${filterId}"]`)
-    )?.scrollIntoView({ behavior: scrollBehaviour, inline: 'center', block: 'nearest' })
+    const filterElement = container.value?.querySelector(`[data-id="${filterId}"]`)
+    filterElement?.scrollIntoView({ behavior: scrollBehaviour, inline: 'center', block: 'nearest' })
   }
 
   if (props.ref) {
@@ -114,7 +122,7 @@ export const WebglEffectsMenu = (props: {
     if (effectElement == null) return
 
     const id = effectElement.dataset.id
-    scrolledEffectId.value = id ? id : undefined
+    scrolledEffectId.value = id ? id : ''
   })
 
   // scroll to selected filter on mount, on container size change and on source change
@@ -217,27 +225,25 @@ export const WebglEffectsMenu = (props: {
     <div class={['miru--menu', props.class]}>
       <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
         {() =>
-          [[undefined, ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(
-            ([id, effect], thumbnailIndex) => {
-              return (
-                <EffectItem
-                  effect={effect}
-                  id={id ?? ''}
-                  imageData={imageData}
-                  thumbnailIndex={thumbnailIndex}
-                  size={props.thumbnailSize}
-                  isActive={() => currentEffect.value === id}
-                  onClick={() => onClickFilter(id)}
-                  class={[
-                    () => scrolledEffectId.value === id && 'miru--hov',
-                    () =>
-                      ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                      'miru--loading',
-                  ]}
-                ></EffectItem>
-              )
-            },
-          )
+          [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => {
+            return (
+              <EffectItem
+                effect={effect}
+                id={id || ''}
+                imageData={imageData}
+                thumbnailIndex={thumbnailIndex}
+                size={props.thumbnailSize}
+                isActive={() => currentEffect.value === id}
+                onClick={() => onClickFilter(id)}
+                class={[
+                  () => scrolledEffectId.value === id && 'miru--hov',
+                  () =>
+                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                    'miru--loading',
+                ]}
+              ></EffectItem>
+            )
+          })
         }
       </p>
 
@@ -249,7 +255,7 @@ export const WebglEffectsMenu = (props: {
           max: 1,
           value: toRef(props.intensity),
           onInput: onInputIntensity,
-          disabled: () => currentEffect.value == undefined,
+          disabled: () => !currentEffect.value,
         })
       }
     </div>

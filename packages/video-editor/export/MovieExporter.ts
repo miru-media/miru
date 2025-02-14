@@ -1,13 +1,12 @@
 import { ref } from 'fine-jsx'
 import VideoContext from 'videocontext'
-import { Renderer } from 'webgl-effects'
 
 import { type DemuxerChunkInfo, type Mp4ContainerInfo, MP4Demuxer } from 'shared/transcode/demuxer'
 import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
-import { getWebgl2Context, setObjectSize } from 'shared/utils'
+import { setObjectSize } from 'shared/utils'
 
-import { type Movie } from '../Movie'
-import { Track } from '../Track'
+import { type Movie } from '../nodes/Movie'
+import { Track } from '../nodes/Track'
 import { type TrackMovie } from '../types'
 
 import { AVEncoder } from './AVEncoder'
@@ -28,8 +27,6 @@ let audioContext: AudioContext | undefined
 
 export class MovieExporter {
   movie: Movie
-  gl = getWebgl2Context()
-  renderer = new Renderer({ gl: this.gl })
   videoContext!: VideoContext
   tracks: Track<ExtractorClip>[] = []
   clips: ExtractorClip[] = []
@@ -37,22 +34,24 @@ export class MovieExporter {
   avEncoder?: AVEncoder
 
   constructor(movie: Movie) {
-    setObjectSize(this.gl.canvas, movie.resolution)
+    setObjectSize(movie.gl.canvas, movie.resolution)
 
     this.movie = movie
   }
 
   async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
-    const { movie, renderer } = this
-    const { duration, resolution } = movie
+    const { movie } = this
+    const { duration, resolution, renderer } = movie
     const frameRate = movie.frameRate.value
-    const { canvas } = this.gl
+    const { canvas } = movie.gl
 
-    canvas.getContext = () => this.gl as any
+    canvas.getContext = () => movie.gl as any
     const videoContext = (this.videoContext = new VideoContext(canvas, undefined, { manualUpdate: true }))
     delete (canvas as Partial<typeof canvas>).getContext
 
     const movieStub: TrackMovie = {
+      id: movie.id,
+      nodes: movie.nodes,
       videoContext,
       renderer,
       resolution,
@@ -62,7 +61,7 @@ export class MovieExporter {
     }
     const movieInit = movie.toObject()
 
-    movieInit.tracks.forEach((init) => {
+    movieInit.children.forEach((init) => {
       const track = new Track(init, movieStub, ExtractorClip)
 
       for (let clip = track.head; clip; clip = clip.next) {
@@ -71,7 +70,7 @@ export class MovieExporter {
         const { source } = clip
         const { source: sourceStart, duration } = clip.time
         const sourceEnd = sourceStart + duration
-        let sourceEntry = this.sources.get(source)
+        let sourceEntry = this.sources.get(source.objectUrl)
 
         if (!sourceEntry) {
           const demuxer = new MP4Demuxer()
@@ -82,11 +81,11 @@ export class MovieExporter {
             info: undefined,
             video: undefined,
             audio: undefined,
-            isAudioOnly: track.type === 'audio',
+            isAudioOnly: track.trackType === 'audio',
           }
-          this.sources.set(source, sourceEntry)
+          this.sources.set(source.objectUrl, sourceEntry)
         } else {
-          sourceEntry.isAudioOnly &&= track.type === 'audio'
+          sourceEntry.isAudioOnly &&= track.trackType === 'audio'
         }
 
         sourceEntry.start = Math.min(sourceEntry.start, sourceStart)
@@ -160,7 +159,7 @@ export class MovieExporter {
     )
 
     this.clips.forEach((clip) => {
-      const { audio, video } = this.sources.get(clip.source)!
+      const { audio, video } = this.sources.get(clip.source.objectUrl)!
 
       clip.node.init({ audio, video })
     })
@@ -199,6 +198,7 @@ export class MovieExporter {
             avEncoder.whenReadyForVideo(),
           ])
 
+          setObjectSize(movie.displayCanvas, movie.resolution)
           videoContext.currentTime = timeS
           videoContext.update(0)
           const frame = new VideoFrame(canvas, { timestamp: 1e6 * timeS, duration: frameDurationUs })

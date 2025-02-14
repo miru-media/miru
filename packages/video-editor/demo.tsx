@@ -1,19 +1,9 @@
-import { h } from 'fine-jsx'
-/* eslint-disable import/no-unresolved */
-import turtle from 'https://assets.miru.media/demo/turtle-PaulsAdventures-pixabay.mp4'
-import underwaterAudio from 'https://assets.miru.media/demo/underwater-ambience-freesound_community-pixabay.mp3'
-import waveBreaking from 'https://assets.miru.media/demo/wave-breaking-EclipseChasers-pixabay.mp4'
-import wavesAudio from 'https://assets.miru.media/demo/waves-breaking-Dia_Pazon-pixabay.mp3'
-import waves from 'https://assets.miru.media/demo/waves-MustaKor-pixabay.mp4'
-import wavesRocks from 'https://assets.miru.media/demo/waves-rocks-McPix22-pixabay.mp4'
-/* eslint-enable import/no-unresolved */
-import { getDefaultFilterDefinitions } from 'webgl-effects'
+import { effect, h } from 'fine-jsx'
 
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
 import { type InputEvent } from 'shared/types'
 import { isElement, provideI18n, useEventListener } from 'shared/utils'
 
-import { type Clip } from './Clip'
 import * as Actions from './components/Actions'
 import { LoadingOverlay } from './components/LoadingOverlay'
 import { PlaybackControls } from './components/PlaybackControls'
@@ -22,78 +12,12 @@ import { SecondaryToolbar } from './components/SecondaryToolbar'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
 import { EXPORT_VIDEO_CODEC, ReadyState, SourceNodeState } from './constants'
+import { demoMovie } from './demoMovie'
 import de from './locales/de.json'
-import { type Movie } from './Movie'
+import { type Clip, type Schema } from './nodes'
 import { VideoEditor } from './VideoEditor'
 
-const filters = new Map(getDefaultFilterDefinitions().map((filter) => [filter.id, filter]))
-
-const demoMovie: Movie.Init = {
-  tracks: [
-    {
-      type: 'video',
-      clips: [
-        {
-          sourceStart: 3,
-          duration: 3,
-          source: waves,
-          filter: filters.get('Chromatic'),
-          filterIntensity: 0.3,
-        },
-        {
-          sourceStart: 2,
-          duration: 4,
-          source: wavesRocks,
-          filter: filters.get('Crispy Cyan'),
-          filterIntensity: 0.5,
-        },
-        {
-          sourceStart: 3,
-          duration: 3,
-          source: waveBreaking,
-          filter: filters.get('Chromatic'),
-          filterIntensity: 0.75,
-        },
-        {
-          sourceStart: 2.18,
-          duration: 5,
-          source: turtle,
-          filter: filters.get('Vintage'),
-          filterIntensity: 0.3,
-        },
-        {
-          sourceStart: 1,
-          duration: 2,
-          source: waves,
-          filter: filters.get('Chromatic'),
-          filterIntensity: 0.3,
-        },
-      ],
-    },
-    {
-      type: 'audio',
-      clips: [
-        {
-          sourceStart: 19,
-          duration: 10,
-          source: wavesAudio,
-        },
-        {
-          sourceStart: 0,
-          duration: 5,
-          source: underwaterAudio,
-        },
-        {
-          sourceStart: 16,
-          duration: 2,
-          source: wavesAudio,
-        },
-      ],
-    },
-  ],
-  resolution: { width: 1080, height: 1920 },
-  frameRate: 24,
-}
+const LOCAL_STORAGE_PREFIX = 'video-editor:'
 
 const Demo = () => {
   const { t } = provideI18n({ translations: { de } })
@@ -111,6 +35,26 @@ const Demo = () => {
   const editor = new VideoEditor()
 
   const { movie } = editor
+
+  {
+    // restore movie from localStorage
+    const movieContentKey = `${LOCAL_STORAGE_PREFIX}content`
+    const savedJson = localStorage.getItem(movieContentKey)
+
+    if (savedJson) {
+      editor
+        .replaceMovie(JSON.parse(savedJson) as Schema.Movie)
+        // eslint-disable-next-line no-console
+        .catch(() => console.warn(`[video-editor] Couldn't restore content`, savedJson))
+    }
+
+    // persist movie to localStorage
+    effect(() => {
+      if (editor.isLoading) return
+      localStorage.setItem(movieContentKey, JSON.stringify(movie.toObject()))
+    })
+  }
+
   useEventListener(window, 'keydown', (event: KeyboardEvent) => {
     const target = event.composedPath()[0]
 
@@ -218,7 +162,7 @@ const Demo = () => {
       >
         <p style="display:flex;gap:0.25rem">
           {() =>
-            movie.tracks.value.map((track) =>
+            movie.children.value.map((track) =>
               track.mapClips((clip) => {
                 const node = clip.node.value
                 const { mediaState } = node

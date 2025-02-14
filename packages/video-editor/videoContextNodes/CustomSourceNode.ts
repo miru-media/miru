@@ -10,7 +10,8 @@ import { fit, setObjectSize } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
 import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants'
-import { type ClipMediaMetadata, type ClipTime, type CustomSourceNodeOptions } from '../types'
+import { type Schema } from '../nodes'
+import { type ClipTime, type CustomSourceNodeOptions } from '../types'
 
 const rangeContainsTime = (range: { start: number; end: number }, time: number) => {
   return range.start <= time && time < range.end
@@ -24,7 +25,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   outTexture!: WebGLTexture
   framebuffer!: WebGLFramebuffer
   framebufferSize: Size = { width: 1, height: 1 }
-  mediaMetadata: ClipMediaMetadata = { rotation: 0 }
+  source: Schema.AvMediaAsset
 
   videoEffect?: Ref<Effect | undefined>
   videoEffectIntensity?: Ref<number>
@@ -118,7 +119,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
 
     this.videoEffect = options.videoEffect
     this.videoEffectIntensity = options.videoEffectIntensity
-    this.mediaMetadata = options.mediaMetadata
+    this.source = options.source
     this.movieIsPaused = options.movieIsPaused
     this.movieResolution = options.movieResolution
     this.getClipTime = options.getClipTime
@@ -178,9 +179,10 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
     ])
 
     const isVideoFrame = 'codedWidth' in media && 'allocationSize' in media
+    const rotation = this.source.video?.rotation ?? 0
 
-    if (isVideoFrame || (IS_FIREFOX && this.mediaMetadata.rotation))
-      mat4.rotateZ(transform, transform, (this.mediaMetadata.rotation * Math.PI) / 180)
+    if (isVideoFrame || (IS_FIREFOX && rotation))
+      mat4.rotateZ(transform, transform, (rotation * Math.PI) / 180)
 
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.framebuffer)
     renderer.setSourceTexture(this.mediaTexture, resolution, this.mediaSize, undefined, false, transform)
@@ -196,9 +198,9 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   abstract _pause(): void
 
   destroy() {
-    super.destroy()
     this.renderer.deleteTexture(this.mediaTexture)
     this.renderer.deleteTexture(this.outTexture)
     this.renderer = undefined as never
+    super.destroy()
   }
 }

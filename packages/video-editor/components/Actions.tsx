@@ -21,12 +21,12 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
     await editor.replaceClipSource(file)
   }
 
-  const getSelectedType = () => editor.selected?.track.type
+  const getSelectedType = () => editor.selected?.parent.trackType
 
   const showFiltersMenu = ref(false)
 
   effect(() => {
-    if (editor.selected?.track.type !== 'video') showFiltersMenu.value = false
+    if (editor.selected?.parent.trackType !== 'video') showFiltersMenu.value = false
   })
 
   return (
@@ -82,7 +82,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
             class="toolbar-button"
             icon={IconTablerCodeDots}
             // eslint-disable-next-line no-console
-            onClick={() => console.info(editor.movie.tracks.value.map((t) => t.toObject()))}
+            onClick={() => console.info(editor.movie.children.value.map((t) => t.toObject()))}
           >
             {t('Log state')}
           </IconButton>

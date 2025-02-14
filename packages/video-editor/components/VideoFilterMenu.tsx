@@ -1,10 +1,11 @@
-import { onScopeDispose, ref, watch } from 'fine-jsx'
+import { computed, onScopeDispose, ref, watch } from 'fine-jsx'
 import { type WebglEffectsMenuElement } from 'webgl-media-editor'
 import 'webgl-media-editor'
 
 import sampleImage from 'shared/assets/320px-Bianchi.jpg'
 import { fit, useEventListener } from 'shared/utils'
 
+import { type VideoEffectAsset } from '../nodes/Asset'
 import { type VideoEditor } from '../VideoEditor'
 
 export const VideoFilterMenu = ({ editor }: { editor: VideoEditor }) => {
@@ -16,7 +17,11 @@ export const VideoFilterMenu = ({ editor }: { editor: VideoEditor }) => {
     if (!clip) return
 
     const { effect, intensity } = event.detail
-    editor.setFilter(clip, effect == undefined ? undefined : editor.effects.value.get(effect), intensity)
+    editor.setFilter(
+      clip,
+      effect == undefined ? undefined : movie.nodes.get<VideoEffectAsset>(effect),
+      intensity,
+    )
 
     const { start, end } = clip.presentationTime
     const { currentTime } = movie
@@ -48,7 +53,7 @@ export const VideoFilterMenu = ({ editor }: { editor: VideoEditor }) => {
       sourceSize={img}
       thumbnailSize={() => fit(img, { width: 200, height: 200 })}
       renderer={renderer}
-      effects={editor.effects}
+      effects={computed(() => new Map(movie.effects.value?.map((effect) => [effect.id, effect])))}
       effect={() => editor.selected?.filter.value?.id}
       intensity={() => editor.selected?.filterIntensity.value ?? 1}
       loading={isLoadingTexture}

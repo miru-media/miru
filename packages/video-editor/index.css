@@ -70,7 +70,10 @@
   top: 4rem;
   z-index: 10;
   display: none;
-  padding: 0.5rem;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 12rem;
+  padding: 1rem;
 }
 
 .settings-button,
@@ -80,7 +83,7 @@
 }
 
 .settings-controls.is-open .settings-content {
-  display: block;
+  display: flex;
 }
 
 .playback-controls {
@@ -315,7 +318,10 @@
   &.loading {
     opacity: 1;
     transition-delay: 0.25s;
-    animation: loading-spinner 2s linear infinite;
+
+    .icon {
+      animation: loading-spinner 2s linear infinite;
+    }
   }
 
   .icon {

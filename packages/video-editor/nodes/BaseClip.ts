@@ -1,21 +1,16 @@
 import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
-import { uid } from 'uid'
 
-import { TRANSITION_DURATION_S } from './constants'
-import { type ClipTime } from './types'
+import { TRANSITION_DURATION_S } from '../constants'
+import { type ClipTime } from '../types'
 
-export namespace BaseClip {
-  export interface Init {
-    id?: string
-    sourceStart: number
-    duration: number
-    source: string
-    transition?: { type: string }
-  }
-}
+import { type Schema } from '.'
+
+import { type MediaAsset } from './Asset'
 
 export class BaseClip {
   id: string
+  source!: MediaAsset
+  type = 'clip' as const
 
   #prev = ref<typeof this>()
   #next = ref<typeof this>()
@@ -76,7 +71,7 @@ export class BaseClip {
 
     return value && { duration: TRANSITION_DURATION_S, ...value }
   }
-  set transition(transition: BaseClip.Init['transition'] | undefined) {
+  set transition(transition: Schema.Clip['transition'] | undefined) {
     this.#transition.value = transition && { type: transition.type }
   }
 
@@ -107,8 +102,8 @@ export class BaseClip {
     return this.#derivedState.value.index
   }
 
-  constructor(init: BaseClip.Init) {
-    this.id = init.id ?? uid()
+  constructor(init: Schema.Clip) {
+    this.id = init.id
     this.sourceStart = ref(init.sourceStart)
     this.duration = ref(init.duration)
   }
@@ -127,17 +122,15 @@ export class BaseClip {
     this.duration.value = Math.min(clipTime.duration, sourceDuration)
   }
 
-  getSource() {
-    return ''
-  }
-
-  toObject(): BaseClip.Init {
-    const { time } = this
+  toObject(): Schema.Clip {
+    const { id, type, source, time } = this
 
     return {
+      id,
+      type,
+      source: { assetId: source.id },
       sourceStart: time.source,
       duration: time.duration,
-      source: this.getSource(),
       transition: this.transition,
     }
   }

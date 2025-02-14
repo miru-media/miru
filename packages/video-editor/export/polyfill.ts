@@ -13,7 +13,7 @@ Object.assign(LibAV, libavOptions)
 let promise: Promise<void> | undefined
 
 export const init = () => {
-  return (promise ||= loadLibAv({ LibAV, libavOptions }))
+  return (promise ??= loadLibAv({ LibAV, libavOptions }))
 }
 
 export { AudioData, AudioEncoder, EncodedAudioChunk }

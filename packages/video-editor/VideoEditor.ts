@@ -1,19 +1,15 @@
 import { effect, type Ref, ref } from 'fine-jsx'
 import { uid } from 'uid'
-import { getDefaultFilterDefinitions } from 'webgl-effects'
 
-import { Effect } from 'reactive-effects/Effect'
-import { type Mp4ContainerInfo } from 'shared/transcode/demuxer'
 import { type Size } from 'shared/types'
 import { useElementSize } from 'shared/utils'
 import { remap0 } from 'shared/utils/math'
 
-import { Clip } from './Clip'
 import { MIN_CLIP_DURATION_S } from './constants'
-import { Movie } from './Movie'
-import { Track } from './Track'
-import { type ClipSnapshot, type HistoryOp, type MediaElementInfo } from './types'
-import { checkAndWarnVideoFile, getContainerInfo, getMediaElementInfo } from './utils'
+import { MovieExporter } from './export/MovieExporter'
+import { Clip, MediaAsset, Movie, type Schema, Track, type VideoEffectAsset } from './nodes'
+import { type ClipSnapshot, type HistoryOp } from './types'
+import { checkAndWarnVideoFile } from './utils'
 
 const getClipAtTime = (track: Track<Clip>, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -21,13 +17,6 @@ const getClipAtTime = (track: Track<Clip>, time: number) => {
 
     if (clipTime.start <= time && time < clipTime.end) return clip
   }
-}
-
-interface MediaSourceEntry {
-  url: string
-  refCount: 0
-  blob?: Blob
-  infoPromise: Promise<Mp4ContainerInfo>
 }
 
 export class VideoEditor {
@@ -49,15 +38,15 @@ export class VideoEditor {
     isDragging: ref(false),
     x: ref(0),
   }
-  #mediaSources = new Map<string, MediaSourceEntry>()
-  effects: Ref<Map<string, Effect>>
+  get renderer() {
+    return this.movie.renderer
+  }
 
   showStats = ref(false)
   exportResult = ref<{ blob: Blob; url: string }>()
   exportProgress = ref(-1)
 
-  #objects = new Map<string, Track<Clip> | Clip>()
-  #isLoading = ref(false)
+  #isLoading = ref(0)
 
   #history = {
     actions: [] as HistoryOp[][],
@@ -95,7 +84,7 @@ export class VideoEditor {
         return
       }
 
-      const { actions, index, canUndo, canRedo } = this.#history
+      const { actions, canUndo, canRedo } = this.#history
 
       if (ops.length === 1 && canUndo.value) {
         const op = ops[0]
@@ -107,17 +96,9 @@ export class VideoEditor {
           return
         }
       }
+      actions.splice(this.#history.index + 1, Infinity, ops).flat()
 
       this.#history.index++
-      const removedOps = actions.splice(index + 1, Infinity, ops).flat()
-
-      ops.forEach((op) => {
-        if (op.to) this.#incrementMediaSource(op.to.clip.source)
-      })
-      removedOps.forEach((op) => {
-        if (op.to) this.#decrementMediaSource(op.to.clip.source)
-      })
-
       canUndo.value = true
       canRedo.value = false
     },
@@ -133,24 +114,26 @@ export class VideoEditor {
       const ops = actions[redo ? newIndex : currentIndex]
       this.#history.index = newIndex
 
+      const { nodes } = this.movie
+
       this.#history.ignore(() => {
         ops.forEach((op) => {
           const { from, to } = op
 
           if (redo) {
             // create
-            if (!from) this.#addClip(this.#objects.get(to.trackId) as Track<Clip>, to.clip, to)
+            if (!from) this.#addClip(nodes.get(to.trackId), to.clip, to)
             // delete
-            else if (!to) this.#deleteClip(this.#objects.get(from.id) as Clip)
+            else if (!to) this.#deleteClip(nodes.get(from.id))
             // udpate
-            else (this.#objects.get(from.id) as Clip).restoreFromSnapshot(to, this.effects.value)
+            else nodes.get<Clip>(from.id).restoreFromSnapshot(to)
           } else {
             // delete created
-            if (!from) this.#deleteClip(this.#objects.get(to.id) as Clip)
+            if (!from) this.#deleteClip(nodes.get(to.id))
             // recreate deleted
-            else if (!to) this.#addClip(this.#objects.get(from.trackId) as Track<Clip>, from.clip, from)
+            else if (!to) this.#addClip(nodes.get(from.trackId), from.clip, from)
             // revert udpate
-            else (this.#objects.get(from.id) as Clip).restoreFromSnapshot(from, this.effects.value)
+            else nodes.get<Clip>(from.id).restoreFromSnapshot(from)
           }
         })
       })
@@ -175,141 +158,99 @@ export class VideoEditor {
     return this.#selected.value
   }
   get isLoading() {
-    return this.#isLoading.value
+    return this.#isLoading.value > 0
   }
 
   constructor(
     initialState: { resolution: Size; frameRate: number } = {
-      resolution: { width: 1280, height: 720 },
+      resolution: { width: 1920, height: 1080 },
       frameRate: 60,
     },
   ) {
     this.movie = new Movie({
-      tracks: [],
+      id: uid(),
+      type: 'movie',
+      assets: [],
+      children: [],
       resolution: initialState.resolution,
       frameRate: initialState.frameRate,
     })
     this.canvasSize = useElementSize(this.movie.displayCanvas)
-    this.effects = ref(
-      new Map(
-        getDefaultFilterDefinitions().map((def, i) => {
-          const { id = i.toString() } = def
-          return [id, new Effect({ ...def, id }, this.movie.renderer)]
-        }),
-      ),
-    )
 
     effect(() => {
       const { movie } = this
-      if (!movie.tracks.value.length) {
-        movie.tracks.value = [new Track({ type: 'video', clips: [] }, movie, Clip)]
+      if (!movie.children.value.length) {
+        movie.children.value = [
+          new Track({ id: uid(), type: 'track', trackType: 'video', children: [] }, movie, Clip),
+        ]
       }
     })
   }
 
-  async replaceMovie(movieInit: Movie.Init) {
+  async replaceMovie(movieInit: Schema.Movie) {
+    this.#isLoading.value++
+
     const { movie } = this
+    const { nodes } = movie
 
     this.#history.reset()
-
-    movie.tracks.value.forEach((track) => {
-      track.forEachClip((clip) => {
-        this.#objects.delete(clip.id)
-        this.#decrementMediaSource(clip.url)
-      })
-      track.dispose()
-      this.#objects.delete(track.id)
-    })
+    movie.clearAllContent()
+    this.select(undefined)
 
     movie.resolution = movieInit.resolution
     movie.frameRate.value = movieInit.frameRate
 
     try {
-      this.#isLoading.value = true
-
-      movie.tracks.value = await this.#history.ignore(() =>
-        Promise.all(
-          movieInit.tracks.map(async (trackInit) => {
-            const track = new Track<Clip>({ ...trackInit, clips: [] }, movie, Clip)
-            this.#objects.set(track.id, track)
-
-            const clips = await Promise.all(
-              trackInit.clips.map(async (clipInit) =>
-                this.#withMediaSourceInfo(clipInit.source, (mediaInfo) =>
-                  this.#addClip(
-                    track,
-                    { ...clipInit, sourceMetadata: mediaInfo.video },
-                    { index: undefined, skipInsert: true },
-                  ),
-                ),
-              ),
-            )
-
-            clips.forEach((clip) => track.pushSingleClip(clip))
-
-            return track
+      await this.#history.ignore(async () => {
+        await Promise.all(
+          movieInit.assets.map(async (assetInit) => {
+            if (assetInit.type === 'video_effect_asset') {
+              // TODO
+              return
+            }
+            const asset = await MediaAsset.fromInit(assetInit)
+            nodes.set(asset)
+            movie.assets.add(asset)
+            return asset
           }),
-        ),
-      )
+        )
+
+        movie.children.value = movieInit.children.map((trackInit) => {
+          const track = new Track(trackInit, movie, Clip)
+          nodes.set(track)
+
+          track.forEachClip((clip) => nodes.set(clip))
+          return track
+        })
+      })
     } finally {
-      this.#isLoading.value = false
+      this.#isLoading.value--
     }
   }
 
   async addClip(track: Track<Clip>, source: string | Blob) {
-    if (typeof source !== 'string' && !checkAndWarnVideoFile(track.type, source)) return
+    if (typeof source !== 'string' && !checkAndWarnVideoFile(track.trackType, source)) return
 
-    await this.#withMediaSourceInfo(source, (mediaInfo, url) => {
-      const { duration } = mediaInfo
-      this.#history.batch(() => {
-        this.#addClip(
-          track,
-          {
-            id: uid(),
-            source: url,
-            sourceStart: 0,
-            duration,
-            sourceMetadata: mediaInfo.video,
-          },
-          { skipInsert: true },
-        )
-      })
+    const asset = await MediaAsset.fromSource(uid(), source)
+    const { duration } = asset
+
+    this.movie.nodes.set(asset)
+    this.movie.assets.add(asset)
+
+    this.#history.batch(() => {
+      this.#addClip(
+        track,
+        { id: uid(), type: 'clip', source: { assetId: asset.id }, sourceStart: 0, duration },
+        {},
+      )
     })
   }
 
-  async #withMediaSourceInfo<T>(
-    source: string | Blob,
-    fn: (
-      info: Mp4ContainerInfo | (MediaElementInfo & { audio: undefined; video: undefined }),
-      url: string,
-    ) => T,
-  ) {
-    const { url, infoPromise } = this.#incrementMediaSource(source)
-
-    try {
-      let info
-
-      try {
-        info = await infoPromise
-      } catch {
-        info = {
-          ...(await getMediaElementInfo(url)),
-          audio: undefined,
-          video: undefined,
-        }
-      }
-      return await fn(info, url)
-    } finally {
-      this.#decrementMediaSource(url)
-    }
-  }
-
-  #addClip(track: Track<Clip>, init: Clip.Init, options: { index?: number; skipInsert?: boolean }) {
+  #addClip(track: Track<Clip>, init: Schema.Clip, options: { index?: number; skipInsert?: boolean }) {
     const { index, skipInsert } = options
     const clip = track.createClip(init)
 
-    this.#incrementMediaSource(init.source)
-    this.#objects.set(clip.id, clip)
+    this.movie.nodes.set(clip)
 
     if (!skipInsert) {
       track.pushSingleClip(clip)
@@ -323,16 +264,15 @@ export class VideoEditor {
 
   async replaceClipSource(source: string | Blob) {
     const clip = this.selected
-    if (!clip || (typeof source !== 'string' && !checkAndWarnVideoFile(clip.track.type, source))) return
+    if (!clip) return
 
-    await this.#withMediaSourceInfo(source, (mediaInfo, url) => {
-      const from = clip.getSnapshot()
-      this.#decrementMediaSource(clip.media.value.src)
-      clip.duration.value = Math.min(mediaInfo.duration, clip.duration.value)
-      clip.setMedia(url, mediaInfo.video)
+    const asset = await MediaAsset.fromSource(uid(), source)
 
-      this.#history.add([{ type: 'clip:update', from, to: clip.getSnapshot() }])
-    })
+    const from = clip.getSnapshot()
+    clip.duration.value = Math.min(asset.duration, clip.duration.value)
+    clip.setMedia(asset)
+
+    this.#history.add([{ type: 'clip:update', from, to: clip.getSnapshot() }])
   }
 
   splitAtCurrentTime() {
@@ -341,14 +281,14 @@ export class VideoEditor {
 
   #splitAtCurrentTime() {
     const { currentTime } = this.movie
-    const trackOfSelectedClip = this.selected?.track
+    const trackOfSelectedClip = this.selected?.parent
 
     // first search the track that contains a selected clip
     let clip = trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
 
     if (!clip) {
       // then search all tracks for a clip at the current time
-      for (const track of this.movie.tracks.value) {
+      for (const track of this.movie.children.value) {
         clip = getClipAtTime(track, currentTime)
         if (clip) break
       }
@@ -363,7 +303,7 @@ export class VideoEditor {
     const undoFrom = clip.getSnapshot()
 
     this.#addClip(
-      clip.track,
+      clip.parent,
       {
         ...clip.toObject(),
         id: uid(),
@@ -376,7 +316,6 @@ export class VideoEditor {
     clip.transition = undefined
     clip.duration.value = delta
 
-    this.#incrementMediaSource(clip.media.value.src)
     this.select(clip)
 
     this.#history.add([{ type: 'clip:update', from: undoFrom, to: clip.getSnapshot() }])
@@ -386,9 +325,8 @@ export class VideoEditor {
     this.#history.add([{ type: 'clip:update', from: clip.getSnapshot(), to: undefined }])
 
     this.#selected.value = undefined
-    this.#decrementMediaSource(clip.media.value.src)
-    this.#objects.delete(clip.id)
-    clip.track.deleteClip(clip)
+    this.movie.nodes.delete(clip.id)
+    clip.parent.deleteClip(clip)
     clip.dispose()
   }
 
@@ -399,7 +337,7 @@ export class VideoEditor {
     this.#deleteClip(clip)
   }
 
-  setTransition(_from: Clip, _to: Clip, _transition: Clip.Init['transition']) {
+  setTransition(_from: Clip, _to: Clip, _transition: Schema.Clip['transition']) {
     throw new Error('Not Implemented.')
   }
   clearTransition(_from: Clip, _to: Clip) {
@@ -429,7 +367,7 @@ export class VideoEditor {
         ops.push({
           type: 'clip:update',
           from: snapshot,
-          to: (this.#objects.get(snapshot.id) as Clip).getSnapshot(),
+          to: this.movie.nodes.get<Clip>(snapshot.id).getSnapshot(),
         }),
     )
 
@@ -457,7 +395,7 @@ export class VideoEditor {
         ops.push({
           type: 'clip:update',
           from: snapshot,
-          to: (this.#objects.get(snapshot.id) as Clip).getSnapshot(),
+          to: this.movie.nodes.get<Clip>(snapshot.id).getSnapshot(),
         }),
     )
     this.#history.add(ops)
@@ -465,7 +403,7 @@ export class VideoEditor {
     this.resize.value = undefined
   }
 
-  setFilter(clip: Clip, filter: Effect | undefined, intensity: number) {
+  setFilter(clip: Clip, filter: VideoEffectAsset | undefined, intensity: number) {
     const from = clip.getSnapshot()
     clip.filter.value = filter
     clip.filterIntensity.value = intensity
@@ -483,11 +421,19 @@ export class VideoEditor {
 
   async startExport() {
     this.exportResult.value = undefined
+
+    const onProgress = (value: number) => (this.exportProgress.value = value)
+
+    this.movie.pause()
+    onProgress(0)
+
     try {
-      const blob = await this.movie.export({
-        onProgress: (value) => (this.exportProgress.value = value),
+      const exporter = new MovieExporter(this.movie)
+
+      await this.movie.withoutRendering(async () => {
+        const blob = await exporter.start({ onProgress }).finally(() => exporter.dispose())
+        this.exportResult.value = { blob, url: URL.createObjectURL(blob) }
       })
-      this.exportResult.value = { blob, url: URL.createObjectURL(blob) }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error)
@@ -503,39 +449,5 @@ export class VideoEditor {
 
   redo() {
     this.#history.undoRedo(true)
-  }
-
-  #incrementMediaSource(source: string | Blob) {
-    let url
-    let blob
-    if (typeof source === 'string') {
-      url = source
-      blob = undefined
-    } else {
-      url = URL.createObjectURL(source)
-      blob = source
-    }
-    const entry = this.#mediaSources.get(url) ?? {
-      url,
-      refCount: 0,
-      blob,
-      infoPromise: getContainerInfo(url),
-    }
-    entry.refCount++
-    this.#mediaSources.set(url, entry)
-
-    return entry
-  }
-
-  #decrementMediaSource(url: string) {
-    const entry = this.#mediaSources.get(url)
-    if (!entry) return
-
-    entry.refCount--
-
-    if (entry.refCount <= 0) {
-      this.#mediaSources.delete(url)
-      if (entry.blob) URL.revokeObjectURL(url)
-    }
   }
 }

@@ -1,31 +1,23 @@
-import { computed, effect, type Ref, ref, watch } from 'fine-jsx'
-import { uid } from 'uid'
+import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
 import VideoContext, { type CompositingNode } from 'videocontext'
-import { type Renderer } from 'webgl-effects'
 
-import { type BaseClip } from './BaseClip'
-import { type Clip } from './Clip'
-import { type TrackMovie } from './types'
+import { type TrackMovie } from '../types'
+
+import { type BaseClip, type Schema } from '.'
 
 type TrackType = 'video' | 'audio'
-
-export namespace Track {
-  export type Type = TrackType
-  export interface Init {
-    id?: string
-    type: TrackType
-    clips: Clip.Init[]
-  }
-}
 
 export class Track<T extends BaseClip> {
   id: string
   #head = ref<T>()
   #tail = ref<T>()
 
-  type: TrackType
+  trackType: TrackType
   node: Ref<CompositingNode<never>>
-  movie: TrackMovie
+  parent: TrackMovie
+  root: TrackMovie
+
+  #scope = createEffectScope()
 
   #duration = computed(() => {
     const lastClip = this.#tail.value
@@ -34,7 +26,7 @@ export class Track<T extends BaseClip> {
     const { start, duration } = lastClip.time
     return start + duration
   })
-  ClipConstructor: new (init: Clip.Init, context: VideoContext, track: Track<T>, renderer: Renderer) => T
+  ClipConstructor: new (init: Schema.Clip, track: Track<T>) => T
 
   get head() {
     return this.#head.value
@@ -51,40 +43,42 @@ export class Track<T extends BaseClip> {
   }
 
   get context() {
-    return this.movie.videoContext
+    return this.parent.videoContext
   }
 
   get renderer() {
-    return this.movie.renderer
+    return this.parent.renderer
   }
 
-  constructor(init: Track.Init, movie: TrackMovie, ClipConstructor: Track<T>['ClipConstructor']) {
-    this.id = init.id ?? uid()
-    this.type = init.type
-    this.movie = movie
+  constructor(init: Schema.Track, movie: TrackMovie, ClipConstructor: Track<T>['ClipConstructor']) {
+    this.id = init.id
+    this.trackType = init.trackType
+    this.root = this.parent = movie
     this.ClipConstructor = ClipConstructor
     this.node = ref(undefined as never)
 
-    // Workaround to recreate processing nodes when the movie resolution changes
-    // beacause VideoContext assumes the canvas size is constant
-    // TODO
-    watch([() => movie.resolution], (_cur, _prev, onCleanup) => {
-      const node = (this.node.value = this.context.compositor(VideoContext.DEFINITIONS.COMBINE))
-      onCleanup(() => !node.destroyed && node.destroy())
-    })
+    this.#scope.run(() => {
+      // Workaround to recreate processing nodes when the movie resolution changes
+      // beacause VideoContext assumes the canvas size is constant
+      // TODO
+      watch([() => movie.resolution], (_cur, _prev, onCleanup) => {
+        const node = (this.node.value = this.context.compositor(VideoContext.DEFINITIONS.COMBINE))
+        onCleanup(() => !node.destroyed && node.destroy())
+      })
 
-    init.clips.forEach((c) => this.pushSingleClip(this.createClip(c)))
+      init.children.forEach((c) => this.pushSingleClip(this.createClip(c)))
 
-    // connect clip nodes and transitions in the correct order
-    effect((onCleanup) => {
-      const clips = this.toArray()
-      clips.forEach((clip) => clip.connect())
-      onCleanup(() => clips.forEach((clip) => clip.disconnect()))
+      // connect clip nodes and transitions in the correct order
+      effect((onCleanup) => {
+        const clips = this.toArray()
+        clips.forEach((clip) => clip.connect())
+        onCleanup(() => clips.forEach((clip) => clip.disconnect()))
+      })
     })
   }
 
-  createClip(init: Clip.Init) {
-    return new this.ClipConstructor(init, this.context, this, this.renderer)
+  createClip(init: Schema.Clip) {
+    return new this.ClipConstructor(init, this)
   }
 
   positionClipAt(clip: T, index: number) {
@@ -157,10 +151,12 @@ export class Track<T extends BaseClip> {
     before.prev = clip
   }
 
-  toObject(): Track.Init {
+  toObject(): Schema.Track {
     return {
-      type: this.type,
-      clips: this.mapClips((clip) => clip.toObject()),
+      id: this.id,
+      type: 'track',
+      trackType: this.trackType,
+      children: this.mapClips((clip) => clip.toObject()),
     }
   }
 
@@ -168,5 +164,7 @@ export class Track<T extends BaseClip> {
     this.toArray().forEach((clip) => clip.dispose())
     this.#head.value = this.#tail.value = undefined
     this.node.value.destroy()
+    this.root = this.parent = undefined as never
+    this.#scope.stop()
   }
 }

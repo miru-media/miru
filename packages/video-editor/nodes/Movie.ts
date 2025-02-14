@@ -1,13 +1,18 @@
 import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
 import Stats from 'stats.js'
 import VideoContext from 'videocontext'
-import { Renderer } from 'webgl-effects'
+import { getDefaultFilterDefinitions, Renderer } from 'webgl-effects'
 
 import { type Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
+import { type AnyNode, type NodeMap as NodeMapType } from '../types'
+import { useRafLoop } from '../utils'
+
+import { type Schema } from '.'
+
+import { MediaAsset, VideoEffectAsset } from './Asset'
 import { Clip } from './Clip'
-import { MovieExporter } from './export/MovieExporter'
 import { Track } from './Track'
 
 export const enum VideoContextState {
@@ -20,14 +25,29 @@ export const enum VideoContextState {
 
 export namespace Movie {
   export interface Init {
-    tracks: Track.Init[]
+    children: Schema.Track[]
     resolution: Size
     frameRate: number
   }
 }
 
+class NodeMap implements NodeMapType {
+  map = new Map<string, Movie | Track<Clip> | Clip | MediaAsset | VideoEffectAsset>()
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+  get<T extends AnyNode>(id: string) {
+    return this.map.get(id) as T
+  }
+  set(node: AnyNode) {
+    this.map.set(node.id, node)
+  }
+  delete(id: string) {
+    return this.map.delete(id)
+  }
+}
+
 export class Movie {
-  tracks = ref<Track<Clip>[]>([])
+  id: string
+  children = ref<Track<Clip>[]>([])
   frameRate: Ref<number>
   displayCanvas = document.createElement('canvas')
   gl = getWebgl2Context(this.displayCanvas)
@@ -41,8 +61,13 @@ export class Movie {
   #scope = createEffectScope()
 
   #currentTime = ref(0)
-  #duration = computed(() => this.tracks.value.reduce((end, track) => Math.max(track.duration, end), 0))
+  #duration = computed(() => this.children.value.reduce((end, track) => Math.max(track.duration, end), 0))
   #resolution = ref({ width: 400, height: 400 / (9 / 16) })
+  #noRender = ref(0)
+  nodes = new NodeMap()
+
+  assets = new Set<MediaAsset | VideoEffectAsset>()
+  effects = ref<VideoEffectAsset[]>()
 
   stats = new Stats()
 
@@ -60,7 +85,7 @@ export class Movie {
   get isReady() {
     const state = this.#state.value
     if (state === VideoContextState.STALLED || state === VideoContextState.BROKEN) return false
-    return this.tracks.value.every((track) => track.toArray().every((clip) => clip.isReady))
+    return this.children.value.every((track) => track.toArray().every((clip) => clip.isReady))
   }
 
   get duration() {
@@ -71,25 +96,46 @@ export class Movie {
     return this.#currentTime.value
   }
 
-  constructor({ tracks = [], resolution, frameRate }: Movie.Init) {
+  constructor({ id, children: tracks = [], resolution, frameRate }: Schema.Movie) {
     const canvas = this.displayCanvas
 
+    this.id = id
     this.resolution = resolution
     this.frameRate = ref(frameRate)
 
     // force webgl2 context
     canvas.getContext = ((_id, _options) => this.gl) as typeof canvas.getContext
-    const videoContext = (this.videoContext = new VideoContext(this.displayCanvas))
+    const videoContext = (this.videoContext = new VideoContext(this.displayCanvas, undefined, {
+      manualUpdate: true,
+    }))
     delete (canvas as Partial<typeof canvas>).getContext
 
     videoContext.pause()
 
+    this.clearAllContent()
+
     this.#scope.run(() => {
-      this.tracks.value = tracks.map((t) => new Track(t, this, Clip))
-      watch([() => this.tracks.value.map((t) => t.node.value)], ([trackNodes], _prev, onCleanup) => {
+      // create tracks
+      this.children.value = tracks.map((t) => new Track(t, this, Clip))
+
+      // keep VideoContext nodes connected
+      watch([() => this.children.value.map((t) => t.node.value)], ([trackNodes], _prev, onCleanup) => {
         trackNodes.forEach((node) => node.connect(videoContext.destination))
         onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
       })
+
+      let prevRafTime = 0
+      watch([this.isPaused], ([paused]) => {
+        if (!paused) prevRafTime = performance.now() / 1e3
+      })
+      useRafLoop(
+        (timestamp) => {
+          const delta = timestamp - prevRafTime
+          videoContext.update(delta)
+          prevRafTime = timestamp
+        },
+        { active: () => this.isPaused.value && !this.#noRender.value },
+      )
     })
 
     const updateState = (currentTime: number) => {
@@ -119,10 +165,11 @@ export class Movie {
       if (isPlaying) this.stats.end()
     }
 
-    Object.values(VideoContext.EVENTS).forEach((type) =>
-      // eslint-disable-next-line no-console -- WIP
-      this.videoContext.registerCallback(type, () => type !== 'update' && console.info(type)),
-    )
+    if (import.meta.env.DEV)
+      Object.values(VideoContext.EVENTS).forEach((type) =>
+        // eslint-disable-next-line no-console -- WIP
+        this.videoContext.registerCallback(type, () => type !== 'update' && console.info(type)),
+      )
   }
 
   play() {
@@ -154,30 +201,53 @@ export class Movie {
   }
 
   get isEmpty() {
-    return this.tracks.value.every((track) => track.count === 0)
+    return this.children.value.every((track) => track.count === 0)
   }
 
   refresh() {
     this.videoContext.update(0)
   }
 
-  toObject(): Movie.Init {
+  async withoutRendering(fn: () => Promise<void>) {
+    this.#noRender.value++
+    await fn().finally(() => this.#noRender.value--)
+  }
+
+  toObject(): Schema.Movie {
+    const assets = Array.from(this.assets).map((asset) => asset.toObject())
+
     return {
-      tracks: this.tracks.value.map((t) => t.toObject()),
+      id: this.id,
+      type: 'movie',
+      assets,
+      children: this.children.value.map((t) => t.toObject()),
       resolution: this.resolution,
       frameRate: this.frameRate.value,
     }
   }
 
-  async export(options: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
-    this.pause()
-    const exporter = new MovieExporter(this)
+  clearAllContent(clearCache: true): Promise<void>
+  clearAllContent(clearCache?: false): void
+  clearAllContent(clearCache = false): Promise<void> | void {
+    this.assets.forEach((asset) => asset.dispose())
+    this.assets.clear()
+    this.children.value.forEach((child) => child.dispose())
+    this.children.value = []
 
-    try {
-      options.onProgress?.(0)
-      return await exporter.start(options)
-    } finally {
-      exporter.dispose()
-    }
+    this.effects.value = getDefaultFilterDefinitions().map((def, i) => {
+      const { id = i.toString() } = def
+      const effect = new VideoEffectAsset({ ...def, id }, this.renderer)
+      this.nodes.set(effect)
+      return effect
+    })
+
+    if (clearCache) return MediaAsset.clearCache().then(() => undefined)
+  }
+
+  dispose() {
+    const children = this.children.value
+    children.forEach((child) => child.dispose())
+    children.length = 0
+    this.#scope.stop()
   }
 }

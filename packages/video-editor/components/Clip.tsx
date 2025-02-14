@@ -9,8 +9,8 @@ import { computed, effect, ref, toRef } from 'fine-jsx'
 
 import { stringHashCode, useI18n } from 'shared/utils'
 
-import { type Clip as ClipType } from '../Clip'
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants'
+import { type Clip as ClipType } from '../nodes'
 import { type VideoEditor } from '../VideoEditor'
 
 import { IconButton } from './IconButton'
@@ -39,7 +39,7 @@ export const Clip = ({
   const clipColor = computed(() => {
     if (!clip.everHadEnoughData) return 'var(--gray)'
 
-    const hash = stringHashCode(clip.media.value.src)
+    const hash = stringHashCode(clip.source.id)
     return CLIP_COLORS[Math.abs(hash) % CLIP_COLORS.length]
   })
 
@@ -156,7 +156,7 @@ export const Clip = ({
             }
 
             if (insertBefore) {
-              clip.track.insertClipBefore(clip, insertBefore)
+              clip.parent.insertClipBefore(clip, insertBefore)
               return
             }
 
@@ -169,7 +169,7 @@ export const Clip = ({
               else break
             }
             if (insertAfter) {
-              clip.track.insertClipBefore(clip, insertAfter.next)
+              clip.parent.insertClipBefore(clip, insertAfter.next)
               return
             }
           },
@@ -198,7 +198,7 @@ export const Clip = ({
       }
     >
       <div ref={mainContainer} class="clip-box" onClick={() => editor.select(clip)}>
-        {clip.track.type === 'audio' ? t('Audio') : t('Clip')} {() => clip.index + 1}
+        {clip.parent.trackType === 'audio' ? t('Audio') : t('Clip')} {() => clip.index + 1}
         <div class="clip-controls">
           <div class="clip-resize-left">
             <IconTablerChevronLeft />

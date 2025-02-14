@@ -3,9 +3,8 @@ import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref } from 'f
 import { type InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 
-import { type Clip as ClipType } from '../Clip'
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants'
-import { type Track } from '../Track'
+import { type Clip as ClipType, type Track } from '../nodes'
 import { splitTime } from '../utils'
 import { type VideoEditor } from '../VideoEditor'
 
@@ -95,7 +94,7 @@ export const Timeline = ({
     )
   }
 
-  const totalClips = computed(() => movie.tracks.value.reduce((acc, track) => acc + track.count, 0))
+  const totalClips = computed(() => movie.children.value.reduce((acc, track) => acc + track.count, 0))
 
   const onInputClipFile = async (event: InputEvent, track: Track<ClipType>) => {
     const file = event.target.files?.[0]
@@ -129,8 +128,8 @@ export const Timeline = ({
 
           <div class="track-list">
             {() =>
-              movie.tracks.value.length ? (
-                movie.tracks.value.map((track, trackIndex) => (
+              movie.children.value.length ? (
+                movie.children.value.map((track, trackIndex) => (
                   <div
                     class="track"
                     style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
@@ -142,14 +141,16 @@ export const Timeline = ({
                           <>
                             <IconTablerPlus />
                             <span class="sr-only">
-                              {track.type === 'audio' ? t('Add audio') : t('Add a clip')}
+                              {track.trackType === 'audio' ? t('Add audio') : t('Add a clip')}
                             </span>
                           </>
                         ) : (
                           <>
                             <IconTablerVideo />
                             <span class="text-body">
-                              {track.type === 'audio' ? t('Click to add audio') : t('Click to add a clip')}
+                              {track.trackType === 'audio'
+                                ? t('Click to add audio')
+                                : t('Click to add a clip')}
                             </span>
                           </>
                         )

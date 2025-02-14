@@ -8,7 +8,6 @@ import { type CustomSourceNodeOptions } from '../types'
 import { CustomSourceNode } from '../videoContextNodes'
 
 export interface ExtractorNodeOptions extends CustomSourceNodeOptions {
-  url: string
   targetFrameRate: number
 }
 
@@ -21,11 +20,10 @@ export namespace Mp4ExtractorNode {
   export interface VideoInit {
     config: VideoDecoderConfig & { codedWidth: number; codedHeight: number }
     chunks: DemuxerChunkInfo[]
-    rotation?: number
   }
 }
+
 export class Mp4ExtractorNode extends CustomSourceNode {
-  url: string
   videoIsReady = false
 
   audioInit?: Mp4ExtractorNode.AudioInit
@@ -64,7 +62,6 @@ export class Mp4ExtractorNode extends CustomSourceNode {
     options: ExtractorNodeOptions,
   ) {
     super(gl, renderGraph, currentTime, options)
-    this.url = options.url
     this._displayName = 'Mp4ExtractorNode'
     this.targetFrameDurationUs = 1e6 / options.targetFrameRate
   }
@@ -75,8 +72,9 @@ export class Mp4ExtractorNode extends CustomSourceNode {
       const { codedWidth, codedHeight } = video.config
 
       this.videoInit = video
+      const rotation = this.source.video?.rotation ?? 0
       ;[this.mediaSize.width, this.mediaSize.height] =
-        this.mediaMetadata.rotation % 180 ? [codedHeight, codedWidth] : [codedWidth, codedHeight]
+        rotation % 180 ? [codedHeight, codedWidth] : [codedWidth, codedHeight]
     }
 
     const { playableTime } = this

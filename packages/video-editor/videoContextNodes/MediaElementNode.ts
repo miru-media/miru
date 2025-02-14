@@ -45,7 +45,7 @@ export class MediaElementNode extends CustomSourceNode {
     super(gl, renderGraph, currentTime, options)
 
     this.media = media
-    this.textureRotation = options.mediaMetadata.rotation
+    this.textureRotation = options.source.video?.rotation ?? 0
     this.mediaState = new MediaNodeState(this, options.movieIsPaused)
     this.mediaTime = this.mediaState.time
 

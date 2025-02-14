@@ -212,18 +212,27 @@ const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrig
   return createImageBitmap(blob)
 }
 
+export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
+  type: T,
+  url: string,
+  crossOrigin?: CrossOrigin,
+) => {
+  const media = document.createElement(type) as T extends 'audio' ? HTMLAudioElement : HTMLVideoElement
+
+  if (type === 'video') (media as HTMLVideoElement).playsInline = true
+  media.preload = 'auto'
+  media.muted = true
+  media.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
+  document.body.appendChild(media)
+  setMediaSrc(media, url, crossOrigin)
+  media.load()
+
+  return media
+}
+
 const loadVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
-  const video = document.createElement('video')
-  video.preload = 'auto'
-  video.playsInline = true
-  video.muted = true
-  video.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
-  document.body.appendChild(video)
-  setMediaSrc(video, url, crossOrigin)
-
   if (!url) throw new Error('Empty video source URL')
-
-  video.load()
+  const video = createHiddenMediaElement('video', url, crossOrigin)
 
   return new Promise<HTMLVideoElement>((resolve, reject) => {
     const onLoadedMetadata = () => {
