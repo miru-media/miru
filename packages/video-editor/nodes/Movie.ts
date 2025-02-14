@@ -7,7 +7,6 @@ import { type Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
 import { type AnyNode, type NodeMap as NodeMapType } from '../types'
-import { useRafLoop } from '../utils'
 
 import { type Schema } from '.'
 
@@ -105,9 +104,7 @@ export class Movie {
 
     // force webgl2 context
     canvas.getContext = ((_id, _options) => this.gl) as typeof canvas.getContext
-    const videoContext = (this.videoContext = new VideoContext(this.displayCanvas, undefined, {
-      manualUpdate: true,
-    }))
+    const videoContext = (this.videoContext = new VideoContext(this.displayCanvas))
     delete (canvas as Partial<typeof canvas>).getContext
 
     videoContext.pause()
@@ -123,19 +120,6 @@ export class Movie {
         trackNodes.forEach((node) => node.connect(videoContext.destination))
         onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
       })
-
-      let prevRafTime = 0
-      watch([this.isPaused], ([paused]) => {
-        if (!paused) prevRafTime = performance.now() / 1e3
-      })
-      useRafLoop(
-        (timestamp) => {
-          const delta = timestamp - prevRafTime
-          videoContext.update(delta)
-          prevRafTime = timestamp
-        },
-        { active: () => this.isPaused.value && !this.#noRender.value },
-      )
     })
 
     const updateState = (currentTime: number) => {
@@ -161,7 +145,9 @@ export class Movie {
       if (displayCanvas.height !== height) displayCanvas.height = height
 
       if (isPlaying) this.stats.begin()
-      _update(dt)
+
+      if (!this.#noRender.value) _update(dt)
+
       if (isPlaying) this.stats.end()
     }
 
@@ -173,6 +159,8 @@ export class Movie {
   }
 
   play() {
+    if (this.#noRender.value) return
+
     this.isPaused.value = false
     this.videoContext.play()
     this.isPaused.value = this.videoContext.state !== 0
