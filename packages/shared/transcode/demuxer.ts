@@ -263,10 +263,14 @@ export class MP4Demuxer {
     const videoTrack = info.videoTracks[0] as MP4BoxVideoTrack | undefined
     const audioTrack = info.audioTracks[0] as MP4BoxAudioTrack | undefined
 
+    const video = videoTrack && this.getConfig(videoTrack)
+    const audio = audioTrack && this.getConfig(audioTrack)
+
     return {
-      duration: info.duration / info.timescale,
-      video: videoTrack && this.getConfig(videoTrack),
-      audio: audioTrack && this.getConfig(audioTrack),
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
+      duration: info.duration / info.timescale || video?.duration || audio?.duration || 0,
+      video,
+      audio,
     }
   }
 
@@ -275,8 +279,8 @@ export class MP4Demuxer {
   getConfig(track: MP4BoxVideoTrack | MP4BoxAudioTrack): DemuxerVideoInfo | DemuxerAudioInfo {
     const { codec } = track
     const trak = this.#file.getTrackById(track.id)
-    // TODO: use track.samples_duration?
-    const duration = track.duration / track.timescale
+    // track.duration is zero in some files
+    const duration = (track.duration || track.samples_duration) / track.timescale
 
     if (track.type === 'audio') {
       const { audio } = track
@@ -322,7 +326,7 @@ export class MP4Demuxer {
     return {
       codec: codec.startsWith('vp08') ? 'vp8' : codec,
       duration,
-      fps: track.nb_samples / duration,
+      fps: track.nb_samples / track.samples_duration / track.timescale,
       description,
       codedWidth: width,
       codedHeight: height,
