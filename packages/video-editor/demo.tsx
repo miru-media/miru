@@ -196,7 +196,6 @@ const Demo = () => {
                         />
                       </label>
                       [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
-                      {() => clip.transition?.duration.toFixed(2)}
                     </div>
                   </div>
                 )

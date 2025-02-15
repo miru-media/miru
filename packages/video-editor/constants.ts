@@ -29,3 +29,5 @@ export enum ReadyState {
 export const VIDEO_PRESEEK_TIME_S = 2
 export const MEDIA_SYNC_INTERVAL_MS = 500
 export const MEDIA_SYNC_TOLERANCE_S = 0.3
+
+export const ASSET_URL_REFRESH_TIMEOUT_MS = 3000

@@ -1,3 +1,5 @@
+import { ref } from 'fine-jsx'
+
 import { Effect } from 'reactive-effects/Effect'
 
 import { getContainerInfo, getMediaElementInfo } from '../utils'
@@ -40,21 +42,54 @@ const addToCache = async (assetId: string, blob: Blob) => {
 }
 
 export class MediaAsset extends Asset<Schema.AvMediaAsset> {
-  objectUrl: string
-  url?: string
   duration: number
   audio?: { duration: number }
   video?: { duration: number; rotation: number }
 
+  blob: Blob
+  #objectUrl = ref('')
+  #isRefreshing = false
+
+  get objectUrl() {
+    return this.#objectUrl.value
+  }
+
   protected constructor(init: Schema.AvMediaAsset, options: { blob: Blob }) {
     super(init)
 
-    this.url = init.url
-    this.objectUrl = URL.createObjectURL(options.blob)
+    this.setBlob(options.blob)
+    this.blob = options.blob
     const { duration, audio, video } = init
     this.duration = duration
     this.audio = audio
     this.video = video
+  }
+
+  setBlob(blob: Blob) {
+    URL.revokeObjectURL(this.objectUrl)
+    this.#objectUrl.value = URL.createObjectURL(blob)
+  }
+
+  async refreshObjectUrl() {
+    if (this.#isRefreshing) return
+    this.#isRefreshing = true
+
+    const url = this.objectUrl
+    try {
+      const res = await fetch(url)
+      res.body?.cancel().catch(() => undefined)
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      if (import.meta.env.DEV) console.error(error)
+
+      const cachedBlob = await getCachedBlob(this.id)
+      if (!cachedBlob) throw new Error(`[video-editor] couldn't get asset data from cache (${this.id})`)
+
+      this.setBlob(cachedBlob)
+    } finally {
+      this.#isRefreshing = false
+    }
   }
 
   dispose() {
@@ -126,6 +161,8 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
 }
 
 export class VideoEffectAsset extends Effect {
+  type = 'video_effect_asset' as const
+
   toObject(): Schema.VideoEffectAsse {
     return {
       ...super.toObject(),

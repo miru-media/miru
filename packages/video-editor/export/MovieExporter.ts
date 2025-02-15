@@ -12,8 +12,10 @@ import { type TrackMovie } from '../types'
 import { AVEncoder } from './AVEncoder'
 import { ExtractorClip } from './ExporterClip'
 import { type Mp4ExtractorNode } from './Mp4ExtractorNode'
+import { MediaAsset } from '../nodes'
 
-interface SourceEntry {
+interface AvAssetEntry {
+  asset: MediaAsset
   start: number
   end: number
   demuxer: MP4Demuxer
@@ -30,7 +32,7 @@ export class MovieExporter {
   videoContext!: VideoContext
   tracks: Track<ExtractorClip>[] = []
   clips: ExtractorClip[] = []
-  sources = new Map<string, SourceEntry>()
+  sources = new Map<string, AvAssetEntry>()
   avEncoder?: AVEncoder
 
   constructor(movie: Movie) {
@@ -75,6 +77,7 @@ export class MovieExporter {
         if (!sourceEntry) {
           const demuxer = new MP4Demuxer()
           sourceEntry = {
+            asset: clip.source,
             start: sourceStart,
             end: sourceEnd,
             demuxer,
@@ -98,8 +101,10 @@ export class MovieExporter {
 
     await Promise.all(
       Array.from(this.sources.entries()).map(async ([source, entry]) => {
+        await entry.asset.refreshObjectUrl()
+
         const getAudioBuffer = async () => {
-          const encodedFileData = await fetch(source).then((r) => r.arrayBuffer())
+          const encodedFileData = await entry.asset.blob.arrayBuffer()
           return await (audioContext ??= new AudioContext()).decodeAudioData(encodedFileData)
         }
 

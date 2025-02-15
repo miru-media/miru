@@ -6,6 +6,7 @@ import { getDefaultFilterDefinitions, Renderer } from 'webgl-effects'
 import { type Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
+import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants'
 import { type AnyNode, type NodeMap as NodeMapType } from '../types'
 
 import { type Schema } from '.'
@@ -119,6 +120,19 @@ export class Movie {
       watch([() => this.children.value.map((t) => t.node.value)], ([trackNodes], _prev, onCleanup) => {
         trackNodes.forEach((node) => node.connect(videoContext.destination))
         onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
+      })
+
+      watch([this.isStalled], ([stalled], _prev, onCleanup) => {
+        if (!stalled) return
+
+        const timeoutId = setTimeout(
+          () =>
+            this.assets.forEach((asset) => {
+              if (asset.type === 'av_media_asset') asset.refreshObjectUrl().catch(() => undefined)
+            }),
+          ASSET_URL_REFRESH_TIMEOUT_MS,
+        )
+        onCleanup(() => clearTimeout(timeoutId))
       })
     })
 

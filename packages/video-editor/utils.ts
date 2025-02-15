@@ -47,14 +47,25 @@ export const useMediaReadyState = (media: MaybeRefOrGetter<HTMLMediaElement | un
   const readyState = ref(0)
   const updateValue = () => (readyState.value = toValue(media)?.readyState ?? 0)
   const events = [
-    'loadedmetadata',
-    'loadeddata',
+    'abort',
     'canplay',
     'canplaythrough',
-    'waiting',
-    'stalled',
-    'seeking',
+    'durationchange',
+    'emptied',
+    'ended',
+    'error',
+    'loadeddata',
+    'loadedmetadata',
+    'loadstart',
+    'pause',
+    'play',
+    'playing',
     'seeked',
+    'seeking',
+    'stalled',
+    'suspend',
+    'timeupdate',
+    'waiting',
   ]
 
   effect(updateValue)

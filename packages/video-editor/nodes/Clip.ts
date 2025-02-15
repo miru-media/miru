@@ -4,7 +4,7 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 import { createHiddenMediaElement } from 'shared/utils'
 
 import { type ClipSnapshot, type CustomSourceNodeOptions, type TrackMovie } from '../types'
-import { useMediaError, useMediaReadyState } from '../utils'
+import { useMediaError } from '../utils'
 import { AudioElementNode, VideoElementNode } from '../videoContextNodes'
 
 import { type Schema } from '.'
@@ -23,7 +23,6 @@ export class Clip extends BaseClip {
   parent: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   error: Ref<MediaError | undefined>
-  readyState = useMediaReadyState(this.media)
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
 
@@ -56,6 +55,12 @@ export class Clip extends BaseClip {
     this.setMedia(this.root.nodes.get(init.source.assetId))
 
     this.scope.run(() => {
+      // keep media URL updated
+      watch([() => this.source.objectUrl], ([url]) => {
+        const media = this.media.value
+        if (media.src && media.src !== url) media.src = url
+      })
+
       watch(
         [
           () => this.transition?.type,
