@@ -73,7 +73,7 @@ export const Settings = ({ editor }: { editor: VideoEditor }) => {
           onClick={() => {
             if (!window.confirm(t(`Are you sure you want to delete your video? \n\nThis can't be undone.`)))
               return
-            return editor.movie.clearAllContent(true)
+            return editor.clearAllContentAndHistory()
           }}
           disabled={() => editor.movie.isEmpty}
         >

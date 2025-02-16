@@ -144,6 +144,7 @@ export class VideoEditor {
     reset: () => {
       this.#history.actions.length = 0
       this.#history.index = -1
+      this.#history.canRedo.value = this.#history.canUndo.value = false
     },
   }
 
@@ -187,20 +188,33 @@ export class VideoEditor {
     })
   }
 
-  async replaceMovie(movieInit: Schema.Movie) {
+  async #withLoading<T>(fn: () => Promise<T>): Promise<T> {
     this.#isLoading.value++
+    return fn().finally(() => this.#isLoading.value--)
+  }
 
-    const { movie } = this
-    const { nodes } = movie
+  async clearAllContentAndHistory() {
+    await this.#withLoading(async () => {
+      const { movie } = this
 
-    this.#history.reset()
-    movie.clearAllContent()
-    this.select(undefined)
+      this.select(undefined)
+      this.#history.reset()
+      await movie.clearAllContent(true)
+    })
+  }
 
-    movie.resolution = movieInit.resolution
-    movie.frameRate.value = movieInit.frameRate
+  async replaceMovie(movieInit: Schema.Movie) {
+    await this.#withLoading(async () => {
+      const { movie } = this
+      const { nodes } = movie
 
-    try {
+      this.#history.reset()
+      movie.clearAllContent()
+      this.select(undefined)
+
+      movie.resolution = movieInit.resolution
+      movie.frameRate.value = movieInit.frameRate
+
       await this.#history.ignore(async () => {
         await Promise.all(
           movieInit.assets.map(async (assetInit) => {
@@ -223,9 +237,7 @@ export class VideoEditor {
           return track
         })
       })
-    } finally {
-      this.#isLoading.value--
-    }
+    })
   }
 
   async addClip(track: Track<Clip>, source: string | Blob) {
