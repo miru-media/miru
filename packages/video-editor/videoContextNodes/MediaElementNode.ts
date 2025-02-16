@@ -83,6 +83,11 @@ export class MediaElementNode extends CustomSourceNode {
     return this.mediaState.isReady.value || !this.isInPresentationTime.value
   }
 
+  _update(movieTime: number) {
+    this.mediaState.readyState.value = this.media.readyState
+    return super._update(movieTime)
+  }
+
   _seek(movieTime: number) {
     const mediaTime = super._seek(movieTime)
     const { media } = this

@@ -2,7 +2,7 @@ import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, 
 
 import { MP4Demuxer } from 'shared/transcode/demuxer'
 import { type Size } from 'shared/types'
-import { loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
+import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
 export const useMappedUniqueArray = <T extends object, U>(
   sourceArrayRef: MaybeRefOrGetter<T[]>,
@@ -238,3 +238,6 @@ export const useInterval = (
     onCleanup(() => clearInterval(id))
   })
 }
+
+export const isAudioElement = (thing?: unknown): thing is HTMLAudioElement =>
+  thing != null && isElement(thing) && thing.nodeName === 'AUDIO'

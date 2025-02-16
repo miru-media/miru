@@ -6,12 +6,13 @@ import { FRAMEBUFFER_TEX_OPTIONS, type Renderer } from 'webgl-effects'
 import { type Effect } from 'reactive-effects/Effect'
 import { type AdjustmentsState, type Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent'
-import { fit, setObjectSize } from 'shared/utils'
+import { fit, isElement, setObjectSize } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
 import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants'
 import { type Schema } from '../nodes'
 import { type ClipTime, type CustomSourceNodeOptions } from '../types'
+import { getImageSize, isAudioElement } from '../utils'
 
 const rangeContainsTime = (range: { start: number; end: number }, time: number) => {
   return range.start <= time && time < range.end
@@ -162,12 +163,17 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
 
     const { media } = this
 
-    if (!this.shouldRender || !media || ('nodeName' in media && media.nodeName === 'AUDIO')) return false
+    if (!this.shouldRender || !media || isAudioElement(media)) return false
 
     this.updateSize()
 
+    if (isElement(media)) {
+      const { width, height } = getImageSize(media)
+      if (!width || !height) return false
+    }
+
     const { renderer } = this
-    renderer.loadImage(this.mediaTexture, media as Exclude<typeof media, HTMLAudioElement>)
+    renderer.loadImage(this.mediaTexture, media)
 
     const gl = this._gl as WebGL2RenderingContext
     const resolution = this.movieResolution.value
