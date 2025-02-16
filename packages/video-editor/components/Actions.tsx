@@ -1,8 +1,9 @@
 import { filesize } from 'filesize'
 import { effect, ref, toRef } from 'fine-jsx'
+import { debounce } from 'throttle-debounce'
 
 import { type InputEvent } from 'shared/types'
-import { useI18n } from 'shared/utils'
+import { useEventListener, useI18n } from 'shared/utils'
 
 import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES } from '../constants'
 import { type VideoEditor } from '../VideoEditor'
@@ -28,6 +29,18 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
   effect(() => {
     if (editor.selected?.parent.trackType !== 'video') showFiltersMenu.value = false
   })
+
+  const showDebugButtons = ref(import.meta.env.DEV)
+  const tapCounter = ref(0)
+  const clearCounterDebounced = debounce(500, () => (tapCounter.value = 0))
+  useEventListener(
+    () => editor.movie.displayCanvas,
+    'pointerup',
+    () => {
+      if (++tapCounter.value === 7) showDebugButtons.value = !showDebugButtons.value
+      clearCounterDebounced()
+    },
+  )
 
   return (
     <div class="actions">
@@ -69,24 +82,27 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
           )
         }
 
-        <IconButton
-          class="toolbar-button"
-          icon={toRef(() => (editor.showStats.value ? IconTablerGraphFilled : IconTablerGraph))}
-          onClick={() => (editor.showStats.value = !editor.showStats.value)}
-        >
-          {t('Debug')}
-        </IconButton>
-
-        {import.meta.env.DEV && (
-          <IconButton
-            class="toolbar-button"
-            icon={IconTablerCodeDots}
-            // eslint-disable-next-line no-console
-            onClick={() => console.info(editor.movie.children.value.map((t) => t.toObject()))}
-          >
-            {t('Log state')}
-          </IconButton>
-        )}
+        {() =>
+          showDebugButtons.value && (
+            <>
+              <IconButton
+                class="toolbar-button"
+                icon={IconTablerCodeDots}
+                // eslint-disable-next-line no-console
+                onClick={() => console.info(editor.movie.children.value.map((t) => t.toObject()))}
+              >
+                {t('Log state')}
+              </IconButton>
+              <IconButton
+                class="toolbar-button"
+                icon={toRef(() => (editor.showStats.value ? IconTablerGraphFilled : IconTablerGraph))}
+                onClick={() => (editor.showStats.value = !editor.showStats.value)}
+              >
+                {t('Debug')}
+              </IconButton>
+            </>
+          )
+        }
 
         <IconButton class="toolbar-button" icon={IconTablerDownload} onClick={() => editor.startExport()}>
           {t('Export')}
