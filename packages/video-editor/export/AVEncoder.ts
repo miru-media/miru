@@ -3,6 +3,8 @@ import { ArrayBufferTarget, Muxer, type MuxerOptions } from 'mp4-muxer'
 import { assertEncoderConfigIsSupported } from 'shared/transcode/utils'
 import { win } from 'shared/utils'
 
+import { EXPORT_VIDEO_CODECS } from '../constants'
+
 import { type EncodedAudioChunk as EncodedAudioChunkPolyfill } from './polyfill'
 
 export namespace AVEncoder {
@@ -49,7 +51,8 @@ export class AVEncoder {
 
     if (video) {
       const { width, height, fps } = video
-      const { codec = `avc1.4200${(40).toString(16)}`, bitrate = 1e7 } = video.config ?? {}
+      // check for the codec async in the init() method
+      const { codec = '', bitrate = 1e7 } = video.config ?? {}
 
       this.video = {
         ...video,
@@ -63,25 +66,27 @@ export class AVEncoder {
         ...audio,
       }
     }
-
-    this.muxer = new Muxer({
-      target: new ArrayBufferTarget(),
-      video: video && {
-        codec: 'avc',
-        width: video.width,
-        height: video.height,
-        rotation: video.rotation,
-      },
-      audio: this.audio?.config,
-      fastStart: 'in-memory',
-    })
   }
 
   async init() {
     const { audio, video } = this
 
     if (video) {
-      await assertEncoderConfigIsSupported('video', video.config)
+      let lastError: unknown
+
+      for (const codec of EXPORT_VIDEO_CODECS) {
+        video.config.codec = codec
+        const isSupported = await assertEncoderConfigIsSupported('video', video.config)
+          .then(() => true)
+          .catch((error: unknown) => {
+            lastError = error
+            return false
+          })
+        if (isSupported) break
+      }
+
+      if (!video.config.codec) throw lastError
+
       video.encoder = new VideoEncoder({
         output: (chunk, meta) => {
           if (this.firstVideoFrameTimeUs === undefined) this.firstVideoFrameTimeUs = chunk.timestamp
@@ -127,6 +132,19 @@ export class AVEncoder {
       })
       audio.encoder.configure(audio.config)
     }
+
+    this.muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: video && {
+        codec: video.config.codec.startsWith('avc') ? 'avc' : 'vp9',
+        width: video.width,
+        height: video.height,
+        rotation: video.rotation,
+      },
+      audio: this.audio?.config,
+      fastStart: 'in-memory',
+    })
+
     return this
   }
 

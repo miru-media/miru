@@ -11,7 +11,7 @@ import { renderComponentTo } from './components/renderTo'
 import { SecondaryToolbar } from './components/SecondaryToolbar'
 import { Settings } from './components/Settings'
 import { Timeline } from './components/Timeline'
-import { EXPORT_VIDEO_CODEC, ReadyState, SourceNodeState } from './constants'
+import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from './constants'
 import { demoMovie } from './demoMovie'
 import de from './locales/de.json'
 import { type Clip, type Schema } from './nodes'
@@ -24,13 +24,21 @@ const Demo = () => {
 
   if (!hasVideoDecoder()) alert(t(`Your browser doesn't have the WebCodec APIs needed to export videos!`))
   else
-    assertEncoderConfigIsSupported('video', { codec: EXPORT_VIDEO_CODEC, width: 1920, height: 1080 }).catch(
-      (error: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error(error)
-        alert(`${t(`Your browser can't export videos in the format that we use.`)} (${EXPORT_VIDEO_CODEC})`)
-      },
+    Promise.all(
+      EXPORT_VIDEO_CODECS.map((codec) =>
+        assertEncoderConfigIsSupported('video', { codec, width: 1920, height: 1080 })
+          .then(() => true)
+          .catch(() => false),
+      ),
     )
+      .then((results) => {
+        if (!results.some((supported) => supported)) {
+          alert(
+            `${t(`Your browser can't export videos in the formats that we use.`)} (${EXPORT_VIDEO_CODECS.join()})`,
+          )
+        }
+      })
+      .catch(() => undefined)
 
   const editor = new VideoEditor()
 
