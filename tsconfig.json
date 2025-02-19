@@ -24,6 +24,19 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["packages", "example", "scripts", "tools", "./*.ts", "./*.js", "./*.cjs"],
-  "exclude": ["**/dist"]
+  "include": [
+    "packages",
+    "example",
+    "scripts",
+    "tools",
+    "docs",
+    "docs/.vitepress/**/*.ts",
+    "./*.ts",
+    "./*.js",
+    "./*.cjs",
+    "**/*.md"
+  ],
+  "vueCompilerOptions": {
+    "vitePressExtensions": [".md"]
+  }
 }

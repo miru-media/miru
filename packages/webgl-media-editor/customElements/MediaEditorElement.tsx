@@ -3,7 +3,7 @@ import { type EffectDefinition } from 'webgl-effects'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { type Context2D, EditorView, type ImageEditState, type ImageSourceOption } from 'shared/types'
-import { downloadBlob, win } from 'shared/utils'
+import { downloadBlob, HTMLElement } from 'shared/utils'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'
@@ -12,15 +12,13 @@ import { MediaEditor } from '../MediaEditor'
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
 
-const HTMLElement = ((win.HTMLElement as unknown) ?? Object) as typeof window.HTMLElement
-
 export class MediaEditorElement extends HTMLElement {
   static observedAttributes = OBSERVED_ATTRS
 
   #scope = createEffectScope()
   #editor: MediaEditor
   #effects = ref<EffectDefinition[]>([])
-  #unmount: () => void
+  #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   #view = ref(EditorView.Crop)
 
@@ -69,10 +67,6 @@ export class MediaEditorElement extends HTMLElement {
         }),
     )
     this.#effects.value = getDefaultFilterDefinitions(import.meta.env.ASSETS_PATH)
-
-    this.#unmount = this.#scope.run(() =>
-      renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
-    )
   }
 
   attributeChangedCallback(name: ObservedAttr, _oldValue: string | null, newValue: string | null) {
@@ -96,9 +90,15 @@ export class MediaEditorElement extends HTMLElement {
 
   connectedCallback() {
     clearTimeout(this.#disconnectTimeout)
+
+    if (!this.#unmount) {
+      this.#unmount = this.#scope.run(() =>
+        renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
+      )
+    }
   }
   disconnectedCallback() {
-    this.#disconnectTimeout = setTimeout(this.#unmount, 500)
+    if (this.#unmount) this.#disconnectTimeout = setTimeout(this.#unmount, 500)
   }
 
   #dispatchEvent(type: string, detail: unknown) {
@@ -137,6 +137,6 @@ export class MediaEditorElement extends HTMLElement {
 
   dispose() {
     this.#editor.dispose()
-    this.#unmount()
+    this.#unmount?.()
   }
 }

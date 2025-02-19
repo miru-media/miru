@@ -101,7 +101,7 @@ export const useEventListener = <T extends Event>(
   })
 
 const supportsHover = ref(false)
-{
+if ('matchMedia' in win) {
   const query = win.matchMedia('(hover: hover)')
   supportsHover.value = query.matches
   query.addEventListener('change', () => (supportsHover.value = query.matches))

@@ -1,6 +1,7 @@
 import { createEffectScope, ref } from 'fine-jsx'
 
 import { renderComponentTo } from 'miru-video-editor/components/renderTo'
+import { HTMLElement } from 'shared/utils'
 
 import { trim } from '../trim'
 import { type TrimState, VideoTrimmerUI } from '../VideoTrimmerUI'

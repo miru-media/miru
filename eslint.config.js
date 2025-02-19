@@ -1,73 +1,83 @@
 import eslint from '@eslint/js'
+import markdown from '@eslint/markdown'
 import importPlugin from 'eslint-plugin-import'
 import * as tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
-  ...tseslint.configs.strictTypeChecked,
-  importPlugin.flatConfigs.recommended,
-  importPlugin.flatConfigs.warnings,
-  importPlugin.flatConfigs.typescript,
+  markdown.configs.recommended,
+  { files: ['**/*.md'], language: 'markdown/gfm' },
   {
-    settings: {
-      'import/resolver': { typescript: { project: '.' } },
-      'import/internal-regex': '^(webgl-media-editor|miru-video-editor|reactive-effects|renderer|shared)/',
-    },
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+    files: ['**/*.{ts,tsx,js,jsx,cjs,mts,mjs}'],
+    ignores: ['!docs/.vitepress', '**/dist/**', 'docs/.vitepress/cache/**'],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+      ...tseslint.configs.strictTypeChecked,
+      importPlugin.flatConfigs.recommended,
+      importPlugin.flatConfigs.warnings,
+      importPlugin.flatConfigs.typescript,
+      {
+        settings: {
+          'import/resolver': { typescript: { project: '.' } },
+          'import/internal-regex':
+            '^(webgl-media-editor|miru-video-editor|reactive-effects|renderer|shared)/',
+        },
+        languageOptions: {
+          parserOptions: {
+            projectService: true,
+            tsconfigRootDir: import.meta.dirname,
+          },
+        },
+        rules: {
+          '@typescript-eslint/consistent-type-imports': [
+            'error',
+            {
+              disallowTypeAnnotations: true,
+              fixStyle: 'inline-type-imports',
+            },
+          ],
+          '@typescript-eslint/no-explicit-any': 'warn',
+          '@typescript-eslint/no-unsafe-argument': 'warn',
+          '@typescript-eslint/no-unsafe-assignment': 'warn',
+          '@typescript-eslint/no-unsafe-member-access': 'warn',
+          '@typescript-eslint/no-unsafe-return': 'warn',
+          '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_' }],
+          '@typescript-eslint/no-confusing-void-expression': [
+            'error',
+            { ignoreArrowShorthand: true, ignoreVoidOperator: true },
+          ],
+          '@typescript-eslint/no-non-null-assertion': 'warn',
+          '@typescript-eslint/no-namespace': 'off',
+          '@typescript-eslint/strict-boolean-expressions': [
+            'error',
+            {
+              allowNullableNumber: false,
+              allowNullableBoolean: true,
+              allowNullableObject: true,
+              allowNullableString: true,
+            },
+          ],
+          '@typescript-eslint/restrict-template-expressions': [
+            'error',
+            { allowBoolean: true, allowNumber: true },
+          ],
+          'import/order': [
+            'error',
+            {
+              alphabetize: { order: 'asc', caseInsensitive: true },
+              'newlines-between': 'always',
+              groups: ['builtin', 'external', 'internal', 'parent', 'index'],
+            },
+          ],
+          'import/no-cycle': 'error',
+          'import/no-relative-packages': 'error',
+          'import/no-useless-path-segments': 'error',
+          'no-undef': 'off',
+          'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
+        },
       },
-    },
-    rules: {
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        {
-          disallowTypeAnnotations: true,
-          fixStyle: 'inline-type-imports',
-        },
-      ],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-confusing-void-expression': [
-        'error',
-        { ignoreArrowShorthand: true, ignoreVoidOperator: true },
-      ],
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/strict-boolean-expressions': [
-        'error',
-        {
-          allowNullableNumber: false,
-          allowNullableBoolean: true,
-          allowNullableObject: true,
-          allowNullableString: true,
-        },
-      ],
-      '@typescript-eslint/restrict-template-expressions': [
-        'error',
-        { allowBoolean: true, allowNumber: true },
-      ],
-      'import/order': [
-        'error',
-        {
-          alphabetize: { order: 'asc', caseInsensitive: true },
-          'newlines-between': 'always',
-          groups: ['builtin', 'external', 'internal', 'parent', 'index'],
-        },
-      ],
-      'import/no-cycle': 'error',
-      'import/no-relative-packages': 'error',
-      'import/no-useless-path-segments': 'error',
-      'no-undef': 'off',
-      'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
-    },
+    ],
   },
   {
     files: ['packages/**/*.{ts,tsx,js,jsx}'],

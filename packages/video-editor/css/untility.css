@@ -1,6 +1,6 @@
 .text-small {
   font-size: 9px;
-  font-weight: semibold;
+  font-weight: 600;
   line-height: 12px;
 }
 
@@ -47,6 +47,7 @@
 }
 
 .numeric {
+  font-family: sans-serif;
   font-variant-numeric: tabular-nums;
 }
 
@@ -57,9 +58,9 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+  clip: rect(0, 0, 0, 0);
 }
 
 .safe-padding-x {

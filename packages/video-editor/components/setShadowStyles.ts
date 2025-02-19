@@ -28,7 +28,7 @@ export const setShadowStyles = (shadow: ShadowRoot) => {
   }
 }
 
-if (import.meta.hot != null && 'CSSStyleSheet' in window) {
+if (import.meta.hot && 'CSSStyleSheet' in window) {
   import.meta.hot.accept('../index.css?inline', (mod) => {
     if (mod == null) import.meta.hot?.invalidate()
     if (styleSheet_ == null) return

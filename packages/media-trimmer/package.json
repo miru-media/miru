@@ -8,6 +8,17 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": {
+      "import": "./index.ts"
+    },
+    "./elements": {
+      "import": "./elements/index.ts"
+    },
+    "./vue2": {
+      "import": "./vue2/index.ts"
+    }
+  },
   "publishConfig": {
     "exports": {
       ".": {

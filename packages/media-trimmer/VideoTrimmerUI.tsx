@@ -325,7 +325,7 @@ export const VideoTrimmerUI = (props: {
           </ToggleButton>
           <div class="video-trimmer-controls-center">{() => formatTime(currentTime.value, false)}</div>
           <div class="video-trimmer-controls-right">
-            <div>{() => formatDuration(endTime.value - startTime.value)}</div>
+            <div>{() => formatDuration(Math.round(endTime.value - startTime.value))}</div>
             {() =>
               unableToDecode.value ? (
                 <div></div>

@@ -26,7 +26,7 @@ export const IconButton = ({
       },
       children,
     ],
-    ...(tag === 'button' ? { type: 'button' } : null),
+    ...(tag === 'button' ? { type: 'button' } : { role: 'button' }),
     ...props,
   }
 

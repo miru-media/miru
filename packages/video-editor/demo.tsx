@@ -1,8 +1,8 @@
-import { effect, h } from 'fine-jsx'
+import { effect, h, onScopeDispose } from 'fine-jsx'
 
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/transcode/utils'
 import { type InputEvent } from 'shared/types'
-import { isElement, provideI18n, useEventListener } from 'shared/utils'
+import { isElement, provideI18n, useEventListener, win } from 'shared/utils'
 
 import * as Actions from './components/Actions'
 import { LoadingOverlay } from './components/LoadingOverlay'
@@ -41,8 +41,9 @@ const Demo = () => {
       .catch(() => undefined)
 
   const editor = new VideoEditor()
-
   const { movie } = editor
+
+  onScopeDispose(() => editor.dispose())
 
   {
     // restore movie from localStorage
@@ -63,7 +64,7 @@ const Demo = () => {
     })
   }
 
-  useEventListener(window, 'keydown', (event: KeyboardEvent) => {
+  useEventListener(win, 'keydown', (event: KeyboardEvent) => {
     const target = event.composedPath()[0]
 
     if (isElement(target) && target.closest('select,input,textarea,[contenteditable=true]')) return
@@ -216,4 +217,4 @@ const Demo = () => {
   )
 }
 
-renderComponentTo(Demo, {}, document.getElementById('app')!)
+export const mountDemo = (root: HTMLElement) => renderComponentTo(Demo, {}, root)

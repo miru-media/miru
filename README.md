@@ -1,6 +1,6 @@
 <picture>
-  <source srcset="./packages/shared/assets/branding/logo/white-logo.svg" media="(prefers-color-scheme: dark)" height="170px" width="100%">
-  <img src="./packages/shared/assets/branding/logo/dark-logo.svg" height="170px" width="100%">
+  <source srcset="./docs/branding/logo/white-logo.svg" media="(prefers-color-scheme: dark)" height="170px" width="100%">
+  <img src="./docs/branding/logo/dark-logo.svg" height="170px" width="100%">
 </picture>
 
 Miru is a new set of modular, extensible Web platform tools and components for still image and multi-track video editing and state-of-the-art, real-time AR. Using WebGL, WebAssembly, and open source, mobile-optimized machine learning models, Miru will give people on the social web the tools to edit images and apply interactive effects to recorded video without compromising on privacy and transparency. Miru aims to provide intuitive and user-friendly UIs which developers can easily integrate into their Web apps regardless of the frontend frameworks they use.
@@ -12,8 +12,8 @@ You can try out the image editing features at https://demo.miru.media
 This project is still in its early stages. We're working on:
 
 - [x] Still iamge editor with WebGL filters
-- [ ] Mobile-friendly video editor
-- [ ] WebGL video effects
+- [x] Mobile-friendly video editor
+- [x] WebGL video effects
 - [ ] Documentation
 - [ ] Real-time AR effects using [MediaPipe](https://github.com/google-ai-edge/mediapipe)
 

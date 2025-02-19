@@ -7,6 +7,8 @@ export const renderComponentTo = <P extends Record<string, unknown>>(
   props: P,
   node: HTMLElement,
 ) => {
+  if (import.meta.env.SSR) return () => undefined
+
   const shadow = node.attachShadow({ mode: 'open' })
 
   setShadowStyles(shadow)

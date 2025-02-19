@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
+  - 'docs'
 
 catalog:
   '@libav.js/variant-opus': '^6.5.7'

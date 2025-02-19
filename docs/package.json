@@ -1,0 +1,10 @@
+{
+  "name": "docs",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "media-trimmer": "workspace:^",
+    "miru-video-editor": "workspace:^",
+    "webgl-media-editor": "workspace:^"
+  }
+}

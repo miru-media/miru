@@ -36,12 +36,14 @@ svg {
 
 input,
 button,
+[role='button'],
 textarea,
 select {
   font: inherit;
 }
 
-button {
+button,
+[role='button'] {
   width: auto;
   padding: 0;
   margin: 0;

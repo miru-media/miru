@@ -125,7 +125,7 @@ export const formatDuration = (durationS: number, languages = navigator.language
   })
 
   if (!seconds) return minutesFormat.format(minutes)
-  return `${minutes ? `${minutesFormat.format(minutes)} ` : ''}${secondsFormat.format(seconds)}s`
+  return `${minutes ? `${minutesFormat.format(minutes)} ` : ''}${secondsFormat.format(seconds)}`
 }
 
 export const getMediaElementInfo = async (source: Blob | string) => {

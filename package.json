@@ -5,13 +5,16 @@
   "packageManager": "pnpm@9.10.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "pnpm run docs:dev",
     "dev:slow": "VITE_DEV_SLOW_DOWN_MS=5000 pnpm run dev",
     "build": "tsc -b tsconfig.check.json && NODE_ENV=production rollup --config rollup.config.js",
     "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
     "check": "tsc -b tsconfig.check.json --incremental",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
@@ -23,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@eslint/markdown": "^6.2.2",
     "@iconify-json/tabler": "^1.2.14",
     "@rollup/plugin-alias": "^5.1.1",
     "@rollup/plugin-commonjs": "^28.0.2",
@@ -45,7 +49,7 @@
     "conventional-recommended-bump": "^10.0.0",
     "cssnano": "^7.0.6",
     "esbuild": "^0.24.2",
-    "eslint": "^9.18.0",
+    "eslint": "^9.20.1",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
     "fine-jsx": "catalog:",
@@ -84,9 +88,10 @@
     "unocss": "^65.4.2",
     "unplugin-auto-import": "^19.0.0",
     "unplugin-icons": "^22.0.0",
-    "vite": "6.0.7",
+    "vite": "6.1.0",
     "vite-bundle-analyzer": "^0.16.0",
-    "vite-plugin-remote-assets": "^0.6.0"
+    "vite-plugin-remote-assets": "^0.6.0",
+    "vitepress": "2.0.0-alpha.2"
   },
   "lint-staged": {
     "**/*.((ts|js|cjs)?(x)|vue|md)": [

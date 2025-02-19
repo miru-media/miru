@@ -30,7 +30,7 @@ export class AVEncoder {
   audio?: Required<AVEncoder.AudioOptions> & {
     encoder?: AudioEncoder
   }
-  muxer: Muxer<ArrayBufferTarget>
+  muxer!: Muxer<ArrayBufferTarget>
   onOutput?: (type: 'audio' | 'video', timestamp: number) => void
   onError: (error: unknown) => void
   firstVideoFrameTimeUs?: number

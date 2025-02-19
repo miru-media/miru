@@ -3,6 +3,7 @@ import { type Renderer } from 'webgl-effects'
 
 import { type Effect } from 'reactive-effects/Effect'
 import { type CropState, type Size } from 'shared/types'
+import { HTMLElement } from 'shared/utils'
 
 import { FilterView } from '../components/Filter'
 import { renderComponentTo } from '../components/renderTo'

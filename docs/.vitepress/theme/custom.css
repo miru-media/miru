@@ -1,0 +1,24 @@
+:root {
+  --vp-c-brand-1: #1d6be4;
+  --vp-c-text-1: #212121;
+  --vp-nav-logo-height: 32px;
+}
+
+.dark {
+  --vp-c-text-1: #d0f1ff;
+  --vp-c-bg: #212121;
+  --vp-c-bg-soft: #2b2b2b;
+  --vp-c-bg-alt: #1a1a1a;
+}
+
+:root:not(.dark) .dark-only {
+  display: none;
+}
+
+:root:is(.dark) .light-only {
+  display: none;
+}
+
+.demo-container {
+  height: calc(100dvh - var(--vp-nav-height));
+}

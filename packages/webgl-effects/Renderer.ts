@@ -31,6 +31,7 @@ const setTextureParameters = (
 
 export class Renderer {
   #gl: WebGL2RenderingContext
+  #ownsGl: boolean
   #passthroughProgram: twgl.ProgramInfo
   #uniforms = {
     u_flipY: true,
@@ -42,8 +43,6 @@ export class Renderer {
     u_textureMatrix: mat4.create(),
   }
   #vertexBuffers: WebGLBuffer[] = []
-  emptyTexture: WebGLTexture
-  emptyTexture3D: WebGLTexture
   isDisposed = false
 
   effectOps: RendererEffectOp[] = []
@@ -56,7 +55,13 @@ export class Renderer {
   }
   scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
 
-  constructor({ gl = getWebgl2Context() } = {}) {
+  constructor({ gl }: { gl?: WebGL2RenderingContext } = {}) {
+    if (gl) this.#ownsGl = true
+    else {
+      gl = getWebgl2Context()
+      this.#ownsGl = true
+    }
+
     this.#gl = gl
 
     this.#passthroughProgram = twgl.createProgramInfo(gl, [vs, passthrough])
@@ -76,9 +81,6 @@ export class Renderer {
       gl.enableVertexAttribArray(location)
       this.#vertexBuffers.push(buffer)
     })
-
-    this.emptyTexture = this.createTexture()
-    this.emptyTexture3D = this.createTexture(LUT_TEX_OPTIONS)
 
     const createFb = () =>
       twgl.createFramebufferInfo(gl, [
@@ -116,7 +118,7 @@ export class Renderer {
     const texture = this.createTexture()
     if (size) this.resizeTexture(texture, size)
 
-    const framebuffer = gl.createFramebuffer()!
+    const framebuffer = gl.createFramebuffer()
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, framebuffer)
     gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
@@ -494,9 +496,13 @@ export class Renderer {
     gl.deleteProgram(programInfo.program)
     this.#fragmentsToPrograms.forEach(({ programInfo }) => gl.deleteProgram(programInfo.program))
     this.#fragmentsToPrograms.clear()
+    this.#passthroughProgram = undefined as never
 
-    gl.getExtension('WEBGL_lose_context')?.loseContext()
-    this.#gl = this.#passthroughProgram = undefined as never
+    if (this.#ownsGl) {
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      this.#gl = undefined as never
+    }
+
     this.isDisposed = true
   }
 }

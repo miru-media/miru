@@ -22,7 +22,6 @@ export class MediaEditor {
   #thumbnailUrls: string[] = []
 
   constructor(props: MediaEditorProps) {
-    const noop = () => undefined
     const scope = createEffectScope()
 
     this.#editor = scope.run(() => {
@@ -42,7 +41,7 @@ export class MediaEditor {
 
           props.onRenderPreview?.(sourceIndex, url)
         },
-        onEdit: props.onEdit ?? noop,
+        onEdit: props.onEdit ?? (() => undefined),
       })
     })
 

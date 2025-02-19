@@ -54,18 +54,7 @@ export default defineConfig({
     jsx: 'automatic',
     jsxImportSource: 'fine-jsx',
   },
-  base: './',
   build: {
     minify: false,
-
-    rollupOptions: {
-      input: {
-        index: resolve(import.meta.dirname, 'index.html'),
-        imageeditor: resolve(import.meta.dirname, 'image/index.html'),
-        videoeditor: resolve(import.meta.dirname, 'video/index.html'),
-        videotrimmer: resolve(import.meta.dirname, 'trim/index.html'),
-        videotest: resolve(import.meta.dirname, 'video/test.html'),
-      },
-    },
   },
 })

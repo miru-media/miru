@@ -2,9 +2,18 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
 deleted file mode 100644
 index 085cf8c538e3bce76ba011bcecf0f20954726e1f..0000000000000000000000000000000000000000
 diff --git a/dist/videocontext.js b/dist/videocontext.js
-index 9c49efe609802d7340f481ae983841aef133731a..6d9033eefe3548f5de50bba30e94bb86ce2f4952 100644
+index 9c49efe609802d7340f481ae983841aef133731a..f98ff1371947c484973a9ddc15f9e0fb4afdcdba 100644
 --- a/dist/videocontext.js
 +++ b/dist/videocontext.js
+@@ -7,7 +7,7 @@
+ 		exports["VideoContext"] = factory();
+ 	else
+ 		root["VideoContext"] = factory();
+-})(window, function() {
++})(typeof window == 'undefined' ? globalThis : window, function() {
+ return /******/ (function(modules) { // webpackBootstrap
+ /******/ 	// The module cache
+ /******/ 	var installedModules = {};
 @@ -1627,6 +1627,12 @@ var DestinationNode = function (_ProcessingNode) {
              gl.clear(gl.COLOR_BUFFER_BIT);
  

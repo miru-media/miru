@@ -38,9 +38,6 @@ export class VideoEditor {
     isDragging: ref(false),
     x: ref(0),
   }
-  get renderer() {
-    return this.movie.renderer
-  }
 
   showStats = ref(false)
   exportResult = ref<{ blob: Blob; url: string }>()
@@ -461,5 +458,9 @@ export class VideoEditor {
 
   redo() {
     this.#history.undoRedo(true)
+  }
+
+  dispose() {
+    this.movie.dispose()
   }
 }

@@ -5,14 +5,13 @@ import { type DemuxerChunkInfo, type Mp4ContainerInfo, MP4Demuxer } from 'shared
 import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
 import { setObjectSize } from 'shared/utils'
 
+import { type MediaAsset } from '../nodes'
 import { type Movie } from '../nodes/Movie'
 import { Track } from '../nodes/Track'
-import { type TrackMovie } from '../types'
 
 import { AVEncoder } from './AVEncoder'
 import { ExtractorClip } from './ExporterClip'
 import { type Mp4ExtractorNode } from './Mp4ExtractorNode'
-import { MediaAsset } from '../nodes'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -36,31 +35,28 @@ export class MovieExporter {
   avEncoder?: AVEncoder
 
   constructor(movie: Movie) {
-    setObjectSize(movie.gl.canvas, movie.resolution)
-
     this.movie = movie
-  }
 
-  async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
-    const { movie } = this
-    const { duration, resolution, renderer } = movie
-    const frameRate = movie.frameRate.value
     const { canvas } = movie.gl
 
-    canvas.getContext = () => movie.gl as any
-    const videoContext = (this.videoContext = new VideoContext(canvas, undefined, { manualUpdate: true }))
+    setObjectSize(canvas, movie.resolution)
+    canvas.getContext = () => movie.gl as never
+    this.videoContext = new VideoContext(canvas, undefined, { manualUpdate: true })
     delete (canvas as Partial<typeof canvas>).getContext
 
-    const movieStub: TrackMovie = {
+    const { resolution } = movie
+
+    const movieStub = {
       id: movie.id,
       nodes: movie.nodes,
-      videoContext,
-      renderer,
+      videoContext: this.videoContext,
+      renderer: movie.renderer,
       resolution,
       frameRate: movie.frameRate,
       isPaused: ref(false),
       isStalled: ref(false),
     }
+
     const movieInit = movie.toObject()
 
     movieInit.children.forEach((init) => {
@@ -95,6 +91,13 @@ export class MovieExporter {
         sourceEntry.end = Math.max(sourceEntry.end, sourceEnd)
       }
     })
+  }
+
+  async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
+    const { movie, videoContext } = this
+    const { duration, resolution } = movie
+    const frameRate = movie.frameRate.value
+    const { canvas } = movie.gl
 
     let hasAudio = false as boolean
     let hasVideo = false as boolean
