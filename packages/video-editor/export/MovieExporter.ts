@@ -1,16 +1,12 @@
-import { ref } from 'fine-jsx'
-import VideoContext from 'videocontext'
-
 import { type DemuxerChunkInfo, type Mp4ContainerInfo, MP4Demuxer } from 'shared/transcode/demuxer'
 import { assertDecoderConfigIsSupported } from 'shared/transcode/utils'
 import { setObjectSize } from 'shared/utils'
 
-import { type MediaAsset } from '../nodes'
-import { type Movie } from '../nodes/Movie'
-import { Track } from '../nodes/Track'
+import { type MediaAsset, type Movie, type Track } from '../nodes'
 
 import { AVEncoder } from './AVEncoder'
-import { ExtractorClip } from './ExporterClip'
+import { type ExtractorClip } from './ExporterClip'
+import { ExportMovie } from './ExportMovie'
 import { type Mp4ExtractorNode } from './Mp4ExtractorNode'
 
 interface AvAssetEntry {
@@ -27,41 +23,16 @@ interface AvAssetEntry {
 let audioContext: AudioContext | undefined
 
 export class MovieExporter {
-  movie: Movie
-  videoContext!: VideoContext
+  movie: ExportMovie
   tracks: Track<ExtractorClip>[] = []
   clips: ExtractorClip[] = []
   sources = new Map<string, AvAssetEntry>()
   avEncoder?: AVEncoder
 
   constructor(movie: Movie) {
-    this.movie = movie
+    const exportMovie = (this.movie = new ExportMovie(movie))
 
-    const { canvas } = movie.gl
-
-    setObjectSize(canvas, movie.resolution)
-    canvas.getContext = () => movie.gl as never
-    this.videoContext = new VideoContext(canvas, undefined, { manualUpdate: true })
-    delete (canvas as Partial<typeof canvas>).getContext
-
-    const { resolution } = movie
-
-    const movieStub = {
-      id: movie.id,
-      nodes: movie.nodes,
-      videoContext: this.videoContext,
-      renderer: movie.renderer,
-      resolution,
-      frameRate: movie.frameRate,
-      isPaused: ref(false),
-      isStalled: ref(false),
-    }
-
-    const movieInit = movie.toObject()
-
-    movieInit.children.forEach((init) => {
-      const track = new Track(init, movieStub, ExtractorClip)
-
+    exportMovie.children.forEach((track) => {
       for (let clip = track.head; clip; clip = clip.next) {
         this.clips.push(clip)
 
@@ -94,7 +65,7 @@ export class MovieExporter {
   }
 
   async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
-    const { movie, videoContext } = this
+    const { movie } = this
     const { duration, resolution } = movie
     const frameRate = movie.frameRate.value
     const { canvas } = movie.gl
@@ -189,6 +160,7 @@ export class MovieExporter {
       onError: (error) => (encoderError = error),
     }).init())
 
+    const { videoContext } = movie
     videoContext.play()
     onProgress?.(0)
 
@@ -206,7 +178,7 @@ export class MovieExporter {
             avEncoder.whenReadyForVideo(),
           ])
 
-          setObjectSize(movie.displayCanvas, movie.resolution)
+          setObjectSize(movie.gl.canvas, movie.resolution)
           videoContext.currentTime = timeS
           videoContext.update(0)
           const frame = new VideoFrame(canvas, { timestamp: 1e6 * timeS, duration: frameDurationUs })
@@ -288,12 +260,9 @@ export class MovieExporter {
 
   dispose() {
     this.tracks.forEach((track) => track.dispose())
-    this.videoContext.reset()
-    this.videoContext.destination.destroy()
     this.sources.clear()
     this.avEncoder?.dispose()
 
-    this.movie = this.videoContext = undefined as never
     this.tracks.length = this.clips.length = 0
   }
 }

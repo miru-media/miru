@@ -89,7 +89,7 @@ export const ClipActions = ({ editor }: { editor: VideoEditor }) => {
                 class="toolbar-button"
                 icon={IconTablerCodeDots}
                 // eslint-disable-next-line no-console
-                onClick={() => console.info(editor.movie.children.value.map((t) => t.toObject()))}
+                onClick={() => console.info(editor.movie.children.map((t) => t.toObject()))}
               >
                 {t('Log state')}
               </IconButton>

@@ -31,7 +31,7 @@ export class ExtractorClip extends BaseClip {
   }
 
   constructor(init: Schema.Clip, track: Track<ExtractorClip>) {
-    super(init)
+    super(init, track)
 
     const { renderer, root } = track
 

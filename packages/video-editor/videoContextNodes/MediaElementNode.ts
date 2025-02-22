@@ -67,7 +67,7 @@ export class MediaElementNode extends CustomSourceNode {
 
       watch([this.shouldPlay], ([shouldPlay]) => {
         if (shouldPlay) this._play()
-        else media.pause()
+        else this._pause()
       })
 
       // seek to the media source starting time before the clip is scheduled to play

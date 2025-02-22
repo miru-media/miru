@@ -3,7 +3,7 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { createHiddenMediaElement } from 'shared/utils'
 
-import { type ClipSnapshot, type CustomSourceNodeOptions, type TrackMovie } from '../types'
+import { type ClipSnapshot, type CustomSourceNodeOptions } from '../types'
 import { useMediaError } from '../utils'
 import { AudioElementNode, VideoElementNode } from '../videoContextNodes'
 
@@ -19,8 +19,7 @@ export class Clip extends BaseClip {
   filter: Ref<VideoEffectAsset | undefined>
   filterIntensity: Ref<number>
 
-  root: TrackMovie
-  parent: Track<Clip>
+  declare parent: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   error: Ref<MediaError | undefined>
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
@@ -42,10 +41,8 @@ export class Clip extends BaseClip {
   }
 
   constructor(init: Schema.Clip, track: Track<Clip>) {
-    super(init)
+    super(init, track)
 
-    this.parent = track
-    this.root = track.root
     this.filter = ref(init.filter ? this.root.nodes.get<VideoEffectAsset>(init.filter.assetId) : undefined)
     this.filterIntensity = ref(init.filter?.intensity ?? 1)
     this.transition = init.transition
@@ -194,9 +191,8 @@ export class Clip extends BaseClip {
     }
   }
 
-  dispose() {
-    super.dispose()
+  _dispose() {
+    super._dispose()
     this.#unloadCurrentMedia()
-    this.root = this.parent = undefined as never
   }
 }

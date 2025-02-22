@@ -1,21 +1,22 @@
 import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
 import VideoContext, { type CompositingNode } from 'videocontext'
 
-import { type TrackMovie } from '../types'
+import { type ExportMovie } from '../export/ExportMovie'
 
-import { type BaseClip, type Schema } from '.'
+import { type BaseClip, type Movie, type Schema } from '.'
+
+import { ParentNode } from './ParentNode'
 
 type TrackType = 'video' | 'audio'
 
-export class Track<T extends BaseClip> {
-  id: string
+export class Track<T extends BaseClip> extends ParentNode {
   #head = ref<T>()
   #tail = ref<T>()
 
   trackType: TrackType
   node: Ref<CompositingNode<never>>
-  parent: TrackMovie
-  root: TrackMovie
+  declare parent: Movie | ExportMovie
+  declare root: Movie | ExportMovie
 
   #scope = createEffectScope()
 
@@ -35,6 +36,10 @@ export class Track<T extends BaseClip> {
     return this.#tail.value
   }
 
+  get children() {
+    return this.toArray()
+  }
+
   get duration() {
     return this.#duration.value
   }
@@ -50,10 +55,9 @@ export class Track<T extends BaseClip> {
     return this.parent.renderer
   }
 
-  constructor(init: Schema.Track, movie: TrackMovie, ClipConstructor: Track<T>['ClipConstructor']) {
-    this.id = init.id
+  constructor(init: Schema.Track, movie: Movie | ExportMovie, ClipConstructor: Track<T>['ClipConstructor']) {
+    super(init.id, movie)
     this.trackType = init.trackType
-    this.root = this.parent = movie
     this.ClipConstructor = ClipConstructor
     this.node = ref(undefined as never)
 
@@ -160,11 +164,10 @@ export class Track<T extends BaseClip> {
     }
   }
 
-  dispose() {
-    this.toArray().forEach((clip) => clip.dispose())
+  _dispose() {
+    super._dispose()
     this.#head.value = this.#tail.value = undefined
     this.node.value.destroy()
-    this.root = this.parent = undefined as never
     this.#scope.stop()
   }
 }

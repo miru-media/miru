@@ -94,7 +94,7 @@ export const Timeline = ({
     )
   }
 
-  const totalClips = computed(() => movie.children.value.reduce((acc, track) => acc + track.count, 0))
+  const totalClips = computed(() => movie.children.reduce((acc, track) => acc + track.count, 0))
 
   const onInputClipFile = async (event: InputEvent, track: Track<ClipType>) => {
     const file = event.target.files?.[0]
@@ -128,8 +128,8 @@ export const Timeline = ({
 
           <div class="track-list">
             {() =>
-              movie.children.value.length ? (
-                movie.children.value.map((track, trackIndex) => (
+              movie.children.length ? (
+                movie.children.map((track, trackIndex) => (
                   <div
                     class="track"
                     style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}

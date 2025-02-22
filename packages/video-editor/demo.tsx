@@ -171,7 +171,7 @@ const Demo = () => {
       >
         <p style="display:flex;gap:0.25rem">
           {() =>
-            movie.children.value.map((track) =>
+            movie.children.map((track) =>
               track.mapClips((clip) => {
                 const node = clip.node.value
                 const { mediaState } = node

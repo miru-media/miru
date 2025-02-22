@@ -206,7 +206,6 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   destroy() {
     this.renderer.deleteTexture(this.mediaTexture)
     this.renderer.deleteTexture(this.outTexture)
-    this.renderer = undefined as never
     super.destroy()
   }
 }

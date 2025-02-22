@@ -1,19 +1,23 @@
 import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
 
 import { TRANSITION_DURATION_S } from '../constants'
+import { type ExportMovie } from '../export/ExportMovie'
 import { type ClipTime } from '../types'
 
-import { type Schema } from '.'
+import { type Movie, type Schema } from '.'
 
 import { type MediaAsset } from './Asset'
+import { BaseNode } from './BaseNode'
 
-export class BaseClip {
+export class BaseClip extends BaseNode {
   id: string
   source!: MediaAsset
   type = 'clip' as const
 
   #prev = ref<typeof this>()
   #next = ref<typeof this>()
+
+  declare root: Movie | ExportMovie
 
   sourceStart: Ref<number>
   duration: Ref<number>
@@ -102,7 +106,8 @@ export class BaseClip {
     return this.#derivedState.value.index
   }
 
-  constructor(init: Schema.Clip) {
+  constructor(init: Schema.Clip, parent: BaseClip['parent']) {
+    super(init.id, parent)
     this.id = init.id
     this.sourceStart = ref(init.sourceStart)
     this.duration = ref(init.duration)
@@ -135,7 +140,7 @@ export class BaseClip {
     }
   }
 
-  dispose() {
+  _dispose() {
     this.disconnect()
     this.scope.stop()
   }

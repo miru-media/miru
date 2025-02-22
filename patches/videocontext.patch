@@ -2,7 +2,7 @@ diff --git a/CHANGELOG.md b/CHANGELOG.md
 deleted file mode 100644
 index 085cf8c538e3bce76ba011bcecf0f20954726e1f..0000000000000000000000000000000000000000
 diff --git a/dist/videocontext.js b/dist/videocontext.js
-index 9c49efe609802d7340f481ae983841aef133731a..f98ff1371947c484973a9ddc15f9e0fb4afdcdba 100644
+index 9c49efe609802d7340f481ae983841aef133731a..83766671a1ee43ea4e6447781c071cfb5fd857a5 100644
 --- a/dist/videocontext.js
 +++ b/dist/videocontext.js
 @@ -7,7 +7,7 @@
@@ -91,6 +91,30 @@ index 9c49efe609802d7340f481ae983841aef133731a..f98ff1371947c484973a9ddc15f9e0fb
  exports.default = NODES;
  module.exports = exports.default;
  
+@@ -5590,8 +5607,8 @@ var VideoContext = function () {
+             }
+         }
+         if (this._id === undefined) this._id = (0, _utils.generateRandomId)();
+-        if (window.__VIDEOCONTEXT_REFS__ === undefined) window.__VIDEOCONTEXT_REFS__ = {};
+-        window.__VIDEOCONTEXT_REFS__[this._id] = this;
++        // if (window.__VIDEOCONTEXT_REFS__ === undefined) window.__VIDEOCONTEXT_REFS__ = {};
++        // window.__VIDEOCONTEXT_REFS__[this._id] = this;
+ 
+         this._renderGraph = new _rendergraph2.default();
+         this._sourceNodes = [];
+@@ -6621,9 +6638,9 @@ var VideoContext = function () {
+          */
+         ,
+         set: function set(newID) {
+-            delete window.__VIDEOCONTEXT_REFS__[this._id];
+-            if (window.__VIDEOCONTEXT_REFS__[newID] !== undefined) console.warn("Warning; setting id to that of an existing VideoContext instance.");
+-            window.__VIDEOCONTEXT_REFS__[newID] = this;
++            // delete window.__VIDEOCONTEXT_REFS__[this._id];
++            // if (window.__VIDEOCONTEXT_REFS__[newID] !== undefined) console.warn("Warning; setting id to that of an existing VideoContext instance.");
++            // window.__VIDEOCONTEXT_REFS__[newID] = this;
+             this._id = newID;
+         }
+     }, {
 @@ -7234,4 +7251,3 @@ module.exports = exports.default;
  
  /******/ });

@@ -126,6 +126,14 @@ export const useHoverCoords = (targetRef: MaybeRefOrGetter<EventTarget | undefin
   return coords
 }
 
+export const useDocumentVisibility = (doc = document) => {
+  const isVisible = ref(doc.visibilityState === 'visible')
+
+  useEventListener(doc, 'visibilitychange', () => (isVisible.value = doc.visibilityState === 'visible'))
+
+  return isVisible
+}
+
 interface I18nOptions {
   translations: Record<string, Record<string, string>>
   languages?: MaybeRefOrGetter<string[]>

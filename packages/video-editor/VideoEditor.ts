@@ -1,4 +1,4 @@
-import { effect, type Ref, ref } from 'fine-jsx'
+import { type Ref, ref } from 'fine-jsx'
 import { uid } from 'uid'
 
 import { type Size } from 'shared/types'
@@ -174,15 +174,6 @@ export class VideoEditor {
       frameRate: initialState.frameRate,
     })
     this.canvasSize = useElementSize(this.movie.displayCanvas)
-
-    effect(() => {
-      const { movie } = this
-      if (!movie.children.value.length) {
-        movie.children.value = [
-          new Track({ id: uid(), type: 'track', trackType: 'video', children: [] }, movie, Clip),
-        ]
-      }
-    })
   }
 
   async #withLoading<T>(fn: () => Promise<T>): Promise<T> {
@@ -226,7 +217,7 @@ export class VideoEditor {
           }),
         )
 
-        movie.children.value = movieInit.children.map((trackInit) => {
+        movie.children = movieInit.children.map((trackInit) => {
           const track = new Track(trackInit, movie, Clip)
           nodes.set(track)
 
@@ -297,7 +288,7 @@ export class VideoEditor {
 
     if (!clip) {
       // then search all tracks for a clip at the current time
-      for (const track of this.movie.children.value) {
+      for (const track of this.movie.children) {
         clip = getClipAtTime(track, currentTime)
         if (clip) break
       }
