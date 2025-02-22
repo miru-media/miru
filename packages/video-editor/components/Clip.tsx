@@ -198,7 +198,7 @@ export const Clip = ({
       }
     >
       <div ref={mainContainer} class="clip-box" onClick={() => editor.select(clip)}>
-        {clip.parent.trackType === 'audio' ? t('Audio') : t('Clip')} {() => clip.index + 1}
+        <span class="clip-name">{clip.displayName}</span>
         <div class="clip-controls">
           <div class="clip-resize-left">
             <IconTablerChevronLeft />

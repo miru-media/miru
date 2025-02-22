@@ -4,20 +4,22 @@ import { TRANSITION_DURATION_S } from '../constants'
 import { type ExportMovie } from '../export/ExportMovie'
 import { type ClipTime } from '../types'
 
-import { type Movie, type Schema } from '.'
+import { type Movie, type Schema, type Track } from '.'
 
 import { type MediaAsset } from './Asset'
 import { BaseNode } from './BaseNode'
 
-export class BaseClip extends BaseNode {
+export abstract class BaseClip extends BaseNode {
   id: string
-  source!: MediaAsset
+  abstract source: MediaAsset
   type = 'clip' as const
 
   #prev = ref<typeof this>()
   #next = ref<typeof this>()
 
   declare root: Movie | ExportMovie
+  declare parent: Track<any>
+  declare name?: string
 
   sourceStart: Ref<number>
   duration: Ref<number>
@@ -104,6 +106,11 @@ export class BaseClip extends BaseNode {
 
   get index() {
     return this.#derivedState.value.index
+  }
+
+  get displayName() {
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    return this.name || this.source.name
   }
 
   constructor(init: Schema.Clip, parent: BaseClip['parent']) {

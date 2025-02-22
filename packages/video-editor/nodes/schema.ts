@@ -5,6 +5,7 @@ import { type Size } from 'shared/types'
 interface Base {
   id: string
   type: string
+  name?: string
 }
 
 export interface Movie extends Base {
@@ -28,11 +29,12 @@ export interface AvMediaAsset extends Base {
   }
 }
 
-export interface VideoEffectAsse extends Base, Required<EffectDefinition> {
+export interface VideoEffectAsset extends Base, Omit<EffectDefinition, 'id' | 'name'> {
   type: 'video_effect_asset'
+  name: string
 }
 
-export type Asset = AvMediaAsset | VideoEffectAsse
+export type Asset = AvMediaAsset | VideoEffectAsset
 
 export interface Track extends Base {
   type: 'track'

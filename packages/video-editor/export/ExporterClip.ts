@@ -2,7 +2,7 @@ import { type Ref, ref, toRef } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 
 import { type Schema, type Track } from '../nodes'
-import { type VideoEffectAsset } from '../nodes/Asset'
+import { type MediaAsset, type VideoEffectAsset } from '../nodes/Asset'
 import { BaseClip } from '../nodes/BaseClip'
 
 import { type ExtractorNodeOptions, Mp4ExtractorNode } from './Mp4ExtractorNode'
@@ -15,6 +15,7 @@ export class ExtractorClip extends BaseClip {
   track: Track<ExtractorClip>
   node: Mp4ExtractorNode
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
+  source: MediaAsset
 
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
   context: VideoContext

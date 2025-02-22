@@ -21,9 +21,14 @@ export class Clip extends BaseClip {
 
   declare parent: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
+  #source = ref<MediaAsset>(undefined as never)
   error: Ref<MediaError | undefined>
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
   #transitionNode = ref<TransitionNode<{ mix: number }>>()
+
+  get source() {
+    return this.#source.value
+  }
 
   get outTransitionNode() {
     return this.#transitionNode.value
@@ -123,7 +128,7 @@ export class Clip extends BaseClip {
 
     this.#unloadCurrentMedia()
 
-    this.source = asset
+    this.#source.value = asset
     this.media.value = createHiddenMediaElement(this.parent.trackType, asset.objectUrl)
 
     const { parent: movie } = this.parent

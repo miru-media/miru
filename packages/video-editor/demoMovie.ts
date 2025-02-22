@@ -21,6 +21,7 @@ const assets = {
   waves: {
     id: 'demo:waves',
     type: 'av_media_asset',
+    name: `Ocean bird's eye view`,
     url: waves,
     duration: 7.021333,
     video: { duration: 7.021333, rotation: 0 },
@@ -28,6 +29,7 @@ const assets = {
   wavesRocks: {
     id: 'demo:wavesRocks',
     type: 'av_media_asset',
+    name: 'Rocky shore',
     url: wavesRocks,
     duration: 7.07,
     video: { duration: 7.07, rotation: 0 },
@@ -35,6 +37,7 @@ const assets = {
   waveBreaking: {
     id: 'demo:waveBreaking',
     type: 'av_media_asset',
+    name: 'Wave breaking',
     url: waveBreaking,
     duration: 10,
     video: { duration: 10, rotation: 0 },
@@ -42,6 +45,7 @@ const assets = {
   turtle: {
     id: 'demo:turtle',
     type: 'av_media_asset',
+    name: 'Turtle swimming',
     url: turtle,
     duration: 10,
     video: { duration: 10, rotation: 0 },
@@ -49,6 +53,7 @@ const assets = {
   wavesAudio: {
     id: 'demo:wavesAudio',
     type: 'av_media_asset',
+    name: 'Waves crashing sounds',
     url: wavesAudio,
     duration: 51.330594,
     video: { duration: 51.330594, rotation: 0 },
@@ -56,6 +61,7 @@ const assets = {
   underwaterAudio: {
     id: 'demo:underwaterAudio',
     type: 'av_media_asset',
+    name: 'Underwater sounds',
     url: underwaterAudio,
     duration: 46.92,
     video: { duration: 46.92, rotation: 0 },

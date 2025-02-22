@@ -54,6 +54,10 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     return this.#objectUrl.value
   }
 
+  get name() {
+    return this.raw.name ?? ''
+  }
+
   protected constructor(init: Schema.AvMediaAsset, options: { blob: Blob }) {
     super(init)
 
@@ -102,20 +106,31 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   static async fromInit(init: Schema.AvMediaAsset) {
     const blob = await getCachedBlob(init.id)
 
-    if (!blob && init.url) return this.fromSource(init.id, init.url)
+    if (!blob && init.url) return this.fromSource(init.id, init.url, init)
 
     if (!blob) throw new Error('[video-editor] Asset data was never fetched and cached')
 
     return new MediaAsset(init, { blob })
   }
 
-  static async fromSource(id: string, urlOrBlob: string | Blob) {
+  static async fromSource(
+    id: string,
+    urlOrBlob: string | (Blob & { name?: string }),
+    init?: Schema.AvMediaAsset,
+  ) {
     const isBlobSource = typeof urlOrBlob !== 'string'
+    const name = isBlobSource
+      ? 'name' in urlOrBlob
+        ? urlOrBlob.name
+        : undefined
+      : urlOrBlob.replace(/.*\//, '')
 
     if (!isBlobSource && urlOrBlob.startsWith('blob:')) throw new Error(`[video-editor] Unexpected blob: URL`)
 
     const blob = isBlobSource ? urlOrBlob : await fetch(urlOrBlob).then((res) => res.blob())
     await addToCache(id, blob)
+
+    if (init) return new MediaAsset({ ...init, id }, { blob })
 
     const containerOrElementInfo = await getContainerInfo(blob).catch(() => getMediaElementInfo(blob))
     let duration = containerOrElementInfo.duration
@@ -147,6 +162,7 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
       {
         id,
         type: 'av_media_asset',
+        name,
         duration,
         audio,
         video,
@@ -163,9 +179,10 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
 export class VideoEffectAsset extends Effect {
   type = 'video_effect_asset' as const
 
-  toObject(): Schema.VideoEffectAsse {
+  toObject(): Schema.VideoEffectAsset {
     return {
       ...super.toObject(),
+      name: this.name,
       id: this.id,
       type: 'video_effect_asset',
     }
