@@ -19,10 +19,7 @@ export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
         isActive={movie.isPaused}
         onToggle={(shouldPause) => {
           if (shouldPause) movie.pause()
-          else {
-            if (movie.isEnded.value) movie.seekTo(0)
-            movie.play()
-          }
+          else movie.play()
         }}
       >
         <span class="sr-only">{playOrPause}</span>

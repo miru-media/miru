@@ -85,8 +85,10 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
       let nChunks = desiredSize - decoder.decodeQueueSize;
       this.chunkIndex < chunks.length && (nChunks > 0 || chunks[this.chunkIndex].type !== 'key');
       nChunks--
-    )
+    ) {
       this.decode(chunks[this.chunkIndex++])
+      if (this.chunkIndex === chunks.length) this.decoder.flush().catch(this.options.onError)
+    }
   }
 
   async read() {
@@ -129,7 +131,7 @@ export class VideoDecoderStream extends DecoderStream<VideoFrame> {
         }
 
         this._controller.enqueue(data)
-        this.doneDecoding = data.timestamp + data.duration! >= this.endUs
+        this.doneDecoding = data.timestamp + (data.duration ?? 0) >= this.endUs
 
         if (this.doneDecoding) if (decoder.state === 'configured') decoder.close()
       },

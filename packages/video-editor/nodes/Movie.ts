@@ -203,6 +203,8 @@ export class Movie extends ParentNode {
   play() {
     if (this.#noRender.value) return
 
+    if (this.isEnded.value) this.seekTo(0)
+
     this.isPaused.value = false
     this.videoContext.play()
     this.isPaused.value = this.videoContext.state !== 0

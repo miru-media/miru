@@ -408,8 +408,8 @@ export class MP4Demuxer {
           const chunkInfo: DemuxerChunkInfo = {
             data,
             type: is_sync ? ('key' as const) : ('delta' as const),
-            timestamp: timeS * 1_000_000,
-            duration: (duration * 1_000_000) / timescale,
+            timestamp: timeS * 1e6,
+            duration: (duration * 1e6) / timescale,
             codedWidth,
             codedHeight,
             colorSpace,
@@ -418,7 +418,10 @@ export class MP4Demuxer {
 
           state.onSample(chunkInfo)
 
-          state.isEnded ||= timeS >= lastFrameTimeS && is_sync
+          if (timeS >= lastFrameTimeS && is_sync) {
+            state.isEnded = true
+            break
+          }
         }
 
         state.isEnded ||= state.sampleBytes >= this.#file.getTrackById(track_id).samples_size
