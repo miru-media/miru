@@ -19,6 +19,10 @@
   display: none;
 }
 
+.VPNavBar .logo {
+  margin-top: -10%;
+}
+
 .demo-container {
   height: calc(100dvh - var(--vp-nav-height));
 }
