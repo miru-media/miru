@@ -20,7 +20,7 @@ import { VideoEditor } from './VideoEditor'
 const LOCAL_STORAGE_PREFIX = 'video-editor:'
 
 const Demo = () => {
-  const { t } = provideI18n({ translations: { de } })
+  const { t } = provideI18n({ locales: { de } })
 
   if (!hasVideoDecoder()) alert(t(`Your browser doesn't have the WebCodec APIs needed to export videos!`))
   else

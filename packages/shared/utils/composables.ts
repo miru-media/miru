@@ -135,22 +135,25 @@ export const useDocumentVisibility = (doc = document) => {
 }
 
 interface I18nOptions {
-  translations: Record<string, Record<string, string>>
+  locales: Record<string, Record<string, string>>
   languages?: MaybeRefOrGetter<string[]>
 }
 
 export const createI18n = (options: I18nOptions) => {
   const languages = toRef(options.languages ?? (navigator.languages as string[]))
-  const messages = computed(() => {
-    const { translations } = options
-    const language = languages.value.find((l) => l in translations)
-
-    return language === undefined ? undefined : translations[language]
+  const language = computed(() => {
+    const { locales: locales } = options
+    return (
+      languages.value.find((l) => l in locales) ??
+      languages.value.map((l) => new Intl.Locale(l).language).find((l) => l in locales) ??
+      navigator.language
+    )
   })
+  const messages = computed((): I18nOptions['locales'][string] | undefined => options.locales[language.value])
 
   const t = (key: string) => messages.value?.[key] ?? key
 
-  return { t, messages, languages }
+  return { t, messages, languages, language }
 }
 
 export const provideI18n = (options: I18nOptions) => {
