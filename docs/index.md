@@ -51,32 +51,3 @@ This project is funded through [NGI Zero Core](https://nlnet.nl/core), a fund es
     <img class="dark-only w-50" src="/NGI0_tag_white_mono.svg" alt="NGI Zero Logo" />
   </a>
 </p>
-
-<HeroAnimation ref="heroAnimation" v-bind="heroImageAttrs"/>
-
-<script setup lang="ts">
-import { ref, watchEffect } from 'vue'
-import HeroAnimation from './hero-animation.vue'
-
-const heroAnimation = ref<{ $el: SVGElement }>()
-const heroImageAttrs = ref<Record<string, unknown>>({class: 'hidden'})
-
-watchEffect(() => {
-  const svgEl = heroAnimation.value?.$el
-  if (!svgEl) return
-
-  const heroImage = document.querySelector<HTMLImageElement>('.VPHomeHero.has-image .VPImage[src$=".svg"]')
-
-  if (!heroImage) {
-    console.warn('no hero image')
-    return
-  }
-
-  heroImageAttrs.value =
-    Object.fromEntries(Array.from(heroImage.attributes).filter(a => a.name !== 'src').map(({ name, value }) => [name, value]))
-    console.log(heroImageAttrs.value)
-
-  heroImage.parentElement?.insertBefore(svgEl, heroImage)
-  heroImage.remove()
-})
-</script>
