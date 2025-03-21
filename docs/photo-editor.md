@@ -1,5 +1,8 @@
 ---
 layout: page
+title: Photo editor
+navbar: false
+pageClass: demo-page
 ---
 
 <script setup lang="ts">
@@ -43,11 +46,8 @@ if (!import.meta.env.SSR) {
 <div class="demo-container m-0">
   <div class="flex flex-col w-full h-full max-w-1440px m-auto overflow-hidden">
     <div class="flex flex-1 px-4 gap-2rem min-h-0">
-      <div class="flex flex-col gap-1rem w-25% min-h-0 <md:hidden">
-        <pre class="p-8 whitespace-pre-wrap">{{ errorText }}</pre>
-      </div>
       <div class="flex flex-col overflow-auto flex-1 min-w-0 min-h-0 gap-12px">
-        <media-editor ref="editor" class="min-h-0 flex-1 h-full"
+        <media-editor ref="editor" class="min-h-0 flex-1 h-full max-w-600px m-auto"
           :color-scheme="isDark ? 'dark' : 'light'"></media-editor>
         <div class="flex">
           <label
@@ -63,7 +63,6 @@ if (!import.meta.env.SSR) {
           </button>
         </div>
       </div>
-      <div class="flex flex-col gap-1rem w-25% <md:hidden"></div>
     </div>
   </div>
 </div>

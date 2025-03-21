@@ -12,14 +12,11 @@ hero:
     alt: ''
   actions:
     - theme: brand
-      text: Video editor
-      link: /video-editor
+      text: What is Miru?
+      link: /guide/introduction
     - theme: alt
-      text: Video trimmer
-      link: /video-trimmer
-    - theme: alt
-      text: Photo editor
-      link: /photo-editor
+      text: Demos
+      link: /demos
     - theme: alt
       text: Source code
       link: https://gitea.com/miru/miru

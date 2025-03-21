@@ -62,10 +62,10 @@ const packageOptions = [
     },
   },
   {
-    root: 'packages/video-editor',
+    root: 'packages/miru-video-editor',
     inputs: {
       // TODO
-      'video-editor': 'VideoEditor.ts',
+      'miru-video-editor': 'VideoEditor.ts',
     },
   },
 ]
@@ -78,7 +78,7 @@ const opusWasmFile = resolve(
 const aliases = {
   entries: {
     'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/index.css'),
-    'virtual:video-shadow.css': resolve(ROOT, 'packages/video-editor/index.css'),
+    'virtual:video-shadow.css': resolve(ROOT, 'packages/miru-video-editor/index.css'),
     [`${opusWasmFile}?url`]: opusWasmFile,
   },
 }

@@ -20,9 +20,27 @@
 }
 
 .VPNavBar .logo {
-  margin-top: -10%;
+  margin-top: -16px;
 }
 
 .demo-container {
-  height: calc(100dvh - var(--vp-nav-height));
+  /* minus height of mobile sidebar top menu */
+  height: calc(100dvh - 48px);
+
+  @media (width >= 768px) {
+    height: calc(100dvh - 24px);
+  }
+
+  @media (width >= 960px) {
+    height: 100dvh;
+  }
+}
+
+/* hide "Return to top" button */
+.demo-page .VPLocalNavOutlineDropdown {
+  display: none;
+}
+
+#app :is(.video-editor-demo-page .VPContent.has-sidebar) {
+  padding-right: 0;
 }

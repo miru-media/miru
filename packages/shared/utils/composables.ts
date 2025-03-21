@@ -12,6 +12,8 @@ import {
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
+import { type I18nOptions } from '../types'
+
 import { win } from './window'
 
 export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | undefined>) => {
@@ -134,26 +136,24 @@ export const useDocumentVisibility = (doc = document) => {
   return isVisible
 }
 
-interface I18nOptions {
-  locales: Record<string, Record<string, string>>
-  languages?: MaybeRefOrGetter<string[]>
-}
-
 export const createI18n = (options: I18nOptions) => {
   const languages = toRef(options.languages ?? (navigator.languages as string[]))
   const language = computed(() => {
-    const { locales: locales } = options
+    const messages = toValue(options.messages)
     return (
-      languages.value.find((l) => l in locales) ??
-      languages.value.map((l) => new Intl.Locale(l).language).find((l) => l in locales) ??
+      languages.value.find((l) => l in messages) ??
+      languages.value.map((l) => new Intl.Locale(l).language).find((l) => l in messages) ??
       navigator.language
     )
   })
-  const messages = computed((): I18nOptions['locales'][string] | undefined => options.locales[language.value])
+  const matchingMessages = computed(
+    (): Record<string, string> | undefined => toValue(options.messages)[language.value],
+  )
 
-  const t = (key: string) => messages.value?.[key] ?? key
+  const t = (key: string) => matchingMessages.value?.[key] ?? key
+  const tr = (key: string) => toRef(() => t(key))
 
-  return { t, messages, languages, language }
+  return { t, tr, languages, language }
 }
 
 export const provideI18n = (options: I18nOptions) => {

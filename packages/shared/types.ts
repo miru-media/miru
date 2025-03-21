@@ -1,3 +1,4 @@
+import { type MaybeRefOrGetter } from 'fine-jsx'
 import { type AssetType } from 'webgl-effects'
 
 export type SyncImageSource =
@@ -71,6 +72,6 @@ export type MaybeArray<T> = T | T[]
 export type InputEvent = Event & { target: HTMLInputElement }
 
 export interface I18nOptions {
-  locales: Record<string, Record<string, string>>
-  defaultLocale?: string
+  messages: MaybeRefOrGetter<Record<string, Record<string, string>>>
+  languages?: MaybeRefOrGetter<string[]>
 }

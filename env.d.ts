@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 /// <reference types="vite/client" />
 
 // remote assets
@@ -30,6 +31,11 @@ declare module '*.frag' {
 declare module '*.glsl' {
   const src: string
   export default src
+}
+
+declare module '*.vue' {
+  const component: import('vue').Component
+  export default component
 }
 
 declare module 'postcss-url' {}

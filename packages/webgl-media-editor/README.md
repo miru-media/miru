@@ -1,6 +1,8 @@
 # An image editor with cropping and filters in the browser
 
-https://demo.miru.media/image/
+[<img src="https://miru.media/webgl-media-editor-screenshot.jpg" alt="Screenshot">](https://miru.media/photo-editor)
+
+https://miru.media/photo-editor
 
 ```sh
 npm install webgl-media-editor
@@ -43,7 +45,7 @@ editor.setEditState(
   {
     // index of effect. -1 to apply no effect
     effect: 2,
-    // the intensityf of the effect from 0 to 1
+    // the intensity of the effect from 0 to 1
     intensity: 0.75,
     // optional adjustments to apply. adjustment values go from -1 to 1
     adjustments: { brightness: 0, contrast: 0.25, saturation: 0.3 },

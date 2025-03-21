@@ -1,0 +1,107 @@
+.video-trimmer {
+  display: flex;
+  flex-direction: column;
+  width: inherit;
+  height: inherit;
+  overflow: hidden;
+
+  .viewport {
+    flex-shrink: 1;
+    max-height: min(60vh, calc(100vh - 19rem));
+
+    &.is-empty {
+      min-height: 16rem;
+    }
+  }
+}
+
+.video-trimmer-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  padding: 2rem;
+  font-size: 1.5rem;
+  color: var(--white);
+  background-color: var(--black-3);
+  translate: -50% -50%;
+}
+
+.video-trimmer-controls {
+  display: grid;
+  grid-template-columns: 1fr max-content 1fr;
+  place-items: center;
+  padding: 0.25rem 0;
+
+  .icon-button {
+    font-size: 2rem;
+  }
+}
+
+.video-trimmer-controls-center {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.video-trimmer-controls-left {
+  justify-self: start;
+}
+
+.video-trimmer-controls-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-self: end;
+}
+
+.video-trimmer-timeline {
+  position: relative;
+  margin: 0 1.5rem;
+  touch-action: none;
+
+  .clip {
+    position: relative;
+    border-radius: 0;
+  }
+
+  .clip-box {
+    left: calc(var(--clip-box-left) - var(--clip-resize-handle-width));
+    width: calc(var(--clip-box-right) - var(--clip-box-left) + 2 * var(--clip-resize-handle-width));
+  }
+}
+
+.video-trimmer-clip-warning {
+  position: relative;
+  inset: 0;
+  display: flex;
+  place-content: center;
+  place-items: center;
+  height: inherit;
+  pointer-events: none;
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: '';
+    background-color: currentcolor;
+    border-radius: 0.25rem;
+    opacity: 0.15;
+  }
+}
+
+.video-trimmer-scrubber {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.video-trimmer-cursor {
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  left: 0;
+  width: 0.125rem;
+  pointer-events: none;
+  background-color: currentcolor;
+  translate: calc(var(--current-time-offset) - 50%);
+}

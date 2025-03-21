@@ -1,0 +1,54 @@
+{
+  "name": "miru-video-editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "module": "dist/miru-video-editor.js",
+  "main": "dist/miru-video-editor.umd.js",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/miru-video-editor.js",
+        "require": "./dist/miru-video-editor.umd.js"
+      },
+      "./vue2": {
+        "import": "./dist/vue2.js",
+        "require": "./dist/vue2.umd.js"
+      }
+    }
+  },
+  "author": "Taye Adeyemi",
+  "license": "AGPL-3.0-only",
+  "homepage": "https://miru.media",
+  "repository": {
+    "type": "git",
+    "url": "https://gitea.com/miru/miru.git",
+    "directory": "packages/miru-video-editor"
+  },
+  "dependencies": {
+    "@interactjs/actions": "^1.10.27",
+    "@interactjs/auto-start": "^1.10.27",
+    "@interactjs/core": "^1.10.27",
+    "@interactjs/interact": "^1.10.27",
+    "@interactjs/modifiers": "^1.10.27",
+    "filesize": "catalog:",
+    "fine-jsx": "catalog:",
+    "gl-matrix": "catalog:",
+    "mp4-muxer": "catalog:",
+    "mp4box": "catalog:",
+    "stats.js": "catalog:",
+    "throttle-debounce": "catalog:",
+    "twgl.js": "catalog:",
+    "uid": "^2.0.2",
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^"
+  },
+  "devDependencies": {
+    "@libav.js/variant-opus": "catalog:",
+    "libavjs-webcodecs-polyfill": "catalog:",
+    "videocontext": "^0.54.0"
+  }
+}

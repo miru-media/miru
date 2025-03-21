@@ -1,5 +1,7 @@
 import { type DemuxerChunkInfo } from 'shared/transcode/demuxer'
 
+import { IS_FIREFOX } from '../userAgent'
+
 import { assertCanExtractVideoFrames, assertDecoderConfigIsSupported } from './utils'
 
 const HIGH_WATER_MARK = 16
@@ -53,7 +55,10 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
   _init() {
     const { decoder } = this
     const { config } = this.options
-    ;(this.decoder.configure as (config: unknown) => void)(config)
+    ;(this.decoder.configure as (config: unknown) => void)({
+      hardwareAcceleration: IS_FIREFOX ? 'prefer-software' : 'prefer-hardware',
+      ...config,
+    })
 
     const { chunks } = this
     let startKeyframeIndex = 0

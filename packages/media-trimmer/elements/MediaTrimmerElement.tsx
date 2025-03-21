@@ -14,7 +14,7 @@ export class MediaTrimmerElement extends HTMLElement {
   #scope = createEffectScope()
   #source = ref<string>('')
   #state = ref<TrimState>()
-  #unmount: () => void
+  #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   #isTrimming = false
 
@@ -32,8 +32,18 @@ export class MediaTrimmerElement extends HTMLElement {
     this.#state.value = value
   }
 
-  constructor() {
-    super()
+  attributeChangedCallback(name: 'start' | 'end', _oldValue: number, newValue: number): void
+  attributeChangedCallback(name: 'mute', _oldValue: boolean, newValue: boolean): void
+  attributeChangedCallback(name: 'source', _oldValue: string, newValue: string): void
+  attributeChangedCallback(name: string, _oldValue: any, newValue: any): void {
+    if (name === 'start' || name === 'end' || name === 'mute')
+      this.state = { start: 0, end: 0, mute: false, ...this.state, [name]: newValue }
+    else if (name === 'source') this[name] = newValue
+  }
+
+  connectedCallback() {
+    clearTimeout(this.#disconnectTimeout)
+    if (this.#unmount) return
 
     this.#unmount = this.#scope.run(() =>
       renderComponentTo(
@@ -49,21 +59,11 @@ export class MediaTrimmerElement extends HTMLElement {
       ),
     )
   }
-
-  attributeChangedCallback(name: 'start' | 'end', _oldValue: number, newValue: number): void
-  attributeChangedCallback(name: 'mute', _oldValue: boolean, newValue: boolean): void
-  attributeChangedCallback(name: 'source', _oldValue: string, newValue: string): void
-  attributeChangedCallback(name: string, _oldValue: any, newValue: any): void {
-    if (name === 'start' || name === 'end' || name === 'mute')
-      this.state = { start: 0, end: 0, mute: false, ...this.state, [name]: newValue }
-    else if (name === 'source') this[name] = newValue
-  }
-
-  connectedCallback() {
-    clearTimeout(this.#disconnectTimeout)
-  }
   disconnectedCallback() {
-    this.#disconnectTimeout = setTimeout(this.#unmount, 500)
+    this.#disconnectTimeout = setTimeout(() => {
+      this.#unmount?.()
+      this.#unmount = undefined
+    }, 500)
   }
 
   async toBlob() {

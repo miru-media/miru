@@ -1,8 +1,8 @@
 # A video trimmer in the browser
 
-![Screenshot](https://demo.miru.media/media-trimmer-screenshot.jpg)
+[<img src="https://miru.media/media-trimmer-screenshot.jpg" alt="Screenshot">](https://miru.media/video-trimmer)
 
-https://demo.miru.media/trim/
+https://miru.media/video-trimmer
 
 ```sh
 npm install media-trimmer

@@ -1,5 +1,8 @@
 ---
 layout: page
+title: Video trimmer
+navbar: false
+pageClass: demo-page
 ---
 
 <script setup lang="ts">

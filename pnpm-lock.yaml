@@ -54,13 +54,16 @@ importers:
     dependencies:
       miru-video-editor:
         specifier: workspace:^
-        version: link:packages/video-editor
+        version: link:packages/miru-video-editor
       reactive-effects:
         specifier: workspace:^
         version: link:packages/reactive-effects
       shared:
         specifier: workspace:^
         version: link:packages/shared
+      vue-i18n-lite:
+        specifier: ^1.0.2
+        version: 1.0.2(vue@3.5.13(typescript@5.7.3))
       webgl-media-editor:
         specifier: workspace:^
         version: link:packages/webgl-media-editor
@@ -274,7 +277,7 @@ importers:
         version: link:../packages/media-trimmer
       miru-video-editor:
         specifier: workspace:^
-        version: link:../packages/video-editor
+        version: link:../packages/miru-video-editor
       webgl-media-editor:
         specifier: workspace:^
         version: link:../packages/webgl-media-editor
@@ -294,35 +297,7 @@ importers:
         specifier: 'catalog:'
         version: 5.0.2
 
-  packages/reactive-effects:
-    dependencies:
-      fine-jsx:
-        specifier: 'catalog:'
-        version: 0.0.11
-      webgl-effects:
-        specifier: workspace:^
-        version: link:../webgl-effects
-
-  packages/shared:
-    dependencies:
-      fine-jsx:
-        specifier: 'catalog:'
-        version: 0.0.11
-      mp4box:
-        specifier: 'catalog:'
-        version: 0.5.3
-      throttle-debounce:
-        specifier: 'catalog:'
-        version: 5.0.2
-      webgl-effects:
-        specifier: workspace:^
-        version: link:../webgl-effects
-    devDependencies:
-      twgl.js:
-        specifier: 'catalog:'
-        version: 5.5.4
-
-  packages/video-editor:
+  packages/miru-video-editor:
     dependencies:
       '@interactjs/actions':
         specifier: ^1.10.27
@@ -366,9 +341,6 @@ importers:
       uid:
         specifier: ^2.0.2
         version: 2.0.2
-      videocontext:
-        specifier: ^0.54.0
-        version: 0.54.0(patch_hash=5xjdlmqphldi6yzuks6o3otumu)
       webgl-effects:
         specifier: workspace:^
         version: link:../webgl-effects
@@ -382,6 +354,37 @@ importers:
       libavjs-webcodecs-polyfill:
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=3y7clsu5aecxqwnff7ycfcb5am)
+      videocontext:
+        specifier: ^0.54.0
+        version: 0.54.0(patch_hash=5xjdlmqphldi6yzuks6o3otumu)
+
+  packages/reactive-effects:
+    dependencies:
+      fine-jsx:
+        specifier: 'catalog:'
+        version: 0.0.11
+      webgl-effects:
+        specifier: workspace:^
+        version: link:../webgl-effects
+
+  packages/shared:
+    dependencies:
+      fine-jsx:
+        specifier: 'catalog:'
+        version: 0.0.11
+      mp4box:
+        specifier: 'catalog:'
+        version: 0.5.3
+      throttle-debounce:
+        specifier: 'catalog:'
+        version: 5.0.2
+      webgl-effects:
+        specifier: workspace:^
+        version: link:../webgl-effects
+    devDependencies:
+      twgl.js:
+        specifier: 'catalog:'
+        version: 5.5.4
 
   packages/webgl-effects:
     dependencies:
@@ -5800,6 +5803,11 @@ packages:
     resolution: {integrity: sha512-JdgRRUVrN0Y2GosA0M68DEbKlXMqJ7FQgsK8CjQD2vxvNSqAU6PZEpi4cfcTVtfM2GVOMjHo7GKKLbXxOBqDqA==}
     peerDependencies:
       vue: ^3.4.37
+
+  vue-i18n-lite@1.0.2:
+    resolution: {integrity: sha512-2eaYIPQb4oY8LbhjDJExpZJvVAu2E8dxwQ9sI+x5EbEVw86oDSEXGvAQrdAT5j4WeICuq9RPAJTNhrBknzAp8Q==}
+    peerDependencies:
+      vue: ^3.0.0
 
   vue@3.5.13:
     resolution: {integrity: sha512-wmeiSMxkZCSc+PM2w2VRsOYAZC8GdipNFRTsLSfodVqI9mbejKeXEGr8SckuLnrQPGe3oJN5c3K0vpoU9q/wCQ==}
@@ -12059,6 +12067,10 @@ snapshots:
       - yaml
 
   vue-flow-layout@0.1.1(vue@3.5.13(typescript@5.7.3)):
+    dependencies:
+      vue: 3.5.13(typescript@5.7.3)
+
+  vue-i18n-lite@1.0.2(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       vue: 3.5.13(typescript@5.7.3)
 

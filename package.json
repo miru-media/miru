@@ -22,6 +22,7 @@
     "miru-video-editor": "workspace:^",
     "reactive-effects": "workspace:^",
     "shared": "workspace:^",
+    "vue-i18n-lite": "^1.0.2",
     "webgl-media-editor": "workspace:^"
   },
   "devDependencies": {
