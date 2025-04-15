@@ -1,14 +1,14 @@
 import { createEffectScope, ref } from 'fine-jsx'
 
-import { renderComponentTo } from 'miru-video-editor/components/renderTo'
-import { HTMLElement } from 'shared/utils'
+import { HTMLElementOrStub } from 'shared/utils'
+import { renderComponentTo } from 'shared/video/renderTo'
 
 import { trim } from '../trim'
 import { type TrimState, VideoTrimmerUI } from '../VideoTrimmerUI'
 
 const OBSERVED_ATTRS = ['source', 'start', 'end', 'mute'] as const
 
-export class MediaTrimmerElement extends HTMLElement {
+export class MediaTrimmerElement extends HTMLElementOrStub {
   static observedAttributes = OBSERVED_ATTRS
 
   #scope = createEffectScope()

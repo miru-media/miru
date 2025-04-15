@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 /// <reference types="vite/client" />
+/// <reference types="./auto-imports" />
 
 // remote assets
 declare module 'https://*.webm' {
@@ -218,7 +219,7 @@ declare module 'videocontext' {
     customSourceNode<T extends GraphNode>(
       // eslint-disable-next-line @typescript-eslint/prefer-function-type
       CustomSourceNode: { new (...args: any[]): T },
-      ...args: unkonwn[]
+      ...args: unknown[]
     ): T
     compositor<T extends Record<string, any>>(definition: EffectDefinition): CompositingNode<T>
     transition<T extends Record<string, any>>(...args: any[]): TransitionNode<T>
@@ -231,23 +232,23 @@ declare module 'videocontext' {
 
     _update(dt: number): void
 
-    static EVENTS = {
-      UPDATE: 'update',
-      STALLED: 'stalled',
-      ENDED: 'ended',
-      CONTENT: 'content',
-      NOCONTENT: 'nocontent',
-    } as const
+    static EVENTS: {
+      UPDATE: 'update'
+      STALLED: 'stalled'
+      ENDED: 'ended'
+      CONTENT: 'content'
+      NOCONTENT: 'nocontent'
+    }
 
-    static NODES = {
-      AudioNode,
-      CanvasNode,
-      ImageNode,
-      MediaNode,
-      SourceNode,
-      VideoNode,
+    static NODES: {
+      AudioNode: typeof AudioNode
+      CanvasNode: typeof CanvasNode
+      ImageNode: typeof ImageNode
+      MediaNode: typeof MediaNode
+      SourceNode: typeof SourceNode
+      VideoNode: typeof VideoNode
       // patched
-      GraphNode,
+      GraphNode: typeof GraphNode
     }
 
     static DEFINITIONS: {

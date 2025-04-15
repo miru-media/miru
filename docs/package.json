@@ -3,8 +3,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@vueuse/core": "^13.1.0",
     "media-trimmer": "workspace:^",
-    "miru-video-editor": "workspace:^",
-    "webgl-media-editor": "workspace:^"
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^",
+    "webgl-video-editor": "workspace:^"
   }
 }

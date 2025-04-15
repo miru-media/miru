@@ -1,5 +1,5 @@
-import { assertCanExtractVideoFrames } from 'shared/transcode/utils'
 import { IS_LIKE_MAC, IS_SAFARI_16, IS_SAFARI_17 } from 'shared/userAgent'
+import { assertCanExtractVideoFrames } from 'shared/video/utils'
 
 const hasVideoEncoder = () => typeof VideoEncoder === 'function'
 

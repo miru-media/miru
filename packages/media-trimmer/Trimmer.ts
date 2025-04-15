@@ -1,5 +1,7 @@
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
 
+import { IS_LIKE_MAC, IS_SAFARI } from 'shared/userAgent'
+import { Janitor, promiseWithResolvers } from 'shared/utils'
 import {
   type DemuxerAudioInfo,
   type DemuxerChunkInfo,
@@ -7,13 +9,11 @@ import {
   type MP4BoxFileInfo,
   type MP4BoxVideoTrack,
   MP4Demuxer,
-} from 'shared/transcode/demuxer'
-import { type FrameExtractor } from 'shared/transcode/FrameExtractor'
-import { RvfcExtractor } from 'shared/transcode/RvfcExtractor'
-import { assertEncoderConfigIsSupported } from 'shared/transcode/utils'
-import { VideoDecoderExtractor } from 'shared/transcode/VideoDecoderExtractor'
-import { IS_LIKE_MAC, IS_SAFARI } from 'shared/userAgent'
-import { Janitor, promiseWithResolvers } from 'shared/utils'
+} from 'shared/video/demuxer'
+import { type FrameExtractor } from 'shared/video/FrameExtractor'
+import { RvfcExtractor } from 'shared/video/RvfcExtractor'
+import { assertEncoderConfigIsSupported } from 'shared/video/utils'
+import { VideoDecoderExtractor } from 'shared/video/VideoDecoderExtractor'
 
 import { type TrimOptions } from './trim'
 import { assertHasRequiredApis } from './utils'

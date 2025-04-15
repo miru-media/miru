@@ -6,7 +6,7 @@
 
 # Video editor
 
-[<img src="/video-editor-screenshot.jpg" alt="Screenshot" class="max-h-30rem">](/video-editor)
+[<img src="/webgl-video-editor-screenshot.jpg" alt="Screenshot" class="max-h-30rem">](/video-editor)
 [Open video editor demo](/video-editor)
 
 # Video trimmer

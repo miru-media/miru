@@ -10,10 +10,10 @@ import {
   watch,
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
-import { type Renderer, type RendererEffectOp } from 'webgl-effects'
+import { type CropState, type Renderer, type RendererEffectOp } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/Effect'
-import { type CropState, type InputEvent, type Size } from 'shared/types'
+import { type InputEvent, type Size } from 'shared/types'
 import { getCenter, useElementSize } from 'shared/utils'
 
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants'

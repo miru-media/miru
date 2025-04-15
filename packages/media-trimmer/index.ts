@@ -6,4 +6,6 @@ if (typeof customElements !== 'undefined' && 'define' in customElements) {
 
 export * from './trim'
 
+export { type LoadInfo, type TrimState } from './VideoTrimmerUI'
+
 export { MediaTrimmerElement }

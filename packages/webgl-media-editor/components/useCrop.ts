@@ -1,7 +1,7 @@
 import Cropper from 'cropperjs'
 import { computed, ref, toValue, watch } from 'fine-jsx'
+import { type CropState } from 'webgl-effects'
 
-import { type CropState } from 'shared/types'
 import {
   centerTo,
   cropIsEqualTo,

@@ -1,9 +1,9 @@
 import { ref } from 'fine-jsx'
-import { type Renderer } from 'webgl-effects'
+import { type CropState, type Renderer } from 'webgl-effects'
 
 import { type Effect } from 'reactive-effects/Effect'
-import { type CropState, type Size } from 'shared/types'
-import { HTMLElement } from 'shared/utils'
+import { type Size } from 'shared/types'
+import { HTMLElementOrStub } from 'shared/utils/window'
 
 import { FilterView } from '../components/Filter'
 import { renderComponentTo } from '../components/renderTo'
@@ -13,7 +13,7 @@ import { MediaEditor, unwrap } from '../wrapper'
 
 export { MediaEditor }
 
-export class MediaEditorPreviewElement extends HTMLElement {
+export class MediaEditorPreviewElement extends HTMLElementOrStub {
   static observedAttributes = ['source-index']
   #sourceIndex = ref(0)
   get sourceIndex() {
@@ -33,11 +33,11 @@ export class MediaEditorPreviewElement extends HTMLElement {
   }
 }
 
-export class MediaEditorFilterMenuElement extends HTMLElement {
+export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
   static observedAttributes = ['source-index']
   #sourceIndex = ref(0)
   #showPreview = ref(false)
-  #showSlider = ref(true)
+  #showIntensity = ref(true)
   #editor?: MediaEditor
   #unmount?: () => void
 
@@ -55,11 +55,11 @@ export class MediaEditorFilterMenuElement extends HTMLElement {
     this.#showPreview.value = value
   }
 
-  get showSlider() {
-    return this.#showSlider.value
+  get showIntensity() {
+    return this.#showIntensity.value
   }
-  set showSlider(value: boolean) {
-    this.#showSlider.value = value
+  set showIntensity(value: boolean) {
+    this.#showIntensity.value = value
   }
 
   get editor() {
@@ -80,7 +80,7 @@ export class MediaEditorFilterMenuElement extends HTMLElement {
         editor: unwrap(editor),
         sourceIndex: this.#sourceIndex,
         showPreviews: this.#showPreview,
-        showSlider: this.#showSlider,
+        showIntensity: this.#showIntensity,
         onChange: (id, intensity) =>
           this.dispatchEvent(new CustomEvent('change', { detail: { effect: id, intensity } })),
       },
@@ -91,13 +91,13 @@ export class MediaEditorFilterMenuElement extends HTMLElement {
   attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
     if (name === 'source-index') this.sourceIndex = parseInt(newValue ?? '0', 10) || 0
     else if (name === 'show-preview') this.showPreview = newValue == null ? false : true
-    else if (name === 'show-slider') this.showSlider = newValue == null ? false : true
+    else if (name === 'show-slider') this.showIntensity = newValue == null ? false : true
   }
 }
 
-export class WebglEffectsMenuElement extends HTMLElement {
+export class WebglEffectsMenuElement extends HTMLElementOrStub {
   #renderer?: Renderer
-  #showSlider = ref(true)
+  #showIntensity = ref(true)
   #sourceTexture = ref<WebGLTexture>()
   #sourceSize = ref<Size>({ width: 1, height: 1 })
   #thumbnailSize = ref<Size>({ width: 1, height: 1 })
@@ -158,11 +158,11 @@ export class WebglEffectsMenuElement extends HTMLElement {
     this.#loading.value = value
   }
 
-  get showSlider() {
-    return this.#showSlider.value
+  get showIntensity() {
+    return this.#showIntensity.value
   }
-  set showSlider(value: boolean) {
-    this.#showSlider.value = value
+  set showIntensity(value: boolean) {
+    this.#showIntensity.value = value
   }
 
   get renderer() {
@@ -189,7 +189,7 @@ export class WebglEffectsMenuElement extends HTMLElement {
         effects: this.#effects,
         effect: this.#effect,
         intensity: this.#intensity,
-        showSlider: this.#showSlider,
+        showSlider: this.#showIntensity,
         loading: this.#loading,
         onChange: (id, intensity) =>
           this.dispatchEvent(new CustomEvent('change', { detail: { effect: id, intensity } })),

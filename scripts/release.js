@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fs from 'node:fs'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
 import { Bumper } from 'conventional-recommended-bump'
-import spawn from 'nano-spawn'
 import pico from 'picocolors'
 import * as semver from 'semver'
 
-import { getPublickPackageDirs, ROOT } from './utils.js'
+import { getPublickPackageDirs, ROOT, run } from './utils.js'
 
 const allPublicPackageDirs = getPublickPackageDirs()
 
@@ -167,15 +165,6 @@ async function getPackageJson(packageDir) {
 async function writePackageJson(packageDir, pkg) {
   const filePath = resolve(packageDir, 'package.json')
   await fs.promises.writeFile(filePath, `${JSON.stringify(pkg, null, 2)}\n`)
-}
-
-/**
- * @param {string} file
- * @param {readonly string[] | undefined} args
- */
-async function run(file, args) {
-  console.info(file, ...(args ?? []))
-  await spawn(file, args, { stdio: 'inherit' })
 }
 
 /**

@@ -3,7 +3,7 @@ import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
 import { renderComponentTo } from '../components/renderTo'
 import { MediaEditor, type MediaEditor_, unwrap } from '../wrapper'
 
-interface VueInstance {
+export interface VueInstance {
   editor: MediaEditor
   scope: EffectScope
   sourceIndex: number

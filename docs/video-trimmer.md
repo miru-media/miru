@@ -9,7 +9,7 @@ pageClass: demo-page
 import 'media-trimmer'
 import { ref, watchEffect } from 'vue'
 import { trim } from 'media-trimmer'
-import { type LoadInfo, type TrimState } from './VideoTrimmerUI'
+import { type LoadInfo, type TrimState } from 'media-trimmer'
 
 const videoEditorContainer = ref<HTMLElement>()
 
@@ -83,7 +83,7 @@ const onInputFile = (event: Event) => {
     <button
       type="button"
       :onClick="exportVideo"
-      :disabled="() => !state.value"
+      :disabled="!state"
       style="padding: 1rem; border: solid white"
     >
       Export

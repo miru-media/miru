@@ -46,7 +46,7 @@ export default tseslint.config(
     settings: {
       'import/resolver': { typescript: { project: '.' } },
       'import/internal-regex':
-        '^(webgl-media-editor|miru-video-editor|reactive-effects|webgl-effects|shared)/',
+        '^(webgl-media-editor|webgl-video-editor|reactive-effects|webgl-effects|shared)/',
     },
     rules: {
       '@typescript-eslint/consistent-type-imports': [

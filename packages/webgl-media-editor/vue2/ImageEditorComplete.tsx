@@ -1,14 +1,8 @@
 import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
-import { type EffectDefinition } from 'webgl-effects'
+import { type Context2D, type EffectDefinition } from 'webgl-effects'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
-import {
-  type Context2D,
-  EditorView,
-  type ImageEditState,
-  type ImageSource,
-  type ImageSourceOption,
-} from 'shared/types'
+import { EditorView, type ImageEditState, type ImageSource, type ImageSourceOption } from 'shared/types'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'

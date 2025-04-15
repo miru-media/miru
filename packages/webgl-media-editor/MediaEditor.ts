@@ -1,9 +1,8 @@
 import { computed, effect, type EffectScope, getCurrentScope, ref, type Ref, watch } from 'fine-jsx'
-import { Renderer } from 'webgl-effects'
-import { type EffectDefinition } from 'webgl-effects'
+import { type Context2D, type EffectDefinition, Renderer } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/Effect'
-import { type Context2D, type ImageEditState, type ImageSourceOption } from 'shared/types'
+import { type ImageEditState, type ImageSourceOption } from 'shared/types'
 
 import { ImageSourceInternal } from './ImageSourceInternal'
 

@@ -10,6 +10,7 @@ declare global {
   const IconTablerArrowForwardUp: typeof import('~icons/tabler/arrow-forward-up.jsx')['default']
   const IconTablerChevronLeft: typeof import('~icons/tabler/chevron-left.jsx')['default']
   const IconTablerChevronRight: typeof import('~icons/tabler/chevron-right.jsx')['default']
+  const IconTablerChevronsRight: typeof import('~icons/tabler/chevrons-right.jsx')['default']
   const IconTablerCircleOff: typeof import('~icons/tabler/circle-off.jsx')['default']
   const IconTablerCodeDots: typeof import('~icons/tabler/code-dots.jsx')['default']
   const IconTablerContrastFilled: typeof import('~icons/tabler/contrast-filled.jsx')['default']
@@ -34,5 +35,8 @@ declare global {
   const IconTablerSun: typeof import('~icons/tabler/sun.jsx')['default']
   const IconTablerTrash: typeof import('~icons/tabler/trash.jsx')['default']
   const IconTablerVideo: typeof import('~icons/tabler/video.jsx')['default']
+  const IconTablerVolume: typeof import('~icons/tabler/volume.jsx')['default']
+  const IconTablerVolumeOff: typeof import('~icons/tabler/volume-off.jsx')['default']
+  const IconTablerVolume_3: typeof import('~icons/tabler/volume-3.jsx')['default']
   const IconTablerWand: typeof import('~icons/tabler/wand.jsx')['default']
 }

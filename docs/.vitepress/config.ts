@@ -23,7 +23,7 @@ export default defineConfig({
     template: {
       compilerOptions: {
         isCustomElement: (tag) =>
-          tag === 'media-trimmer' || tag.startsWith('media-editor') || tag === 'video-editor',
+          tag === 'media-trimmer' || tag.startsWith('media-editor') || tag.startsWith('webgl-effects-'),
       },
     },
   },
@@ -56,7 +56,7 @@ export default defineConfig({
             text: 'Packages',
             items: [
               { text: 'webgl-media-editor', link: '/guide/webgl-media-editor' },
-              { text: 'miru-video-editor', link: '/guide/miru-video-editor' },
+              { text: 'webgl-video-editor', link: '/guide/webgl-video-editor' },
               { text: 'media-trimmer', link: '/guide/media-trimmer' },
             ],
           },

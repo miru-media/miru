@@ -1,9 +1,10 @@
 import { createEffectScope, effect, ref } from 'fine-jsx'
-import { type EffectDefinition } from 'webgl-effects'
+import { type Context2D, type EffectDefinition } from 'webgl-effects'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
-import { type Context2D, EditorView, type ImageEditState, type ImageSourceOption } from 'shared/types'
-import { downloadBlob, HTMLElement } from 'shared/utils'
+import { EditorView, type ImageEditState, type ImageSourceOption } from 'shared/types'
+import { downloadBlob } from 'shared/utils'
+import { HTMLElementOrStub } from 'shared/utils/window'
 
 import { MediaEditorUI } from '../components/MediaEditorUI'
 import { renderComponentTo } from '../components/renderTo'
@@ -12,7 +13,7 @@ import { MediaEditor } from '../MediaEditor'
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
 
-export class MediaEditorElement extends HTMLElement {
+export class MediaEditorElement extends HTMLElementOrStub {
   static observedAttributes = OBSERVED_ATTRS
 
   #scope = createEffectScope()

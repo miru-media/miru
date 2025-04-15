@@ -47,7 +47,10 @@ export default defineConfig({
         import.meta.dirname,
         'packages/webgl-media-editor/index.css?inline',
       ),
-      'virtual:video-shadow.css': resolve(import.meta.dirname, 'packages/miru-video-editor/index.css?inline'),
+      'virtual:video-shadow.css': resolve(
+        import.meta.dirname,
+        'packages/webgl-video-editor/src/index.css?inline',
+      ),
     },
   },
   esbuild: {

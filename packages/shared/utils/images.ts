@@ -1,10 +1,8 @@
-import { type AssetType } from 'webgl-effects'
+import { type AssetType, type Context2D, type CropState } from 'webgl-effects'
 
 import {
   type AdjustmentsState,
   type AsyncImageSource,
-  type Context2D,
-  type CropState,
   type CrossOrigin,
   type ImageEditState,
   type ImageSource,
@@ -15,8 +13,6 @@ import {
   type Xywh,
 } from '../types'
 import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent'
-
-import { devSlowDown } from './general'
 
 const getCanvasContext = (
   canvas: HTMLCanvasElement | OffscreenCanvas | undefined,
@@ -164,7 +160,7 @@ export const loadAsyncImageSource = <IsVideo extends boolean>(
         )
       : loadImageUrlOrBlob(source, crossOrigin)
 
-  const promise = (devSlowDown != undefined ? devSlowDown(Promise.resolve(loadPromise)) : loadPromise)
+  const promise = loadPromise
     // reject if already closed
     .then((result) => {
       media = result

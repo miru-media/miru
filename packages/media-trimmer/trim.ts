@@ -44,7 +44,7 @@ export interface TrimOptions {
  * import { trim } from 'media-trimmer'
  *
  * try {
- *   await trim('video.mp4', {
+ *   const blob = await trim('video.mp4', {
  *     start: 2,    // start time in seconds
  *     end: 10,     // end time in seconds
  *     mute: false, // ignore the audio track?

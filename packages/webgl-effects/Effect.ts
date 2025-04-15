@@ -3,9 +3,10 @@ import { Janitor, normalizeSourceOption } from 'shared/utils'
 import { FRAGMENT_SHADERS } from './allFragmentShaders'
 import { type Renderer } from './Renderer'
 import { TextureResource } from './TextureResource'
-import { type AssetType, type EffectDefinition, type RendererEffectOp } from './types'
+import { type Effect as Effect_ } from './types/classes'
+import { type AssetType, type EffectDefinition, type RendererEffectOp } from './types/core'
 
-export class Effect {
+export class Effect implements Effect_ {
   id?: string
   name: string
   ops: RendererEffectOp[]

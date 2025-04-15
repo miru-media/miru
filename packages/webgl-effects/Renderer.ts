@@ -1,7 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import * as twgl from 'twgl.js'
 
-import { type Context2D, type CropState, type Size } from 'shared/types'
 import { timeout } from 'shared/utils'
 import {
   canvasToBlob,
@@ -16,7 +15,20 @@ import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './GL'
 import vs from './glsl/main.vert'
 import passthrough from './glsl/passthrough.frag'
-import { type AssetType, type RendererDrawOptions, type RendererEffect, type RendererEffectOp } from './types'
+import { type Renderer as Renderer_ } from './types/classes'
+import {
+  type AssetType,
+  type Context2D,
+  type CropState,
+  type RendererDrawOptions,
+  type RendererEffect,
+  type RendererEffectOp,
+} from './types/core'
+
+interface Size {
+  width: number
+  height: number
+}
 
 const setTextureParameters = (
   gl: WebGL2RenderingContext,
@@ -29,7 +41,7 @@ const setTextureParameters = (
   gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, options.flipY ?? false)
 }
 
-export class Renderer {
+export class Renderer implements Renderer_ {
   #gl: WebGL2RenderingContext
   #ownsGl: boolean
   #passthroughProgram: twgl.ProgramInfo

@@ -1,5 +1,5 @@
 import { type MaybeRefOrGetter } from 'fine-jsx'
-import { type AssetType } from 'webgl-effects'
+import { type AssetType, type CropState } from 'webgl-effects'
 
 export type SyncImageSource =
   | HTMLImageElement
@@ -11,8 +11,6 @@ export type SyncImageSource =
 export type AsyncImageSource = Blob | string
 export type ImageSource = SyncImageSource | AsyncImageSource
 export type CrossOrigin = 'anonymous' | 'use-credentials' | null
-
-export type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 
 export interface Size {
   width: number
@@ -31,14 +29,6 @@ export interface Xywh {
   y: number
   width: number
   height: number
-}
-
-export interface CropState {
-  x: number
-  y: number
-  width: number
-  height: number
-  rotate: number
 }
 
 export interface AdjustmentsState {
@@ -74,4 +64,5 @@ export type InputEvent = Event & { target: HTMLInputElement }
 export interface I18nOptions {
   messages: MaybeRefOrGetter<Record<string, Record<string, string>>>
   languages?: MaybeRefOrGetter<string[]>
+  fallbackLanguage?: MaybeRefOrGetter<string>
 }

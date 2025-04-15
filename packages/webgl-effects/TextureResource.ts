@@ -7,7 +7,7 @@ import { type Renderer } from './Renderer'
 export class TextureResource {
   canvas?: HTMLCanvasElement
   context?: ImageBitmapRenderingContext
-  promise?: Promise<void>
+  promise?: Promise<never>
   isLoading = false
   error: unknown
   janitor = new Janitor()

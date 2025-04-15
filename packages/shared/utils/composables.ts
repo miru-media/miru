@@ -143,7 +143,8 @@ export const createI18n = (options: I18nOptions) => {
     return (
       languages.value.find((l) => l in messages) ??
       languages.value.map((l) => new Intl.Locale(l).language).find((l) => l in messages) ??
-      navigator.language
+      toValue(options.fallbackLanguage) ??
+      'en'
     )
   })
   const matchingMessages = computed(
