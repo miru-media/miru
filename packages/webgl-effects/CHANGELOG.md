@@ -1,3 +1,20 @@
+# [0.1.0](https://gitea.com/miru/miru/compare/webgl-effects@0.0.3...webgl-effects@0.1.0) (2025-04-20)
+
+
+### Bug Fixes
+
+* **video-editor:** use custom context nodes that extend GraphNode ([1a179b5](https://gitea.com/miru/miru/commits/1a179b5749029d87408f51cc792b42852314f936))
+* **webgl-effects:** adjust chromatic aberration shader ([45928e3](https://gitea.com/miru/miru/commits/45928e3d326230a14855a8ac83822a21f030358a))
+* **webgl-effects:** avoid extra imports from shared utils ([7271520](https://gitea.com/miru/miru/commits/7271520a3148ee5f8114c5336d83ec95c83562df))
+
+
+### Features
+
+* improve rendering to framebuffers; add video effects ([5b9308d](https://gitea.com/miru/miru/commits/5b9308df52eee19d954286d5beae829f9f3b1b2a))
+* **webgl-effects:** add simple chromatic aberration ([e0a6849](https://gitea.com/miru/miru/commits/e0a6849cbae248a54851fdfbbb50136a47e50b75))
+
+
+
 ## [0.0.3](https://gitea.com/miru/miru/compare/webgl-effects@0.0.2...webgl-effects@0.0.3) (2025-01-22)
 
 

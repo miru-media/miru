@@ -1,7 +1,7 @@
 {
   "name": "webgl-media-editor",
   "description": "A simple image editor with cropping, rotation, and WebGL filters",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "type": "module",
   "module": "dist/webgl-media-editor.js",
   "main": "dist/webgl-media-editor.js",
