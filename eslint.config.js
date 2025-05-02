@@ -22,6 +22,7 @@ export default tseslint.config(
       },
     },
   },
+  { files: ['**/CHANGELOG.md'], rules: { 'markdown/heading-increment': 'off' } },
   {
     files: ['**/*.md/*.{ts,tsx,js,jsx}'],
     languageOptions: {
