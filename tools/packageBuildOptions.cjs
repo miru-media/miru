@@ -40,6 +40,9 @@ const packageOptions = [
       elements: 'elements/index.ts',
       vue2: 'vue2.ts',
     },
+    copy: (options) => ({
+      targets: [{ src: resolve(options.root, 'types/*'), dest: options.dist }],
+    }),
   },
   {
     root: 'packages/webgl-video-editor',

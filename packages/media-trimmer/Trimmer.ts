@@ -15,7 +15,7 @@ import { RvfcExtractor } from 'shared/video/RvfcExtractor'
 import { assertEncoderConfigIsSupported } from 'shared/video/utils'
 import { VideoDecoderExtractor } from 'shared/video/VideoDecoderExtractor'
 
-import { type TrimOptions } from './trim'
+import { type TrimOptions } from './types/media-trimmer'
 import { assertHasRequiredApis } from './utils'
 
 type MuxerRotation = [number, number, number, number, number, number, number, number, number]
@@ -75,7 +75,7 @@ export class Trimmer {
         sampleRate: audio.sampleRate,
         numberOfChannels: audio.numberOfChannels,
       },
-      fastStart: options.fastStart ?? 'in-memory',
+      fastStart: 'in-memory',
     })
 
     const videoEncoder = await this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error))

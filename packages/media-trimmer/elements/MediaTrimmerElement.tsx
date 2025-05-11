@@ -4,7 +4,8 @@ import { HTMLElementOrStub } from 'shared/utils'
 import { renderComponentTo } from 'shared/video/renderTo'
 
 import { trim } from '../trim'
-import { type TrimState, VideoTrimmerUI } from '../VideoTrimmerUI'
+import { type TrimState } from '../types/ui'
+import { VideoTrimmerUI } from '../VideoTrimmerUI'
 
 const OBSERVED_ATTRS = ['source', 'start', 'end', 'mute'] as const
 

@@ -13,19 +13,8 @@ import {
   useMediaReadyState,
 } from 'shared/video/utils'
 
+import { type LoadInfo, type TrimState } from './types/ui'
 import { hasRequiredApis } from './utils'
-
-export interface LoadInfo {
-  duration: number
-  hasAudio: boolean
-}
-
-export interface TrimState {
-  start: number
-  end: number
-  mute: boolean
-  isFullDuration?: boolean
-}
 
 const MIN_CLIP_DURATION_S = 0.25
 const MIN_CLIP_WIDTH_PX = 1
