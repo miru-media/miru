@@ -6,7 +6,8 @@ import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener
 import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent'
 import { win } from '../utils'
 
-import { MP4Demuxer } from './demuxer'
+import { Demuxer } from './Demuxer'
+import { type AudioMetadata, type VideoMetadata } from './types'
 
 export const hasVideoDecoder = () => typeof VideoDecoder === 'function'
 export const hasAudioDecoder = () => typeof AudioDecoder === 'function'
@@ -48,6 +49,16 @@ export const assertEncoderConfigIsSupported = async (
 
   if (!support.supported)
     throw new Error(`Encoding ${type} config '${JSON.stringify(config)}' is not supported by the user agent.`)
+}
+
+export const assertCanDecodeTrack = async (track: AudioMetadata | VideoMetadata) => {
+  if (track.type === 'video') {
+    const { codec, codedWidth, codedHeight } = track
+    await assertEncoderConfigIsSupported('video', { codec, width: codedWidth, height: codedHeight })
+  } else {
+    const { codec, sampleRate, numberOfChannels } = track
+    await assertEncoderConfigIsSupported('audio', { codec, sampleRate, numberOfChannels })
+  }
 }
 
 export const useMappedUniqueArray = <T extends object, U>(
@@ -193,10 +204,10 @@ export const getMediaElementInfo = async (source: Blob | string) => {
   }
 }
 
-export const getContainerInfo = async (source: Blob | string) => {
-  const demuxer = new MP4Demuxer()
+export const getContainerMetadata = async (source: Blob | string) => {
   const isBlob = typeof source !== 'string'
   const url = isBlob ? URL.createObjectURL(source) : source
+  const demuxer = new Demuxer()
 
   try {
     return await demuxer.init(url)
@@ -235,18 +246,13 @@ export const getImageSize = (image: TexImageSource): Size => {
   return { width: image.width, height: image.height }
 }
 
-export const checkAndWarnVideoFile = (
-  type: 'audio' | 'video',
-  file: Blob,
-  translate = (text: string) => text,
-) => {
-  const mime = file.type.replace('quicktime', 'mp4')
-  if (!document.createElement(type).canPlayType(mime)) {
-    alert(`${translate('error_cannot_play_type')} (${file.type})`)
-    return false
-  }
+export const assertCanDecodeMediaFile = async (file: Blob) => {
+  const { audio, video } = await getContainerMetadata(file)
 
-  if (!/video\/(mp4|mov|quicktime)/.test(file.type)) alert(translate('error_export_only_mp4'))
+  if (!audio && !video) throw new Error('Media file has no video or audio tracks.')
+
+  if (video) await assertCanDecodeTrack(video)
+  // AudioContext is used to decode audio
 
   return true
 }

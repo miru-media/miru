@@ -4,6 +4,9 @@ packages:
 
 catalog:
   '@libav.js/variant-opus': '^6.5.7'
+  buffer: '^6.0.3'
+  ebml: '^3.0.0'
+  ebml-block: '^1.1.2'
   filesize: '^10.1.6'
   fine-jsx: '^0.0.11'
   gl-matrix: '^3.4.3'
@@ -14,3 +17,4 @@ catalog:
   throttle-debounce: '^5.0.2'
   twgl.js: '^5.5.4'
   uid: '^2.0.2'
+  webm-muxer: '^5.1.2'

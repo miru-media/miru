@@ -106,5 +106,3 @@ const onInputFile = (event: Event) => {
     :class="!resultUrl && 'hidden'"
   />
 </div>
-
-<div ref="videoEditorContainer" class="demo-container" />

@@ -1,15 +1,15 @@
 import { promiseWithResolvers, timeout } from '../utils'
 
-import { type MP4Demuxer } from './demuxer'
+import { type Demuxer } from './Demuxer'
 import { FrameExtractor } from './FrameExtractor'
 import { assertDecoderConfigIsSupported } from './utils'
 
 export class VideoDecoderExtractor extends FrameExtractor {
-  rvfcHandle = 0
   decoder?: VideoDecoder
-  demuxer: MP4Demuxer
+  demuxer: Demuxer
+  #wasFlushed = false
 
-  constructor(demuxer: MP4Demuxer, options: FrameExtractor.Options) {
+  constructor(demuxer: Demuxer, options: FrameExtractor.Options) {
     super(options)
     this.demuxer = demuxer
   }
@@ -34,14 +34,18 @@ export class VideoDecoderExtractor extends FrameExtractor {
     }))
 
     decoder.configure(this.videoInfo)
+
     demuxer.setExtractionOptions(
-      this.videoInfo.track,
-      (chunk) => decoder.decode(new EncodedVideoChunk(chunk)),
+      this.videoInfo,
+      (chunk) => {
+        if (this.#wasFlushed) return
+        decoder.decode(new EncodedVideoChunk(chunk))
+      },
       p.resolve,
     )
 
     await p.promise
-    await decoder.flush()
+    if (decoder.state === 'configured') await decoder.flush()
   }
 
   async flush() {
@@ -49,6 +53,7 @@ export class VideoDecoderExtractor extends FrameExtractor {
     await timeout(10)
 
     const { decoder } = this
+    this.#wasFlushed = true
     await Promise.all([decoder?.state === 'configured' && decoder.flush(), super.flush()])
   }
 }

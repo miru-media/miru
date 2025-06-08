@@ -2,7 +2,8 @@
 import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
-import { type DemuxerChunkInfo, MP4Demuxer } from 'shared/video/demuxer'
+import { MP4Demuxer } from 'shared/video/Mp4Demuxer'
+import { type MediaChunk, type MP4BoxVideoTrack } from 'shared/video/types'
 
 import { AVEncoder } from './src/export/AVEncoder'
 
@@ -64,10 +65,9 @@ const test = async () => {
     .then(() => new Promise((r) => setTimeout(r, 200)))
   const videoInfo = (await demuxer.init(url)).video!
 
-  let sample!: DemuxerChunkInfo | undefined
-  demuxer.setExtractionOptions(videoInfo.track, (s) => (sample ??= s))
-  demuxer.start()
-  await demuxer.flush()
+  let sample!: MediaChunk | undefined
+  demuxer.setExtractionOptions(videoInfo.track as MP4BoxVideoTrack, (s) => (sample ??= s))
+  await demuxer.start()
 
   if (!sample) throw new Error(`Demuxer didn't extract any samples`)
   const chunk = new EncodedVideoChunk(sample)

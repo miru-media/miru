@@ -1,13 +1,13 @@
 import { get2dContext, Janitor } from '../utils'
 
-import { type DemuxerVideoInfo } from './demuxer'
+import { type VideoMetadata } from './types'
 
 export namespace FrameExtractor {
   export type OnFrame = (frame: VideoFrame | ImageBitmap, sourceTimestamp: number) => void
   export interface Options {
     start: number
     end: number
-    videoInfo: DemuxerVideoInfo
+    videoInfo: VideoMetadata
     angle: number
   }
 }
@@ -22,7 +22,7 @@ export abstract class FrameExtractor {
   private abort: AbortController | undefined
   private promise?: Promise<void>
   private context = get2dContext(new OffscreenCanvas(0, 0))
-  videoInfo: DemuxerVideoInfo
+  videoInfo: VideoMetadata
   startTimeS: number
   endTimeS: number
   angle: number

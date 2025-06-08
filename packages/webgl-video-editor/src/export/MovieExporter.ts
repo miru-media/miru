@@ -1,5 +1,6 @@
 import { setObjectSize } from 'shared/utils'
-import { type DemuxerChunkInfo, type Mp4ContainerInfo, MP4Demuxer } from 'shared/video/demuxer'
+import { Demuxer } from 'shared/video/Demuxer'
+import { type MediaChunk, type MediaContainerMetadata } from 'shared/video/types'
 import { assertDecoderConfigIsSupported } from 'shared/video/utils'
 
 import { type MediaAsset, type Movie, type Track } from '../nodes'
@@ -13,8 +14,8 @@ interface AvAssetEntry {
   asset: MediaAsset
   start: number
   end: number
-  demuxer: MP4Demuxer
-  info?: Mp4ContainerInfo
+  demuxer: Demuxer
+  info?: MediaContainerMetadata
   audio?: Mp4ExtractorNode.AudioInit
   video?: Mp4ExtractorNode.VideoInit
   isAudioOnly: boolean
@@ -42,7 +43,7 @@ export class MovieExporter {
         let sourceEntry = this.sources.get(source.objectUrl)
 
         if (!sourceEntry) {
-          const demuxer = new MP4Demuxer()
+          const demuxer = new Demuxer()
           sourceEntry = {
             asset: clip.source,
             start: sourceStart,
@@ -83,10 +84,10 @@ export class MovieExporter {
         }
 
         const { start, end, demuxer } = entry
-        let info: Mp4ContainerInfo
+        let metadata: MediaContainerMetadata
 
         try {
-          info = entry.info = await demuxer.init(source)
+          metadata = entry.info = await demuxer.init(source)
         } catch (error) {
           // If the source can't be demuxed, decode with an AudioContext
           if (entry.isAudioOnly) {
@@ -107,33 +108,32 @@ export class MovieExporter {
 
         if (!entry.isAudioOnly) {
           hasVideo = true
-          const chunks: DemuxerChunkInfo[] = []
-          const videoInfo = info.video!
+          const chunks: MediaChunk[] = []
+          const videoInfo = metadata.video!
           await assertDecoderConfigIsSupported('video', videoInfo)
 
           entry.video = { config: videoInfo, chunks }
-          demuxer.setExtractionOptions(videoInfo.track, (chunk) => chunks.push(chunk))
+          demuxer.setExtractionOptions(videoInfo, (chunk) => chunks.push(chunk))
         }
 
-        const audioInfo = info.audio
+        const audioInfo = metadata.audio
         if (audioInfo) {
           hasAudio = true
-          const chunks: DemuxerChunkInfo[] = []
+          const chunks: MediaChunk[] = []
 
           entry.audio = { config: audioInfo, chunks }
 
           try {
             await assertDecoderConfigIsSupported('audio', audioInfo)
 
-            demuxer.setExtractionOptions(audioInfo.track, (chunk) => chunks.push(chunk))
+            demuxer.setExtractionOptions(audioInfo, (chunk) => chunks.push(chunk))
           } catch {
             // If decoding the audio with WebCodecs isn't supported, decode with an AudioContext instead
             entry.audio.audioBuffer = await getAudioBuffer()
           }
         }
 
-        demuxer.start(start, end)
-        await demuxer.flush()
+        await demuxer.start(start, end)
       }),
     )
 

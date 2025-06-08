@@ -1,5 +1,7 @@
+import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 
+import NodeGlobalsPolyfill from '@esbuild-plugins/node-globals-polyfill'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import globImport from 'rollup-plugin-glob-import'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
@@ -14,6 +16,8 @@ import remoteAssets from 'vite-plugin-remote-assets'
 import { autoImportOptions } from './tools/autoImportOptions'
 
 const isProd = process.env.NODE_ENV === 'production'
+
+const require = createRequire(import.meta.url)
 
 export default defineConfig({
   plugins: [
@@ -43,6 +47,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      ebml: require.resolve('ebml/lib/ebml.umd.js'),
       'virtual:image-shadow.css': resolve(
         import.meta.dirname,
         'packages/webgl-media-editor/index.css?inline',
@@ -56,6 +61,19 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'fine-jsx',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+      plugins: [
+        (NodeGlobalsPolyfill as unknown as { default: (...args: unknown[]) => any }).default({
+          process: true,
+          buffer: true,
+        }),
+      ],
+    },
   },
   build: {
     minify: false,

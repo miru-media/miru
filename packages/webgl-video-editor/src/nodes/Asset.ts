@@ -1,7 +1,7 @@
 import { ref } from 'fine-jsx'
 
 import { Effect } from 'reactive-effects/Effect'
-import { getContainerInfo, getMediaElementInfo } from 'shared/video/utils'
+import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
 import { type Schema } from '.'
 
@@ -134,7 +134,7 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
 
     if (init) return new MediaAsset({ ...init, id }, { blob, root })
 
-    const containerOrElementInfo = await getContainerInfo(blob).catch(() => getMediaElementInfo(blob))
+    const containerOrElementInfo = await getContainerMetadata(blob).catch(() => getMediaElementInfo(blob))
     let duration = containerOrElementInfo.duration
 
     let hasAudio = false

@@ -22,7 +22,6 @@
   "error_no_webcodecs": "Your browser doesn't have the WebCodec APIs needed to export videos!",
   "error_cannot_export": "Your browser can't export videos in the formats that we use.",
   "error_cannot_play_type": "Your browser can't play this file type",
-  "error_export_only_mp4": "Export is currently only supported for MP4 videos!",
   "delete_all_content": "Delete all content",
   "confirm_delete_all_content": "Are you sure you want to delete your video? \n\nThis can't be undone."
 }

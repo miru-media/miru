@@ -1,4 +1,4 @@
-import { type DemuxerChunkInfo } from 'shared/video/demuxer'
+import { type MediaChunk } from 'shared/video/types'
 
 import { IS_FIREFOX } from '../userAgent'
 
@@ -7,7 +7,7 @@ import { assertCanExtractVideoFrames, assertDecoderConfigIsSupported } from './u
 const HIGH_WATER_MARK = 16
 
 interface Options<T extends VideoFrame | AudioData> {
-  chunks: DemuxerChunkInfo[]
+  chunks: MediaChunk[]
   start: number
   end: number
   mute?: boolean
@@ -19,7 +19,7 @@ interface Options<T extends VideoFrame | AudioData> {
 }
 
 abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableStream<T> {
-  chunks: DemuxerChunkInfo[]
+  chunks: MediaChunk[]
   options: Options<T>
   decoder: VideoDecoder | AudioDecoder
   doneDecoding = false
@@ -56,7 +56,7 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
     const { decoder } = this
     const { config } = this.options
     ;(this.decoder.configure as (config: unknown) => void)({
-      hardwareAcceleration: IS_FIREFOX ? 'prefer-software' : 'prefer-hardware',
+      hardwareAcceleration: IS_FIREFOX ? 'prefer-software' : 'no-preference',
       ...config,
     })
 
@@ -78,7 +78,7 @@ abstract class DecoderStream<T extends VideoFrame | AudioData> extends ReadableS
   }
 
   abstract init(): Promise<this>
-  abstract decode(chunk: DemuxerChunkInfo): void
+  abstract decode(chunk: MediaChunk): void
 
   enqueueChunks() {
     const { chunks, decoder, doneDecoding: done } = this
@@ -151,7 +151,7 @@ export class VideoDecoderStream extends DecoderStream<VideoFrame> {
     return super._init()
   }
 
-  decode(chunk: DemuxerChunkInfo) {
+  decode(chunk: MediaChunk) {
     this.decoder.decode(new EncodedVideoChunk(chunk))
   }
 }
@@ -192,7 +192,7 @@ export class AudioDecoderStream extends DecoderStream<AudioData> {
     return super._init()
   }
 
-  decode(chunk: DemuxerChunkInfo) {
+  decode(chunk: MediaChunk) {
     this.decoder.decode(new EncodedAudioChunk(chunk))
   }
 
@@ -207,6 +207,9 @@ export class AudioDecoderStream extends DecoderStream<AudioData> {
     }
 
     const { timestamp, duration, numberOfChannels, numberOfFrames, sampleRate } = audioData
+
+    if (numberOfFrames === 0) return
+
     const buffer = new AudioBuffer({ length: numberOfFrames, numberOfChannels, sampleRate })
 
     for (let i = 0; i < numberOfChannels; i++) {

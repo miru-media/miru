@@ -14,10 +14,9 @@ export interface TrimOptions {
    * A subset set of VideoEncoder config options.
    * https://developer.mozilla.org/en-US/docs/Web/API/VideoEncoder/encode
    */
-  encoderConfig?: {
+  videoEncoderConfig?: {
     codec?: string
     bitrate?: number
-    quantizer?: VideoEncoderConfig['avc']
     latencyMode?: LatencyMode
     hardwareAcceleration?: HardwareAcceleration
   }

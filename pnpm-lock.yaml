@@ -9,6 +9,12 @@ catalogs:
     '@libav.js/variant-opus':
       specifier: ^6.5.7
       version: 6.5.7
+    ebml:
+      specifier: ^3.0.0
+      version: 3.0.0
+    ebml-block:
+      specifier: ^1.1.2
+      version: 1.1.2
     fine-jsx:
       specifier: ^0.0.11
       version: 0.0.11
@@ -36,6 +42,9 @@ catalogs:
     uid:
       specifier: ^2.0.2
       version: 2.0.2
+    webm-muxer:
+      specifier: ^5.1.2
+      version: 5.1.2
 
 patchedDependencies:
   glsl-tokenizer:
@@ -71,6 +80,9 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2(vue@3.5.13(typescript@5.8.3))
     devDependencies:
+      '@esbuild-plugins/node-globals-polyfill':
+        specifier: ^0.2.3
+        version: 0.2.3(esbuild@0.25.2)
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.18.0
@@ -110,6 +122,9 @@ importers:
       '@types/dom-webcodecs':
         specifier: ^0.1.13
         version: 0.1.13
+      '@types/ebml':
+        specifier: ^3.0.5
+        version: 3.0.5
       '@types/eslint__js':
         specifier: ^8.42.3
         version: 8.42.3
@@ -305,6 +320,15 @@ importers:
 
   packages/media-trimmer:
     dependencies:
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
+      ebml:
+        specifier: ^3.0.0
+        version: 3.0.0
+      ebml-block:
+        specifier: 'catalog:'
+        version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.11
@@ -317,6 +341,9 @@ importers:
       throttle-debounce:
         specifier: 'catalog:'
         version: 5.0.2
+      webm-muxer:
+        specifier: 'catalog:'
+        version: 5.1.2
 
   packages/reactive-effects:
     dependencies:
@@ -329,9 +356,21 @@ importers:
 
   packages/shared:
     dependencies:
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
+      ebml:
+        specifier: ^3.0.0
+        version: 3.0.0
+      ebml-block:
+        specifier: 'catalog:'
+        version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.11
+      mp4-muxer:
+        specifier: 'catalog:'
+        version: 5.1.3
       mp4box:
         specifier: 'catalog:'
         version: 0.5.3
@@ -341,6 +380,9 @@ importers:
       webgl-effects:
         specifier: workspace:^
         version: link:../webgl-effects
+      webm-muxer:
+        specifier: 'catalog:'
+        version: 5.1.2
     devDependencies:
       twgl.js:
         specifier: 'catalog:'
@@ -409,6 +451,15 @@ importers:
       '@interactjs/modifiers':
         specifier: ^1.10.27
         version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
+      ebml:
+        specifier: 'catalog:'
+        version: 3.0.0
+      ebml-block:
+        specifier: 'catalog:'
+        version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.11
@@ -442,6 +493,9 @@ importers:
       webgl-media-editor:
         specifier: workspace:^
         version: link:../webgl-media-editor
+      webm-muxer:
+        specifier: 'catalog:'
+        version: 5.1.2
     devDependencies:
       '@libav.js/variant-opus':
         specifier: 'catalog:'
@@ -923,6 +977,11 @@ packages:
 
   '@dual-bundle/import-meta-resolve@4.1.0':
     resolution: {integrity: sha512-+nxncfwHM5SgAtrVzgpzJOI1ol0PkumhVo469KCf9lUi21IGcY90G98VuHm9VRrUypmAzawAHO9bs6hqeADaVg==}
+
+  '@esbuild-plugins/node-globals-polyfill@0.2.3':
+    resolution: {integrity: sha512-r3MIryXDeXDOZh7ih1l/yE9ZLORCd5e8vWg02azWRGj5SPTuoh69A2AIyn0Z31V/kHBfZ4HgWJ+OK3GTTwLmnw==}
+    peerDependencies:
+      esbuild: '*'
 
   '@esbuild/aix-ppc64@0.23.1':
     resolution: {integrity: sha512-6VhYk1diRqrhBAqpJEdjASR/+WVRtfjpqKuNw11cLiaWpAT/Uu+nokB+UJnevzy/P9C/ty6AOe0dwueMrGh/iQ==}
@@ -1909,6 +1968,9 @@ packages:
   '@types/dom-webcodecs@0.1.13':
     resolution: {integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==}
 
+  '@types/ebml@3.0.5':
+    resolution: {integrity: sha512-6hBHfvrza9g9R5JudsAZOOePryZ03CDFCcuGThMpXKGE1OtFfpmyid0HXMjorN4XM2/w69WPbhiY0yNpVfODXw==}
+
   '@types/eslint@9.6.1':
     resolution: {integrity: sha512-FXx2pKgId/WyYo2jXw63kk7/+TY7u7AziEJxJAnSFzHlqTAS3Ync6SvgYAN/k4/PQpnnVuzoMuVnByKK2qp0ag==}
 
@@ -2452,6 +2514,10 @@ packages:
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
+  buffers@0.1.1:
+    resolution: {integrity: sha512-9q/rDEGSb/Qsvv2qvzIzdluL5k7AaJOTrw23z9reQthrbF7is4CtlT0DXyO1oei2DCp4uojjzQ7igaSHp1kAEQ==}
+    engines: {node: '>=0.2.0'}
+
   bundle-require@5.0.0:
     resolution: {integrity: sha512-GuziW3fSSmopcx4KRymQEJVbZUfqlCqcq7dvs6TYwKRZiegK/2buMxQTPs6MGlNv50wms1699qYO54R8XfRX4w==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -2860,6 +2926,14 @@ packages:
   de-indent@1.0.2:
     resolution: {integrity: sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg==}
 
+  debug@3.1.0:
+    resolution: {integrity: sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
     peerDependencies:
@@ -2968,6 +3042,13 @@ packages:
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
+
+  ebml-block@1.1.2:
+    resolution: {integrity: sha512-HgNlIsRFP6D9VKU5atCeHRJY7XkJP8bOe8yEhd8NB7B3b4++VWTyauz6g650iiPmLfPLGlVpoJmGSgMfXDYusg==}
+
+  ebml@3.0.0:
+    resolution: {integrity: sha512-Q6C1u4/TX1nYipT9HNIopp95YyyyI0zs1GXdNRKO7XL7k+oo+ZtDc1CaJjpCdmlLxWsnlKBOXJCXkYU0K/Anlg==}
+    engines: {node: '>= 6.4'}
 
   electron-to-chromium@1.5.41:
     resolution: {integrity: sha512-dfdv/2xNjX0P8Vzme4cfzHqnPm5xsZXwsolTYr0eyW18IUmNyG08vL+fttvinTfhKfIKdRoqkDIC9e9iWQCNYQ==}
@@ -4306,6 +4387,9 @@ packages:
   mrmime@2.0.0:
     resolution: {integrity: sha512-eu38+hdgojoyq63s+yTpN4XMBdt5l8HhMhc4VKLO9KM5caLIBvUm4thi7fFaxyTmCKeNnXZ5pAlBwCUnhA09uw==}
     engines: {node: '>=10'}
+
+  ms@2.0.0:
+    resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -6106,6 +6190,9 @@ packages:
       typescript:
         optional: true
 
+  webm-muxer@5.1.2:
+    resolution: {integrity: sha512-gl9pXKRD/zr/njtW6P2Z/a4qSWFHjEL1OxMjoRVR10eZCw0b/J3Z0pX5RAX8x03Q78P585KVxQQkd4lWuek5rQ==}
+
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -6744,6 +6831,10 @@ snapshots:
       - '@algolia/client-search'
 
   '@dual-bundle/import-meta-resolve@4.1.0': {}
+
+  '@esbuild-plugins/node-globals-polyfill@0.2.3(esbuild@0.25.2)':
+    dependencies:
+      esbuild: 0.25.2
 
   '@esbuild/aix-ppc64@0.23.1':
     optional: true
@@ -7509,6 +7600,10 @@ snapshots:
 
   '@types/dom-webcodecs@0.1.13': {}
 
+  '@types/ebml@3.0.5':
+    dependencies:
+      '@types/node': 22.10.7
+
   '@types/eslint@9.6.1':
     dependencies:
       '@types/estree': 1.0.6
@@ -8201,6 +8296,8 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  buffers@0.1.1: {}
+
   bundle-require@5.0.0(esbuild@0.24.2):
     dependencies:
       esbuild: 0.24.2
@@ -8699,6 +8796,10 @@ snapshots:
 
   de-indent@1.0.2: {}
 
+  debug@3.1.0:
+    dependencies:
+      ms: 2.0.0
+
   debug@3.2.7:
     dependencies:
       ms: 2.1.3
@@ -8815,6 +8916,15 @@ snapshots:
       stream-shift: 1.0.3
 
   eastasianwidth@0.2.0: {}
+
+  ebml-block@1.1.2: {}
+
+  ebml@3.0.0:
+    dependencies:
+      buffers: 0.1.1
+      debug: 3.1.0
+    transitivePeerDependencies:
+      - supports-color
 
   electron-to-chromium@1.5.41: {}
 
@@ -10552,6 +10662,8 @@ snapshots:
   mp4box@0.5.3: {}
 
   mrmime@2.0.0: {}
+
+  ms@2.0.0: {}
 
   ms@2.1.3: {}
 
@@ -12601,6 +12713,11 @@ snapshots:
       '@vue/shared': 3.5.13
     optionalDependencies:
       typescript: 5.8.3
+
+  webm-muxer@5.1.2:
+    dependencies:
+      '@types/dom-webcodecs': 0.1.13
+      '@types/wicg-file-system-access': 2020.9.8
 
   webpack-virtual-modules@0.6.2: {}
 

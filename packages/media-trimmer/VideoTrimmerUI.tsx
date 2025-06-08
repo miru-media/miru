@@ -8,7 +8,7 @@ import { clamp } from 'shared/utils/math'
 import {
   formatDuration,
   formatTime,
-  getContainerInfo,
+  getContainerMetadata,
   getMediaElementInfo,
   useMediaReadyState,
 } from 'shared/video/utils'
@@ -210,7 +210,7 @@ export const VideoTrimmerUI = (props: {
 
     let info
     try {
-      info = await getContainerInfo(url)
+      info = await getContainerMetadata(url)
     } catch (error) {
       unableToDecode.value = true
       props.onError(error)

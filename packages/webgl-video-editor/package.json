@@ -57,6 +57,9 @@
     "@interactjs/core": "^1.10.27",
     "@interactjs/interact": "^1.10.27",
     "@interactjs/modifiers": "^1.10.27",
+    "buffer": "^6.0.3",
+    "ebml": "catalog:",
+    "ebml-block": "catalog:",
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "mp4-muxer": "catalog:",
@@ -66,7 +69,8 @@
     "twgl.js": "catalog:",
     "uid": "catalog:",
     "webgl-effects": "workspace:^",
-    "webgl-media-editor": "workspace:^"
+    "webgl-media-editor": "workspace:^",
+    "webm-muxer": "catalog:"
   },
   "peerDependencies": {
     "vue": "3"

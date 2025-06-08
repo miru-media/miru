@@ -49,6 +49,18 @@ declare module 'eslint-plugin-import' {
 
 declare module 'mp4box' {}
 
+declare module 'ebml-block' {
+  const ebmlBlock: (buffer: Buffer) => {
+    trackNumber: 1
+    timecode: number
+    invisible: boolean
+    keyframe: boolean
+    discardable: boolean
+    frames: Buffer[]
+  }
+  export default ebmlBlock
+}
+
 declare module 'videocontext' {
   interface EffectDefinition {
     title: string

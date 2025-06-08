@@ -4,6 +4,19 @@ import * as MP4Box_ from 'mp4box'
 
 import { promiseWithResolvers } from 'shared/utils'
 
+import {
+  type AudioMetadata,
+  type DemuxerSampleCallback,
+  type MediaChunk,
+  type MediaContainerMetadata,
+  type MP4BoxAudioTrack,
+  type MP4BoxFileInfo,
+  type MP4BoxSample,
+  type MP4BoxTrack,
+  type MP4BoxVideoTrack,
+  type VideoMetadata,
+} from './types'
+
 export interface MP4BoxFile<S = unknown, E = unknown> {
   onMoovStart(): void
   onReady(info: MP4BoxFileInfo): void
@@ -34,177 +47,14 @@ export interface MP4BoxFile<S = unknown, E = unknown> {
   getTrackById(track_id: number): any
 }
 
-export interface MP4BoxSample {
-  data: ArrayBuffer
-  moof_number: number
-  number_in_traf: number
-  number: number
-  track_id: number
-  timescale: number
-  description_index: number
-  size: number
-  duration: number
-  dts: number
-  cts: number
-  is_sync: boolean
-  is_leading: number
-  depends_on: number
-  is_depended_on: number
-  has_redundancy: number
-  degradation_priority: number
-  offset: number
-  alreadyRead: number
-  description: {
-    type: string
-    size: number
-    boxes: unknown[]
-    hdr_size: number
-    start: number
-    data_reference_index: number
-    width: number
-    height: number
-    horizresolution: number
-    vertresolution: number
-    frame_count: number
-    compressorname: string
-    depth: number
-    avcC?: {
-      type: 'avcC'
-      size: number
-      hdr_size: number
-      start: number
-      configurationVersion: number
-      AVCProfileIndication: number
-      profile_compatibility: number
-      AVCLevelIndication: number
-      lengthSizeMinusOne: number
-      nb_SPS_nalus: number
-      SPS: {
-        length: number
-        nalu: Uint8Array
-      }[]
-      nb_PPS_nalus: 1
-      PPS: {
-        length: number
-        nalu: Uint8Array
-      }[]
-    }
-    colr?: {
-      type: 'colr'
-      size: number
-      hdr_size: number
-      start: number
-      data: Uint8Array
-      colour_type: string
-      colour_primaries: number
-      transfer_characteristics: number
-      matrix_coefficients: number
-      full_range_flag: number
-    }
-  }
-}
-
-export interface MP4BoxBaseTrack {
-  id: number
-  name: string
-  references: unknown[]
-  created: string
-  modified: string
-  movie_duration: number
-  movie_timescale: number
-  layer: number
-  alternate_group: number
-  volume: number
-  matrix: Int32Array
-  track_width: number
-  track_height: number
-  timescale: number
-  cts_shift?: number
-  duration: number
-  samples_duration: number
-  codec: string
-  kind: {
-    schemeURI: string
-    value: string
-  }
-  language: string
-  nb_samples: number
-  size: number
-  bitrate: number
-  type: string
-}
-
-export interface MP4BoxVideoTrack extends MP4BoxBaseTrack {
-  video: {
-    width: number
-    height: number
-  }
-  type: 'video'
-}
-
-export interface MP4BoxAudioTrack extends MP4BoxBaseTrack {
-  audio: {
-    sample_rate: number
-    channel_count: number
-    sample_size: number
-  }
-  type: 'audio'
-}
-
-export type MP4BoxTrack = MP4BoxVideoTrack | MP4BoxAudioTrack | MP4BoxBaseTrack
-
-export interface MP4BoxFileInfo {
-  duration: number
-  timescale: number
-  isFragmented: boolean
-  isProgressive: boolean
-  hasIOD: boolean
-  brands: string[]
-  created: string
-  modified: string
-  tracks: MP4BoxTrack[]
-  videoTracks: MP4BoxVideoTrack[]
-  audioTracks: MP4BoxAudioTrack[]
-}
-
-export type DemuxerVideoInfo = VideoDecoderConfig & {
-  duration: number
-  fps: number
-  codedWidth: number
-  codedHeight: number
-  matrix: [number, number, number, number, number, number, number, number, number]
-  rotation: number
-  track: MP4BoxVideoTrack
-}
-export type DemuxerAudioInfo = AudioDecoderConfig & { duration: number; track: MP4BoxAudioTrack }
-
-export interface Mp4ContainerInfo {
-  duration: number
-  video?: DemuxerVideoInfo
-  audio?: DemuxerAudioInfo
-}
-
 const MP4Box = MP4Box_ as { createFile<S = unknown, E = unknown>(): MP4BoxFile<S, E>; DataStream: any }
-
-export interface DemuxerChunkInfo {
-  type: 'key' | 'delta'
-  timestamp: number
-  duration: number
-  data: ArrayBuffer
-  colorSpace?: VideoColorSpaceInit
-  codedWidth: number
-  codedHeight: number
-  mediaType: 'audio' | 'video'
-}
-
-export type DemuxerSampleCallback = (chunk: DemuxerChunkInfo) => void
 
 interface TrackState {
   track: MP4BoxTrack
   isEnded: boolean
   sampleBytes: number
   presentationOffsetS: number
-  onSample: (chunk: DemuxerChunkInfo) => unknown
+  onSample: (chunk: MediaChunk) => unknown
   onDone?: () => void
   resolve: () => void
   reject: (reason: any) => void
@@ -219,10 +69,9 @@ export class MP4Demuxer {
     onSample: DemuxerSampleCallback
     onDone?: () => void
   }[] = []
-  #promise?: Promise<void>
   #fileAbort = new AbortController()
 
-  async init(url: string, requestInit?: RequestInit): Promise<Mp4ContainerInfo> {
+  async init(url: string, requestInit?: RequestInit): Promise<MediaContainerMetadata> {
     requestInit?.signal?.addEventListener('abort', () => this.#fileAbort.abort(), { once: true })
     const response = await fetch(url, { ...requestInit, signal: this.#fileAbort.signal })
 
@@ -236,7 +85,7 @@ export class MP4Demuxer {
     let fileOffset = 0
 
     return new Promise((resolve, reject) => {
-      this.#file.onReady = (info: MP4BoxFileInfo) => resolve(this.getContainerAndTrackInfo(info))
+      this.#file.onReady = (info: MP4BoxFileInfo) => resolve(this.getMetadata(info))
 
       this.#file.onError = reject
 
@@ -254,19 +103,19 @@ export class MP4Demuxer {
         ),
       )
 
-      // eslint-disable-next-line @typescript-eslint/use-unknown-in-catch-callback-variable
       this.#pipePromise.catch(reject)
     })
   }
 
-  getContainerAndTrackInfo(info: MP4BoxFileInfo): Mp4ContainerInfo {
+  getMetadata(info: MP4BoxFileInfo): MediaContainerMetadata {
     const videoTrack = info.videoTracks[0] as MP4BoxVideoTrack | undefined
     const audioTrack = info.audioTracks[0] as MP4BoxAudioTrack | undefined
 
-    const video = videoTrack && this.getConfig(videoTrack)
-    const audio = audioTrack && this.getConfig(audioTrack)
+    const video = videoTrack && this.getTrackMetadata(videoTrack)
+    const audio = audioTrack && this.getTrackMetadata(audioTrack)
 
     return {
+      type: 'mp4',
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
       duration: info.duration / info.timescale || video?.duration || audio?.duration || 0,
       video,
@@ -274,9 +123,9 @@ export class MP4Demuxer {
     }
   }
 
-  getConfig(track: MP4BoxVideoTrack): DemuxerVideoInfo
-  getConfig(track: MP4BoxAudioTrack): DemuxerAudioInfo
-  getConfig(track: MP4BoxVideoTrack | MP4BoxAudioTrack): DemuxerVideoInfo | DemuxerAudioInfo {
+  getTrackMetadata(track: MP4BoxVideoTrack): VideoMetadata
+  getTrackMetadata(track: MP4BoxAudioTrack): AudioMetadata
+  getTrackMetadata(track: MP4BoxVideoTrack | MP4BoxAudioTrack): VideoMetadata | AudioMetadata {
     const { codec } = track
     const trak = this.#file.getTrackById(track.id)
     // track.duration is zero in some files
@@ -287,6 +136,8 @@ export class MP4Demuxer {
       const mp4aSampleDescription = trak.mdia.minf.stbl.stsd.entries.find(({ type }: any) => type === 'mp4a')
 
       return {
+        id: track.id,
+        type: track.type,
         codec,
         duration,
         sampleRate: audio.sample_rate,
@@ -320,13 +171,15 @@ export class MP4Demuxer {
 
     const matrix = Array.from(track.matrix).map(
       (n, i) => n / (i % 3 === 2 ? 2 ** 30 : 2 ** 16),
-    ) as DemuxerVideoInfo['matrix']
+    ) as VideoMetadata['matrix']
     const rotation = Math.atan2(matrix[3], matrix[0]) * (180 / Math.PI)
 
     return {
+      id: track.id,
+      type: track.type,
       codec: codec.startsWith('vp08') ? 'vp8' : codec,
       duration,
-      fps: track.nb_samples / track.samples_duration / track.timescale,
+      fps: track.nb_samples / (track.samples_duration / track.timescale),
       description,
       codedWidth: width,
       codedHeight: height,
@@ -344,7 +197,7 @@ export class MP4Demuxer {
     this.#trackConfigs.push({ track, onSample, onDone })
   }
 
-  start(_firstFrameTimeS = 0, lastFrameTimeS?: number) {
+  async start(_firstFrameTimeS = 0, lastFrameTimeS?: number) {
     lastFrameTimeS ??= this.#trackConfigs.reduce(
       (acc, { track }) => Math.min(acc, track.samples_duration / track.timescale),
       Infinity,
@@ -405,7 +258,7 @@ export class MP4Demuxer {
             }
           }
 
-          const chunkInfo: DemuxerChunkInfo = {
+          const chunk: MediaChunk = {
             data,
             type: is_sync ? ('key' as const) : ('delta' as const),
             timestamp: timeS * 1e6,
@@ -416,7 +269,7 @@ export class MP4Demuxer {
             mediaType: track.type as 'audio' | 'video',
           }
 
-          state.onSample(chunkInfo)
+          state.onSample(chunk)
 
           if (timeS >= lastFrameTimeS && is_sync) {
             state.isEnded = true
@@ -438,14 +291,13 @@ export class MP4Demuxer {
       }
     }
 
-    this.#promise = new Promise<void>((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/use-unknown-in-catch-callback-variable
+    await new Promise<void>((resolve, reject) => {
       this.#pipePromise?.catch(reject)
       this.#file.onError = reject
       this.#file.start()
       Promise.all(extractionPromises)
         .then(() => resolve())
-        // eslint-disable-next-line @typescript-eslint/use-unknown-in-catch-callback-variable
+
         .catch(reject)
     }).finally(this.stop.bind(this))
   }
@@ -453,10 +305,6 @@ export class MP4Demuxer {
   stop() {
     this.#file.stop()
     this.#fileAbort.abort('stopped')
-  }
-
-  flush() {
-    return Promise.resolve(this.#promise)
   }
 }
 

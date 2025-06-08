@@ -1,17 +1,18 @@
-import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
+import * as mp4Muxer from 'mp4-muxer'
+import * as webmMuxer from 'webm-muxer'
 
 import { IS_LIKE_MAC, IS_SAFARI } from 'shared/userAgent'
 import { Janitor, promiseWithResolvers } from 'shared/utils'
-import {
-  type DemuxerAudioInfo,
-  type DemuxerChunkInfo,
-  type DemuxerVideoInfo,
-  type MP4BoxFileInfo,
-  type MP4BoxVideoTrack,
-  MP4Demuxer,
-} from 'shared/video/demuxer'
+import { Demuxer } from 'shared/video/Demuxer'
 import { type FrameExtractor } from 'shared/video/FrameExtractor'
 import { RvfcExtractor } from 'shared/video/RvfcExtractor'
+import {
+  type AudioMetadata,
+  type MediaChunk,
+  type MP4BoxFileInfo,
+  type MP4BoxVideoTrack,
+  type VideoMetadata,
+} from 'shared/video/types'
 import { assertEncoderConfigIsSupported } from 'shared/video/utils'
 import { VideoDecoderExtractor } from 'shared/video/VideoDecoderExtractor'
 
@@ -25,11 +26,25 @@ interface PromiseResolvers {
   reject: (reason: unknown) => void
 }
 
+const MUXER_CODEC_ID_MAP: Record<'webm' | 'mp4', Record<string, string>> = {
+  mp4: { vp09: 'vp9', av01: 'av1', avc1: 'avc', hev1: 'hevc', opus: 'opus', mp4a: 'aac' },
+  webm: {
+    vp09: 'V_VP9',
+    vp8: 'V_VP8',
+    av01: 'V_AV1',
+    avc1: 'V_MPEG4/ISO/AVC',
+    hev1: 'V_MPEGH/ISO/HEVC',
+    opus: 'A_OPUS',
+    vorbis: 'A_VORBIS',
+  },
+}
+
 export class Trimmer {
   url: string
   options: TrimOptions
   rotation!: number
   janitor?: Janitor
+  videoOutCodec!: string
 
   constructor(url: string, options: TrimOptions) {
     this.url = url
@@ -57,36 +72,58 @@ export class Trimmer {
       if (!done && !abort.signal.aborted) abort.abort()
     })
 
-    const { demuxer, mp4Info } = await this.initDemuxer(abort)
-    const { video, audio } = mp4Info
-    this.rotation = video?.rotation ?? 0
-    const frameExtractor = await this.createFrameExtractor(demuxer, video!)
+    const { demuxer, metadata } = await this.initDemuxer(abort)
+    const { video, audio } = metadata
 
-    const muxer = new Muxer({
-      target: new ArrayBufferTarget(),
+    const withAudio = !!audio && !options.mute
+    this.rotation = video?.rotation ?? 0
+
+    if (!video && !audio) throw new Error('Input media has no video or audio tracks.')
+
+    if (video) {
+      this.videoOutCodec =
+        options.videoEncoderConfig?.codec ?? (metadata.type === 'mp4' ? `avc1.420028` : video.codec)
+    }
+
+    const muxerVideoCodecId = MUXER_CODEC_ID_MAP[metadata.type][this.videoOutCodec.replace(/\..*/, '')]
+
+    const muxerOptions = {
       video: video && {
-        codec: 'avc',
+        codec: muxerVideoCodecId as any,
         width: video.codedWidth,
         height: video.codedHeight,
         rotation: video.matrix,
       },
-      audio: audio && {
-        codec: 'aac',
-        sampleRate: audio.sampleRate,
-        numberOfChannels: audio.numberOfChannels,
-      },
+      audio: withAudio
+        ? {
+            codec: MUXER_CODEC_ID_MAP[metadata.type][audio.codec.replace(/\..*/, '')] as any,
+            sampleRate: audio.sampleRate,
+            numberOfChannels: audio.numberOfChannels,
+          }
+        : undefined,
       fastStart: 'in-memory',
-    })
+    } as const
 
-    const videoEncoder = await this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error))
+    const muxer =
+      metadata.type === 'mp4'
+        ? new mp4Muxer.Muxer({ ...muxerOptions, target: new mp4Muxer.ArrayBufferTarget() })
+        : new webmMuxer.Muxer({ ...muxerOptions, target: new webmMuxer.ArrayBufferTarget() })
 
-    frameExtractor.start((frame, trimmedTimestamp) => {
-      if (videoEncoder.state === 'configured' && trimmedTimestamp >= 0) videoEncoder.encode(frame)
-      frame.close()
-    }, abort.signal)
+    const frameExtractor = video && (await this.createFrameExtractor(demuxer, video))
+    const videoEncoder =
+      video &&
+      frameExtractor &&
+      (await this.createVideoEncoder(frameExtractor, muxer, (error) => abort.abort(error)))
+
+    if (frameExtractor && videoEncoder) {
+      frameExtractor.start((frame, trimmedTimestamp) => {
+        if (videoEncoder.state === 'configured' && trimmedTimestamp >= 0) videoEncoder.encode(frame)
+        frame.close()
+      }, abort.signal)
+    }
 
     const audioRemuxPromise = promiseWithResolvers()
-    if (audio) {
+    if (withAudio) {
       this.setAudioRemuxing(demuxer, muxer, audio, {
         resolve: audioRemuxPromise.resolve,
         reject: (error) => {
@@ -96,29 +133,28 @@ export class Trimmer {
       })
     } else audioRemuxPromise.resolve()
 
-    demuxer.start(options.start, options.end)
-    await demuxer.flush()
-    await frameExtractor.flush()
-    await Promise.all([videoEncoder.flush(), audioRemuxPromise.promise])
+    await demuxer.start(options.start, options.end)
+    await frameExtractor?.flush()
+    await Promise.all([videoEncoder?.flush(), audioRemuxPromise.promise])
 
     muxer.finalize()
     done = true
 
     const { buffer } = muxer.target
-    return new Blob([buffer], { type: 'video/mp4' })
+    return new Blob([buffer], { type: 'video/webm' })
   }
 
   async initDemuxer(abort: AbortController) {
     const { credentials } = this.options
 
-    const demuxer = new MP4Demuxer()
-    const mp4Info = await demuxer.init(this.url, {
+    const demuxer = new Demuxer()
+    const metadata = await demuxer.init(this.url, {
       credentials,
       signal: abort.signal,
     })
 
     this.janitor!.add(() => demuxer.stop())
-    return { demuxer, mp4Info }
+    return { demuxer, metadata }
   }
 
   getTracks(info: MP4BoxFileInfo, mute?: boolean) {
@@ -137,7 +173,7 @@ export class Trimmer {
     return { videoTrack, audioTrack, rotation, angle }
   }
 
-  async createFrameExtractor(demuxer: MP4Demuxer, videoInfo: DemuxerVideoInfo) {
+  async createFrameExtractor(demuxer: Demuxer, videoInfo: VideoMetadata) {
     const { rotation: angle } = this
     const options = { ...this.options, videoInfo, angle }
     let extractor
@@ -156,18 +192,18 @@ export class Trimmer {
     return extractor
   }
 
-  async createVideoEncoder(extractor: FrameExtractor, muxer: Muxer<any>, onError: (error: unknown) => void) {
+  async createVideoEncoder(
+    extractor: FrameExtractor,
+    muxer: mp4Muxer.Muxer<any> | webmMuxer.Muxer<any>,
+    onError: (error: unknown) => void,
+  ) {
     const { options } = this
     const endTimeUs = options.end * 1_000_000
     const { codedWidth, codedHeight } = extractor.videoInfo
-    const MAX_AREA_LEVEL_30 = 1280 * 720
-    const {
-      codec = `avc1.4200${(codedWidth * codedHeight > MAX_AREA_LEVEL_30 ? 40 : 31).toString(16)}`,
-      bitrate = 1e6,
-    } = options.encoderConfig ?? {}
+    const { bitrate = 1e8 } = options.videoEncoderConfig ?? {}
 
     const config: VideoEncoderConfig = {
-      codec,
+      codec: this.videoOutCodec,
       width: codedWidth,
       height: codedHeight,
       bitrate,
@@ -194,28 +230,35 @@ export class Trimmer {
   }
 
   setAudioRemuxing(
-    demuxer: MP4Demuxer,
-    muxer: Muxer<ArrayBufferTarget>,
-    audio: DemuxerAudioInfo,
+    demuxer: Demuxer,
+    muxer: mp4Muxer.Muxer<mp4Muxer.ArrayBufferTarget> | webmMuxer.Muxer<webmMuxer.ArrayBufferTarget>,
+    audio: AudioMetadata,
     { resolve, reject }: PromiseResolvers,
   ) {
-    const startTimeUs = this.options.start * 1_000_000
+    const startTimeUs = this.options.start * 1e6
+    const endTimeUs = this.options.end * 1e6
+
     let firstAudioChunkTimestamp = -1
 
+    const { codec, sampleRate, numberOfChannels, description } = audio
+    const meta: EncodedAudioChunkMetadata = {
+      decoderConfig: { codec, sampleRate, numberOfChannels, description },
+    }
+
     demuxer.setExtractionOptions(
-      audio.track,
-      (chunk: DemuxerChunkInfo) => {
+      audio,
+      (chunk: MediaChunk) => {
         const { timestamp } = chunk
-        if (timestamp < startTimeUs) return
+        if (timestamp < startTimeUs || timestamp >= endTimeUs) return
         if (firstAudioChunkTimestamp === -1) firstAudioChunkTimestamp = timestamp
 
         try {
-          muxer.addAudioChunkRaw(
-            new Uint8Array(chunk.data),
-            chunk.type,
-            timestamp - firstAudioChunkTimestamp,
-            chunk.duration,
-          )
+          const uint8 = new Uint8Array(chunk.data)
+          const trimmedTimestamp = timestamp - firstAudioChunkTimestamp
+
+          if (muxer instanceof mp4Muxer.Muxer)
+            muxer.addAudioChunkRaw(uint8, chunk.type, trimmedTimestamp, chunk.duration!)
+          else muxer.addAudioChunkRaw(uint8, chunk.type, trimmedTimestamp, meta)
         } catch (error) {
           reject(error)
         }

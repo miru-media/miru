@@ -85,7 +85,14 @@ export const Timeline = ({
   const onInputClipFile = async (event: InputEvent, track: Track<ClipType>) => {
     const file = event.target.files?.[0]
     if (!file) return
-    await editor.addClip(track, file)
+
+    try {
+      await editor.addClip(track, file)
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error)
+      alert(t('error_cannot_play_type'))
+    }
   }
 
   const onPointerdownScroller = (event: Event) => {

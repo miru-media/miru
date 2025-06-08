@@ -2,7 +2,7 @@ import { ref } from 'fine-jsx'
 import { type RenderGraph } from 'videocontext'
 
 import { AudioDecoderStream, VideoDecoderStream } from 'shared/video/DecoderStream'
-import { type DemuxerChunkInfo } from 'shared/video/demuxer'
+import { type MediaChunk } from 'shared/video/types'
 
 import { type CustomSourceNodeOptions } from '../../types/internal'
 import { CustomSourceNode } from '../videoContextNodes'
@@ -14,12 +14,12 @@ export interface ExtractorNodeOptions extends CustomSourceNodeOptions {
 export namespace Mp4ExtractorNode {
   export interface AudioInit {
     config: AudioDecoderConfig
-    chunks: DemuxerChunkInfo[]
+    chunks: MediaChunk[]
     audioBuffer?: AudioBuffer
   }
   export interface VideoInit {
     config: VideoDecoderConfig & { codedWidth: number; codedHeight: number }
-    chunks: DemuxerChunkInfo[]
+    chunks: MediaChunk[]
   }
 }
 

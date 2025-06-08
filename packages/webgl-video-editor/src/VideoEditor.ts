@@ -3,7 +3,7 @@ import { uid } from 'uid'
 
 import { type Size } from 'shared/types'
 import { remap0 } from 'shared/utils/math'
-import { checkAndWarnVideoFile } from 'shared/video/utils'
+import { assertCanDecodeMediaFile, hasVideoDecoder } from 'shared/video/utils'
 
 import { type ClipSnapshot, type HistoryOp } from '../types/internal'
 
@@ -260,7 +260,14 @@ export class VideoEditor {
   }
 
   async addClip(track: Track<Clip>, source: string | Blob) {
-    if (typeof source !== 'string' && !checkAndWarnVideoFile(track.trackType, source)) return
+    if (typeof source !== 'string') {
+      if (hasVideoDecoder()) await assertCanDecodeMediaFile(source)
+      else {
+        const mime = source.type.replace('quicktime', 'mp4').replace(/(x-)?matroska/, 'webm')
+        if (!document.createElement(track.trackType).canPlayType(mime))
+          throw new Error(`Can't play media file type.`)
+      }
+    }
 
     const asset = await MediaAsset.fromSource(uid(), this._movie, source)
     const { duration } = asset
