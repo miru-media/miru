@@ -1,6 +1,6 @@
 {
   "name": "webgl-video-editor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "module": "index.ts",
   "main": "index.ts",
