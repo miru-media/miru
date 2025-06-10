@@ -17,4 +17,4 @@ catalog:
   throttle-debounce: '^5.0.2'
   twgl.js: '^5.5.4'
   uid: '^2.0.2'
-  webm-muxer: '^5.1.2'
+  webm-muxer: '^5.1.3'

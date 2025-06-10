@@ -260,14 +260,7 @@ export class VideoEditor {
   }
 
   async addClip(track: Track<Clip>, source: string | Blob) {
-    if (typeof source !== 'string') {
-      if (hasVideoDecoder()) await assertCanDecodeMediaFile(source)
-      else {
-        const mime = source.type.replace('quicktime', 'mp4').replace(/(x-)?matroska/, 'webm')
-        if (!document.createElement(track.trackType).canPlayType(mime))
-          throw new Error(`Can't play media file type.`)
-      }
-    }
+    if (track.trackType === 'audio' && hasVideoDecoder()) await assertCanDecodeMediaFile(source)
 
     const asset = await MediaAsset.fromSource(uid(), this._movie, source)
     const { duration } = asset
@@ -500,10 +493,12 @@ export class VideoEditor {
     try {
       const exporter = new MovieExporter(this._movie)
 
-      await this._movie.withoutRendering(async () => {
-        const blob = await exporter.start({ onProgress }).finally(() => exporter.dispose())
-        this.#exportResult.value = { blob, url: URL.createObjectURL(blob) }
-      })
+      await this._movie
+        .withoutRendering(async () => {
+          const blob = await exporter.start({ onProgress })
+          this.#exportResult.value = { blob, url: URL.createObjectURL(blob) }
+        })
+        .finally(() => exporter.dispose())
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error)

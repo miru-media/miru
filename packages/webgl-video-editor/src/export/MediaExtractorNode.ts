@@ -1,8 +1,12 @@
 import { ref } from 'fine-jsx'
 import { type RenderGraph } from 'videocontext'
 
-import { AudioDecoderStream, VideoDecoderStream } from 'shared/video/DecoderStream'
-import { type MediaChunk } from 'shared/video/types'
+import {
+  type AudioBufferData,
+  AudioDecoderTransform,
+  VideoDecoderTransform,
+} from 'shared/video/encoderDecoderTransforms'
+import { type EncodedMediaChunk } from 'shared/video/types'
 
 import { type CustomSourceNodeOptions } from '../../types/internal'
 import { CustomSourceNode } from '../videoContextNodes'
@@ -11,43 +15,36 @@ export interface ExtractorNodeOptions extends CustomSourceNodeOptions {
   targetFrameRate: number
 }
 
-export namespace Mp4ExtractorNode {
+export namespace MediaExtractorNode {
   export interface AudioInit {
     config: AudioDecoderConfig
-    chunks: MediaChunk[]
+    getStream: () => ReadableStream<EncodedMediaChunk>
     audioBuffer?: AudioBuffer
   }
   export interface VideoInit {
     config: VideoDecoderConfig & { codedWidth: number; codedHeight: number }
-    chunks: MediaChunk[]
+    getStream: () => ReadableStream<EncodedMediaChunk>
   }
 }
 
-export class Mp4ExtractorNode extends CustomSourceNode {
+export class MediaExtractorNode extends CustomSourceNode {
   videoIsReady = false
 
-  audioInit?: Mp4ExtractorNode.AudioInit
-  videoInit?: Mp4ExtractorNode.VideoInit
+  audioInit?: MediaExtractorNode.AudioInit
+  videoInit?: MediaExtractorNode.VideoInit
 
-  videoStream?: VideoDecoderStream
-  audioStream?: AudioDecoderStream
-  streamInit!: { start: number; end: number; onError: (error: unknown) => void }
+  videoStream?: VideoDecoderTransform
+  audioStream?: AudioDecoderTransform
+  decoderRange!: { start: number; end: number }
+  videoReader?: ReadableStreamDefaultReader<VideoFrame>
+  audioReader?: ReadableStreamDefaultReader<AudioBufferData>
   targetFrameDurationUs: number
 
   everHadEnoughData = false
   mediaTime = ref(0)
 
-  get currentVideoFrame() {
-    return this.videoStream?.currentValue
-  }
-  get currentAudioData() {
-    const audioBuffer = this.audioInit?.audioBuffer
-
-    if (audioBuffer) return { timestamp: 0, duration: audioBuffer.duration * 1e6, buffer: audioBuffer }
-    return this.audioStream?.currentValue
-  }
-
-  onError?: (error: unknown) => void
+  currentVideoFrame?: VideoFrame
+  currentAudioData?: AudioBufferData
 
   _audioReady = false
   _isReady() {
@@ -62,11 +59,11 @@ export class Mp4ExtractorNode extends CustomSourceNode {
     options: ExtractorNodeOptions,
   ) {
     super(gl, renderGraph, currentTime, options)
-    this._displayName = 'Mp4ExtractorNode'
+    this._displayName = 'MediaExtractorNode'
     this.targetFrameDurationUs = 1e6 / options.targetFrameRate
   }
 
-  init({ audio, video }: { audio?: Mp4ExtractorNode.AudioInit; video?: Mp4ExtractorNode.VideoInit }) {
+  init({ audio, video }: { audio?: MediaExtractorNode.AudioInit; video?: MediaExtractorNode.VideoInit }) {
     if (audio) this.audioInit = audio
     if (video) {
       const { codedWidth, codedHeight } = video.config
@@ -80,8 +77,7 @@ export class Mp4ExtractorNode extends CustomSourceNode {
     const { playableTime } = this
     const start = playableTime.source
     const end = start + playableTime.duration
-    const onError = (error: unknown) => this.onError?.(error)
-    this.streamInit = { start, end, onError }
+    this.decoderRange = { start, end }
 
     this.everHadEnoughData = true
   }
@@ -90,7 +86,7 @@ export class Mp4ExtractorNode extends CustomSourceNode {
     this.videoIsReady = true
     this._seek(timeS)
 
-    if (!this.videoInit || this.videoStream?.doneReading) return false
+    if (!this.videoInit) return false
 
     const { presentationTime } = this
 
@@ -102,18 +98,12 @@ export class Mp4ExtractorNode extends CustomSourceNode {
     const sourceTimeUs = this.expectedMediaTime.value * 1e6
 
     if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
-      this.media = this.currentVideoFrame
       return true
     }
 
     this.videoIsReady = false
 
-    if (!this.videoStream) {
-      const { chunks, config } = this.videoInit
-      this.videoStream = await new VideoDecoderStream({ chunks, config, ...this.streamInit }).init()
-    }
-
-    if (!this.currentVideoFrame) await this.videoStream.read()
+    if (!this.currentVideoFrame) if (await this.readNextVideoFrame()) return false
 
     while (this.currentVideoFrame) {
       if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
@@ -122,42 +112,79 @@ export class Mp4ExtractorNode extends CustomSourceNode {
         return true
       }
 
-      if (this.videoStream.doneReading) break
-
-      await this.videoStream.read()
+      if (await this.readNextVideoFrame()) break
     }
 
     return false
   }
 
+  async readNextVideoFrame() {
+    if (!this.videoReader) {
+      const { config, getStream } = this.videoInit!
+      this.videoStream = new VideoDecoderTransform({ config, ...this.decoderRange })
+      this.videoReader = getStream().pipeThrough(this.videoStream).getReader()
+    }
+
+    this.currentVideoFrame?.close()
+    const { done, value } = await this.videoReader.read()
+    this.currentVideoFrame = this.media = value
+
+    return done
+  }
+
   async seekAudio(timeS: number): Promise<boolean> {
-    if (!this.audioInit || (!this.audioInit.audioBuffer && this.audioStream?.doneReading)) return false
+    if (!this.audioInit) return false
 
     const { playableTime } = this
 
     if (timeS < playableTime.start || timeS >= playableTime.end) return false
-    if (this.audioInit.audioBuffer) return true
 
     const sourceTimeUs = (timeS - playableTime.start + playableTime.source) * 1e6
 
     if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
 
-    if (!this.audioStream) {
-      const { chunks, config } = this.audioInit
-      this.audioStream = await new AudioDecoderStream({ chunks, config, ...this.streamInit }).init()
-    }
-
-    if (!this.currentAudioData) await this.audioStream.read()
+    if (!this.currentAudioData) if (await this.readNextAudio()) return false
 
     while (this.currentAudioData) {
+      // if the current data starts after the seek time, stop seeking
+      if (this.currentAudioData.timestamp > timeS * 1e6) return true
+
       if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
-      await this.audioStream.read()
+      if (await this.readNextAudio()) break
     }
+
     return false
   }
 
+  async readNextAudio() {
+    const audioBuffer = this.audioInit?.audioBuffer
+    if (audioBuffer) {
+      if (this.currentAudioData) {
+        this.currentAudioData = undefined
+        return false
+      }
+
+      this.currentAudioData = {
+        timestamp: 0,
+        duration: audioBuffer.duration * 1e6,
+        buffer: audioBuffer,
+      }
+      return true
+    }
+    if (!this.audioReader) {
+      const { config, getStream } = this.audioInit!
+      this.audioStream = new AudioDecoderTransform({ config, ...this.decoderRange })
+      this.audioReader = getStream().pipeThrough(this.audioStream).getReader()
+    }
+
+    const { done, value } = await this.audioReader.read()
+    this.currentAudioData = value
+
+    return done
+  }
+
   #hasVideoFrameAtTimeUs(sourceTimeUs: number) {
-    const frame = this.videoStream?.currentValue
+    const frame = this.currentVideoFrame
     if (!frame) return false
 
     const frameCenter = frame.timestamp + frame.duration! / 2
@@ -166,7 +193,7 @@ export class Mp4ExtractorNode extends CustomSourceNode {
   }
 
   #hasAudioFrameAtTimeUs(sourceTimeUs: number) {
-    const data = this.audioStream?.currentValue
+    const data = this.currentAudioData
     if (!data) return false
     return data.timestamp <= sourceTimeUs && sourceTimeUs < data.timestamp + data.duration
   }
@@ -179,7 +206,7 @@ export class Mp4ExtractorNode extends CustomSourceNode {
   }
 
   getTextureImageSource() {
-    return this.videoStream?.currentValue
+    return this.media as VideoFrame
   }
 
   closeTextureImageSource() {
@@ -189,6 +216,8 @@ export class Mp4ExtractorNode extends CustomSourceNode {
   destroy() {
     this.videoStream?.dispose()
     this.audioStream?.dispose()
+
+    this.currentVideoFrame?.close()
 
     super.destroy()
   }

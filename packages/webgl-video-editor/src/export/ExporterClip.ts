@@ -5,7 +5,7 @@ import { type Schema, type Track } from '../nodes'
 import { type MediaAsset, type VideoEffectAsset } from '../nodes/Asset'
 import { BaseClip } from '../nodes/BaseClip'
 
-import { type ExtractorNodeOptions, Mp4ExtractorNode } from './Mp4ExtractorNode'
+import { type ExtractorNodeOptions, MediaExtractorNode } from './MediaExtractorNode'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
@@ -13,7 +13,7 @@ export class ExtractorClip extends BaseClip {
   filter: Ref<VideoEffectAsset | undefined>
 
   track: Track<ExtractorClip>
-  node: Mp4ExtractorNode
+  node: MediaExtractorNode
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
   source: MediaAsset
 
@@ -55,7 +55,7 @@ export class ExtractorClip extends BaseClip {
       getPlayableTime: () => this.playableTime,
       targetFrameRate: track.parent.frameRate.value,
     }
-    this.node = track._context.customSourceNode(Mp4ExtractorNode, undefined, nodeOptions)
+    this.node = track._context.customSourceNode(MediaExtractorNode, undefined, nodeOptions)
   }
 
   connect() {

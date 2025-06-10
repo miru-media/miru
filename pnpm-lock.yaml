@@ -43,8 +43,8 @@ catalogs:
       specifier: ^2.0.2
       version: 2.0.2
     webm-muxer:
-      specifier: ^5.1.2
-      version: 5.1.2
+      specifier: ^5.1.3
+      version: 5.1.3
 
 patchedDependencies:
   glsl-tokenizer:
@@ -343,7 +343,7 @@ importers:
         version: 5.0.2
       webm-muxer:
         specifier: 'catalog:'
-        version: 5.1.2
+        version: 5.1.3
 
   packages/reactive-effects:
     dependencies:
@@ -382,7 +382,7 @@ importers:
         version: link:../webgl-effects
       webm-muxer:
         specifier: 'catalog:'
-        version: 5.1.2
+        version: 5.1.3
     devDependencies:
       twgl.js:
         specifier: 'catalog:'
@@ -495,7 +495,7 @@ importers:
         version: link:../webgl-media-editor
       webm-muxer:
         specifier: 'catalog:'
-        version: 5.1.2
+        version: 5.1.3
     devDependencies:
       '@libav.js/variant-opus':
         specifier: 'catalog:'
@@ -6190,8 +6190,8 @@ packages:
       typescript:
         optional: true
 
-  webm-muxer@5.1.2:
-    resolution: {integrity: sha512-gl9pXKRD/zr/njtW6P2Z/a4qSWFHjEL1OxMjoRVR10eZCw0b/J3Z0pX5RAX8x03Q78P585KVxQQkd4lWuek5rQ==}
+  webm-muxer@5.1.3:
+    resolution: {integrity: sha512-zHLsTCXJ1m+sSVt2xefsmGuGz/mHcGtKzjL7Tekx2HaodpjT4xYyZnm+DrECv5D7EPt8p+XV74MUy41Ley1mdg==}
 
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
@@ -12714,7 +12714,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
-  webm-muxer@5.1.2:
+  webm-muxer@5.1.3:
     dependencies:
       '@types/dom-webcodecs': 0.1.13
       '@types/wicg-file-system-access': 2020.9.8

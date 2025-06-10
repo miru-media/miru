@@ -178,6 +178,7 @@ export const loadAsyncImageSource = <IsVideo extends boolean>(
 
     if (media instanceof HTMLElement) {
       media.removeAttribute('src')
+      media.load()
       media.remove()
       media.pause()
     } else media.close()

@@ -1,3 +1,5 @@
+import { IS_FIREFOX } from 'shared/userAgent'
+
 export * from './publicConstants'
 
 export const MOBILE_MAX_WIDTH = 640
@@ -28,3 +30,5 @@ export const MEDIA_SYNC_INTERVAL_MS = 500
 export const MEDIA_SYNC_TOLERANCE_S = 0.3
 
 export const ASSET_URL_REFRESH_TIMEOUT_MS = 3000
+
+export const VIDEO_DECODER_HW_ACCEL_PREF = IS_FIREFOX ? 'prefer-software' : 'no-preference'

@@ -1,14 +1,15 @@
 import { setObjectSize } from 'shared/utils'
 import { Demuxer } from 'shared/video/Demuxer'
-import { type MediaChunk, type MediaContainerMetadata } from 'shared/video/types'
-import { assertDecoderConfigIsSupported } from 'shared/video/utils'
+import { type MediaContainerMetadata } from 'shared/video/types'
+import { assertDecoderConfigIsSupported, setVideoEncoderConfigCodec } from 'shared/video/utils'
 
-import { type MediaAsset, type Movie, type Track } from '../nodes'
+import { VIDEO_DECODER_HW_ACCEL_PREF } from '../constants'
+import { type MediaAsset, type Movie } from '../nodes'
 
 import { AVEncoder } from './AVEncoder'
 import { type ExtractorClip } from './ExporterClip'
 import { ExportMovie } from './ExportMovie'
-import { type Mp4ExtractorNode } from './Mp4ExtractorNode'
+import { type MediaExtractorNode } from './MediaExtractorNode'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -16,16 +17,22 @@ interface AvAssetEntry {
   end: number
   demuxer: Demuxer
   info?: MediaContainerMetadata
-  audio?: Mp4ExtractorNode.AudioInit
-  video?: Mp4ExtractorNode.VideoInit
+  audio?: MediaExtractorNode.AudioInit
+  video?: MediaExtractorNode.VideoInit
   isAudioOnly: boolean
+  consumers: number
 }
 
-let audioContext: AudioContext | undefined
+let decoderAudioContext: OfflineAudioContext | undefined
+
+const multiTee = <T>(source: ReadableStream<T>, n: number) => {
+  const streams = [source]
+  for (let i = 0; i < n - 1; i++) streams.push(...streams.pop()!.tee())
+  return streams
+}
 
 export class MovieExporter {
   movie: ExportMovie
-  tracks: Track<ExtractorClip>[] = []
   clips: ExtractorClip[] = []
   sources = new Map<string, AvAssetEntry>()
   avEncoder?: AVEncoder
@@ -53,12 +60,14 @@ export class MovieExporter {
             video: undefined,
             audio: undefined,
             isAudioOnly: track.trackType === 'audio',
+            consumers: 0,
           }
           this.sources.set(source.objectUrl, sourceEntry)
         } else {
           sourceEntry.isAudioOnly &&= track.trackType === 'audio'
         }
 
+        sourceEntry.consumers++
         sourceEntry.start = Math.min(sourceEntry.start, sourceStart)
         sourceEntry.end = Math.max(sourceEntry.end, sourceEnd)
       }
@@ -68,11 +77,19 @@ export class MovieExporter {
   async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
     const { movie } = this
     const { duration, resolution } = movie
-    const frameRate = movie.frameRate.value
+    const framerate = movie.frameRate.value
     const { canvas } = movie.gl
 
     let hasAudio = false as boolean
     let hasVideo = false as boolean
+
+    const emptyStream = new ReadableStream<never>({ start: (controller) => controller.close() })
+
+    const audioEncoderConfig = {
+      numberOfChannels: 2,
+      sampleRate: 44100,
+      codec: 'opus',
+    } as const
 
     await Promise.all(
       Array.from(this.sources.entries()).map(async ([source, entry]) => {
@@ -80,7 +97,10 @@ export class MovieExporter {
 
         const getAudioBuffer = async () => {
           const encodedFileData = await entry.asset.blob.arrayBuffer()
-          return await (audioContext ??= new AudioContext()).decodeAudioData(encodedFileData)
+          return await (decoderAudioContext ??= new OfflineAudioContext({
+            ...audioEncoderConfig,
+            length: 1,
+          })).decodeAudioData(encodedFileData)
         }
 
         const { start, end, demuxer } = entry
@@ -96,9 +116,9 @@ export class MovieExporter {
             const { numberOfChannels, sampleRate } = audioBuffer
 
             entry.audio = {
-              config: { codec: 'unused', numberOfChannels: numberOfChannels, sampleRate },
+              config: { codec: 'unused', numberOfChannels, sampleRate },
               audioBuffer,
-              chunks: [],
+              getStream: () => emptyStream,
             }
             return
           }
@@ -108,32 +128,41 @@ export class MovieExporter {
 
         if (!entry.isAudioOnly) {
           hasVideo = true
-          const chunks: MediaChunk[] = []
           const videoInfo = metadata.video!
           await assertDecoderConfigIsSupported('video', videoInfo)
 
-          entry.video = { config: videoInfo, chunks }
-          demuxer.setExtractionOptions(videoInfo, (chunk) => chunks.push(chunk))
+          const streams = multiTee(demuxer.getChunkStream(videoInfo, start, end), entry.consumers)
+
+          entry.video = {
+            config: { ...videoInfo, hardwareAcceleration: VIDEO_DECODER_HW_ACCEL_PREF },
+            getStream: () => streams.pop()!,
+          }
         }
 
         const audioInfo = metadata.audio
+
         if (audioInfo) {
           hasAudio = true
-          const chunks: MediaChunk[] = []
-
-          entry.audio = { config: audioInfo, chunks }
 
           try {
             await assertDecoderConfigIsSupported('audio', audioInfo)
 
-            demuxer.setExtractionOptions(audioInfo, (chunk) => chunks.push(chunk))
+            const streams = multiTee(demuxer.getChunkStream(audioInfo, start, end), entry.consumers)
+            entry.audio = {
+              config: audioInfo,
+              getStream: () => streams.pop()!,
+            }
           } catch {
             // If decoding the audio with WebCodecs isn't supported, decode with an AudioContext instead
-            entry.audio.audioBuffer = await getAudioBuffer()
+            entry.audio = {
+              config: audioInfo,
+              audioBuffer: await getAudioBuffer(),
+              getStream: () => emptyStream,
+            }
           }
         }
 
-        await demuxer.start(start, end)
+        demuxer.start()
       }),
     )
 
@@ -146,18 +175,22 @@ export class MovieExporter {
     let encoderError: unknown
 
     const durationUs = duration * 1e6
-    const audioEncoderConfig = {
-      numberOfChannels: 2,
-      sampleRate: 44100,
-      codec: 'opus',
-    } as const
+
+    const videoEncoderConfig: VideoEncoderConfig = {
+      codec: '',
+      ...resolution,
+      framerate: framerate,
+      // bitrate: 1e7,
+    }
+
+    if (hasVideo) await setVideoEncoderConfigCodec(videoEncoderConfig)
+
     const avEncoder = (this.avEncoder = await new AVEncoder({
-      video: hasVideo ? { ...resolution, fps: frameRate } : undefined,
-      audio: hasAudio ? { config: audioEncoderConfig } : undefined,
+      video: hasVideo ? videoEncoderConfig : undefined,
+      audio: hasAudio ? audioEncoderConfig : undefined,
       onOutput: (type, timestamp) => {
         if (type === 'video' || !hasVideo) onProgress?.(timestamp / durationUs)
       },
-      onError: (error) => (encoderError = error),
     }).init())
 
     const { videoContext } = movie
@@ -167,29 +200,32 @@ export class MovieExporter {
     await Promise.all([
       // Video
       (async () => {
-        if (!hasVideo) return
-        const totalFrames = duration * frameRate
-        const frameDurationUs = 1e6 / frameRate
+        const writer = avEncoder.video?.getWriter()
+        if (!writer) return
+
+        const totalFrames = duration * framerate
+        const frameDurationUs = 1e6 / framerate
 
         for (let i = 0; i < totalFrames && encoderError == undefined && !signal?.aborted; i++) {
           const timeS = duration * (i / totalFrames)
-          await Promise.all([
-            Promise.all(this.clips.map((clip) => clip.node.seekVideo(timeS))),
-            avEncoder.whenReadyForVideo(),
-          ])
+          await Promise.all(this.clips.map((clip) => clip.node.seekVideo(timeS)))
 
           setObjectSize(movie.gl.canvas, movie.resolution)
           videoContext.currentTime = timeS
           videoContext.update(0)
+
           const frame = new VideoFrame(canvas, { timestamp: 1e6 * timeS, duration: frameDurationUs })
-          avEncoder.encodeVideoFrame(frame)
+          await writer.write(frame)
           frame.close()
         }
+
+        await writer.close()
       })(),
 
       // Audio
       (async () => {
-        if (!hasAudio) return
+        const writer = avEncoder.audio?.getWriter()
+        if (!writer) return
 
         const { numberOfChannels, sampleRate } = audioEncoderConfig
         const ctx = new OfflineAudioContext({ numberOfChannels, sampleRate, length: sampleRate * duration })
@@ -216,9 +252,7 @@ export class MovieExporter {
                 bufferSource.connect(ctx.destination)
               }
 
-              if (!node.audioStream) break
-
-              await node.audioStream.read()
+              await node.readNextAudio()
             }
           }),
         )
@@ -237,7 +271,7 @@ export class MovieExporter {
             i,
           )
 
-        avEncoder.encodeAudioData(
+        await writer.write(
           new avEncoder.AudioData({
             format: 'f32-planar',
             timestamp: 0,
@@ -248,6 +282,7 @@ export class MovieExporter {
             transfer: [f32Planar.buffer],
           }),
         )
+        await writer.close()
       })(),
     ])
 
@@ -259,10 +294,7 @@ export class MovieExporter {
   }
 
   dispose() {
-    this.tracks.forEach((track) => track.dispose())
+    this.movie.dispose()
     this.sources.clear()
-    this.avEncoder?.dispose()
-
-    this.tracks.length = this.clips.length = 0
   }
 }

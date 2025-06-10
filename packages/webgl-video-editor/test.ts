@@ -2,8 +2,7 @@
 import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
-import { MP4Demuxer } from 'shared/video/Mp4Demuxer'
-import { type MediaChunk, type MP4BoxVideoTrack } from 'shared/video/types'
+import { MP4Demuxer } from 'shared/video/mp4/Mp4Demuxer'
 
 import { AVEncoder } from './src/export/AVEncoder'
 
@@ -28,19 +27,17 @@ const test = async () => {
   }
   const testImage = new ImageData(testBytes, size.width)
 
-  const fps = 1
+  const framerate = 1
   const rotatedSize = { width: size.height, height: size.width }
-  const config = { codec: `avc1.4200${(40).toString(16)}`, ...size }
-  const av = new AVEncoder({
-    video: { ...size, fps, config, rotation: 270 },
-    onError: (e) => console.error(e),
-  })
+  const config = { codec: `avc1.4200${(40).toString(16)}`, ...size, framerate, rotation: 270 as const }
+  const av = new AVEncoder({ video: config })
   await av.init()
 
   const bitmap = await createImageBitmap(testImage)
+  const writer = av.video!.getWriter()
   for (let i = 0; i < 10; i++) {
-    const frame = new VideoFrame(bitmap, { duration: 1e6, timestamp: (i * 1e6) / fps })
-    av.encodeVideoFrame(frame)
+    const frame = new VideoFrame(bitmap, { duration: 1e6, timestamp: (i * 1e6) / framerate })
+    await writer.write(frame)
     frame.close()
   }
 
@@ -63,11 +60,11 @@ const test = async () => {
   })
     .then(() => videoEl.play())
     .then(() => new Promise((r) => setTimeout(r, 200)))
-  const videoInfo = (await demuxer.init(url)).video!
+  const videoInfo = (await demuxer.init((await fetch(url)).body!)).video!
 
-  let sample!: MediaChunk | undefined
-  demuxer.setExtractionOptions(videoInfo.track as MP4BoxVideoTrack, (s) => (sample ??= s))
-  await demuxer.start()
+  const chunks = demuxer.getChunkStream(videoInfo)
+  demuxer.start()
+  const { value: sample } = await chunks.getReader().read()
 
   if (!sample) throw new Error(`Demuxer didn't extract any samples`)
   const chunk = new EncodedVideoChunk(sample)

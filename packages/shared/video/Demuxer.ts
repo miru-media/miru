@@ -1,46 +1,52 @@
-import { MP4Demuxer } from './Mp4Demuxer'
-import {
-  type AudioMetadata,
-  type DemuxerSampleCallback,
-  type MediaContainerMetadata,
-  type VideoMetadata,
-} from './types'
-import { WebmDemuxer } from './WebmDemuxer'
+import { MP4Demuxer } from './mp4/Mp4Demuxer'
+import { type AudioMetadata, type MediaContainerMetadata, type VideoMetadata } from './types'
+import { WebmDemuxer } from './webm/WebmDemuxer'
 
 export class Demuxer {
-  #demuxer!: MP4Demuxer | WebmDemuxer
-  async init(source: Blob | string, requestInit?: RequestInit): Promise<MediaContainerMetadata> {
-    const isBlob = typeof source !== 'string'
-    const url = isBlob ? URL.createObjectURL(source) : source
-    let fileType: string | null = null
+  #demuxer?: MP4Demuxer | WebmDemuxer
+  async init(
+    source: ReadableStream<Uint8Array> | Blob | string,
+    requestInit?: RequestInit,
+  ): Promise<MediaContainerMetadata> {
+    const isUrl = typeof source === 'string'
+    const isStream = !isUrl && 'getReader' in source
+    let sourceStream: ReadableStream<Uint8Array>
 
-    if (isBlob) fileType = source.type
-    else {
-      const method = url.startsWith('blob:') ? 'GET' : 'HEAD'
-      const res = await fetch(url, { ...requestInit, method })
-      fileType = res.headers.get('content-type')
-    }
+    if (isStream) sourceStream = source
+    else if (isUrl) {
+      const response = await fetch(source, requestInit)
+      if (!response.ok || !response.body) throw new Error(`Invalid response from "${typeof source}".`)
 
-    const containerType = fileType && /video\/(webm|matroska|x-matroska)/.test(fileType) ? 'webm' : 'mp4'
+      sourceStream = response.body
+    } else sourceStream = source.stream()
 
-    this.#demuxer = containerType === 'webm' ? new WebmDemuxer() : new MP4Demuxer()
+    const teed = sourceStream.tee()
+    sourceStream = teed[0]
 
-    return this.#demuxer.init(url, requestInit)
+    const reader = teed[1].getReader()
+    const { value: fileBytes } = await reader.read()
+    reader.cancel().catch(() => undefined)
+
+    if (!fileBytes) throw new Error(`Couldn't read source stream.`)
+    if (fileBytes.length === 1) throw new Error('TODO')
+
+    const SpecificDemuxer = [WebmDemuxer, MP4Demuxer].find(({ signature }) => signature.check(fileBytes))
+    if (!SpecificDemuxer) throw new Error(`Unsupported media file type.`)
+
+    this.#demuxer = new SpecificDemuxer()
+
+    return this.#demuxer.init(sourceStream)
   }
 
-  setExtractionOptions(
-    track: VideoMetadata | AudioMetadata,
-    onSample: DemuxerSampleCallback,
-    onDone?: () => void,
-  ) {
-    this.#demuxer.setExtractionOptions(track as any, onSample, onDone)
+  getChunkStream(track: VideoMetadata | AudioMetadata, firstFrameTimeS?: number, lastFrameTimeS?: number) {
+    return this.#demuxer!.getChunkStream(track, firstFrameTimeS, lastFrameTimeS)
   }
 
-  start(firstFrameTimeS?: number, lastFrameTimeS?: number) {
-    return this.#demuxer.start(firstFrameTimeS, lastFrameTimeS)
+  start() {
+    this.#demuxer!.start()
   }
 
   stop() {
-    this.#demuxer.stop()
+    this.#demuxer?.stop()
   }
 }

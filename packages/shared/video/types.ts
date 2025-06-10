@@ -179,7 +179,7 @@ export interface AudioMetadata extends AudioDecoderConfig {
   track: MP4BoxAudioTrack | WebmTrack
 }
 
-export interface MediaChunk {
+export interface EncodedMediaChunk {
   type: 'key' | 'delta'
   timestamp: number
   duration?: number
@@ -189,8 +189,6 @@ export interface MediaChunk {
   codedHeight: number
   mediaType: 'audio' | 'video'
 }
-
-export type DemuxerSampleCallback = (chunk: MediaChunk) => void
 
 export type EbmlChunk<T extends ebml.TagType = any> =
   | ['start' | 'end', ebml.TagMetadata]

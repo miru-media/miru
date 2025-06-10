@@ -55,6 +55,7 @@ export class ExportMovie extends ParentNode {
     this.children = movie.children.map((track_) => new Track(track_.toObject(), this, ExtractorClip))
 
     this.onDispose(() => {
+      this.children.forEach((track) => track.dispose())
       this.videoContext.reset()
       this.videoContext.destination.destroy()
     })

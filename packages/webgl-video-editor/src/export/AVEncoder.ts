@@ -1,6 +1,7 @@
 import { ArrayBufferTarget, Muxer, type MuxerOptions } from 'mp4-muxer'
 
 import { win } from 'shared/utils'
+import { AudioEncoderTransform, VideoEncoderTransform } from 'shared/video/encoderDecoderTransforms'
 import { assertEncoderConfigIsSupported } from 'shared/video/utils'
 
 import { EXPORT_VIDEO_CODECS } from '../constants'
@@ -8,69 +9,60 @@ import { EXPORT_VIDEO_CODECS } from '../constants'
 import { type EncodedAudioChunk as EncodedAudioChunkPolyfill } from './polyfill'
 
 export namespace AVEncoder {
-  export interface VideoOptions {
-    config?: VideoEncoderConfig
-    width: number
-    height: number
-    fps: number
+  export interface Options {
+    video?: AVEncoder.VideoOptions
+    audio?: AVEncoder.AudioOptions
+    onOutput?: (type: 'audio' | 'video', timestamp: number) => void
+  }
+  export interface VideoOptions extends VideoEncoderConfig {
     rotation?: Required<MuxerOptions<ArrayBufferTarget>>['video']['rotation']
   }
 
-  export interface AudioOptions {
-    config?: Omit<AudioEncoderConfig, 'codec'> & { codec: 'opus' | 'aac' }
+  export interface AudioOptions extends Omit<AudioEncoderConfig, 'codec'> {
+    codec: 'opus' | 'aac'
   }
 }
 
 export class AVEncoder {
-  video?: AVEncoder.VideoOptions & {
-    config: VideoEncoderConfig
-    encoder?: VideoEncoder
+  #options: AVEncoder.Options
+  #video?: {
+    config: AVEncoder.VideoOptions
+    transform: VideoEncoderTransform
+    promise?: Promise<void>
   }
-  audio?: Required<AVEncoder.AudioOptions> & {
-    encoder?: AudioEncoder
+  #audio?: {
+    config: AVEncoder.AudioOptions
+    transform: AudioEncoderTransform
+    promise?: Promise<void>
   }
   muxer!: Muxer<ArrayBufferTarget>
   onOutput?: (type: 'audio' | 'video', timestamp: number) => void
-  onError: (error: unknown) => void
   firstVideoFrameTimeUs?: number
 
-  AudioEncoder = win.AudioEncoder
   AudioData = win.AudioData
 
-  constructor(options: {
-    video?: AVEncoder.VideoOptions
-    audio?: AVEncoder.AudioOptions
-    onOutput?: (type: 'audio' | 'video', timestamp: number) => void
-    onError: (error: unknown) => void
-  }) {
-    const { video, audio } = options
+  get video() {
+    return this.#video?.transform.writable
+  }
+  get audio() {
+    return this.#audio?.transform.writable
+  }
 
-    this.onOutput = options.onOutput
-    this.onError = options.onError
-
-    if (video) {
-      const { width, height, fps } = video
-      // check for the codec async in the init() method
-      const { codec = '', bitrate = 1e7 } = video.config ?? {}
-
-      this.video = {
-        ...video,
-        config: { codec, width, height, bitrate, framerate: fps },
-      }
-    }
-
-    if (audio) {
-      this.audio = {
-        config: { codec: 'opus', numberOfChannels: 2, sampleRate: 48000 },
-        ...audio,
-      }
-    }
+  constructor(options: AVEncoder.Options) {
+    this.#options = options
   }
 
   async init() {
-    const { audio, video } = this
+    const options = this.#options
 
-    if (video) {
+    if (options.video) {
+      this.#video = {
+        config: options.video,
+        transform: new VideoEncoderTransform(options.video),
+        promise: undefined,
+      }
+      const video = this.#video
+
       let lastError: unknown
 
       for (const codec of EXPORT_VIDEO_CODECS) {
@@ -86,96 +78,79 @@ export class AVEncoder {
 
       if (!video.config.codec) throw lastError
 
-      video.encoder = new VideoEncoder({
-        output: (chunk, meta) => {
-          if (this.firstVideoFrameTimeUs === undefined) this.firstVideoFrameTimeUs = chunk.timestamp
-          this.muxer.addVideoChunk(chunk, meta, chunk.timestamp - this.firstVideoFrameTimeUs)
-          this.onOutput?.('video', chunk.timestamp)
-        },
-        error: this.onError,
-      })
-      video.encoder.configure(video.config)
+      video.promise = video.transform.readable.pipeTo(
+        new WritableStream({
+          write: ([chunk, meta]) => {
+            if (this.firstVideoFrameTimeUs === undefined) this.firstVideoFrameTimeUs = chunk.timestamp
+            this.muxer.addVideoChunk(chunk, meta, chunk.timestamp - this.firstVideoFrameTimeUs)
+            this.#options.onOutput?.('video', chunk.timestamp)
+          },
+        }),
+      )
     }
 
-    if (audio) {
-      const isPolyfill = (this.AudioEncoder as unknown) == null || (this.AudioData as unknown) == null
+    if (options.audio) {
+      let { AudioEncoder } = win
+      const useAudioEncoderPolyfil = typeof AudioEncoder !== 'function'
 
-      if (isPolyfill) {
+      if (useAudioEncoderPolyfil) {
         const polyfill = await import('./polyfill')
         await polyfill.init()
-
-        this.AudioEncoder = polyfill.AudioEncoder as typeof AudioEncoder
+        AudioEncoder = polyfill.AudioEncoder as typeof AudioEncoder
         this.AudioData = polyfill.AudioData
       }
 
-      await Promise.all([assertEncoderConfigIsSupported('audio', audio.config, this.AudioEncoder)])
+      await Promise.all([assertEncoderConfigIsSupported('audio', options.audio, AudioEncoder)])
+
+      this.#audio = {
+        config: options.audio,
+        transform: new AudioEncoderTransform(options.audio, AudioEncoder),
+        promise: undefined,
+      }
+      const audio = this.#audio
 
       let hasFirstChunk = false
       let firstTimetsamp = 0
 
-      audio.encoder = new this.AudioEncoder({
-        output: (chunk, meta) => {
-          if (!hasFirstChunk) {
-            hasFirstChunk = true
-            firstTimetsamp = chunk.timestamp
-          }
+      audio.promise = audio.transform.readable.pipeTo(
+        new WritableStream({
+          write: ([chunk, meta]) => {
+            if (!hasFirstChunk) {
+              hasFirstChunk = true
+              firstTimetsamp = chunk.timestamp
+            }
 
-          const timestamp = chunk.timestamp - firstTimetsamp
-          if (isPolyfill) {
-            const data = (chunk as EncodedAudioChunkPolyfill)._libavGetData()
-            this.muxer.addAudioChunkRaw(data, chunk.type, timestamp, chunk.duration!, meta)
-          } else this.muxer.addAudioChunk(chunk, meta, timestamp)
-          this.onOutput?.('audio', chunk.timestamp)
-        },
-        error: this.onError,
-      })
-      audio.encoder.configure(audio.config)
+            const timestamp = chunk.timestamp - firstTimetsamp
+            if (useAudioEncoderPolyfil) {
+              const data = (chunk as EncodedAudioChunkPolyfill)._libavGetData()
+              this.muxer.addAudioChunkRaw(data, chunk.type, timestamp, chunk.duration!, meta)
+            } else this.muxer.addAudioChunk(chunk, meta, timestamp)
+            this.onOutput?.('audio', chunk.timestamp)
+          },
+        }),
+      )
     }
 
     this.muxer = new Muxer({
       target: new ArrayBufferTarget(),
-      video: video && {
-        codec: video.config.codec.startsWith('avc') ? 'avc' : 'vp9',
-        width: video.width,
-        height: video.height,
-        rotation: video.rotation,
+      video: this.#video && {
+        ...this.#video.config,
+        codec: this.#video.config.codec.startsWith('avc') ? 'avc' : 'vp9',
       },
-      audio: this.audio?.config,
+      audio: this.#audio?.config,
       fastStart: 'in-memory',
     })
 
     return this
   }
 
-  encodeVideoFrame(frame: VideoFrame, options?: VideoEncoderEncodeOptions) {
-    this.video!.encoder!.encode(frame, options)
-  }
-
-  encodeAudioData(data: AudioData) {
-    this.audio!.encoder!.encode(data)
-  }
-
-  async whenReadyForVideo() {
-    const encoder = this.video?.encoder
-    if (!encoder) throw new Error('VideoEncoder is not initialized')
-
-    if (encoder.encodeQueueSize >= 20)
-      await new Promise((resolve) => encoder.addEventListener('dequeue', resolve, { once: true }))
-  }
-
   async flush() {
-    await Promise.all(
-      [this.video, this.audio].map((type) => type?.encoder?.state === 'configured' && type.encoder.flush()),
-    )
+    await Promise.all([this.#video?.promise, this.#audio?.promise])
   }
 
   finalize() {
     const { muxer } = this
     muxer.finalize()
     return muxer.target.buffer
-  }
-
-  dispose() {
-    ;[this.video, this.audio].forEach((type) => type?.encoder?.state === 'configured' && type.encoder.close())
   }
 }

@@ -6,6 +6,7 @@ import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener
 import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent'
 import { win } from '../utils'
 
+import { EXPORT_VIDEO_CODECS } from './constants'
 import { Demuxer } from './Demuxer'
 import { type AudioMetadata, type VideoMetadata } from './types'
 
@@ -42,7 +43,7 @@ export const assertEncoderConfigIsSupported = async (
   Encoder = type === 'audio' ? win.AudioEncoder : win.VideoEncoder,
 ) => {
   if (typeof Encoder === 'undefined')
-    throw new Error(`Missing ${type === 'audio' ? 'Audio' : 'Video'}Decoder API.`)
+    throw new Error(`Missing ${type === 'audio' ? 'Audio' : 'Video'}Encoder API.`)
 
   const support = await Encoder.isConfigSupported(config as any)
   if (IS_SAFARI_16 && IS_LIKE_MAC) throw new Error(`VideoEncoder doesn't work on Safari 16.`)
@@ -204,16 +205,13 @@ export const getMediaElementInfo = async (source: Blob | string) => {
   }
 }
 
-export const getContainerMetadata = async (source: Blob | string) => {
-  const isBlob = typeof source !== 'string'
-  const url = isBlob ? URL.createObjectURL(source) : source
+export const getContainerMetadata = async (source: Blob | string | ReadableStream<Uint8Array>) => {
   const demuxer = new Demuxer()
 
   try {
-    return await demuxer.init(url)
+    return await demuxer.init(source)
   } finally {
     demuxer.stop()
-    if (isBlob) URL.revokeObjectURL(url)
   }
 }
 
@@ -246,7 +244,7 @@ export const getImageSize = (image: TexImageSource): Size => {
   return { width: image.width, height: image.height }
 }
 
-export const assertCanDecodeMediaFile = async (file: Blob) => {
+export const assertCanDecodeMediaFile = async (file: Blob | string) => {
   const { audio, video } = await getContainerMetadata(file)
 
   if (!audio && !video) throw new Error('Media file has no video or audio tracks.')
@@ -292,3 +290,26 @@ export const useInterval = (
 
 export const isAudioElement = (thing?: unknown): thing is HTMLAudioElement =>
   thing != null && isElement(thing) && thing.nodeName === 'AUDIO'
+
+export const setVideoEncoderConfigCodec = async (
+  config: VideoEncoderConfig,
+  codecs = EXPORT_VIDEO_CODECS,
+) => {
+  let firstError: unknown
+  let foundSupportedCodec = false
+
+  for (const codec of [config.codec, ...codecs]) {
+    if (!codec) continue
+
+    try {
+      config.codec = codec
+      await assertEncoderConfigIsSupported('video', config)
+      foundSupportedCodec = true
+      break
+    } catch (error) {
+      firstError ??= error
+    }
+  }
+
+  if (!foundSupportedCodec) throw firstError
+}

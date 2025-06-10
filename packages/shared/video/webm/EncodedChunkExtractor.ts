@@ -4,7 +4,7 @@ import ebmlBlock from 'ebml-block'
 import {
   type AudioMetadata,
   type EbmlChunk,
-  type MediaChunk,
+  type EncodedMediaChunk,
   type MediaContainerMetadata,
   type VideoMetadata,
   type WebmTrack,
@@ -18,7 +18,7 @@ interface TrackState {
 
 export class EncodedChunkExtractor extends TransformStream<
   EbmlChunk,
-  [MediaChunk, VideoMetadata | AudioMetadata]
+  [EncodedMediaChunk, VideoMetadata | AudioMetadata]
 > {
   #trackStates: Record<number, TrackState | undefined> = {}
   metadata!: MediaContainerMetadata
@@ -70,7 +70,7 @@ export class EncodedChunkExtractor extends TransformStream<
             const { frames } = ebmlBlock(block.data)
 
             frames.forEach((frame) => {
-              const chunk: MediaChunk = {
+              const chunk: EncodedMediaChunk = {
                 ...track,
                 duration: durationUs,
                 codedWidth,
