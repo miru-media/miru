@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 
@@ -26,7 +28,7 @@ export default defineConfig({
       awaitDownload: true,
       rules: [
         {
-          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3))(?=[`'")\]])/gi,
+          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3|task))(?=[`'")\]])/gi,
         },
       ],
     }),
@@ -78,5 +80,62 @@ export default defineConfig({
   build: {
     minify: false,
     sourcemap: true,
+  },
+  assetsInclude: new RegExp(
+    `\\.(` +
+      [
+        // Tesnsor flow task file
+        'task',
+        // HDR textures
+        'hdr',
+        // glTF
+        'gltf',
+        'glb',
+
+        // images
+        'apng',
+        'bmp',
+        'png',
+        'jpe?g',
+        'jfif',
+        'pjpeg',
+        'pjp',
+        'gif',
+        'svg',
+        'ico',
+        'webp',
+        'avif',
+        'cur',
+        'jxl',
+
+        // media
+        'mp4',
+        'webm',
+        'ogg',
+        'mp3',
+        'wav',
+        'flac',
+        'aac',
+        'opus',
+        'mov',
+        'm4a',
+        'vtt',
+
+        // fonts
+        'woff2?',
+        'eot',
+        'ttf',
+        'otf',
+
+        // other
+        'webmanifest',
+        'pdf',
+        'txt',
+      ].join('|') +
+      `)(\\?.*)?$`,
+    'i',
+  ),
+  test: {
+    environment: 'happy-dom',
   },
 })

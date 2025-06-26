@@ -3,7 +3,12 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@gltf-transform/core": "catalog:",
+    "@gltf-transform/extensions": "catalog:",
+    "@gltf-transform/functions": "catalog:",
     "@vueuse/core": "^13.1.0",
+    "ar-effects": "workspace:^",
+    "gltf-interactivity": "workspace:",
     "media-trimmer": "workspace:^",
     "webgl-effects": "workspace:^",
     "webgl-media-editor": "workspace:^",

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 /// <reference types="vite/client" />
+/// <reference types="vitest/client" />
 /// <reference types="./auto-imports" />
 
 // remote assets
@@ -15,6 +16,27 @@ declare module 'https://*.mp3' {
   const src: string
   export default src
 }
+declare module 'https://*.task' {
+  const src: string
+  export default src
+}
+
+// HDR texture assets
+declare module '*.hdr' {
+  const src: string
+  export default src
+}
+
+// glTF files
+declare module '*.gltf' {
+  const src: string
+  export default src
+}
+declare module '*.glb' {
+  const src: string
+  export default src
+}
+
 
 declare module 'virtual:*-shadow.css' {
   const src: string

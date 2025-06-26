@@ -1,5 +1,4 @@
 {
-  "exclude": ["packages/ar-effects"],
   "compilerOptions": {
     "target": "ES2020",
     "experimentalDecorators": true,

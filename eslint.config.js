@@ -104,4 +104,10 @@ export default tseslint.config(
       'no-console': 'error',
     },
   },
+  {
+    files: ['**/*.test.{ts,tsx,js,jsx}'],
+    rules: {
+      'import/no-extraneous-dependencies': 'off',
+    },
+  },
 )

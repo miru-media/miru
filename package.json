@@ -14,7 +14,8 @@
     "prepare": "husky",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "update-deps": "taze major -I"
   },
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
@@ -24,6 +25,7 @@
     "shared": "workspace:^",
     "uid": "catalog:",
     "vue": "^3.5.13",
+    "vitest": "^3.2.4",
     "vue-i18n-lite": "^1.0.2"
   },
   "devDependencies": {
@@ -59,6 +61,7 @@
     "fine-jsx": "catalog:",
     "glob": "^11.0.1",
     "glslify": "^7.1.1",
+    "happy-dom": "^18.0.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.1",
     "nano-spawn": "^0.2.0",
@@ -88,6 +91,7 @@
     "stylelint-config-html": "^1.1.0",
     "stylelint-config-recess-order": "^6.0.0",
     "stylelint-config-standard": "^37.0.0",
+    "taze": "^19.0.4",
     "terser": "^5.37.0",
     "throttle-debounce": "catalog:",
     "typescript": "^5.8.3",
@@ -117,7 +121,8 @@
     "patchedDependencies": {
       "glsl-tokenizer": "patches/glsl-tokenizer.patch",
       "libavjs-webcodecs-polyfill": "patches/libavjs-webcodecs-polyfill.patch",
-      "videocontext": "patches/videocontext.patch"
+      "videocontext": "patches/videocontext.patch",
+      "@mediapipe/tasks-vision": "patches/@mediapipe__tasks-vision.patch"
     },
     "onlyBuiltDependencies": [
       "esbuild",
