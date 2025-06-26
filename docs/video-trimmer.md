@@ -102,6 +102,7 @@ const onInputFile = (event: Event) => {
     :src="resultUrl"
     height="300"
     autoplay="true"
+    playsInline
     controls
     :class="!resultUrl && 'hidden'"
   />

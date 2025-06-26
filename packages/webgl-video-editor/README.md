@@ -1,6 +1,6 @@
 # An embeddable, framework-agnostic, browser-based video editor
 
-[<img src="https://miru.media/video-editor-screenshot.jpg" alt="Screenshot">](https://miru.media/video-editor)
+[<img src="https://miru.media/webgl-video-editor-screenshot.jpg" alt="Screenshot">](https://miru.media/video-editor)
 
 https://miru.media/video-editor
 

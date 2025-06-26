@@ -41,6 +41,6 @@
   display: none;
 }
 
-#app :is(.video-editor-demo-page .VPContent.has-sidebar) {
-  padding-right: 0;
+.video-editor-demo-page {
+  --vp-layout-max-width: 100vw;
 }

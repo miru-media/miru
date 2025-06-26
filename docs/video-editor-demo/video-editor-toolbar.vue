@@ -13,11 +13,12 @@ import FilterMenu from './video-editor-filter-menu.vue'
 
 const { editor } = defineProps<{ editor: VideoEditor }>()
 
-const onInputVideoFile = async (event: InputEvent) => {
-  const file = event.target.files?.[0]
+const onInputVideoFile = async (event: Event) => {
+  const { target } = event as InputEvent
+  const file = target.files?.[0]
   if (!file) return
-  event.target.value = ''
 
+  target.value = ''
   await editor.replaceClipSource(file)
 }
 
@@ -75,7 +76,7 @@ useEventListener(
             type="file"
             :accept="getSelectedType() === 'audio' ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES"
             :disabled="!editor.selection"
-            @input="{ onInputVideoFile }"
+            @input="onInputVideoFile"
             hidden
           />
           {{ $t(`change_${getSelectedType() ?? ''}`) }}

@@ -32,7 +32,7 @@ const onClickClearAll = (prompt: string) => {
 
 <template>
   <div ref="root" :class="['settings-controls safe-padding-x', isOpen && 'is-open']">
-    <button class="toolbar-button" @click="() => (isOpen = !isOpen)" :title="$t('settings')">
+    <button class="toolbar-button settings-button" @click="() => (isOpen = !isOpen)" :title="$t('settings')">
       <div class="icon i-tabler-settings overlay" />
       <span class="sr-only">{{ $t('settings') }}</span>
     </button>
@@ -56,10 +56,10 @@ const onClickClearAll = (prompt: string) => {
         {{ $t('frame_rate') }}
         <select
           class="settings-frame-rate"
-          @input="(event) => (editor.frameRate = parseInt((event.target as HTMLInputElement).value))"
+          @input="(event) => (editor.frameRate = parseInt((event.target as HTMLInputElement).value, 10))"
           :value="JSON.stringify(editor.frameRate)"
         >
-          <option v-for="value of [24, 25, 30, 48, 50, 60]" value="value">{{ value }}</option>
+          <option v-for="value of [24, 25, 30, 48, 50, 60]" :value="value">{{ value }}</option>
         </select>
       </label>
 
@@ -79,19 +79,14 @@ const onClickClearAll = (prompt: string) => {
 
 <style scoped>
 .settings-controls {
+  color: var(--white);
   position: absolute;
   top: 0;
-  right: 0;
+  right: max(env(safe-area-inset-p, 1.25rem), 1.25rem);
   display: flex;
   justify-content: right;
   padding-top: max(env(safe-area-inset-p, 1.25rem), 1.25rem);
   padding-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
-}
-
-.settings-button {
-  width: 2.5rem;
-  height: 2.5rem;
-  font-size: 1.25rem;
 }
 
 .settings-content {
@@ -101,7 +96,7 @@ const onClickClearAll = (prompt: string) => {
   display: none;
   flex-direction: column;
   gap: 1rem;
-  min-width: 12rem;
+  min-width: 14rem;
   padding: 1rem;
 }
 
@@ -113,5 +108,57 @@ const onClickClearAll = (prompt: string) => {
 
 .settings-controls.is-open .settings-content {
   display: flex;
+}
+
+.toolbar-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  align-self: stretch;
+  justify-content: flex-start;
+  font-size: 0.75rem;
+  line-height: initial;
+  text-align: center;
+
+  &:hover {
+    background-color: var(--white-1);
+  }
+
+  &:active {
+    background-color: var(--white-2);
+  }
+
+  &.overlay {
+    background-color: var(--primary-bg-05);
+
+    &:hover {
+      background-color: var(--black-3);
+    }
+
+    &:active {
+      background-color: var(--black-3);
+    }
+  }
+
+  &[disabled] {
+    cursor: default;
+    background-color: transparent;
+    opacity: 0.625;
+  }
+}
+
+.settings-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.25rem;
+  justify-content: center;
+}
+
+.settings-frame-rate,
+.settings-resolution {
+  padding: 0.5rem;
 }
 </style>

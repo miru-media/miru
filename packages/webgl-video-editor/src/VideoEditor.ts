@@ -188,7 +188,7 @@ export class VideoEditor {
   constructor(
     options: { resolution: Size; frameRate: number } = {
       resolution: { width: 1920, height: 1080 },
-      frameRate: 60,
+      frameRate: 24,
     },
   ) {
     this._movie = new Movie({
@@ -238,8 +238,6 @@ export class VideoEditor {
               return
             }
             const asset = await MediaAsset.fromInit(assetInit, this._movie)
-            nodes.set(asset)
-            movie.assets.add(asset)
             return asset
           }),
         )
@@ -264,9 +262,6 @@ export class VideoEditor {
 
     const asset = await MediaAsset.fromSource(uid(), this._movie, source)
     const { duration } = asset
-
-    this._movie.nodes.set(asset)
-    this._movie.assets.add(asset)
 
     let clip!: Clip
 

@@ -38,7 +38,11 @@ const addToCache = async (assetId: string, blob: Blob) => {
 
   await cache.put(getCacheKey(assetId), new Response(blob))
 
-  if (!askedToPersist && !(await navigator.storage.persisted().catch(() => false))) {
+  if (
+    !askedToPersist &&
+    'storage' in navigator &&
+    !(await navigator.storage.persisted().catch(() => false))
+  ) {
     askedToPersist = true
     navigator.storage.persist().catch(() => undefined)
   }
@@ -62,7 +66,8 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   }
 
   protected constructor(init: Schema.AvMediaAsset, options: { blob: Blob; root: Movie }) {
-    super(init, options.root)
+    const { root } = options
+    super(init, root)
 
     this.#setBlob(options.blob)
     this.blob = options.blob
@@ -70,6 +75,9 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     this.duration = duration
     this.audio = audio
     this.video = video
+
+    root.nodes.set(this)
+    root.assets.add(this)
   }
 
   #setBlob(blob: Blob) {
