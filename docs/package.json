@@ -10,6 +10,7 @@
     "ar-effects": "workspace:^",
     "gltf-interactivity": "workspace:",
     "media-trimmer": "workspace:^",
+    "three": "catalog:",
     "webgl-effects": "workspace:^",
     "webgl-media-editor": "workspace:^",
     "webgl-video-editor": "workspace:^"

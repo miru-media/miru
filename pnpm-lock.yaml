@@ -149,6 +149,9 @@ importers:
       '@types/eslint__js':
         specifier: ^8.42.3
         version: 8.42.3
+      '@types/json-pointer':
+        specifier: ^1.0.34
+        version: 1.0.34
       '@types/node':
         specifier: ^22.10.7
         version: 22.10.7
@@ -158,6 +161,9 @@ importers:
       '@types/stats.js':
         specifier: ^0.17.3
         version: 0.17.3
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.177.0
       '@types/throttle-debounce':
         specifier: ^5.0.2
         version: 5.0.2
@@ -346,10 +352,13 @@ importers:
         version: link:../packages/ar-effects
       gltf-interactivity:
         specifier: 'workspace:'
-        version: link:../packages/gltf-interactivity
+        version: link:../packages/gltf-ar-effects
       media-trimmer:
         specifier: workspace:^
         version: link:../packages/media-trimmer
+      three:
+        specifier: 'catalog:'
+        version: 0.177.0
       webgl-effects:
         specifier: workspace:^
         version: link:../packages/webgl-effects
@@ -362,40 +371,33 @@ importers:
 
   packages/ar-effects:
     dependencies:
-      '@behave-graph/core':
-        specifier: ^0.9.13
-        version: 0.9.13
-      '@mediapipe/tasks-vision':
-        specifier: ^0.10.21
-        version: 0.10.21(patch_hash=e6295e5a77808c0a64df341dc48e9b6ea018e002dc60c728d271096d8a2b2f7e)
       gltf-interactivity:
         specifier: 'workspace:'
-        version: link:../gltf-interactivity
-      json-pointer:
-        specifier: ^0.6.2
-        version: 0.6.2
-    devDependencies:
-      '@gltf-transform/core':
-        specifier: 'catalog:'
-        version: 4.2.0
-      '@types/json-pointer':
-        specifier: ^1.0.34
-        version: 1.0.34
-      '@types/three':
-        specifier: 'catalog:'
-        version: 0.177.0
+        version: link:../gltf-ar-effects
       three:
         specifier: 'catalog:'
         version: 0.177.0
 
-  packages/gltf-interactivity:
+  packages/gltf-ar-effects:
     dependencies:
+      '@behave-graph/core':
+        specifier: ^0.9.13
+        version: 0.9.13
       '@gltf-transform/core':
         specifier: 'catalog:'
         version: 4.2.0
+      '@mediapipe/tasks-vision':
+        specifier: ^0.10.21
+        version: 0.10.21(patch_hash=e6295e5a77808c0a64df341dc48e9b6ea018e002dc60c728d271096d8a2b2f7e)
+      json-pointer:
+        specifier: ^0.6.2
+        version: 0.6.2
       property-graph:
         specifier: ^3.0.0
         version: 3.0.0
+      three:
+        specifier: 'catalog:'
+        version: 0.177.0
 
   packages/media-trimmer:
     dependencies:
