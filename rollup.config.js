@@ -11,7 +11,6 @@ import copy from 'rollup-plugin-copy'
 import del from 'rollup-plugin-delete'
 import esbuild from 'rollup-plugin-esbuild-transform'
 import filesize from 'rollup-plugin-filesize'
-import globImport from 'rollup-plugin-glob-import'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
 import postcss from 'rollup-plugin-postcss'
 import autoImport from 'unplugin-auto-import/rollup'
@@ -19,8 +18,9 @@ import icons from 'unplugin-icons/rollup'
 
 import rootPkg from './package.json' with { type: 'json' }
 import { getPublickPackageDirs, ROOT } from './scripts/utils.js'
-import { autoImportOptions } from './tools/autoImportOptions.js'
-import { packageOptions } from './tools/packageBuildOptions.cjs'
+import { autoImportOptions } from './tools/auto-import-ptions.js'
+import { globImportFrag } from './tools/glob-import-frag.js'
+import { packageOptions } from './tools/package-build-options.cjs'
 
 const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
@@ -34,7 +34,7 @@ const opusWasmFile = resolve(
 
 const aliases = {
   entries: {
-    'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/index.css'),
+    'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/src/index.css'),
     'virtual:video-shadow.css': resolve(ROOT, 'packages/webgl-video-editor/src/index.css'),
     [`${opusWasmFile}?url`]: opusWasmFile,
   },
@@ -94,7 +94,7 @@ export default packageOptions.map((options) => {
     plugins: [
       clearDist && del({ targets: resolve(dist, '*'), runOnce: true }),
       nodeResolve({ extensions: ['.mjs', '.js', '.json', '.node', '.ts', '.tsx'] }),
-      globImport({ format: 'default' }),
+      globImportFrag(),
       commonjs(),
       alias(aliases),
       esbuild(esbuildOptions),

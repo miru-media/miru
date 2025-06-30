@@ -1,6 +1,6 @@
 import { type Renderer } from 'webgl-effects'
 
-import { type Effect } from 'reactive-effects/Effect'
+import { type Effect } from 'reactive-effects/effect'
 
 export * as Schema from './schema'
 

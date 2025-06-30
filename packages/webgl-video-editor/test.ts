@@ -2,9 +2,9 @@
 import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
-import { MP4Demuxer } from 'shared/video/mp4/Mp4Demuxer'
+import { MP4Demuxer } from 'shared/video/mp4/mp4-demuxer'
 
-import { AVEncoder } from './src/export/AVEncoder'
+import { AVEncoder } from './src/export/av-encoder'
 
 const test = async () => {
   document.body.appendChild(document.createElement('br'))

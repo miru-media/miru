@@ -10,13 +10,13 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.ts"
+      "import": "./src/index.ts"
     },
     "./elements": {
-      "import": "./elements/index.ts"
+      "import": "./src/elements/index.ts"
     },
     "./vue2": {
-      "import": "./vue2/index.ts"
+      "import": "./src/vue2/index.ts"
     }
   },
   "publishConfig": {

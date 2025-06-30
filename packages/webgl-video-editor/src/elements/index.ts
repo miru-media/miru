@@ -1,2 +1,2 @@
-export * from '../publicConstants'
-export { VideoEditorElement } from './VideoEditorElement'
+export * from '../public-constants'
+export { VideoEditorElement } from './video-editor-element'

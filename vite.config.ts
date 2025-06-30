@@ -5,7 +5,6 @@ import { resolve } from 'node:path'
 
 import NodeGlobalsPolyfill from '@esbuild-plugins/node-globals-polyfill'
 import basicSsl from '@vitejs/plugin-basic-ssl'
-import globImport from 'rollup-plugin-glob-import'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
 import { presetIcons, presetWind3 } from 'unocss'
 import unocss from 'unocss/vite'
@@ -15,7 +14,8 @@ import { defineConfig } from 'vite'
 import analyzer from 'vite-bundle-analyzer'
 import remoteAssets from 'vite-plugin-remote-assets'
 
-import { autoImportOptions } from './tools/autoImportOptions'
+import { autoImportOptions } from './tools/auto-import-ptions'
+import { globImportFrag } from './tools/glob-import-frag'
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -42,7 +42,7 @@ export default defineConfig({
         },
       },
     }),
-    globImport({ format: 'default' }),
+    globImportFrag(),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
     !!process.env.BASIC_SSL && basicSsl(),
     !!process.env.BUNDLE_ANALYZER && analyzer({ openAnalyzer: false, analyzerPort: 5173 }),
@@ -52,7 +52,7 @@ export default defineConfig({
       ebml: require.resolve('ebml/lib/ebml.umd.js'),
       'virtual:image-shadow.css': resolve(
         import.meta.dirname,
-        'packages/webgl-media-editor/index.css?inline',
+        'packages/webgl-media-editor/src/index.css?inline',
       ),
       'virtual:video-shadow.css': resolve(
         import.meta.dirname,

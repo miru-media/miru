@@ -1,4 +1,4 @@
-import { VideoEditorElement } from './elements/VideoEditorElement'
+import { VideoEditorElement } from './elements/video-editor-element'
 
 export type * from '../types/core'
 

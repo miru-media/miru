@@ -3,10 +3,10 @@ import { createEffectScope, EffectScope, type MaybeRefOrGetter, type Ref } from 
 import * as Vue from 'vue'
 
 import * as interop from 'shared/utils/interop'
-import { renderComponentTo } from 'shared/video/renderTo'
+import { renderComponentTo } from 'shared/video/render-to'
 
 import type * as pub from '../../types/webgl-video-editor'
-import { VideoEditorUI } from '../components/VideoEditorUI'
+import { VideoEditorUI } from '../components/video-editor-ui'
 import type * as nodes from '../nodes'
 import { VideoEditor as VideoEditor_ } from '../VideoEditor'
 

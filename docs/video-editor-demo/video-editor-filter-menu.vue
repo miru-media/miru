@@ -3,7 +3,7 @@ import { onScopeDispose, ref, watch, Reactive } from 'vue'
 import { type WebglEffectsMenuElement } from 'webgl-media-editor'
 import 'webgl-media-editor'
 
-import sampleImage from 'shared/assets/320px-Bianchi.jpg'
+import sampleImage from 'shared/assets/320px-bianchi.jpg'
 import { fit, useEventListener } from 'shared/utils'
 
 import { VideoEditor } from 'webgl-video-editor'

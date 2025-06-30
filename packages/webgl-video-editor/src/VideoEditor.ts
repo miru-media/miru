@@ -8,7 +8,7 @@ import { assertCanDecodeMediaFile, hasVideoDecoder } from 'shared/video/utils'
 import { type ClipSnapshot, type HistoryOp } from '../types/internal'
 
 import { MIN_CLIP_DURATION_S } from './constants'
-import { MovieExporter } from './export/MovieExporter'
+import { MovieExporter } from './export/movie-exporter'
 import { Clip, MediaAsset, Movie, type Schema, Track, type VideoEffectAsset } from './nodes'
 
 const getClipAtTime = (track: Track<Clip>, time: number) => {

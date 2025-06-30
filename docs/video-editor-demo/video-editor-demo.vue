@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import 'webgl-video-editor/elements'
 
-import { demoMovie } from './demoMovie'
+import { demoMovie } from './demo-movie'
 import { type VideoEditor } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'

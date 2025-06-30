@@ -10,10 +10,10 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.ts"
+      "import": "./src/index.ts"
     },
     "./vue2": {
-      "import": "./vue2/index.ts"
+      "import": "./src/vue2/index.ts"
     }
   },
   "publishConfig": {

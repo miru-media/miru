@@ -7,7 +7,7 @@ import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent'
 import { win } from '../utils'
 
 import { EXPORT_VIDEO_CODECS } from './constants'
-import { Demuxer } from './Demuxer'
+import { Demuxer } from './demuxer'
 import { type AudioMetadata, type VideoMetadata } from './types'
 
 export const hasVideoDecoder = () => typeof VideoDecoder === 'function'

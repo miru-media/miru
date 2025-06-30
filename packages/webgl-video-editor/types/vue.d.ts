@@ -1,4 +1,4 @@
-export * from './publicConstants'
+export * from './public-constants'
 
 declare const VideoEditor: {
   name: 'VideoEditor'
