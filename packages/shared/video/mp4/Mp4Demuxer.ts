@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment  */
-import * as MP4Box_ from 'mp4box'
+/* eslint-disable @typescript-eslint/no-unsafe-assignment  */
+import * as MP4Box from 'mp4box'
 
 import { FileSignature } from '../FileSignature'
 import {
@@ -7,8 +7,6 @@ import {
   type EncodedMediaChunk,
   type MediaContainerMetadata,
   type MP4BoxAudioTrack,
-  type MP4BoxFileInfo,
-  type MP4BoxSample,
   type MP4BoxVideoTrack,
   type VideoMetadata,
 } from '../types'
@@ -19,38 +17,6 @@ const PRIMARIES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<
 >
 const TRANFERS = { 1: 'bt709', 13: 'iec61966-2-1' } as Record<number, VideoColorSpaceInit['transfer']>
 const MATRICES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<number, VideoColorSpaceInit['matrix']>
-
-export interface MP4BoxFile<S = unknown, E = unknown> {
-  onMoovStart(): void
-  onReady?(info: MP4BoxFileInfo): void
-  onError?(error: unknown): void
-  appendBuffer(data: Uint8Array & { fileStart: number }): number
-  start(): void
-  stop(): void
-  flush(): void
-  setSegmentOptions(track_id: number, user?: S, options?: { nbSamples: number; rapAlignment: boolean }): void
-  unsetSegmentOptions(track_id: number): void
-  onSegment(id: number, user: S, buffer: ArrayBuffer, sampleNumber: number, last: boolean): void
-  initializeSegmentation(): {
-    id: 2
-    buffer: ArrayBuffer
-    user: S
-    sampleNumber: number
-    last?: boolean
-  }
-  setExtractionOptions(
-    track_id: number,
-    user?: E,
-    options?: { nbSamples: number; rapAlignment: boolean },
-  ): void
-  unsetExtractionOptions(track_id: number): void
-  onSamples?(id: number, user: E, samples: MP4BoxSample[]): void
-  seek(time: number, useRap?: boolean): { offset: number; time: number }
-  releaseUsedSamples(id: number, sampleNumber: number): void
-  getTrackById(track_id: number): any
-}
-
-const MP4Box = MP4Box_ as { createFile<S = unknown, E = unknown>(): MP4BoxFile<S, E>; DataStream: any }
 
 interface TrackState {
   track: VideoMetadata | AudioMetadata
@@ -70,97 +36,72 @@ export class MP4Demuxer {
     new Uint8Array([0x66, 0x74, 0x79, 0x70, 0x4d, 0x53, 0x4e, 0x56]),
     new Uint8Array([0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34]),
     new Uint8Array([0x66, 0x74, 0x79, 0x70, 0x71, 0x74]),
+    new Uint8Array([
+      0x66, 0x74, 0x79, 0x70, 0x64, 0x61, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00, 0x69, 0x73, 0x6f, 0x36, 0x6d,
+      0x70, 0x34,
+    ]),
   )
 
   #fileOffset = 0
-  #file = MP4Box.createFile<unknown, TrackState>()
-  #source?: ReadableStream<Uint8Array>
-  #trackConfigs: {
-    track: VideoMetadata | AudioMetadata
-  }[] = []
-  #abort = new AbortController()
-  #encodedChunkStream!: ReadableStream<[number, TrackState, EncodedMediaChunk]>
-  #trackStates: TrackState[] = []
+  #pendingFileChunks: Uint8Array[] = []
+  #file = MP4Box.createFile(false) as MP4Box.ISOFile<unknown, TrackState>
+  #samplesStream?: ReadableStream<Uint8Array>
   #chunkTransform!: TransformStream<Uint8Array, [number, TrackState, EncodedMediaChunk]>
+  #abort = new AbortController()
+  #trackStates: TrackState[] = []
+  #onError!: ((error: Error) => void) | null
 
   async init(source: ReadableStream<Uint8Array>): Promise<MediaContainerMetadata> {
-    this.#source = source
     this.#fileOffset = 0
 
+    this.#file.onError = (module, msg) => {
+      this.#onError?.(new Error(`${module}: ${msg}`))
+    }
+
+    this.#file.onReady = (info) => (metadata = this.getMetadata(info))
     let metadata: MediaContainerMetadata | undefined
-    let error: unknown
 
-    await this.#source
-      .pipeThrough(
-        new TransformStream<Uint8Array, MediaContainerMetadata>({
-          start: (controller) => {
-            this.#file.onReady = (info: MP4BoxFileInfo) => (metadata = this.getMetadata(info))
-            this.#file.onError = controller.error.bind(controller)
-          },
-          transform: this.#writeChunkToMP4BoxFile.bind(this),
-          flush: this.#file.flush.bind(this.#file),
-        }),
-      )
-      .pipeTo(new WritableStream({ write: (value) => void (metadata = value) }))
+    const [metadataStream, samplesStream] = source.tee()
 
-    if (!metadata) throw new Error(`Couldn't find MP4 container metadata.`)
+    try {
+      let error: unknown
+      this.#onError = (e) => (error = e)
 
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    if (error !== undefined) throw error
+      const reader = metadataStream.getReader()
+      const { signal } = this.#abort
 
-    this.#chunkTransform = new TransformStream<Uint8Array, [number, TrackState, EncodedMediaChunk]>({
-      start: (controller) => {
-        this.#file.onError = controller.error.bind(controller)
-        this.#file.onSamples = (track_id, state, samples) => {
-          if (state.isEnded) return
+      while (!metadata && error == undefined && !signal.aborted) {
+        const { value, done } = await reader.read()
+        if (value) this.#appendFileChunk(value)
+        if (done) break
+      }
 
-          const { lastFrameTimeUs } = state
+      reader.releaseLock()
+      void metadataStream.cancel()
 
-          try {
-            const samplesLength = samples.length
-            for (let i = 0; i < samplesLength; i++) {
-              const sample = samples[i]
-              const encodedChunk = sampleToEncodedChunk(state, sample)
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      if (error != undefined) throw error
+      if (!metadata) throw new Error(`Couldn't find MP4 container metadata.`)
+    } catch (error) {
+      void samplesStream.cancel()
+      throw error
+    }
 
-              controller.enqueue([track_id, state, encodedChunk])
-
-              if (encodedChunk.timestamp >= lastFrameTimeUs && sample.is_sync) {
-                state.isEnded = true
-                break
-              }
-            }
-
-            state.extractedSampleCount += samplesLength
-            this.#file.releaseUsedSamples(track_id, state.extractedSampleCount)
-
-            if (state.isEnded) {
-              this.#file.unsetExtractionOptions(track_id)
-              this.#file.flush()
-              controller.terminate()
-            }
-          } catch (error) {
-            state.isEnded = true
-            controller.error(error)
-          }
-        }
-      },
-      transform: this.#writeChunkToMP4BoxFile.bind(this),
-      flush: () => {
-        this.#file.flush()
-      },
-    })
+    this.#samplesStream = samplesStream
 
     return metadata
   }
 
-  #writeChunkToMP4BoxFile(chunk: Uint8Array) {
-    const buffer = chunk.buffer as Uint8Array & { fileStart: number }
+  #appendFileChunk(chunk: Uint8Array) {
+    const buffer = chunk.buffer as MP4Box.MP4BoxBuffer
     buffer.fileStart = this.#fileOffset
-    this.#fileOffset += buffer.byteLength
+
     this.#file.appendBuffer(buffer)
+    this.#fileOffset += buffer.byteLength
+    this.#pendingFileChunks.length = 0
   }
 
-  getMetadata(info: MP4BoxFileInfo): MediaContainerMetadata {
+  getMetadata(info: MP4Box.Movie): MediaContainerMetadata {
     const videoTrack = info.videoTracks[0] as MP4BoxVideoTrack | undefined
     const audioTrack = info.audioTracks[0] as MP4BoxAudioTrack | undefined
 
@@ -183,6 +124,7 @@ export class MP4Demuxer {
     const trak = this.#file.getTrackById(track.id)
     // track.duration is zero in some files
     const duration = (track.duration || track.samples_duration) / track.timescale
+    const fps = track.nb_samples / duration
 
     if (track.type === 'audio') {
       const { audio } = track
@@ -204,7 +146,7 @@ export class MP4Demuxer {
 
     let description
 
-    for (const entry of trak.mdia.minf.stbl.stsd.entries) {
+    for (const entry of trak.mdia.minf.stbl.stsd.entries as MP4Box.VisualSampleEntry[]) {
       const box =
         entry.avcC ?? // H.264
         entry.hvcC ?? // H.265
@@ -213,8 +155,8 @@ export class MP4Demuxer {
         null
 
       if (box != null) {
-        const stream = new MP4Box.DataStream(undefined, 0, MP4Box.DataStream.BIG_ENDIAN)
-        box.write(stream)
+        const stream = new MP4Box.DataStream(undefined, 0, MP4Box.Endianness.BIG_ENDIAN)
+        box.write(stream as MP4Box.MultiBufferStream)
         description = new Uint8Array(stream.buffer, box.hdr_size)
         break
       }
@@ -234,7 +176,7 @@ export class MP4Demuxer {
       type: track.type,
       codec: codec.startsWith('vp08') ? 'vp8' : codec,
       duration,
-      fps: track.nb_samples / (track.samples_duration / track.timescale),
+      fps,
       description,
       codedWidth: width,
       codedHeight: height,
@@ -245,7 +187,6 @@ export class MP4Demuxer {
   }
 
   getChunkStream(track: VideoMetadata | AudioMetadata, firstFrameTimeS = 0, lastFrameTimeS = Infinity) {
-    this.#trackConfigs.push({ track })
     const lastFrameTimeUs = lastFrameTimeS * 1e6
 
     const state: TrackState = {
@@ -275,35 +216,76 @@ export class MP4Demuxer {
       }),
       isEnded: false,
     }
-    this.#file.setExtractionOptions(track.id, state)
+
     this.#trackStates.push(state)
+    this.#file.setExtractionOptions(track.id, state)
 
     return state.transform.readable
   }
 
   start() {
+    this.#fileOffset = 0
+    this.#chunkTransform = new TransformStream<Uint8Array, [number, TrackState, EncodedMediaChunk]>({
+      start: (controller) => {
+        this.#onError = controller.error.bind(controller)
+
+        this.#file.onSamples = (track_id, state, samples) => {
+          if (state.isEnded) return
+
+          const { lastFrameTimeUs } = state
+
+          try {
+            const samplesLength = samples.length
+            for (let i = 0; i < samplesLength; i++) {
+              const sample = samples[i]
+              const encodedChunk = sampleToEncodedChunk(state, sample)
+
+              controller.enqueue([track_id, state, encodedChunk])
+
+              if (encodedChunk.timestamp >= lastFrameTimeUs && sample.is_sync) {
+                state.isEnded = true
+                break
+              }
+            }
+
+            state.extractedSampleCount += samplesLength
+            this.#file.releaseUsedSamples(track_id, state.extractedSampleCount)
+
+            if (state.isEnded) {
+              this.#file.unsetExtractionOptions(track_id)
+              controller.terminate()
+            }
+          } catch (error) {
+            state.isEnded = true
+            controller.error(error)
+          }
+        }
+      },
+      transform: this.#appendFileChunk.bind(this),
+      flush: this.#file.flush.bind(this.#file),
+    })
+
     this.#file.start()
 
-    this.#encodedChunkStream = this.#source!.pipeThrough(this.#chunkTransform, {
+    const encodedChunkStream = this.#samplesStream!.pipeThrough(this.#chunkTransform, {
       signal: this.#abort.signal,
     })
-    let _chunkStream = this.#encodedChunkStream
 
-    this.#trackStates.forEach((state, i, states) => {
-      let currentStream = _chunkStream
+    let _chunkStream = encodedChunkStream
 
-      if (i < states.length - 1) [currentStream, _chunkStream] = _chunkStream.tee()
+    this.#trackStates.forEach((trackState, i, states) => {
+      let streamForTrack = _chunkStream
+      if (i < states.length - 1) [streamForTrack, _chunkStream] = _chunkStream.tee()
 
-      currentStream.pipeThrough(state.transform)
+      streamForTrack.pipeThrough(trackState.transform)
     })
-
-    return
   }
 
   stop() {
     this.#file.stop()
+    this.#samplesStream?.cancel().catch(() => undefined)
     this.#abort.abort('stopped')
-    this.#file.onError = this.#file.onReady = this.#file.onSamples = undefined
+    this.#file.onError = this.#file.onReady = this.#file.onSamples = null
   }
 }
 
@@ -336,20 +318,28 @@ const parseAudioStsd = (stsd: any) => {
   return { sampleRate, numberOfChannels: channelConfiguration }
 }
 
-const sampleToEncodedChunk = (state: TrackState, sample: MP4BoxSample) => {
-  const { data, is_sync, cts, duration, timescale, description } = sample
+const sampleToEncodedChunk = (state: TrackState, sample: MP4Box.Sample) => {
+  const { data, is_sync, cts, duration, timescale } = sample
   const timeS = cts / timescale - state.presentationOffsetS
   const { track } = state
 
-  state.sampleBytes += data.byteLength
+  state.sampleBytes += data!.byteLength
 
   let codedWidth = 0
   let codedHeight = 0
   let colorSpace: VideoColorSpaceInit | undefined
 
   if (track.type === 'video') {
-    codedWidth = description.width
-    codedHeight = description.height
+    const description = sample.description as MP4Box.VisualSampleEntry & {
+      colr?: MP4Box.Box & {
+        type: 'colr'
+        colour_type: string
+        colour_primaries: number
+        transfer_characteristics: number
+        matrix_coefficients: number
+      }
+    }
+    ;({ width: codedWidth, height: codedHeight } = description)
 
     const { colr } = description
     colorSpace = colr && {
@@ -360,7 +350,7 @@ const sampleToEncodedChunk = (state: TrackState, sample: MP4BoxSample) => {
   }
 
   const chunk: EncodedMediaChunk = {
-    data,
+    data: data!,
     type: is_sync ? ('key' as const) : ('delta' as const),
     timestamp: timeS * 1e6,
     duration: (duration * 1e6) / timescale,

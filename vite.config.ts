@@ -7,7 +7,7 @@ import NodeGlobalsPolyfill from '@esbuild-plugins/node-globals-polyfill'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import globImport from 'rollup-plugin-glob-import'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
-import { presetIcons, presetUno } from 'unocss'
+import { presetIcons, presetWind3 } from 'unocss'
 import unocss from 'unocss/vite'
 import autoImport from 'unplugin-auto-import/vite'
 import icons from 'unplugin-icons/vite'
@@ -28,13 +28,13 @@ export default defineConfig({
       awaitDownload: true,
       rules: [
         {
-          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3|task))(?=[`'")\]])/gi,
+          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3|hdr|task))(?=[`'")\]])/gi,
         },
       ],
     }),
     icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
     unocss({
-      presets: [presetUno(), presetIcons()],
+      presets: [presetWind3(), presetIcons()],
       content: {
         pipeline: {
           include: [/\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/],

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import turtle from 'https://assets.miru.media/demo/turtle-PaulsAdventures-pixabay.mp4'
 import underwaterAudio from 'https://assets.miru.media/demo/underwater-ambience-freesound_community-pixabay.mp3'
 import waveBreaking from 'https://assets.miru.media/demo/wave-breaking-EclipseChasers-pixabay.mp4'

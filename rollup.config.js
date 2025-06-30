@@ -29,7 +29,7 @@ const PATCHED_DEPS = Object.keys(rootPkg.pnpm.patchedDependencies)
 
 const opusWasmFile = resolve(
   ROOT,
-  'node_modules/.pnpm/@libav.js+variant-opus@6.5.7/node_modules/@libav.js/variant-opus/dist/libav-6.5.7.1-opus.wasm.wasm',
+  'node_modules/.pnpm/@libav.js+variant-opus@6.5.7/node_modules/@libav.js/variant-opus/dist/libav-6.7.7.1.1-opus.wasm.wasm',
 )
 
 const aliases = {

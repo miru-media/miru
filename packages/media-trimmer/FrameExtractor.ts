@@ -50,7 +50,7 @@ export abstract class FrameExtractor {
     const trackIsLandscape = width > height
 
     this.onImage = function (image, sourceTimeUs: number) {
-      const frameOptions = { timestamp: sourceTimeUs, duration }
+      const frameOptions = { timestamp: sourceTimeUs, duration: isNaN(duration) ? undefined : duration }
       let frame
 
       if (this.has90DegreeRotation) {

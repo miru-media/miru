@@ -35,9 +35,9 @@ export abstract class CodecTransform<
           })
         } else this.process(chunk)
       },
-      flush: async () => {
+      flush: async (controller) => {
         try {
-          if (processor.state === 'configured') await processor.flush()
+          await this.flush(controller)
         } catch (error) {
           if ((error as Error | undefined)?.name !== 'AbortError') throw error
         }
@@ -54,6 +54,10 @@ export abstract class CodecTransform<
   abstract process(chunk: In): void
   abstract get queueSize(): number
 
+  protected async flush(_controller: TransformStreamDefaultController<Out>) {
+    const { processor } = this
+    if (processor.state === 'configured') await processor.flush()
+  }
   dispose() {
     if (this.processor.state === 'configured') this.processor.close()
   }
@@ -196,15 +200,60 @@ export class VideoEncoderTransform extends CodecTransform<
   VideoFrame,
   [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata]
 > {
+  #chunks: [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata | undefined][] = []
+
   constructor(config: VideoEncoderConfig) {
     super((controller) => {
       const encoder = new VideoEncoder({
-        output: (chunk, meta) => controller.enqueue([chunk, meta]),
+        output: (chunk, meta) => {
+          const chunks = this.#chunks
+
+          let index
+
+          for (index = chunks.length - 1; index >= 0; index--) {
+            const other = chunks[index][0]
+            if (other.timestamp <= chunk.timestamp) break
+          }
+
+          chunks.splice(index + 1, 0, [chunk, meta])
+          let maybeHasGap = chunks.length < 2
+
+          for (let i = 1; i < chunks.length; i++) {
+            const prev = chunks[i - 1][0]
+            const cur = chunks[i][0]
+            if (prev.timestamp + (prev.duration ?? 0) + 10 >= cur.timestamp) {
+              maybeHasGap = false
+            } else {
+              maybeHasGap = true
+              break
+            }
+          }
+
+          if (!maybeHasGap) this.#flush(controller)
+        },
         error: controller.error.bind(controller),
       })
       encoder.configure(config)
       return encoder
     })
+  }
+
+  #flush(
+    controller: TransformStreamDefaultController<
+      [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata | undefined]
+    >,
+  ) {
+    this.#chunks.forEach((chunk) => controller.enqueue(chunk))
+    this.#chunks.length = 0
+  }
+
+  protected async flush(
+    controller: TransformStreamDefaultController<
+      [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata | undefined]
+    >,
+  ) {
+    await super.flush(controller)
+    this.#flush(controller)
   }
 
   process(chunk: VideoFrame) {

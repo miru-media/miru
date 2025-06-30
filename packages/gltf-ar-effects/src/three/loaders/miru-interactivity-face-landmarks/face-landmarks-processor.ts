@@ -1,7 +1,6 @@
 import { type FaceLandmarkerResult } from '@mediapipe/tasks-vision'
 // eslint-disable-next-line import/default
 import mediaPipeTasksVisionUrl from '@mediapipe/tasks-vision?url'
-// eslint-disable-next-line import/no-unresolved
 import modelAssetPath from 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task'
 import * as THREE from 'three'
 

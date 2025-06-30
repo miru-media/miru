@@ -37,7 +37,6 @@ declare module '*.glb' {
   export default src
 }
 
-
 declare module 'virtual:*-shadow.css' {
   const src: string
   export default src
@@ -68,8 +67,6 @@ declare module 'eslint-plugin-import' {
   const val: any
   export = val
 }
-
-declare module 'mp4box' {}
 
 declare module 'ebml-block' {
   const ebmlBlock: (buffer: Buffer) => {
@@ -163,7 +160,9 @@ declare module 'videocontext' {
     protected _loadTriggered: boolean
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   class CanvasNode extends SourceNode {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   class ImageNode extends SourceNode {}
   class MediaNode extends SourceNode {
     constructor(

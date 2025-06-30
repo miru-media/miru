@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-unresolved
-import 'uno.css'
+import 'virtual:uno.css'
 import './custom.css'
 
 import { type Theme } from 'vitepress'

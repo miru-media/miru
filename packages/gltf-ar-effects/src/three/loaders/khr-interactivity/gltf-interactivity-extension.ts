@@ -87,7 +87,7 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
   setProperty(path: string[], value: unknown) {
     switch (path[0]) {
       case 'nodes': {
-        const threeObject = this.objectArrays.nodes.at(parseInt(path[1], 10))
+        const threeObject = this.objectArrays.nodes[parseInt(path[1], 10)] as THREE.Object3D | undefined
 
         if (!threeObject) return
 

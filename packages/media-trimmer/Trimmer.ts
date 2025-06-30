@@ -5,13 +5,7 @@ import { IS_LIKE_MAC, IS_SAFARI_16 } from 'shared/userAgent'
 import { Janitor } from 'shared/utils'
 import { Demuxer } from 'shared/video/Demuxer'
 import { VideoEncoderTransform } from 'shared/video/encoderDecoderTransforms'
-import {
-  type AudioMetadata,
-  type EncodedMediaChunk,
-  type MP4BoxFileInfo,
-  type MP4BoxVideoTrack,
-  type VideoMetadata,
-} from 'shared/video/types'
+import { type AudioMetadata, type EncodedMediaChunk, type VideoMetadata } from 'shared/video/types'
 import {
   assertDecoderConfigIsSupported,
   hasVideoDecoder,
@@ -23,8 +17,6 @@ import { RvfcExtractor } from './RvfcExtractor'
 import { type TrimOptions } from './types/media-trimmer'
 import { assertHasRequiredApis } from './utils'
 import { VideoDecoderExtractor } from './VideoDecoderExtractor'
-
-type MuxerRotation = [number, number, number, number, number, number, number, number, number]
 
 const MUXER_CODEC_ID_MAP: Record<'webm' | 'mp4', Record<string, string>> = {
   mp4: { vp09: 'vp9', av01: 'av1', avc1: 'avc', hev1: 'hevc', opus: 'opus', mp4a: 'aac' },
@@ -85,7 +77,7 @@ export class Trimmer {
       codec: video.codec,
       width: video.codedWidth,
       height: video.codedHeight,
-      framerate: video.fps,
+      framerate: isNaN(video.fps) ? undefined : video.fps,
     }
 
     if (video) {
@@ -112,12 +104,15 @@ export class Trimmer {
             numberOfChannels: audio.numberOfChannels,
           }
         : undefined,
-      fastStart: 'in-memory',
-    } as const
+    } satisfies Omit<webmMuxer.MuxerOptions<any> | mp4Muxer.MuxerOptions<any>, 'target'>
 
     const muxer =
       metadata.type === 'mp4'
-        ? new mp4Muxer.Muxer({ ...muxerOptions, target: new mp4Muxer.ArrayBufferTarget() })
+        ? new mp4Muxer.Muxer({
+            ...muxerOptions,
+            target: new mp4Muxer.ArrayBufferTarget(),
+            fastStart: 'in-memory',
+          })
         : new webmMuxer.Muxer({ ...muxerOptions, target: new webmMuxer.ArrayBufferTarget() })
 
     const mediaTrackPromises: Promise<void>[] = []
@@ -157,22 +152,6 @@ export class Trimmer {
 
     this.janitor!.add(() => demuxer.stop())
     return { demuxer, metadata }
-  }
-
-  getTracks(info: MP4BoxFileInfo, mute?: boolean) {
-    const { videoTracks, audioTracks } = info
-    const videoTrack = videoTracks[0] as MP4BoxVideoTrack | undefined
-    if (!videoTrack) throw new Error(`File doesn't contain a video track.`)
-
-    const rotation = Array.from(videoTrack.matrix).map(
-      (n, i) => n / (i % 3 === 2 ? 2 ** 30 : 2 ** 16),
-    ) as MuxerRotation
-
-    const angle = Math.atan2(rotation[3], rotation[0]) * (180 / Math.PI)
-
-    const audioTrack = mute ? undefined : audioTracks[0]
-
-    return { videoTrack, audioTrack, rotation, angle }
   }
 
   pipeVideo({

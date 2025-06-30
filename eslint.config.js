@@ -92,6 +92,7 @@ export default tseslint.config(
       ],
       'import/no-cycle': 'error',
       'import/no-relative-packages': 'error',
+      'import/no-unresolved': ['error', { ignore: ['^https:', '^virtual:.*css$'] }],
       'import/no-useless-path-segments': 'error',
       'no-undef': 'off',
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
@@ -108,6 +109,8 @@ export default tseslint.config(
     files: ['**/*.test.{ts,tsx,js,jsx}'],
     rules: {
       'import/no-extraneous-dependencies': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
     },
   },
 )

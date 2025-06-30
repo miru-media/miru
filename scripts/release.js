@@ -85,11 +85,15 @@ async function updateVersions() {
 
       bumper.tag({ prefix: tagPrefix })
       bumper.commits({ path: packageDir })
-      const { reason, releaseType } = await bumper.bump()
+      const result = await bumper.bump()
 
+      if (!('releaseType' in result)) {
+        console.log(pico.bgBlue(pkg.name), pico.yellow('nothing to release'))
+        return
+      }
+
+      const { reason, releaseType } = result
       console.log(pico.bgBlue(pkg.name), pico.blue(`${reason} - ${releaseType}`))
-
-      if (!releaseType) return
 
       const targetVersion = getTargetVersion(pkg.version, releaseType)
       pkg.version = targetVersion

@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import css from 'virtual:image-shadow.css'
 
 let styleSheet_: CSSStyleSheet | HTMLStyleElement | undefined

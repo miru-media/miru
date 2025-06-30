@@ -51,9 +51,9 @@
     "cropperjs": "^1.6.2",
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
-    "webgl-effects": "workspace:^",
     "throttle-debounce": "catalog:",
-    "twgl.js": "catalog:"
+    "twgl.js": "catalog:",
+    "webgl-effects": "workspace:^"
   },
   "devDependencies": {
     "twgl.js": "catalog:"

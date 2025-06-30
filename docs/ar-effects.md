@@ -1,6 +1,6 @@
 ---
 layout: page
-title: AR demo
+title: AR effects
 navbar: false
 pageClass: demo-page
 ---
