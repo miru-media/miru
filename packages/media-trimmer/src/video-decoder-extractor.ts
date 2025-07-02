@@ -1,5 +1,5 @@
-import { type Demuxer } from 'shared/video/demuxer'
 import { VideoDecoderTransform } from 'shared/video/coder-transforms'
+import type { Demuxer } from 'shared/video/demuxer'
 
 import { FrameExtractor } from './frame-extractor'
 

@@ -67,7 +67,7 @@ const replacements = {
   preventAssignment: true,
 }
 
-export default packageOptions.map((options) => {
+export default (await packageOptions).map((options) => {
   const {
     root: inputRoot,
     inputs,

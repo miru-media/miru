@@ -1,13 +1,13 @@
 import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
 import { LoadingOverlay } from 'shared/components/loading-overlay'
-import { type InputEvent } from 'shared/types'
+import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants'
-import { type Clip as ClipType, type Track } from '../nodes'
-import { type VideoEditor } from '../VideoEditor'
+import type { Clip as ClipType, Track } from '../nodes'
+import type { VideoEditor } from '../video-eidtor'
 
 import { Clip } from './clip'
 import { Ruler } from './ruler'
@@ -88,9 +88,8 @@ export const Timeline = ({
 
     try {
       await editor.addClip(track, file)
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error)
+    } catch {
+      // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
     }
   }

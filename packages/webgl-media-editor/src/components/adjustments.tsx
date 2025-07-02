@@ -1,12 +1,14 @@
 import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
 
-import { type AdjustmentsState, type InputEvent } from 'shared/types'
+import type { AdjustmentsState, InputEvent } from 'shared/types'
 
-import { type ImageSourceInternal } from '../image-source-internal'
-import { type MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal'
+import type { MediaEditor } from '../media-editor'
 
 import { RowSlider } from './row-slider'
 import { SourcePreview } from './source-preview'
+
+const SNAP_MARGIN = 0.15
 
 export const AdjustmentsView = ({
   editor,
@@ -29,13 +31,13 @@ export const AdjustmentsView = ({
 
   const onInputSlider = (event: InputEvent) => {
     const $source = source.value
-    if ($source == undefined) return
+    if ($source == null) return
 
-    const saved_value = $source.adjustments.value?.[currentType.value] ?? 0
-    const direction = event.target.valueAsNumber > saved_value ? 1 : -1
-    const should_snap =
-      (direction == 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= 0.15) ||
-      (direction == -1 && event.target.valueAsNumber < 0 && event.target.valueAsNumber >= -0.15)
+    const savedValue = $source.adjustments.value?.[currentType.value] ?? 0
+    const direction = event.target.valueAsNumber > savedValue ? 1 : -1
+    const shouldSnap =
+      (direction === 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= SNAP_MARGIN) ||
+      (direction === -1 && event.target.valueAsNumber < 0 && event.target.valueAsNumber >= -SNAP_MARGIN)
 
     $source.adjustments.value = {
       ...($source.adjustments.value ?? {
@@ -43,7 +45,7 @@ export const AdjustmentsView = ({
         contrast: 0,
         saturation: 0,
       }),
-      [currentType.value]: should_snap ? 0 : event.target.valueAsNumber,
+      [currentType.value]: shouldSnap ? 0 : event.target.valueAsNumber,
     }
   }
 
@@ -54,7 +56,7 @@ export const AdjustmentsView = ({
   return (
     <>
       {() =>
-        toValue(showPreviews) == true &&
+        toValue(showPreviews) === true &&
         sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
       <div class="miru--menu">

@@ -13,7 +13,7 @@ import {
   useMediaReadyState,
 } from 'shared/video/utils'
 
-import { type LoadInfo, type TrimState } from './types/ui'
+import type { LoadInfo, TrimState } from './types/ui'
 import { hasRequiredApis } from './utils'
 
 const MIN_CLIP_DURATION_S = 0.25
@@ -49,7 +49,7 @@ const Clip = ({
   const initialTime = { start: 0, duration: 0 }
 
   const onPointerDown = (event: PointerEvent) => {
-    if (isResizing.value || event.button !== 0) return
+    if (!!isResizing.value || event.button !== 0) return
     const handle = event.currentTarget as HTMLElement
 
     downCoords.x = event.pageX

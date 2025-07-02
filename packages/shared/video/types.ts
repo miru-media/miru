@@ -1,4 +1,3 @@
-/* eslint-disable import/namespace */
 import type * as ebml from 'ebml'
 import type * as MP4Box from 'mp4box'
 

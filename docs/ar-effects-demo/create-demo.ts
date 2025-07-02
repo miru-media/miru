@@ -1,4 +1,10 @@
-import { GLTFFaceLandmarkDetectionExtension, GLTFInteractivityExtension } from 'gltf-interactivity/three'
+import {
+  DETECTION_CAMERA_FAR,
+  DETECTION_CAMERA_FOV,
+  DETECTION_CAMERA_NEAR,
+  GLTFFaceLandmarkDetectionExtension,
+  GLTFInteractivityExtension,
+} from 'gltf-interactivity/three'
 import envHdr from 'https://github.com/mrdoob/three.js/raw/refs/heads/master/examples/textures/equirectangular/venice_sunset_1k.hdr'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
@@ -20,8 +26,12 @@ export const createDemo = (options: {
   const video = document.createElement('video')
   video.playsInline = video.muted = true
 
-  // https:github.com/google-ai-edge/mediapipe/blob/232008b/mediapipe/tasks/cc/vision/face_geometry/face_geometry_from_landmarks_graph.cc#L71
-  const camera = new THREE.PerspectiveCamera(63, 1, 1, 10_000)
+  const camera = new THREE.PerspectiveCamera(
+    DETECTION_CAMERA_FOV,
+    1,
+    DETECTION_CAMERA_NEAR,
+    DETECTION_CAMERA_FAR,
+  )
 
   let controls: OrbitControls | undefined
 

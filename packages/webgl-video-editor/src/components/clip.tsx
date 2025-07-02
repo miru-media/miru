@@ -2,8 +2,8 @@ import '@interactjs/actions/resize/index.js'
 import '@interactjs/actions/drag/index.js'
 import '@interactjs/modifiers/index.js'
 import '@interactjs/auto-start/index.js'
-import { type DragEvent } from '@interactjs/actions/drag/plugin.js'
-import { type ResizeEvent } from '@interactjs/actions/resize/plugin.js'
+import type { DragEvent } from '@interactjs/actions/drag/plugin.js'
+import type { ResizeEvent } from '@interactjs/actions/resize/plugin.js'
 import interact from '@interactjs/interact'
 import { computed, effect, ref, toRef } from 'fine-jsx'
 
@@ -11,8 +11,8 @@ import { IconButton } from 'shared/components/icon-button'
 import { stringHashCode, useI18n } from 'shared/utils'
 
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants'
-import { type Clip as ClipType } from '../nodes'
-import { type VideoEditor } from '../VideoEditor'
+import type { Clip as ClipType } from '../nodes'
+import type { VideoEditor } from '../video-eidtor'
 
 const CLIP_COLORS = [
   'var(--red-dark)',
@@ -126,9 +126,12 @@ export const Clip = ({
       drag: {
         modifiers: [
           interact.modifiers.restrictRect({
-            restriction: () => {
-              return { left: 0, right: editor.secondsToPixels(editor._movie.duration), top: 0, bottom: 0 }
-            },
+            restriction: () => ({
+              left: 0,
+              right: editor.secondsToPixels(editor._movie.duration),
+              top: 0,
+              bottom: 0,
+            }),
           }),
         ],
         startAxis: 'x',
@@ -148,7 +151,7 @@ export const Clip = ({
             const newCenterTime = newStartTime + clip.time.duration / 2
 
             let insertBefore: ClipType | undefined
-            for (let prev = clip.prev; prev; prev = prev.prev) {
+            for (let { prev } = clip; prev; { prev } = prev) {
               const { start, duration } = prev.time
               if (start >= newStartTime || start + duration / 2 >= newCenterTime) insertBefore = prev
               else break
@@ -162,14 +165,13 @@ export const Clip = ({
             const newEndTime = newStartTime + clip.time.duration
 
             let insertAfter: ClipType | undefined
-            for (let next = clip.next; next; next = next.next) {
+            for (let { next } = clip; next; { next } = next) {
               const { end, duration } = next.time
               if (end <= newEndTime || end - duration / 2 <= newCenterTime) insertAfter = next
               else break
             }
             if (insertAfter) {
               clip.parent.insertClipBefore(clip, insertAfter.next)
-              return
             }
           },
           end() {
@@ -213,6 +215,7 @@ export const Clip = ({
           class="clip-transition"
           title={tr('transition')}
           onClick={() => {
+            // eslint-disable-next-line no-alert -- TODO
             alert(t('Not implemented.'))
           }}
         >

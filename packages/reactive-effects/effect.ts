@@ -1,12 +1,12 @@
 import { ref } from 'fine-jsx'
 import { Effect as BaseEffect, type EffectDefinition, type Renderer } from 'webgl-effects'
 
-// eslint-disable-next-line import/no-relative-packages
-import { type Effect as Effect_ } from '../webgl-effects/src/types/classes'
+// eslint-disable-next-line import/no-relative-packages -- internal
+import type { Effect as Effect_ } from '../webgl-effects/src/types/classes'
 
 export class Effect implements Effect_ {
-  #effect: BaseEffect
-  #isLoading = ref(false)
+  readonly #effect: BaseEffect
+  readonly #isLoading = ref(false)
   shaders: string[] = []
 
   get id() {

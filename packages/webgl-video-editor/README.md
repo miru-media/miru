@@ -2,7 +2,9 @@
 
 [<img src="https://miru.media/webgl-video-editor-screenshot.jpg" alt="Screenshot">](https://miru.media/video-editor)
 
-https://miru.media/video-editor
+<https://miru.media/video-editor>
+
+<!-- #region main -->
 
 ```sh
 npm install webgl-video-editor
@@ -54,6 +56,8 @@ Powered by:
 - [ ] Bitrate/filesize controls
 - [ ] Webm support
 - [ ] Color profile settings
+
+<!-- #endregion main -->
 
 ## Funding
 

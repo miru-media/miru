@@ -1,12 +1,12 @@
 import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
 
-import { type ClipTime } from '../../types/core'
+import type { ClipTime } from '../../types/core'
 import { TRANSITION_DURATION_S } from '../constants'
-import { type ExportMovie } from '../export/export-movie'
+import type { ExportMovie } from '../export/export-movie'
 
-import { type Movie, type Schema, type Track } from '.'
+import type { Movie, Schema, Track } from '.'
 
-import { type MediaAsset } from './assets'
+import type { MediaAsset } from './assets'
 import { BaseNode } from './base-node'
 
 export abstract class BaseClip extends BaseNode {
@@ -14,20 +14,20 @@ export abstract class BaseClip extends BaseNode {
   abstract source: MediaAsset
   type = 'clip' as const
 
-  #prev = ref<typeof this>()
-  #next = ref<typeof this>()
+  readonly #prev = ref<typeof this>()
+  readonly #next = ref<typeof this>()
 
   declare root: Movie | ExportMovie
   declare parent: Track<any>
   declare name?: string
 
-  #sourceStart: Ref<number>
-  #duration: Ref<number>
+  readonly #sourceStart: Ref<number>
+  readonly #duration: Ref<number>
 
   scope = createEffectScope()
 
-  #transition = ref<{ type: string }>()
-  #derivedState = computed(
+  readonly #transition = ref<{ type: string }>()
+  readonly #derivedState = computed(
     (): {
       start: number
       end: number
@@ -48,13 +48,13 @@ export abstract class BaseClip extends BaseNode {
     },
   )
 
-  #time = computed((): ClipTime => {
+  readonly #time = computed((): ClipTime => {
     const { start, end } = this.#derivedState.value
     const { duration } = this
     const source = this.sourceStart
     return { start, source, duration, end }
   })
-  #presentationTime = computed((): ClipTime => {
+  readonly #presentationTime = computed((): ClipTime => {
     const { time } = this
     const inTransitionDuration = this.prev?.transition?.duration ?? 0
 
@@ -64,7 +64,7 @@ export abstract class BaseClip extends BaseNode {
 
     return { start, source, duration, end: time.end }
   })
-  #playableTime = computed((): ClipTime => {
+  readonly #playableTime = computed((): ClipTime => {
     const presentation = this.#presentationTime.value
     if (presentation.source >= 0) return presentation
 
@@ -73,7 +73,7 @@ export abstract class BaseClip extends BaseNode {
   })
 
   get transition(): { duration: number; type: string } | undefined {
-    const value = this.#transition.value
+    const { value } = this.#transition
 
     return value && { duration: TRANSITION_DURATION_S, ...value }
   }
@@ -124,8 +124,7 @@ export abstract class BaseClip extends BaseNode {
   }
 
   get displayName() {
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-    return this.name || this.source.name
+    return (this.name ?? '') || this.source.name
   }
 
   constructor(init: Schema.Clip, parent: BaseClip['parent']) {

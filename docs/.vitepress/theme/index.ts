@@ -1,8 +1,7 @@
-// eslint-disable-next-line import/no-unresolved
 import 'virtual:uno.css'
 import './custom.css'
 
-import { type Theme } from 'vitepress'
+import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import { createI18n } from 'vue-i18n-lite'
 

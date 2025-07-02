@@ -15,20 +15,22 @@ import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
 import * as GL from './gl'
 import vs from './glsl/main.vert'
 import passthrough from './glsl/passthrough.frag'
-import { type Renderer as Renderer_ } from './types/classes'
-import {
-  type AssetType,
-  type Context2D,
-  type CropState,
-  type RendererDrawOptions,
-  type RendererEffect,
-  type RendererEffectOp,
+import type { Renderer as Renderer_ } from './types/classes'
+import type {
+  AssetType,
+  Context2D,
+  CropState,
+  RendererDrawOptions,
+  RendererEffect,
+  RendererEffectOp,
 } from './types/core'
 
 interface Size {
   width: number
   height: number
 }
+
+const DRAW_COUNT = 6
 
 const setTextureParameters = (
   gl: WebGL2RenderingContext,
@@ -43,9 +45,9 @@ const setTextureParameters = (
 
 export class Renderer implements Renderer_ {
   #gl: WebGL2RenderingContext
-  #ownsGl: boolean
+  readonly #ownsGl: boolean
   #passthroughProgram: twgl.ProgramInfo
-  #uniforms = {
+  readonly #uniforms = {
     u_flipY: true,
     u_resolution: [1, 1],
     u_image: null as WebGLTexture | null,
@@ -54,13 +56,13 @@ export class Renderer implements Renderer_ {
     u_matrix: mat4.create(),
     u_textureMatrix: mat4.create(),
   }
-  #vertexBuffers: WebGLBuffer[] = []
+  readonly #vertexBuffers: WebGLBuffer[] = []
   isDisposed = false
 
   effectOps: RendererEffectOp[] = []
 
-  #fbs: [twgl.FramebufferInfo, twgl.FramebufferInfo]
-  #fragmentsToPrograms = new Map<string, { programInfo: twgl.ProgramInfo; refCount: number }>()
+  readonly #fbs: [twgl.FramebufferInfo, twgl.FramebufferInfo]
+  readonly #fragmentsToPrograms = new Map<string, { programInfo: twgl.ProgramInfo; refCount: number }>()
 
   get canvas() {
     return this.#gl.canvas
@@ -113,7 +115,7 @@ export class Renderer implements Renderer_ {
 
     const texture = gl.createTexture()
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mismatch between TS and eslint?
-    if (texture == undefined) throw new Error(`[miru] gl.createTexture() failed`)
+    if (texture == null) throw new Error(`[miru] gl.createTexture() failed`)
 
     twgl.setTextureParameters(gl, texture, textureOptions)
 
@@ -152,6 +154,7 @@ export class Renderer implements Renderer_ {
     if (textureOptions.auto === true) this.#gl.generateMipmap(GL.TEXTURE_2D)
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- internal
   setSourceTexture(
     texture: WebGLTexture,
     resolution: Size,
@@ -201,7 +204,7 @@ export class Renderer implements Renderer_ {
   #loadLut(texture: WebGLTexture, imageData: ImageData | undefined, isHald: boolean) {
     const gl = this.#gl
 
-    if (imageData == undefined) return
+    if (imageData == null) return
 
     const format = GL.RGBA
     const type = GL.UNSIGNED_BYTE
@@ -340,7 +343,7 @@ export class Renderer implements Renderer_ {
       setViewport()
       if (options.clear) this.clear()
 
-      gl.drawArrays(GL.TRIANGLES, 0, 6)
+      gl.drawArrays(GL.TRIANGLES, 0, DRAW_COUNT)
     } else {
       const { width, height } = resolution
       const u_matrix = mat4.ortho(mat4.create(), 0, width, height, 0, -1, 1)
@@ -348,7 +351,7 @@ export class Renderer implements Renderer_ {
       const u_textureMatrix = mat4.identity(mat4.create())
 
       gl.bindFramebuffer(GL.FRAMEBUFFER, this.#fbs[0].framebuffer)
-      gl.drawArrays(GL.TRIANGLES, 0, 6)
+      gl.drawArrays(GL.TRIANGLES, 0, DRAW_COUNT)
 
       const lastOpIndex = this.effectOps.length - 1
 
@@ -374,7 +377,7 @@ export class Renderer implements Renderer_ {
           u_image: this.#fbs[sourceFbIndex].attachments[0],
           u_intensity: this.#uniforms.u_intensity * op.intensity,
         })
-        gl.drawArrays(GL.TRIANGLES, 0, 6)
+        gl.drawArrays(GL.TRIANGLES, 0, DRAW_COUNT)
       })
     }
 
@@ -388,7 +391,7 @@ export class Renderer implements Renderer_ {
 
     const status = sync && gl.clientWaitSync(sync, 0, 0)
 
-    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console -- --
     if (status === GL.WAIT_FAILED) console.warn('[webgl-effects] gl.clientWaitSync() failed!')
 
     return { sync, status }
@@ -471,8 +474,8 @@ export class Renderer implements Renderer_ {
     return image
   }
 
-  toBlob(options?: ImageEncodeOptions) {
-    return canvasToBlob(this.#gl.canvas, options)
+  async toBlob(options?: ImageEncodeOptions) {
+    return await canvasToBlob(this.#gl.canvas, options)
   }
 
   deleteTexture(texture: WebGLTexture) {
@@ -503,7 +506,8 @@ export class Renderer implements Renderer_ {
 
     this.effectOps.length = 0
 
-    for (const key in this.#uniforms) (this.#uniforms as any)[key] = null
+    for (const key in this.#uniforms)
+      if (Object.hasOwn(this.#uniforms, key)) (this.#uniforms as any)[key] = null
 
     gl.deleteProgram(programInfo.program)
     this.#fragmentsToPrograms.forEach(({ programInfo }) => gl.deleteProgram(programInfo.program))

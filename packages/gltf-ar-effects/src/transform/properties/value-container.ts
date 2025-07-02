@@ -1,7 +1,7 @@
-import { type InteractivityConfiguration, type InteractivityValue } from '../../types'
+import type { InteractivityConfiguration, InteractivityValue } from '../../types'
 
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
-import { type Type } from './type'
+import type { Type } from './type'
 
 type Literal = boolean | number | string | number[] | string[] | null
 

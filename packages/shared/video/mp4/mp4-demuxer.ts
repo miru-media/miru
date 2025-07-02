@@ -1,22 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment  */
+/* eslint-disable  @typescript-eslint/no-magic-numbers -- file signature magic numbers */
 import * as MP4Box from 'mp4box'
 
 import { FileSignature } from '../file-signature'
-import {
-  type AudioMetadata,
-  type EncodedMediaChunk,
-  type MediaContainerMetadata,
-  type MP4BoxAudioTrack,
-  type MP4BoxVideoTrack,
-  type VideoMetadata,
+import type {
+  AudioMetadata,
+  EncodedMediaChunk,
+  MediaContainerMetadata,
+  MP4BoxAudioTrack,
+  MP4BoxVideoTrack,
+  VideoMetadata,
 } from '../types'
 
-const PRIMARIES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<
-  number,
-  VideoColorSpaceInit['primaries']
->
-const TRANFERS = { 1: 'bt709', 13: 'iec61966-2-1' } as Record<number, VideoColorSpaceInit['transfer']>
-const MATRICES = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' } as Record<number, VideoColorSpaceInit['matrix']>
+const PRIMARIES: Record<number, VideoColorSpaceInit['primaries']> = {
+  1: 'bt709',
+  5: 'bt470bg',
+  6: 'smpte170m',
+}
+const TRANFERS: Record<number, VideoColorSpaceInit['transfer']> = { 1: 'bt709', 13: 'iec61966-2-1' }
+const MATRICES: Record<number, VideoColorSpaceInit['matrix']> = { 1: 'bt709', 5: 'bt470bg', 6: 'smpte170m' }
 
 interface TrackState {
   track: VideoMetadata | AudioMetadata
@@ -43,34 +44,32 @@ export class MP4Demuxer {
   )
 
   #fileOffset = 0
-  #pendingFileChunks: Uint8Array[] = []
-  #file = MP4Box.createFile(false) as MP4Box.ISOFile<unknown, TrackState>
+  readonly #pendingFileChunks: Uint8Array[] = []
+  readonly #file = MP4Box.createFile(false) as MP4Box.ISOFile<unknown, TrackState>
   #samplesStream?: ReadableStream<Uint8Array>
   #chunkTransform!: TransformStream<Uint8Array, [number, TrackState, EncodedMediaChunk]>
-  #abort = new AbortController()
-  #trackStates: TrackState[] = []
+  readonly #abort = new AbortController()
+  readonly #trackStates: TrackState[] = []
   #onError!: ((error: Error) => void) | null
 
   async init(source: ReadableStream<Uint8Array>): Promise<MediaContainerMetadata> {
     this.#fileOffset = 0
 
-    this.#file.onError = (module, msg) => {
-      this.#onError?.(new Error(`${module}: ${msg}`))
-    }
-
+    this.#file.onError = (module, msg) => this.#onError?.(new Error(`${module}: ${msg}`))
     this.#file.onReady = (info) => (metadata = this.getMetadata(info))
     let metadata: MediaContainerMetadata | undefined
 
     const [metadataStream, samplesStream] = source.tee()
 
     try {
-      let error: unknown
+      let error: Error | undefined
       this.#onError = (e) => (error = e)
 
       const reader = metadataStream.getReader()
       const { signal } = this.#abort
 
-      while (!metadata && error == undefined && !signal.aborted) {
+      // eslint-disable-next-line no-unmodified-loop-condition -- modified in callbacks
+      while (!metadata && error == null && !signal.aborted) {
         const { value, done } = await reader.read()
         if (value) this.#appendFileChunk(value)
         if (done) break
@@ -79,8 +78,7 @@ export class MP4Demuxer {
       reader.releaseLock()
       void metadataStream.cancel()
 
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
-      if (error != undefined) throw error
+      if (error != null) throw error
       if (!metadata) throw new Error(`Couldn't find MP4 container metadata.`)
     } catch (error) {
       void samplesStream.cancel()
@@ -110,7 +108,7 @@ export class MP4Demuxer {
 
     return {
       type: 'mp4',
-      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing -- brevity
       duration: info.duration / info.timescale || video?.duration || audio?.duration || 0,
       video,
       audio,
@@ -119,6 +117,7 @@ export class MP4Demuxer {
 
   getTrackMetadata(track: MP4BoxVideoTrack): VideoMetadata
   getTrackMetadata(track: MP4BoxAudioTrack): AudioMetadata
+
   getTrackMetadata(track: MP4BoxVideoTrack | MP4BoxAudioTrack): VideoMetadata | AudioMetadata {
     let { codec } = track
     const trak = this.#file.getTrackById(track.id)
@@ -229,7 +228,7 @@ export class MP4Demuxer {
       start: (controller) => {
         this.#onError = controller.error.bind(controller)
 
-        this.#file.onSamples = (track_id, state, samples) => {
+        this.#file.onSamples = (trackId, state, samples) => {
           if (state.isEnded) return
 
           const { lastFrameTimeUs } = state
@@ -240,7 +239,7 @@ export class MP4Demuxer {
               const sample = samples[i]
               const encodedChunk = sampleToEncodedChunk(state, sample)
 
-              controller.enqueue([track_id, state, encodedChunk])
+              controller.enqueue([trackId, state, encodedChunk])
 
               if (encodedChunk.timestamp >= lastFrameTimeUs && sample.is_sync) {
                 state.isEnded = true
@@ -249,10 +248,10 @@ export class MP4Demuxer {
             }
 
             state.extractedSampleCount += samplesLength
-            this.#file.releaseUsedSamples(track_id, state.extractedSampleCount)
+            this.#file.releaseUsedSamples(trackId, state.extractedSampleCount)
 
             if (state.isEnded) {
-              this.#file.unsetExtractionOptions(track_id)
+              this.#file.unsetExtractionOptions(trackId)
               controller.terminate()
             }
           } catch (error) {
@@ -319,7 +318,7 @@ const parseAudioStsd = (stsd: any) => {
 }
 
 const sampleToEncodedChunk = (state: TrackState, sample: MP4Box.Sample) => {
-  const { data, is_sync, cts, duration, timescale } = sample
+  const { data, is_sync: isSync, cts, duration, timescale } = sample
   const timeS = cts / timescale - state.presentationOffsetS
   const { track } = state
 
@@ -351,7 +350,7 @@ const sampleToEncodedChunk = (state: TrackState, sample: MP4Box.Sample) => {
 
   const chunk: EncodedMediaChunk = {
     data: data!,
-    type: is_sync ? ('key' as const) : ('delta' as const),
+    type: isSync ? ('key' as const) : ('delta' as const),
     timestamp: timeS * 1e6,
     duration: (duration * 1e6) / timescale,
     codedWidth,

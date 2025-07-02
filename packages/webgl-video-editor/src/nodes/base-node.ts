@@ -1,4 +1,4 @@
-import { type ParentNode } from './parent-node'
+import type { ParentNode } from './parent-node'
 
 export abstract class BaseNode {
   abstract type: string

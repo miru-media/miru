@@ -1,11 +1,11 @@
 import { type Ref, ref } from 'fine-jsx'
 import VideoContext from 'videocontext'
-import { type Renderer } from 'webgl-effects'
+import type { Renderer } from 'webgl-effects'
 
 import { setObjectSize } from 'shared/utils'
 
-import { type NodeMap } from '../../types/internal'
-import { type Movie } from '../nodes'
+import type { NodeMap } from '../../types/internal'
+import type { Movie } from '../nodes'
 import { ParentNode } from '../nodes/parent-node'
 import { Track } from '../nodes/track'
 

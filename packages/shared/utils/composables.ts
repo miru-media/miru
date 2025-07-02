@@ -12,7 +12,7 @@ import {
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
-import { type I18nOptions } from '../types'
+import type { I18nOptions } from '../types'
 
 import { win } from './window'
 
@@ -37,7 +37,7 @@ export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | un
   })
 
   watch([() => toValue(element)], ([el], _prev, onCleanup) => {
-    if (el == undefined) return
+    if (el == null) return
 
     observer.observe(el)
     onCleanup(() => observer.unobserve(el))
@@ -87,7 +87,7 @@ export const arrayFlatToValue = <T>(value: T | T[], result: T[] = []): T[] => {
   return result
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
 export const useEventListener = <T extends Event>(
   targetRef: MaybeRefOrGetter<EventTarget | undefined>,
   type: string,
@@ -96,7 +96,7 @@ export const useEventListener = <T extends Event>(
 ) =>
   effect((onCleanup) => {
     const target = toValue(targetRef)
-    if (target == undefined) return
+    if (target == null) return
 
     target.addEventListener(type, listener as (event: Event) => void, options)
     onCleanup(() => target.removeEventListener(type, listener as (event: Event) => void, options))
@@ -163,6 +163,4 @@ export const provideI18n = (options: I18nOptions) => {
   return i18n
 }
 
-export const useI18n = () => {
-  return inject<ReturnType<typeof createI18n>>('i18n')!
-}
+export const useI18n = () => inject<ReturnType<typeof createI18n>>('i18n')!

@@ -3,18 +3,18 @@ import * as webmMuxer from 'webm-muxer'
 
 import { IS_LIKE_MAC, IS_SAFARI_16 } from 'shared/userAgent'
 import { Janitor } from 'shared/utils'
-import { Demuxer } from 'shared/video/demuxer'
 import { VideoEncoderTransform } from 'shared/video/coder-transforms'
-import { type AudioMetadata, type EncodedMediaChunk, type VideoMetadata } from 'shared/video/types'
+import { Demuxer } from 'shared/video/demuxer'
+import type { AudioMetadata, EncodedMediaChunk, VideoMetadata } from 'shared/video/types'
 import {
   assertDecoderConfigIsSupported,
   hasVideoDecoder,
   setVideoEncoderConfigCodec,
 } from 'shared/video/utils'
 
-import { type FrameExtractor } from './frame-extractor'
-import { RvfcExtractor } from './rvfc-xtractor'
-import { type TrimOptions } from './types/media-trimmer'
+import type { FrameExtractor } from './frame-extractor'
+import { RvfcExtractor } from './rvfc-extractor'
+import type { TrimOptions } from './types/media-trimmer'
 import { assertHasRequiredApis } from './utils'
 import { VideoDecoderExtractor } from './video-decoder-extractor'
 
@@ -52,6 +52,7 @@ export class Trimmer {
     return blob
   }
 
+  // eslint-disable-next-line complexity -- TODO
   async _trim() {
     assertHasRequiredApis()
     const { options } = this
@@ -154,7 +155,7 @@ export class Trimmer {
     return { demuxer, metadata }
   }
 
-  pipeVideo({
+  async pipeVideo({
     demuxer,
     video,
     encoderConfig,
@@ -185,7 +186,7 @@ export class Trimmer {
 
     let firstVideoFrameTimeUs = -1
 
-    return extractor
+    await extractor
       .start()
       .pipeThrough(new VideoEncoderTransform(encoderConfig))
       .pipeTo(
@@ -223,9 +224,8 @@ export class Trimmer {
     const abort = new AbortController()
     signal.addEventListener('abort', () => abort.abort())
 
-    return demuxer
-      .getChunkStream(audio)
-      .pipeTo(
+    try {
+      await demuxer.getChunkStream(audio).pipeTo(
         new WritableStream({
           write: (chunk: EncodedMediaChunk, controller) => {
             const { timestamp } = chunk
@@ -251,9 +251,9 @@ export class Trimmer {
         }),
         { signal: abort.signal },
       )
-      .catch((error: unknown) => {
-        if (!abort.signal.aborted) throw error
-      })
+    } catch (error: unknown) {
+      if (!abort.signal.aborted) throw error
+    }
   }
 
   dispose() {

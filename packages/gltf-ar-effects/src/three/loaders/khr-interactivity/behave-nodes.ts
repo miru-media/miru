@@ -1,7 +1,7 @@
 import * as Behave from '@behave-graph/core'
 import jsonPointer from 'json-pointer'
 
-import { type CustomRegistry } from './custom-registry'
+import type { CustomRegistry } from './custom-registry'
 
 export class EventReceive extends Behave.EventNode {
   static Description = new Behave.NodeDescription(
@@ -28,9 +28,8 @@ export class EventReceive extends Behave.EventNode {
     super(description, graph, inputs, outputs, config)
   }
 
-  init(_engine: Behave.Engine): void {
-    // noop
-  }
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
+  init(_engine: Behave.Engine): void {}
 }
 
 export class EventSend extends Behave.FlowNode {
@@ -40,7 +39,7 @@ export class EventSend extends Behave.FlowNode {
     `event/send`,
     (description, graph, config) => new EventSend(description, graph, config),
   )
-  private customEvent: Behave.CustomEvent
+  private readonly customEvent: Behave.CustomEvent
 
   constructor(description: Behave.NodeDescription, graph: Behave.Graph, config: Behave.NodeConfiguration) {
     const customEvent = graph.customEvents[config.customEventId as number]

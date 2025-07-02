@@ -3,7 +3,9 @@ import { computed } from 'fine-jsx'
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
 
-import { type VideoEditor } from '../VideoEditor'
+import type { VideoEditor } from '../video-eidtor'
+
+const RULER_INTERVAL_MULTIPLIER = 32
 
 export const Ruler = ({ editor }: { editor: VideoEditor }) => {
   const { languages } = useI18n()
@@ -13,7 +15,7 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
     const exponent = Math.floor(Math.log2(range))
     const magnitude = Math.pow(2, exponent)
 
-    return magnitude * 32
+    return magnitude * RULER_INTERVAL_MULTIPLIER
   })
 
   const Markings = () => {

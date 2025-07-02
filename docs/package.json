@@ -7,7 +7,6 @@
     "@gltf-transform/extensions": "catalog:",
     "@gltf-transform/functions": "catalog:",
     "@vueuse/core": "^13.4.0",
-    "ar-effects": "workspace:^",
     "gltf-interactivity": "workspace:",
     "media-trimmer": "workspace:^",
     "three": "catalog:",

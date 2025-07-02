@@ -9,8 +9,8 @@ export const toVue = <T>(
     if (!isRef(fineJsxSource)) throw new Error('[fine-jsx] Value is not a writable ref.')
     fineJsxSource.value = newValue
   },
-): Vue.Ref<T> => {
-  return customRef<T>((track, trigger) => {
+): Vue.Ref<T> =>
+  customRef<T>((track, trigger) => {
     let stopEffect: (() => void) | undefined
     let isDisposed = false
 
@@ -36,7 +36,6 @@ export const toVue = <T>(
       },
     }
   })
-}
 
 export const fromVue = <T>(
   vueToValue: typeof Vue.toValue,

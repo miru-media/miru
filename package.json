@@ -10,6 +10,10 @@
     "build": "vue-tsc -b tsconfig.check.json && NODE_ENV=production rollup --config rollup.config.js",
     "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
     "check": "vue-tsc -b tsconfig.check.json --incremental",
+    "lint:markdown": "markdownlint --ignore-path .gitignore --ignore '**/CHANGELOG.md' '**/*.md'",
+    "lint:prettier": "prettier --check '**/*.{ts,js,tsx,jsx,cjs,vue,md,html,yaml,yml,json}'",
+    "lint": "stylelint '**/*.css' && pnpm run lint:markdown && pnpm eslint --quiet && pnpm run lint:prettier",
+    "lint:fix": "stylelint --fix '**/*.css' && pnpm run lint:markdown --fix && pnpm eslint --quiet --fix && pnpm lint:prettier --write",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prepare": "husky",
     "docs:dev": "vitepress dev docs",
@@ -30,6 +34,7 @@
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@eslint/compat": "^1.3.1",
     "@eslint/js": "^9.30.0",
     "@eslint/markdown": "^6.6.0",
     "@iconify-json/tabler": "^1.2.19",
@@ -57,6 +62,7 @@
     "cssnano": "^7.0.7",
     "esbuild": "^0.25.5",
     "eslint": "^9.30.0",
+    "eslint-config-love": "^121.0.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "fine-jsx": "catalog:",
@@ -65,6 +71,8 @@
     "happy-dom": "^18.0.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
+    "markdown-it-task-lists": "^2.1.1",
+    "markdownlint-cli": "^0.45.0",
     "nano-spawn": "^1.0.2",
     "picocolors": "^1.1.1",
     "postcss": "^8.5.6",
@@ -93,6 +101,7 @@
     "stylelint-config-recess-order": "^7.1.0",
     "stylelint-config-standard": "^38.0.0",
     "stylelint-order": "^7.0.0",
+    "stylelint-prettier": "^5.0.3",
     "taze": "^19.1.0",
     "terser": "^5.43.1",
     "throttle-debounce": "catalog:",
@@ -108,12 +117,17 @@
     "vue-tsc": "^2.2.10"
   },
   "lint-staged": {
-    "**/*.((ts|js|cjs)?(x)|vue|md)": [
+    "**/*.((ts|js|cjs)?(x)|vue)": [
       "eslint --quiet --fix",
       "prettier --check --write"
     ],
-    "**/*.(yaml|yml|json|css)": "prettier --check --write",
-    "**/*.css": "stylelint --fix"
+    "**/*.md": [
+      "eslint --quiet --fix",
+      "markdownlint --fix",
+      "prettier --check --write"
+    ],
+    "**/*.css": "stylelint --fix",
+    "**/*.(yaml|yml|json)": "prettier --check --write"
   },
   "browserslist": [
     "defaults and fully supports es6-module and fully supports webgl2",

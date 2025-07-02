@@ -79,6 +79,6 @@ const canvas = ref()
     height: 2rem;
 }
 .canvas-container canvas {
- max-width:100%; max-height:90vh; object-fit:contain   
+ max-width:100%; max-height:90vh; object-fit:contain
 }
 </style>

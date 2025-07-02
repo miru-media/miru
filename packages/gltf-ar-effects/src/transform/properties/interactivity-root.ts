@@ -2,9 +2,9 @@ import * as gltf from '@gltf-transform/core'
 
 import { KHR_INTERACTIVITY } from '../../constants'
 
-import { type Graph } from './graph'
+import type { Graph } from './graph'
 import { InteractivityPropertyType } from './property-types'
-import { type Type } from './type'
+import type { Type } from './type'
 
 export class InteractivityRoot extends gltf.ExtensionProperty<{
   name: string

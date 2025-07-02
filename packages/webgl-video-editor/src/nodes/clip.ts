@@ -4,27 +4,27 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 import { createHiddenMediaElement } from 'shared/utils'
 import { useMediaError } from 'shared/video/utils'
 
-import { type ClipSnapshot, type CustomSourceNodeOptions } from '../../types/internal'
+import type { ClipSnapshot, CustomSourceNodeOptions } from '../../types/internal'
 import { AudioElementNode, VideoElementNode } from '../video-context-nodes'
 
-import { type Schema } from '.'
+import type { Schema } from '.'
 
-import { type MediaAsset, type VideoEffectAsset } from './assets'
+import type { MediaAsset, VideoEffectAsset } from './assets'
 import { BaseClip } from './base-clip'
-import { type Track } from './track'
+import type { Track } from './track'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export class Clip extends BaseClip {
   declare parent: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
-  #source = ref<MediaAsset>(undefined as never)
+  readonly #source = ref<MediaAsset>(undefined as never)
   error: Ref<MediaError | undefined>
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
-  #transitionNode = ref<TransitionNode<{ mix: number }>>()
+  readonly #transitionNode = ref<TransitionNode<{ mix: number }>>()
 
-  #filter: Ref<VideoEffectAsset | undefined>
-  #filterIntensity: Ref<number>
+  readonly #filter: Ref<VideoEffectAsset | undefined>
+  readonly #filterIntensity: Ref<number>
 
   get start() {
     return this.sourceStart
@@ -50,7 +50,7 @@ export class Clip extends BaseClip {
   }
 
   get filter() {
-    const value = this.#filter.value
+    const { value } = this.#filter
     return value && { id: value.id, name: value.name, intensity: this.#filterIntensity.value }
   }
 

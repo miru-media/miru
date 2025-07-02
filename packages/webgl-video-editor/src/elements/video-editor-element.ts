@@ -7,17 +7,19 @@ import type * as schema from '../../types/schema'
 import type * as pub from '../../types/webgl-video-editor'
 import { VideoEditorUI } from '../components/video-editor-ui'
 import type * as nodes from '../nodes'
-import { VideoEditor } from '../VideoEditor'
+import { VideoEditor } from '../video-eidtor'
+
+const UNMOUNT_TIMEOUT_MS = 500
 
 export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEditor {
   static observedAttributes = ['messages', 'languages']
 
   editor!: VideoEditor
-  #scope = createEffectScope()
+  readonly #scope = createEffectScope()
   #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
-  #messages = ref<Record<string, Record<string, string>>>({})
-  #languages = ref(navigator.languages.slice(0))
+  readonly #messages = ref<Record<string, Record<string, string>>>({})
+  readonly #languages = ref(navigator.languages.slice(0))
 
   get messages() {
     return this.#messages.value
@@ -122,7 +124,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this.#disconnectTimeout = setTimeout(() => {
       this.#unmount?.()
       this.#unmount = undefined
-    }, 500)
+    }, UNMOUNT_TIMEOUT_MS)
   }
 
   attributeChangedCallback(name: 'messages' | 'languages', _oldValue: string, newValue: string): void {
@@ -138,14 +140,14 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   seekTo(time: number) {
     this.editor.seekTo(time)
   }
-  addClip(track: pub.Track, source: string | Blob) {
-    return this.editor.addClip(track as nodes.Track<nodes.Clip>, source)
+  async addClip(track: pub.Track, source: string | Blob) {
+    return await this.editor.addClip(track as nodes.Track<nodes.Clip>, source)
   }
   selectClip(clip: pub.Clip | undefined) {
     this.editor.selectClip(clip?.id)
   }
-  createMediaAsset(source: string | Blob) {
-    return this.editor.createMediaAsset(source)
+  async createMediaAsset(source: string | Blob) {
+    return await this.editor.createMediaAsset(source)
   }
   splitClipAtCurrentTime(): pub.Clip | undefined {
     return this.editor.splitClipAtCurrentTime()
@@ -156,8 +158,8 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   redo() {
     this.editor.redo()
   }
-  replaceClipSource(source: Blob | string) {
-    return this.editor.replaceClipSource(source)
+  async replaceClipSource(source: Blob | string) {
+    await this.editor.replaceClipSource(source)
   }
   setClipFilter(clip: pub.Clip, filterId: string | undefined, intensity: number): void {
     this.editor.setClipFilter(this.editor._movie.nodes.get(clip.id), filterId, intensity)
@@ -165,17 +167,17 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   deleteSelection() {
     this.editor.deleteSelection()
   }
-  clearAllContentAndHistory() {
-    return this.editor.clearAllContentAndHistory()
+  async clearAllContentAndHistory() {
+    await this.editor.clearAllContentAndHistory()
   }
-  replaceContent(newContent: schema.Movie) {
-    return this.editor.replaceContent(newContent)
+  async replaceContent(newContent: schema.Movie) {
+    await this.editor.replaceContent(newContent)
   }
   toObject() {
     return this.editor.toObject()
   }
-  export() {
-    return this.editor.export()
+  async export() {
+    return await this.editor.export()
   }
 
   #dispatch(type: string, detail: unknown) {

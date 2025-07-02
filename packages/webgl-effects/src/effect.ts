@@ -1,10 +1,10 @@
 import { Janitor, normalizeSourceOption } from 'shared/utils'
 
 import { FRAGMENT_SHADERS } from './all-fragment-shaders'
-import { type Renderer } from './renderer'
+import type { Renderer } from './renderer'
 import { TextureResource } from './texture-resource'
-import { type Effect as Effect_ } from './types/classes'
-import { type AssetType, type EffectDefinition, type RendererEffectOp } from './types/core'
+import type { Effect as Effect_ } from './types/classes'
+import type { AssetType, EffectDefinition, RendererEffectOp } from './types/core'
 
 export class Effect implements Effect_ {
   id?: string
@@ -12,10 +12,10 @@ export class Effect implements Effect_ {
   ops: RendererEffectOp[]
   isDisposed = false
   isLoading = false
-  private janitor = new Janitor()
-  private resources: TextureResource[]
-  private shaders: string[] = []
-  private definition: EffectDefinition
+  private readonly janitor = new Janitor()
+  private readonly resources: TextureResource[]
+  private readonly shaders: string[] = []
+  private readonly definition: EffectDefinition
 
   get promise() {
     return this.resources.length ? Promise.all(this.resources.map((t) => t.promise)) : undefined
@@ -44,19 +44,22 @@ export class Effect implements Effect_ {
       return resource.texture
     }
 
+    // eslint-disable-next-line complexity -- simple switch
     this.ops = ops.map((op) => {
       let fragmentShader: string
 
       switch (op.type) {
         case 'shader':
           for (const key in op.properties) {
+            if (!Object.hasOwn(op.properties, key)) continue
+
             const value = op.properties[key]
             if (typeof value !== 'number' && 'type' in value)
               uniforms[key] = createTexture(value.source, value.type)
             else uniforms[key] = value
           }
 
-          fragmentShader = op.fragmentShader
+          ;({ fragmentShader } = op)
           break
         case 'lut': {
           const { lut } = op

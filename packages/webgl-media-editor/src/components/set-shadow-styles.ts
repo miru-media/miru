@@ -3,7 +3,7 @@ import css from 'virtual:image-shadow.css'
 let styleSheet_: CSSStyleSheet | HTMLStyleElement | undefined
 
 const getStyleSheet = () => {
-  if (styleSheet_ == undefined) {
+  if (styleSheet_ == null) {
     try {
       styleSheet_ = new CSSStyleSheet()
       styleSheet_.replaceSync(css)
@@ -30,8 +30,8 @@ export const setShadowStyles = (shadow: ShadowRoot) => {
 if (import.meta.hot && 'CSSStyleSheet' in window) {
   import.meta.hot.accept('../index.css?inline', (mod) => {
     if (mod == null) import.meta.hot?.invalidate()
-    if (styleSheet_ == null) return
-    else if (styleSheet_ instanceof HTMLStyleElement) return
+    if (styleSheet_ == null) return undefined
+    else if (styleSheet_ instanceof HTMLStyleElement) return undefined
     else styleSheet_.replaceSync((mod as unknown as { default: string }).default)
   })
 }

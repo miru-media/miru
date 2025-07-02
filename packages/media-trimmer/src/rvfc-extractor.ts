@@ -9,6 +9,8 @@ interface Options extends FrameExtractor.Options {
   crossOrigin?: 'anonymous' | 'use-credentials' | null
 }
 
+const NEARLY_1 = 0.999
+
 export class RvfcExtractor extends FrameExtractor {
   url: string
   crossOrigin: Options['crossOrigin']
@@ -52,12 +54,12 @@ export class RvfcExtractor extends FrameExtractor {
             return
           }
           if (video.readyState < 2) return
-          video.currentTime = nextTime += frameDurationS * 0.25
+          video.currentTime = nextTime += frameDurationS / 4
         })
         this.janitor.add(queueForceAdvance.cancel)
 
         const advance = () => {
-          nextTime += frameDurationS * 0.999
+          nextTime += frameDurationS * NEARLY_1
           video.currentTime = nextTime
           this.rvfcHandle = video.requestVideoFrameCallback(rvfcLoop)
           queueForceAdvance()
@@ -77,8 +79,8 @@ export class RvfcExtractor extends FrameExtractor {
           const currentTimesUs = Math.trunc(currentTime * 1e6)
           const isAtEndTime = currentTime >= endTimeS
 
-          if (previousTimeS !== -1 && currentTime - previousTimeS > frameDurationS * 1.5)
-            // eslint-disable-next-line no-console
+          if (previousTimeS !== -1 && currentTime - previousTimeS > (frameDurationS * 3) / 2)
+            // eslint-disable-next-line no-console -- dev warning
             console.warn('[media-trimmer] Skipped a frame before', currentTime)
 
           if (
@@ -109,7 +111,7 @@ export class RvfcExtractor extends FrameExtractor {
     })
   }
 
-  flush() {
-    return super.flush().finally(() => this.closeVideo?.())
+  async flush() {
+    return await super.flush().finally(() => this.closeVideo?.())
   }
 }

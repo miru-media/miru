@@ -15,10 +15,10 @@
     display: block;
     width: var(--size-button-icon);
     height: var(--size-button-icon);
-    clip-path: polygon(0% 0%, 100% 0%, 0% 100%, 0% 100%);
     content: '';
     border: 2px solid;
     border-radius: 50%;
+    clip-path: polygon(0% 0%, 100% 0%, 0% 100%, 0% 100%);
     transform-origin: center;
   }
 }

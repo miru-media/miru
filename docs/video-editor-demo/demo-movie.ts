@@ -6,7 +6,7 @@ import waves from 'https://assets.miru.media/demo/waves-MustaKor-pixabay.mp4'
 import wavesRocks from 'https://assets.miru.media/demo/waves-rocks-McPix22-pixabay.mp4'
 import { uid } from 'uid'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
-import { type Schema } from 'webgl-video-editor'
+import type { Schema } from 'webgl-video-editor'
 
 const filters = getDefaultFilterDefinitions().map((def) => ({
   ...def,

@@ -2,8 +2,8 @@ import { computed, getCurrentScope, type MaybeRefOrGetter, ref, type Ref, toRef 
 
 import { EditorView } from 'shared/types'
 
-import { type ImageSourceInternal } from '../image-source-internal'
-import { type MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal'
+import type { MediaEditor } from '../media-editor'
 
 import { AdjustmentsView } from './adjustments'
 import { CropView } from './cropper'
@@ -30,13 +30,11 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
   )
   const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? -1)
   const scope = getCurrentScope()
-  if (scope == undefined) throw new Error(`[webgl-media-editor] must be run in scope`)
+  if (scope == null) throw new Error(`[webgl-media-editor] must be run in scope`)
 
   const hasAdjustment = computed(() => {
     const adjustments = currentSource.value?.adjustments.value
-    return (
-      adjustments != undefined && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
-    )
+    return adjustments != null && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
@@ -79,7 +77,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
               type="button"
               class={() => [
                 'miru--button',
-                currentView.value == view && 'miru--acc',
+                currentView.value === view && 'miru--acc',
                 active() && 'miru--enabled',
               ]}
               onClick={() => (currentView.value = view)}

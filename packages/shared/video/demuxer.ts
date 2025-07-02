@@ -1,5 +1,5 @@
 import { MP4Demuxer } from './mp4/mp4-demuxer'
-import { type AudioMetadata, type MediaContainerMetadata, type VideoMetadata } from './types'
+import type { AudioMetadata, MediaContainerMetadata, VideoMetadata } from './types'
 import { WebmDemuxer } from './webm/webm-demuxer'
 
 export class Demuxer {
@@ -35,7 +35,7 @@ export class Demuxer {
 
     this.#demuxer = new SpecificDemuxer()
 
-    return this.#demuxer.init(sourceStream)
+    return await this.#demuxer.init(sourceStream)
   }
 
   getChunkStream(track: VideoMetadata | AudioMetadata, firstFrameTimeS?: number, lastFrameTimeS?: number) {

@@ -4,15 +4,15 @@ import { uid } from 'uid'
 import VideoContext from 'videocontext'
 import { getDefaultFilterDefinitions, Renderer } from 'webgl-effects'
 
-import { type Size } from 'shared/types'
+import type { Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize, useDocumentVisibility } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 import { useRafLoop } from 'shared/video/utils'
 
-import { type AnyNode, type NodeMap as NodeMapType } from '../../types/internal'
+import type { AnyNode, NodeMap as NodeMapType } from '../../types/internal'
 import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants'
 
-import { type Schema } from '.'
+import type { Schema } from '.'
 
 import { MediaAsset, VideoEffectAsset } from './assets'
 import { Clip } from './clip'
@@ -37,8 +37,8 @@ export namespace Movie {
 
 class NodeMap implements NodeMapType {
   map = new Map<string, Movie | Track<Clip> | Clip | MediaAsset | VideoEffectAsset>()
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-  get<T extends AnyNode>(id: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
+  get<T extends AnyNode>(id: string): T {
     return this.map.get(id) as T
   }
   set(node: AnyNode) {
@@ -51,7 +51,7 @@ class NodeMap implements NodeMapType {
 
 export class Movie extends ParentNode {
   type = 'movie' as const
-  #children = ref<Track<Clip>[]>([])
+  readonly #children = ref<Track<Clip>[]>([])
   frameRate: Ref<number>
   canvas = document.createElement('canvas')
   gl = getWebgl2Context(this.canvas)
@@ -62,12 +62,12 @@ export class Movie extends ParentNode {
   isEnded = ref(false)
   isPaused = ref(true)
   isStalled = ref(false)
-  #scope = createEffectScope()
+  readonly #scope = createEffectScope()
 
-  #currentTime = ref(0)
-  #duration = computed(() => this.children.reduce((end, track) => Math.max(track.duration, end), 0))
-  #resolution = ref({ width: 400, height: 400 / (9 / 16) })
-  #noRender = ref(0)
+  readonly #currentTime = ref(0)
+  readonly #duration = computed(() => this.children.reduce((end, track) => Math.max(track.duration, end), 0))
+  readonly #resolution = ref({ width: 450, height: 800 })
+  readonly #noRender = ref(0)
   nodes = new NodeMap()
 
   assets = new Set<MediaAsset | VideoEffectAsset>()
@@ -75,7 +75,7 @@ export class Movie extends ParentNode {
 
   stats = new Stats()
 
-  #state = ref<VideoContextState>(VideoContextState.STALLED)
+  readonly #state = ref<VideoContextState>(VideoContextState.STALLED)
 
   get children() {
     return this.#children.value
@@ -110,7 +110,7 @@ export class Movie extends ParentNode {
   constructor({ id, children: tracks = [], resolution, frameRate }: Schema.Movie) {
     super(id, undefined)
     this.root = this
-    const canvas = this.canvas
+    const { canvas } = this
 
     this.resolution = resolution
     this.frameRate = ref(frameRate)
@@ -142,7 +142,7 @@ export class Movie extends ParentNode {
         const timeoutId = setTimeout(
           () =>
             this.assets.forEach((asset) => {
-              if (asset.type === 'av_media_asset') asset._refreshObjectUrl().catch(() => undefined)
+              if (asset.type === 'av_media_asset') void asset._refreshObjectUrl()
             }),
           ASSET_URL_REFRESH_TIMEOUT_MS,
         )
@@ -226,11 +226,12 @@ export class Movie extends ParentNode {
     const { duration } = this
     this.#currentTime.value = clamp(time, 0, duration)
     // clamp to exclude 0 and the movie duration so that a frame is always rendered
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- TODO
     this.videoContext.currentTime = clamp(time, 0.0001, duration - 0.001)
   }
 
-  whenReady() {
-    return new Promise<void>((resolve, reject) => {
+  async whenReady() {
+    await new Promise<void>((resolve, reject) => {
       if (this.isReady) return
       if (this.#state.value === VideoContextState.BROKEN) reject(new Error('Broken VideoContext state'))
 

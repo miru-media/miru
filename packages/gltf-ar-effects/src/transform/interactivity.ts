@@ -1,11 +1,11 @@
 import * as gltf from '@gltf-transform/core'
 
 import { KHR_INTERACTIVITY } from '../constants'
-import {
-  type InteractivityGraph,
-  type InteractivityValue,
-  type InteractivityVariable,
-  type KHRInteractivityExtension,
+import type {
+  InteractivityGraph,
+  InteractivityValue,
+  InteractivityVariable,
+  KHRInteractivityExtension,
 } from '../types'
 
 import { InteractivityGraphReaderContext } from './interactivity-graph-reader-context'
@@ -77,7 +77,7 @@ export class Interactivity extends gltf.Extension {
       json.extensions as { [KHR_INTERACTIVITY]?: KHRInteractivityExtension } | undefined
     )?.[KHR_INTERACTIVITY]
 
-    if (!interactivityJson) return this
+    if (!interactivityJson?.graphs) return this
 
     const setBaseProps = <T extends gltf.Property>(prop: T, json: Partial<gltf.IProperty>) => {
       const { name, extras } = json
@@ -114,7 +114,7 @@ export class Interactivity extends gltf.Extension {
 
       // types
       graphJson.types?.forEach((typeJson) => {
-        const signature = typeJson.signature
+        const { signature } = typeJson
         const type = setBaseProps(this.createType().setSignature(signature), typeJson)
         graph.addType(type)
         context.types.push(type)
@@ -213,7 +213,7 @@ export class Interactivity extends gltf.Extension {
     if (graphs.length === 0) return this
 
     json.extensions ??= {}
-    const result = (json.extensions[KHR_INTERACTIVITY] = {} as KHRInteractivityExtension)
+    const result: KHRInteractivityExtension = (json.extensions[KHR_INTERACTIVITY] = {})
 
     result.graphs = graphs.map((graph, graphIndex): InteractivityGraph => {
       const context = (gltfWriterContext.extensionData[KHR_INTERACTIVITY] =

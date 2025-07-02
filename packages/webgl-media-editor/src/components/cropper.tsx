@@ -1,12 +1,14 @@
-import { type Component } from 'fine-jsx'
+import type { Component } from 'fine-jsx'
 import { toValue } from 'fine-jsx'
 
-import { type InputEvent } from 'shared/types'
+import type { InputEvent } from 'shared/types'
 
-import { type MediaEditor } from '../media-editor'
+import type { MediaEditor } from '../media-editor'
 
 import { RowSlider } from './row-slider'
 import { useCrop } from './use-crop'
+
+const ASPECT_9_16 = 0.5625
 
 export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> = (props) => {
   const editor = toValue(props.editor)
@@ -32,9 +34,9 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
           </button>
 
           {[
-            { value: 9 / 16, Icon: IconTablerCropPortrait, label: '9:16' },
-            { value: 1 / 1, Icon: IconTablerCrop_1_1, label: '1:1' },
-            { value: 16 / 9, Icon: IconTablerCropLandscape, label: '16:9' },
+            { value: ASPECT_9_16, Icon: IconTablerCropPortrait, label: '9:16' },
+            { value: 1, Icon: IconTablerCrop_1_1, label: '1:1' },
+            { value: 1 / ASPECT_9_16, Icon: IconTablerCropLandscape, label: '16:9' },
           ].map(({ value, Icon, label }) => (
             <button
               class={() => ['miru--button', aspectRatio.value.toFixed(1) === value.toFixed(1) && 'miru--acc']}

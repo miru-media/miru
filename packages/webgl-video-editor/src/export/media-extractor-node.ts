@@ -1,14 +1,14 @@
 import { ref } from 'fine-jsx'
-import { type RenderGraph } from 'videocontext'
+import type { RenderGraph } from 'videocontext'
 
 import {
   type AudioBufferData,
   AudioDecoderTransform,
   VideoDecoderTransform,
 } from 'shared/video/coder-transforms'
-import { type EncodedMediaChunk } from 'shared/video/types'
+import type { EncodedMediaChunk } from 'shared/video/types'
 
-import { type CustomSourceNodeOptions } from '../../types/internal'
+import type { CustomSourceNodeOptions } from '../../types/internal'
 import { CustomSourceNode } from '../video-context-nodes'
 
 export interface ExtractorNodeOptions extends CustomSourceNodeOptions {
@@ -51,6 +51,7 @@ export class MediaExtractorNode extends CustomSourceNode {
     return this.videoIsReady
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- matches parent class
   constructor(
     _src: undefined,
     gl: WebGL2RenderingContext,
@@ -198,19 +199,13 @@ export class MediaExtractorNode extends CustomSourceNode {
     return data.timestamp <= sourceTimeUs && sourceTimeUs < data.timestamp + data.duration
   }
 
-  _play() {
-    // noop
-  }
-  _pause() {
-    // noop
-  }
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
+  _play() {}
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
+  _pause() {}
 
   getTextureImageSource() {
     return this.media as VideoFrame
-  }
-
-  closeTextureImageSource() {
-    // noop
   }
 
   destroy() {

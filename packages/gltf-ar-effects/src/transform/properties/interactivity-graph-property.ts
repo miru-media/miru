@@ -1,5 +1,5 @@
 import * as gltf from '@gltf-transform/core'
-import { type IProperty } from '@gltf-transform/core'
+import type { IProperty } from '@gltf-transform/core'
 
 import { KHR_INTERACTIVITY } from '../../constants'
 

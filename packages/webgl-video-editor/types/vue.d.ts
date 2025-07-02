@@ -7,13 +7,13 @@ declare const VideoEditor: {
     languages: { type: typeof Array; required: false }
   }
   emits: ['error']
-  setup(
+  setup: (
     props: {
       messages?: Record<string, Record<string, string>>
       languages?: string[]
     },
     ctx: any,
-  ): any
+  ) => any
 }
 
 export default VideoEditor

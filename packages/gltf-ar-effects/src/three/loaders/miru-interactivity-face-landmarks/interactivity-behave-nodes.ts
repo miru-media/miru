@@ -44,7 +44,6 @@ export class EventOnFaceLandmarksChangeNode extends Behave.EventNode {
     this.faceId = faceId
   }
 
-  init(_engine: Behave.Engine): void {
-    return
-  }
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
+  init(_engine: Behave.Engine): void {}
 }

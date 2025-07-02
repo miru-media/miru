@@ -1,6 +1,6 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
 
-import { type Size } from 'shared/types'
+import type { Size } from 'shared/types'
 import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
 
 import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent'
@@ -8,7 +8,7 @@ import { win } from '../utils'
 
 import { EXPORT_VIDEO_CODECS } from './constants'
 import { Demuxer } from './demuxer'
-import { type AudioMetadata, type VideoMetadata } from './types'
+import type { AudioMetadata, VideoMetadata } from './types'
 
 export const hasVideoDecoder = () => typeof VideoDecoder === 'function'
 export const hasAudioDecoder = () => typeof AudioDecoder === 'function'
@@ -148,6 +148,7 @@ export const splitTime = (timeS: number) => {
   const hoursNumber = Math.trunc(timeS / (60 * 60))
   const hours = String(hoursNumber).padStart(2, '0')
   const seconds = String(Math.trunc(timeS) % 60).padStart(2, '0')
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- decimal to padded whole number
   const subSeconds = String(Math.trunc((timeS % 1) * 100)).padStart(2, '0')
 
   return { minutes, hours, seconds, subSeconds }
@@ -160,7 +161,7 @@ export const formatTime = (timeS: number, withSubSeconds = true) => {
 }
 
 const { DurationFormat } = Intl as unknown as {
-  DurationFormat?: new (...args: unknown[]) => { format(...args: unknown[]): string }
+  DurationFormat?: new (...args: unknown[]) => { format: (...args: unknown[]) => string }
 }
 
 export const formatDuration = (durationS: number, languages = navigator.languages) => {
@@ -190,10 +191,17 @@ export const getMediaElementInfo = async (source: Blob | string) => {
   const { promise, close } = loadAsyncImageSource(source, undefined, true)
 
   const media = await promise
-  const duration = media.duration
-  const media_: any = media
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-  const hasAudio = !!(media_.audioTracks?.length || media_.mozHasAudio || media_.webkitAudioDecodedByteCount)
+  const { duration } = media
+  const media_ = media as unknown as {
+    audioTracks?: unknown[]
+    mozHasAudio: boolean
+    webkitAudioDecodedByteCount: number
+  }
+  const hasAudio = !!(
+    (media_.audioTracks?.length ?? 0) ||
+    media_.mozHasAudio ||
+    media_.webkitAudioDecodedByteCount
+  )
 
   close()
 
@@ -258,8 +266,8 @@ export const assertCanDecodeMediaFile = async (file: Blob | string) => {
 export const useRafLoop = (
   callback: (timestamp: number) => void,
   options?: { active?: MaybeRefOrGetter<boolean> },
-) => {
-  return watch([() => toValue(options?.active) ?? true], ([active], _prev, onCleanup) => {
+) =>
+  watch([() => toValue(options?.active) ?? true], ([active], _prev, onCleanup) => {
     if (!active) return
 
     let id = 0
@@ -272,7 +280,6 @@ export const useRafLoop = (
 
     onCleanup(() => cancelAnimationFrame(id))
   })
-}
 
 export const useInterval = (
   callback: () => unknown,

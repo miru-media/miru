@@ -1,15 +1,15 @@
-import { type mat4 } from 'gl-matrix'
+import type { mat4 } from 'gl-matrix'
 import type * as twgl from 'twgl.js'
 
-import {
-  type AssetType,
-  type Context2D,
-  type CropState,
-  type EffectDefinition,
-  type RendererDrawOptions,
-  type RendererEffect,
-  type RendererEffectOp,
-  type Size,
+import type {
+  AssetType,
+  Context2D,
+  CropState,
+  EffectDefinition,
+  RendererDrawOptions,
+  RendererEffect,
+  RendererEffectOp,
+  Size,
 } from './core'
 
 export declare class Effect {

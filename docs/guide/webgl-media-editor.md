@@ -1,5 +1,4 @@
 ---
-title: Photo editor docs
 outline: false
 ---
 
@@ -7,4 +6,4 @@ outline: false
 
 [<img src="/webgl-media-editor-screenshot.jpg" alt="Screenshot" class="max-h-30rem">](/photo-editor)
 
-<!--@include: ../../packages/webgl-media-editor/README.md{6,}-->
+<!--@include: ../../packages/webgl-media-editor/README.md#main-->

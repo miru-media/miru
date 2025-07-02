@@ -1,6 +1,6 @@
 import { type MaybeRefOrGetter, ref, toRef, toValue, watch } from 'fine-jsx'
 
-import { type ImageSourceInternal } from '../image-source-internal'
+import type { ImageSourceInternal } from '../image-source-internal'
 
 export const useToggleEdit = <T>(
   source: MaybeRefOrGetter<ImageSourceInternal | undefined>,
@@ -19,7 +19,7 @@ export const useToggleEdit = <T>(
 
   const toggle = () => {
     const $source = toValue(source)
-    if ($source == undefined) return
+    if ($source == null) return
 
     const _defaultValue = defaultValue($source)
     if (savedValue.value === _defaultValue) {
@@ -34,8 +34,6 @@ export const useToggleEdit = <T>(
   return {
     toggle,
     clearSavedValue,
-    isToggledOff: toRef(
-      () => sourceRef.value != undefined && savedValue.value !== defaultValue(sourceRef.value),
-    ),
+    isToggledOff: toRef(() => sourceRef.value != null && savedValue.value !== defaultValue(sourceRef.value)),
   }
 }

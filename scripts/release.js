@@ -147,7 +147,7 @@ async function pushAndPublish() {
     '--recursive',
     ...(cliArgs.tag ? ['--tag', cliArgs.tag] : []),
     ...(cliArgs.registry ? ['--registry', cliArgs.registry] : []),
-    ...(cliArgs.skipGit || cliArgs.dryRun ? ['--no-git-checks'] : []),
+    ...(cliArgs.skipGit === true || cliArgs.dryRun ? ['--no-git-checks'] : []),
     ...(cliArgs.dryRun ? ['--dry-run'] : []),
   ])
 }

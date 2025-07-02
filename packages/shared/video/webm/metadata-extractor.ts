@@ -1,13 +1,8 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- bit masking and shifting */
 import type * as ebml from 'ebml'
 import ebmlBlock from 'ebml-block'
 
-import {
-  type AudioMetadata,
-  type EbmlChunk,
-  type MediaContainerMetadata,
-  type VideoMetadata,
-  type WebmTrack,
-} from '../types'
+import type { AudioMetadata, EbmlChunk, MediaContainerMetadata, VideoMetadata, WebmTrack } from '../types'
 
 export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainerMetadata> {
   #segmentTimescale = 1000000
@@ -16,8 +11,8 @@ export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainer
   #missingVideoCodecParams = false
   #missingVideoFrameRate = false
   #missingDuration = false
-  #completedTags = new Set<string>()
-  #metadata: MediaContainerMetadata = {
+  readonly #completedTags = new Set<string>()
+  readonly #metadata: MediaContainerMetadata = {
     type: 'webm',
     duration: 0,
     video: undefined,
@@ -25,7 +20,7 @@ export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainer
   }
   #isDone = false
 
-  #writeIfComplete(controller: TransformStreamDefaultController<MediaContainerMetadata>) {
+  #writeIfComplete(controller: TransformStreamDefaultController<MediaContainerMetadata>): void {
     if (
       !this.#hasTracksAndInfo ||
       this.#missingVideoCodecParams ||
@@ -46,6 +41,7 @@ export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainer
     let currentClusterTimecodeTicks = 0
 
     super({
+      // eslint-disable-next-line complexity -- TODO
       transform: (chunk, controller) => {
         if (this.#isDone) return
 
@@ -200,7 +196,7 @@ export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainer
     const { CodecID, TrackType } = track
     if (TrackType !== 1 && TrackType !== 2) return
 
-    let codec = codecs.find((c) => CodecID.startsWith(c[0]))?.[1] as string
+    let codec: string | undefined = codecs.find((c) => CodecID.startsWith(c[0]))?.[1]
     const description = track.CodecPrivate
 
     if (!codec) throw new Error(`Unsupported Matroska codec "${CodecID}".`)
@@ -221,6 +217,7 @@ export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainer
         codec = `${codec}.${profile}${compatibility}${level}`
         break
       }
+      default:
     }
 
     const type = track.TrackType === 1 ? 'video' : 'audio'

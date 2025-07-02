@@ -1,6 +1,6 @@
-import { type InteractivityTypeSignature } from '../../types'
+import type { InteractivityTypeSignature } from '../../types'
 
-import { type Graph } from './graph'
+import type { Graph } from './graph'
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
 import { InteractivityPropertyType } from './property-types'
 

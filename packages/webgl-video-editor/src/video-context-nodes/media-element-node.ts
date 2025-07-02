@@ -1,11 +1,11 @@
 import { EffectScope, type Ref, watch } from 'fine-jsx'
-import { type RenderGraph } from 'videocontext'
+import type { RenderGraph } from 'videocontext'
 
 import { IS_ANDROID, IS_FIREFOX } from 'shared/userAgent'
 import { useEventListener } from 'shared/utils'
 import { getImageSize, useInterval } from 'shared/video/utils'
 
-import { type CustomSourceNodeOptions } from '../../types/internal'
+import type { CustomSourceNodeOptions } from '../../types/internal'
 import { MEDIA_SYNC_INTERVAL_MS, MEDIA_SYNC_TOLERANCE_S } from '../constants'
 
 import { CustomSourceNode } from './custom-source-node'
@@ -33,6 +33,7 @@ export abstract class MediaElementNode extends CustomSourceNode {
     )
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- matches parent class
   constructor(
     // mandatory arguments from `VideoContext.customSourceNode()`
     media: HTMLMediaElement,
@@ -126,6 +127,7 @@ export class VideoElementNode extends MediaElementNode {
     return !!(videoWidth && videoHeight)
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- matches parent class
   constructor(
     media: HTMLVideoElement,
     gl: WebGL2RenderingContext,
@@ -154,11 +156,6 @@ export class VideoElementNode extends MediaElementNode {
 
     return IS_FIREFOX && !IS_ANDROID ? new VideoFrame(media, {}) : media
   }
-
-  closeTextureImageSource(image: VideoFrame | HTMLVideoElement) {
-    if (!('close' in image) || IS_FIREFOX) return
-    image.close()
-  }
 }
 
 export class AudioElementNode extends MediaElementNode {
@@ -169,6 +166,7 @@ export class AudioElementNode extends MediaElementNode {
     return this.mediaState.wasEverPlayable.value
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- matches parent class
   constructor(
     // mandatory arguments from `VideoContext.customSourceNode()`
     media: HTMLAudioElement,
@@ -184,11 +182,9 @@ export class AudioElementNode extends MediaElementNode {
     this._displayName = 'video-editor:AudioElementNode'
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- stub
   getTextureImageSource() {
     return undefined
-  }
-  closeTextureImageSource() {
-    // noop
   }
 
   destroy() {

@@ -1,5 +1,5 @@
 import * as gltf from '@gltf-transform/core'
-import { type IProperty } from '@gltf-transform/core'
+import type { IProperty } from '@gltf-transform/core'
 
 import { MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../constants'
 
@@ -53,9 +53,9 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
           const meshDef = jsonDoc.json.meshes![meshIndex]
           const primitiveExtensions = (meshDef.primitives[primitiveIndex].extensions ??= {})
 
-          const extensionJson = {
+          const extensionJson: Record<string, unknown> = {
             faceId: faceLandmarksDetection.getFaceId(),
-          } as Record<string, unknown>
+          }
 
           if (faceLandmarksDetection.getIsOccluder()) extensionJson.isOccluder = true
 

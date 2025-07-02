@@ -1,5 +1,5 @@
 import { get2dContext } from 'shared/utils'
-import { type VideoMetadata } from 'shared/video/types'
+import type { VideoMetadata } from 'shared/video/types'
 
 export namespace FrameExtractor {
   export type OnFrame = (frame: VideoFrame | ImageBitmap, sourceTimestamp: number) => void
@@ -19,8 +19,8 @@ const getImageSize = (image: VideoFrame | HTMLVideoElement | OffscreenCanvas | H
 
 export abstract class FrameExtractor {
   private abort: AbortController | undefined
-  private promise?: Promise<void>
-  private context = get2dContext(new OffscreenCanvas(0, 0))
+  private readonly promise?: Promise<void>
+  private readonly context = get2dContext(new OffscreenCanvas(0, 0))
   videoInfo: VideoMetadata
   startTimeS: number
   endTimeS: number
@@ -91,8 +91,8 @@ export abstract class FrameExtractor {
     return canvas
   }
 
-  flush() {
-    return Promise.resolve(this.promise).finally(() => {
+  async flush() {
+    return await Promise.resolve(this.promise).finally(() => {
       this.onImage = undefined
     })
   }

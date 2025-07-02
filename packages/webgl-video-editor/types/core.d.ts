@@ -1,8 +1,8 @@
-import { type Renderer } from 'webgl-effects'
+import type { Renderer } from 'webgl-effects'
 
-import { type Effect } from 'reactive-effects/effect'
+import type { Effect } from 'reactive-effects/effect'
 
-export * as Schema from './schema'
+export type * as Schema from './schema'
 
 type TrackType = 'video' | 'audio'
 
@@ -35,7 +35,7 @@ export interface MediaAsset {
   name: string
   duration: number
   blob: Blob
-  dispose(): void
+  dispose: () => void
 }
 
 export interface VideoEditor {
@@ -73,17 +73,17 @@ export interface VideoEditor {
   renderer: Renderer
 
   /** Select the given clip */
-  selectClip(clip: Clip | undefined): void
+  selectClip: (clip: Clip | undefined) => void
 
   /** Play the video at the current time or from the start if the video is ended. */
-  play(): void
+  play: () => void
   /** Play the video. */
-  pause(): void
+  pause: () => void
   /**
    * Seek to the given time of the video.
    * @param time The time of the video to seek to in seconds.
    */
-  seekTo(time: number): void
+  seekTo: (time: number) => void
 
   /**
    * Add a new clip at the end of the specified track.
@@ -91,13 +91,13 @@ export interface VideoEditor {
    * @param track The track the clip will be added to.
    * @param source A Blog or url string of the clip media.
    */
-  addClip(track: Track, source: string | Blob): Promise<Clip | undefined>
+  addClip: (track: Track, source: string | Blob) => Promise<Clip | undefined>
 
   /** Change the media of the selected clip */
-  replaceClipSource(source: string | Blob): Promise<void>
+  replaceClipSource: (source: string | Blob) => Promise<void>
 
   /** Set or remove the filter effect of a clip */
-  setClipFilter(clip: Clip, filterId: string | undefined, intensity: number): void
+  setClipFilter: (clip: Clip, filterId: string | undefined, intensity: number) => void
 
   /**
    * Add a new clip at the end of the specified track.
@@ -105,7 +105,7 @@ export interface VideoEditor {
    * @param track The track the clip will be added to.
    * @param source A Blog or url string of the clip media.
    */
-  createMediaAsset(source: string | Blob): Promise<MediaAsset>
+  createMediaAsset: (source: string | Blob) => Promise<MediaAsset>
 
   /**
    * Split a clip that intersects with the current video time.
@@ -115,10 +115,10 @@ export interface VideoEditor {
    *
    * @returns The newly created clip or `undefined.`.
    */
-  splitClipAtCurrentTime(): Clip | undefined
+  splitClipAtCurrentTime: () => Clip | undefined
 
   /** Delete the selected clip */
-  deleteSelection(): void
+  deleteSelection: () => void
 
   /** The editor is busy with an async action */
   isLoading: boolean
@@ -130,28 +130,28 @@ export interface VideoEditor {
   canRedo: boolean
 
   /** Undo the last editor action. */
-  undo(): void
+  undo: () => void
   /** Redo the last editor action. */
-  redo(): void
+  redo: () => void
 
   /** Remove all clips, tracks, effects and media assets and clear the undo history */
-  clearAllContentAndHistory(): Promise<void>
+  clearAllContentAndHistory: () => Promise<void>
 
   /** Clear all content and set new content */
-  replaceContent(newContent: Schema.Movie): Promise<void>
+  replaceContent: (newContent: Schema.Movie) => Promise<void>
 
   /**
    * Render and encode the video composition.
    * @returns A promise that resolves to an object with a `blob` field and a "blob:" `url` field to the resulting video file.
    */
-  export(): Promise<{ blob: Blob; url: string } | undefined>
+  export: () => Promise<{ blob: Blob; url: string } | undefined>
   /** The most recent export result. */
   exportResult: { blob: Blob; url: string } | undefined
 
-  toObject(): Schema.Movie
+  toObject: () => Schema.Movie
 
   /** Release resources of the video editor and allow it to be garbage collected. */
-  dispose(): void
+  dispose: () => void
 }
 
 export type VideoEditorChangeEvent = CustomEvent<Schema.Movie>

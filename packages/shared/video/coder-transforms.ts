@@ -1,5 +1,5 @@
 import { win } from 'shared/utils'
-import { type EncodedMediaChunk } from 'shared/video/types'
+import type { EncodedMediaChunk } from 'shared/video/types'
 
 import { promiseWithResolvers } from '../utils'
 
@@ -47,8 +47,6 @@ export abstract class CodecTransform<
     })
 
     this.processor = processor
-
-    return this
   }
 
   abstract process(chunk: In): void
@@ -87,8 +85,6 @@ abstract class DecoderTransform<
     this.options = options
     this.startUs = options.start * 1e6
     this.endUs = 1e6 * options.end
-
-    return this
   }
 
   dispose() {
@@ -200,7 +196,7 @@ export class VideoEncoderTransform extends CodecTransform<
   VideoFrame,
   [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata]
 > {
-  #chunks: [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata | undefined][] = []
+  readonly #chunks: [chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata | undefined][] = []
 
   constructor(config: VideoEncoderConfig) {
     super((controller) => {

@@ -1,15 +1,15 @@
 import { setObjectSize } from 'shared/utils'
 import { Demuxer } from 'shared/video/demuxer'
-import { type MediaContainerMetadata } from 'shared/video/types'
+import type { MediaContainerMetadata } from 'shared/video/types'
 import { assertDecoderConfigIsSupported, setVideoEncoderConfigCodec } from 'shared/video/utils'
 
 import { VIDEO_DECODER_HW_ACCEL_PREF } from '../constants'
-import { type MediaAsset, type Movie } from '../nodes'
+import type { MediaAsset, Movie } from '../nodes'
 
 import { AVEncoder } from './av-encoder'
-import { type ExtractorClip } from './exporter-clip'
 import { ExportMovie } from './export-movie'
-import { type MediaExtractorNode } from './media-extractor-node'
+import type { ExtractorClip } from './exporter-clip'
+import type { MediaExtractorNode } from './media-extractor-node'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -172,8 +172,6 @@ export class MovieExporter {
       clip.node.init({ audio, video })
     })
 
-    let encoderError: unknown
-
     const durationUs = duration * 1e6
 
     const videoEncoderConfig: VideoEncoderConfig = {
@@ -206,7 +204,7 @@ export class MovieExporter {
         const totalFrames = duration * framerate
         const frameDurationUs = 1e6 / framerate
 
-        for (let i = 0; i < totalFrames && encoderError == undefined && !signal?.aborted; i++) {
+        for (let i = 0; i < totalFrames && !signal?.aborted; i++) {
           const timeS = duration * (i / totalFrames)
           await Promise.all(this.clips.map((clip) => clip.node.seekVideo(timeS)))
 
@@ -287,7 +285,6 @@ export class MovieExporter {
     ])
 
     await avEncoder.flush()
-    if (encoderError != undefined) throw encoderError as Error
 
     const buffer = avEncoder.finalize()
     return new Blob([buffer], { type: 'video/mp4' })

@@ -3,19 +3,23 @@ import { mat4 } from 'gl-matrix'
 import VideoContext, { type RenderGraph } from 'videocontext'
 import { FRAMEBUFFER_TEX_OPTIONS, type Renderer } from 'webgl-effects'
 
-import { type Effect } from 'reactive-effects/effect'
-import { type AdjustmentsState, type Size } from 'shared/types'
+import type { Effect } from 'reactive-effects/effect'
+import type { AdjustmentsState, Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent'
 import { fit, setObjectSize } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
-import { type ClipTime } from '../../types/core'
-import { type CustomSourceNodeOptions } from '../../types/internal'
+import type { ClipTime } from '../../types/core'
+import type { CustomSourceNodeOptions } from '../../types/internal'
 import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants'
-import { type Schema } from '../nodes'
+import type { Schema } from '../nodes'
 
-const rangeContainsTime = (range: { start: number; end: number }, time: number) => {
-  return range.start <= time && time < range.end
+const rangeContainsTime = (range: { start: number; end: number }, time: number) =>
+  range.start <= time && time < range.end
+
+const closeTextureImageSource = (image: TexImageSource): void => {
+  if (!('close' in image) || IS_FIREFOX) return
+  image.close()
 }
 
 export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
@@ -159,7 +163,6 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   }
 
   abstract getTextureImageSource(): TexImageSource | undefined
-  abstract closeTextureImageSource(image: TexImageSource): void
 
   _update(movieTime: number): boolean {
     this.movieTime.value = movieTime
@@ -196,7 +199,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
     renderer.draw({ framebuffer: this.framebuffer })
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
 
-    this.closeTextureImageSource(image)
+    closeTextureImageSource(image)
     return true
   }
 

@@ -2,7 +2,7 @@ import * as gltf from '@gltf-transform/core'
 
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
 import { InteractivityPropertyType } from './property-types'
-import { type Type } from './type'
+import type { Type } from './type'
 
 export interface IDeclaration extends IInteractivityGraphProperty {
   op: string

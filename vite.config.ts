@@ -1,5 +1,3 @@
-/// <reference types="vitest/config" />
-
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 
@@ -38,8 +36,8 @@ export default defineConfig({
       content: {
         pipeline: {
           include: [/\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/],
-          exclude: ['dist', 'packages/*/dist'],
         },
+        filesystem: [resolve('docs/parts/**/*.md')],
       },
     }),
     globImportFrag(),

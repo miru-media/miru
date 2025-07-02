@@ -10,10 +10,10 @@ import {
   watch,
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
-import { type CropState, type Renderer, type RendererEffectOp } from 'webgl-effects'
+import type { CropState, Renderer, RendererEffectOp } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/effect'
-import { type InputEvent, type Size } from 'shared/types'
+import type { InputEvent, Size } from 'shared/types'
 import { getCenter, useElementSize } from 'shared/utils'
 
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants'
@@ -121,13 +121,13 @@ export const WebglEffectsMenu = (props: {
 
     if (effectElement == null) return
 
-    const id = effectElement.dataset.id
+    const { id } = effectElement.dataset
     scrolledEffectId.value = id ?? ''
   })
 
   // scroll to selected filter on mount, on container size change and on source change
   watch([container, useElementSize(container), toRef(props.sourceTexture)], ([container]) => {
-    if (container != undefined) onClickFilter(currentEffect.value, toValue(props.intensity), 'instant')
+    if (container != null) onClickFilter(currentEffect.value, toValue(props.intensity), 'instant')
     onScroll.cancel({ upcomingOnly: true })
   })
 
@@ -225,25 +225,23 @@ export const WebglEffectsMenu = (props: {
     <div class={['miru--menu', props.class]}>
       <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
         {() =>
-          [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => {
-            return (
-              <EffectItem
-                effect={effect}
-                id={id || ''}
-                imageData={imageData}
-                thumbnailIndex={thumbnailIndex}
-                size={props.thumbnailSize}
-                isActive={() => currentEffect.value === id}
-                onClick={() => onClickFilter(id)}
-                class={[
-                  () => scrolledEffectId.value === id && 'miru--hov',
-                  () =>
-                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                    'miru--loading',
-                ]}
-              ></EffectItem>
-            )
-          })
+          [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => (
+            <EffectItem
+              effect={effect}
+              id={id || ''}
+              imageData={imageData}
+              thumbnailIndex={thumbnailIndex}
+              size={props.thumbnailSize}
+              isActive={() => currentEffect.value === id}
+              onClick={() => onClickFilter(id)}
+              class={[
+                () => scrolledEffectId.value === id && 'miru--hov',
+                () =>
+                  ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                  'miru--loading',
+              ]}
+            ></EffectItem>
+          ))
         }
       </p>
 

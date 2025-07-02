@@ -17,7 +17,8 @@ const BASE_URL = import.meta.env.BASE_URL
     </template>
     <template #sidebar-nav-after>
       <div class="sidebar-bottom">
-        <VPLink href="https://gitea.com/miru/miru">Source code</VPLink>
+        <VPLink class="block" href="https://github.com/miru-media/miru">Source on Github</VPLink>
+        <VPLink class="block" href="https://codeberg.org/miru-media/miru">Source on Codeberg</VPLink>
       </div>
     </template>
   </Layout>

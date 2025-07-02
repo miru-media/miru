@@ -5,7 +5,7 @@ This package explores creating realtime, 3D AR effects such as filters with face
 - [KHR_interactivity](https://github.com/KhronosGroup/glTF/blob/interactivity/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc), a draft specification for events and node-based scripting and
 - MIRU_interactivity_face_landmarks, an experimental extension for integrating face landmark detection from a video stream.
 
-You can try out a demo effect at https://miru.media/ar-effects.
+You can try out a demo effect at <https://miru.media/ar-effects>.
 
 ## Package contents
 
@@ -105,5 +105,4 @@ You can try out a demo effect at https://miru.media/ar-effects.
     }
   }
 }
-
 ```

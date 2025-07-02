@@ -1,10 +1,10 @@
 import type * as Behave from '@behave-graph/core'
 
-import {
-  type InteractivityGraph,
-  type InteractivityType,
-  type InteractivityValue,
-  type InteractivityVariable,
+import type {
+  InteractivityGraph,
+  InteractivityType,
+  InteractivityValue,
+  InteractivityVariable,
 } from '../../../types'
 
 import { TYPES } from './value-types'
@@ -64,9 +64,9 @@ export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON =>
 
     const configuration: Behave.NodeConfigurationJSON = {}
 
-    Object.entries(nodeConfig ?? {}).map(([id, valueJson]) => {
+    Object.entries(nodeConfig ?? {}).forEach(([id, valueJson]) => {
       const value = valueJson?.value
-      if (value != undefined) configuration[id] = (value.length === 1 ? value[0] : value) as Behave.ValueJSON
+      if (value != null) configuration[id] = (value.length === 1 ? value[0] : value) as Behave.ValueJSON
     })
 
     if (op === 'event/receive' || op === 'event/send') {
@@ -82,7 +82,7 @@ export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON =>
       parameters: Object.fromEntries(
         Object.entries(node.values ?? {}).map(([key, valueJson]): [string, Behave.NodeParameterJSON] => [
           `value:${key}`,
-          !('node' in valueJson) || (valueJson.node as unknown) == undefined
+          !('node' in valueJson) || (valueJson.node as unknown) == null
             ? { value: (valueJson as InteractivityValue).value?.[0] as Behave.ValueJSON }
             : {
                 link: { nodeId: valueJson.node.toString(10), socket: `value:${valueJson.socket ?? 'value'}` },

@@ -51,4 +51,4 @@ export declare const trim: (url: string, options: TrimOptions) => Promise<Blob>
 export default trim
 
 export * from './utils'
-export * from './ui'
+export type * from './ui'

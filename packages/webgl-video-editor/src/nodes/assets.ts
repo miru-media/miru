@@ -3,10 +3,10 @@ import { ref } from 'fine-jsx'
 import { Effect } from 'reactive-effects/effect'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
-import { type Schema } from '.'
+import type { Schema } from '.'
 
 import { BaseNode } from './base-node'
-import { type Movie } from './movie'
+import type { Movie } from './movie'
 
 abstract class Asset<T extends Schema.Asset> extends BaseNode {
   id: string
@@ -54,7 +54,7 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   video?: { duration: number; rotation: number }
 
   blob: Blob
-  #objectUrl = ref('')
+  readonly #objectUrl = ref('')
   #isRefreshing = false
 
   get objectUrl() {
@@ -95,7 +95,7 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
       res.body?.cancel().catch(() => undefined)
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
     } catch (error) {
-      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console -- dev error message
       if (import.meta.env.DEV) console.error(error)
 
       const cachedBlob = await getCachedBlob(this.id)
@@ -117,7 +117,7 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   static async fromInit(init: Schema.AvMediaAsset, root: Movie) {
     const blob = await getCachedBlob(init.id)
 
-    if (!blob && init.url) return this.fromSource(init.id, root, init.url, init)
+    if (!blob && init.url) return await this.fromSource(init.id, root, init.url, init)
 
     if (!blob) throw new Error('[video-editor] Asset data was never fetched and cached')
 
@@ -143,14 +143,14 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     if (init) return new MediaAsset({ ...init, id }, { blob, root })
 
     const containerOrElementInfo = await getContainerMetadata(blob).catch(() => getMediaElementInfo(blob))
-    let duration = containerOrElementInfo.duration
+    let { duration } = containerOrElementInfo
 
     let hasAudio = false
     let audio
     let video
 
     if ('hasAudio' in containerOrElementInfo) {
-      hasAudio = containerOrElementInfo.hasAudio
+      ;({ hasAudio } = containerOrElementInfo)
       audio = hasAudio ? { duration } : undefined
       // we can't know whether or not there's a video track
       video = { duration, rotation: 0 }
@@ -181,8 +181,8 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     )
   }
 
-  static clearCache() {
-    return caches.delete(CACHE_NAME)
+  static async clearCache() {
+    return await caches.delete(CACHE_NAME)
   }
 }
 

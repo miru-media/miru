@@ -1,9 +1,9 @@
 import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
 import VideoContext, { type CompositingNode } from 'videocontext'
 
-import { type ExportMovie } from '../export/export-movie'
+import type { ExportMovie } from '../export/export-movie'
 
-import { type BaseClip, type Movie, type Schema } from '.'
+import type { BaseClip, Movie, Schema } from '.'
 
 import { ParentNode } from './parent-node'
 
@@ -11,17 +11,17 @@ type TrackType = 'video' | 'audio'
 
 export class Track<T extends BaseClip> extends ParentNode {
   type = 'track' as const
-  #head = ref<T>()
-  #tail = ref<T>()
+  readonly #head = ref<T>()
+  readonly #tail = ref<T>()
 
   trackType: TrackType
   _node: Ref<CompositingNode<never>>
   declare parent: Movie | ExportMovie
   declare root: Movie | ExportMovie
 
-  #scope = createEffectScope()
+  readonly #scope = createEffectScope()
 
-  #duration = computed(() => {
+  readonly #duration = computed(() => {
     const lastClip = this.#tail.value
     if (!lastClip) return 0
 
@@ -95,7 +95,7 @@ export class Track<T extends BaseClip> extends ParentNode {
   positionClipAt(clip: T, index: number) {
     if (clip.index !== index) {
       let other = this.head
-      for (; (other && other.index < index) || other === clip; other = other.next);
+      for (; (!!other && other.index < index) || other === clip; other = other.next);
 
       this.insertClipBefore(clip, other)
     }

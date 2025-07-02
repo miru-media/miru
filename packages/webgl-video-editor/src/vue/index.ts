@@ -1,4 +1,3 @@
-/* eslint-disable import/namespace */
 import { createEffectScope, EffectScope, type MaybeRefOrGetter, type Ref } from 'fine-jsx'
 import * as Vue from 'vue'
 
@@ -8,7 +7,7 @@ import { renderComponentTo } from 'shared/video/render-to'
 import type * as pub from '../../types/webgl-video-editor'
 import { VideoEditorUI } from '../components/video-editor-ui'
 import type * as nodes from '../nodes'
-import { VideoEditor as VideoEditor_ } from '../VideoEditor'
+import { VideoEditor as VideoEditor_ } from '../video-eidtor'
 
 export { type VideoEditor } from '../../types/webgl-video-editor'
 
@@ -35,7 +34,7 @@ const fromVue = interop.fromVue.bind(null, Vue.toValue, Vue.watchEffect) as <T>(
 
 type EditorStaticProps = 'canvas' | 'renderer'
 type EditorMethodProps =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- needed
   keyof { [P in keyof pub.VideoEditor as pub.VideoEditor[P] extends Function ? P : never]: unknown }
 type EditorReactiveProps = Exclude<keyof pub.VideoEditor, EditorStaticProps | EditorMethodProps>
 
@@ -118,8 +117,8 @@ export default Vue.defineComponent({
       return vueNode
     }
 
-    const vueEditor: pub.VideoEditor = fineJsxScope.run(() => {
-      return Vue.reactive<VueVideoEditorRaw>({
+    const vueEditor: pub.VideoEditor = fineJsxScope.run(() =>
+      Vue.reactive<VueVideoEditorRaw>({
         canvas: editor.canvas,
         renderer: Vue.markRaw(editor.renderer),
         resolution: toVue(
@@ -153,7 +152,7 @@ export default Vue.defineComponent({
           return newClip && getVueNode(newClip)
         },
         replaceClipSource: editor.replaceClipSource.bind(editor),
-        setClipFilter: editor.setClipFilter.bind(editor),
+        setClipFilter: editor.setClipFilter.bind(editor) as pub.VideoEditor['setClipFilter'],
         deleteSelection: editor.deleteSelection.bind(editor),
         undo: editor.undo.bind(editor),
         redo: editor.redo.bind(editor),
@@ -166,8 +165,8 @@ export default Vue.defineComponent({
           editor.dispose()
         },
         _showStats: toVue(editor._showStats),
-      })
-    })
+      }),
+    )
 
     Vue.watch(container, (host, _prev, onCleanup) => {
       if (!host) return
@@ -189,7 +188,7 @@ export default Vue.defineComponent({
 
     ctx.expose(vueEditor)
 
-    const h = Vue.h
+    const { h } = Vue
     return () => h('div', { ...ctx.attrs, ref: container }, ctx.slots)
   },
 })

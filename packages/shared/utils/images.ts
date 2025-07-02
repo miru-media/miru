@@ -1,16 +1,16 @@
-import { type AssetType, type Context2D, type CropState } from 'webgl-effects'
+import type { AssetType, Context2D, CropState } from 'webgl-effects'
 
-import {
-  type AdjustmentsState,
-  type AsyncImageSource,
-  type CrossOrigin,
-  type ImageEditState,
-  type ImageSource,
-  type ImageSourceObject,
-  type ImageSourceOption,
-  type SyncImageSource,
-  type Tlwh,
-  type Xywh,
+import type {
+  AdjustmentsState,
+  AsyncImageSource,
+  CrossOrigin,
+  ImageEditState,
+  ImageSource,
+  ImageSourceObject,
+  ImageSourceOption,
+  SyncImageSource,
+  Tlwh,
+  Xywh,
 } from '../types'
 import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent'
 
@@ -19,7 +19,7 @@ const getCanvasContext = (
   type: OffscreenRenderingContextId,
   options: unknown,
 ) => {
-  if (canvas == undefined) {
+  if (canvas == null) {
     // try offscreen canvas
     if (FULLY_SUPPORTS_OFFSCREEN_CANVAS) {
       canvas = new OffscreenCanvas(1, 1)
@@ -39,18 +39,13 @@ const getCanvasContext = (
   return context
 }
 
-export const getWebgl2Context = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: unknown) => {
-  return getCanvasContext(canvas, 'webgl2', options) as WebGL2RenderingContext
-}
+export const getWebgl2Context = (canvas?: HTMLCanvasElement | OffscreenCanvas, options?: unknown) =>
+  getCanvasContext(canvas, 'webgl2', options) as WebGL2RenderingContext
 
-export const get2dContext = <T extends HTMLCanvasElement | OffscreenCanvas>(
-  canvas?: T,
-  options?: unknown,
-) => {
-  return getCanvasContext(canvas, '2d', options) as T extends HTMLCanvasElement
+export const get2dContext = <T extends HTMLCanvasElement | OffscreenCanvas>(canvas?: T, options?: unknown) =>
+  getCanvasContext(canvas, '2d', options) as T extends HTMLCanvasElement
     ? CanvasRenderingContext2D
     : OffscreenCanvasRenderingContext2D
-}
 
 export const createDisplayContext = () => get2dContext(document.createElement('canvas'))
 
@@ -74,9 +69,9 @@ export const canvasToBlob = async (
   canvas: HTMLCanvasElement | OffscreenCanvas,
   options?: ImageEncodeOptions,
 ) => {
-  if (isOffscreenCanvas(canvas)) return canvas.convertToBlob(options)
+  if (isOffscreenCanvas(canvas)) return await canvas.convertToBlob(options)
 
-  return new Promise<Blob>((resolve, reject) => {
+  return await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob != null) resolve(blob)
@@ -100,8 +95,7 @@ export const fit = (source: Size, container: Size, mode: 'contain' | 'cover' | '
   let { width, height } = container
 
   if (mode === 'fill') {
-    width = container.width
-    height = container.height
+    ;({ width, height } = container)
   } else if (mode === 'contain' ? sourceRatio > containerRatio : sourceRatio < containerRatio) {
     height = width / sourceRatio
   } else {
@@ -137,9 +131,8 @@ export const setObjectSize = (object: Size, size: Size) => {
   object.height = size.height
 }
 
-export const isOffscreenCanvas = (canvas: HTMLCanvasElement | OffscreenCanvas): canvas is OffscreenCanvas => {
-  return SUPPORTS_2D_OFFSCREEN_CANVAS && canvas instanceof OffscreenCanvas
-}
+export const isOffscreenCanvas = (canvas: HTMLCanvasElement | OffscreenCanvas): canvas is OffscreenCanvas =>
+  SUPPORTS_2D_OFFSCREEN_CANVAS && canvas instanceof OffscreenCanvas
 
 const isCrossOrigin = (url: string) => new URL(url, location.href).origin !== location.origin
 
@@ -206,7 +199,7 @@ const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrig
       : // use blob source
         source
 
-  return createImageBitmap(blob)
+  return await createImageBitmap(blob)
 }
 
 export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
@@ -241,8 +234,7 @@ const loadVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
       removeListeners()
     }
     const onError = (event: ErrorEvent) => {
-      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-      reject(video.error ?? event.error ?? new Error('Unknown video error.'))
+      reject((video.error ?? event.error ?? new Error('Unknown video error.')) as Error)
       removeListeners()
     }
 
@@ -279,11 +271,11 @@ export const resizeImageSync = (
   if ('data' in source) {
     context.save()
     context.scale(size.width / source.width, size.height / source.height)
-    if (crop != undefined) context.putImageData(source, 0, 0, crop.x, crop.y, crop.width, crop.height)
+    if (crop != null) context.putImageData(source, 0, 0, crop.x, crop.y, crop.width, crop.height)
     else context.putImageData(source, 0, 0)
     context.restore()
   } else {
-    if (crop != undefined)
+    if (crop != null)
       context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, size.width, size.height)
     else context.drawImage(source, 0, 0, source.width, source.height, 0, 0, size.width, size.height)
   }
@@ -301,7 +293,7 @@ export const resizeImage = async (
     resizeQuality: 'high',
   } as const
 
-  if (crop == undefined) return createImageBitmap(source, resizeOptions)
+  if (crop == null) return await createImageBitmap(source, resizeOptions)
 
   // using createImageBitmap with `sx, sy, sw, sh` options in firefox 130 doesn't work correctly
   if (IS_FIREFOX) {
@@ -315,9 +307,9 @@ export const resizeImage = async (
       context.restore()
     } else context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, size.width, size.height)
 
-    return createImageBitmap(canvas)
+    return await createImageBitmap(canvas)
   } else {
-    return createImageBitmap(source, crop.x, crop.y, crop.width, crop.height, resizeOptions)
+    return await createImageBitmap(source, crop.x, crop.y, crop.width, crop.height, resizeOptions)
   }
 }
 
@@ -326,13 +318,11 @@ export const drawImage = (context: Context2D, image: SyncImageSource, dx: number
   else context.drawImage(image, dx, dy)
 }
 
-export const isSyncSource = (source: ImageSource): source is SyncImageSource => {
-  return !(typeof source === 'string' || source instanceof Blob)
-}
+export const isSyncSource = (source: ImageSource): source is SyncImageSource =>
+  !(typeof source === 'string' || source instanceof Blob)
 
-export const isObjectWithSource = (source: ImageSourceOption): source is ImageSourceObject => {
-  return typeof source !== 'string' && 'source' in source && Boolean(source.source)
-}
+export const isObjectWithSource = (source: ImageSourceOption): source is ImageSourceObject =>
+  typeof source !== 'string' && 'source' in source && Boolean(source.source)
 
 export const normalizeSourceOption = <T extends ImageSource>(
   source: T | ImageSourceObject,

@@ -1,5 +1,5 @@
-import { type MaybeRefOrGetter } from 'fine-jsx'
-import { type AssetType, type CropState } from 'webgl-effects'
+import type { MaybeRefOrGetter } from 'fine-jsx'
+import type { AssetType, CropState } from 'webgl-effects'
 
 export type SyncImageSource =
   | HTMLImageElement

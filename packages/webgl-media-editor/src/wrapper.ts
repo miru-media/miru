@@ -1,8 +1,8 @@
 import { createEffectScope, onScopeDispose, toRef } from 'fine-jsx'
-import { type EffectDefinition, type Renderer } from 'webgl-effects'
+import type { EffectDefinition, Renderer } from 'webgl-effects'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
-import { type ImageEditState, type ImageSourceOption } from 'shared/types'
+import type { ImageEditState, ImageSourceOption } from 'shared/types'
 import { canvasToBlob } from 'shared/utils'
 
 import { MediaEditor as MediaEditor_ } from './media-editor'
@@ -59,10 +59,10 @@ export class MediaEditor {
     source.drawPreview().catch(() => undefined)
   }
 
-  toBlob(sourceIndex: number, options?: ImageEncodeOptions) {
-    return this.#editor.toBlob(sourceIndex, options)
+  async toBlob(sourceIndex: number, options?: ImageEncodeOptions): Promise<Blob> {
+    return await this.#editor.toBlob(sourceIndex, options)
   }
 }
 
-export { MediaEditor_ as MediaEditor_ }
+export { MediaEditor_ }
 export const unwrap = (wrapped: MediaEditor) => editorMap.get(wrapped)!

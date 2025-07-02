@@ -4,17 +4,18 @@ import { HTMLElementOrStub } from 'shared/utils'
 import { renderComponentTo } from 'shared/video/render-to'
 
 import { trim } from '../trim'
-import { type TrimState } from '../types/ui'
+import type { TrimState } from '../types/ui'
 import { VideoTrimmerUI } from '../video-trimmer-ui'
 
 const OBSERVED_ATTRS = ['source', 'start', 'end', 'mute'] as const
+const UNMOUNT_TIMEOUT_MS = 500
 
 export class MediaTrimmerElement extends HTMLElementOrStub {
   static observedAttributes = OBSERVED_ATTRS
 
-  #scope = createEffectScope()
-  #source = ref<string>('')
-  #state = ref<TrimState>()
+  readonly #scope = createEffectScope()
+  readonly #source = ref<string>('')
+  readonly #state = ref<TrimState>()
   #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   #isTrimming = false
@@ -64,7 +65,7 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
     this.#disconnectTimeout = setTimeout(() => {
       this.#unmount?.()
       this.#unmount = undefined
-    }, 500)
+    }, UNMOUNT_TIMEOUT_MS)
   }
 
   async toBlob() {

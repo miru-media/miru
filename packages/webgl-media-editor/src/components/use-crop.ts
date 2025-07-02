@@ -1,6 +1,6 @@
 import Cropper from 'cropperjs'
 import { computed, ref, toValue, watch } from 'fine-jsx'
-import { type CropState } from 'webgl-effects'
+import type { CropState } from 'webgl-effects'
 
 import {
   centerTo,
@@ -13,8 +13,8 @@ import {
   setObjectSize,
 } from 'shared/utils'
 
-import { type ImageSourceInternal } from '../image-source-internal'
-import { type MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal'
+import type { MediaEditor } from '../media-editor'
 
 export type CropContext = ReturnType<typeof useCrop>
 
@@ -44,7 +44,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
   container.className = 'miru--cropper-container'
 
   watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {
-    if (source == undefined || original == undefined) return
+    if (source == null || original == null) return
 
     let cropperImage
 
@@ -139,7 +139,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
     const $cropper = cropper.value
     const source = sourceRef.value
     const original = source?.original
-    if (source == undefined || $cropper == undefined || original == undefined) return
+    if (source == null || $cropper == null || original == null) return
 
     await withUnlimitedCropper(() => {
       $cropper.setAspectRatio(original.width / original.height)
@@ -150,7 +150,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
   }
   const fitCrop = twice(async () => {
     const $cropper = cropper.value
-    if ($cropper == undefined) return
+    if ($cropper == null) return
 
     const container = $cropper.getContainerData()
     const { naturalWidth, naturalHeight } = $cropper.getCanvasData()
@@ -199,7 +199,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
 
   const withUnlimitedCropper = async (fn: () => unknown) => {
     const $cropper = cropper.value as any
-    if ($cropper == undefined) return
+    if ($cropper == null) return
 
     const cropperOptions = ($cropper as unknown as { options: Cropper.Options }).options
     const { viewMode } = cropperOptions
@@ -220,20 +220,20 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
   const defaultZoom = computed(() => {
     const source = sourceRef.value
     const original = source?.original
-    if (source == undefined || original == undefined) return 1
+    if (source == null || original == null) return 1
 
     const crop = (savedValue.value = source.crop.value)
     const { width, height } = crop ?? original
 
     return Math.min(width / height, height / width)
   })
-  const isToggledOff = computed(() => zoom.value == defaultZoom.value)
+  const isToggledOff = computed(() => zoom.value === defaultZoom.value)
   const toggle = () => {
     const source = sourceRef.value
     const original = source?.original
-    if (source == undefined || original == undefined) return
+    if (source == null || original == null) return
 
-    if (savedValue.value == undefined) {
+    if (savedValue.value == null) {
       savedValue.value = source.crop.value
       setZoom(defaultZoom.value)
     } else {

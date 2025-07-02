@@ -1,7 +1,7 @@
 import { ToggleButton } from 'shared/components/toggle-button'
 import { useI18n } from 'shared/utils'
 
-import { type VideoEditor } from '../VideoEditor'
+import type { VideoEditor } from '../video-eidtor'
 
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
   const { _movie: movie } = editor

@@ -1,5 +1,7 @@
+const URL_REVOKE_TIMEOUT_MS = 60_000
+
 export class Janitor {
-  private _onDispose = new Set<() => void>()
+  private readonly _onDispose = new Set<() => void>()
   isDisposed = false
 
   add(fn: () => void) {
@@ -22,10 +24,10 @@ export const downloadBlob = (blob: Blob, fileName: string) => {
   anchor.download = fileName
   anchor.dispatchEvent(new MouseEvent('click'))
 
-  setTimeout(() => URL.revokeObjectURL(anchor.href), 60_000)
+  setTimeout(() => URL.revokeObjectURL(anchor.href), URL_REVOKE_TIMEOUT_MS)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- needed for type narrowing
 export const isFunction = (value: unknown): value is Function => typeof value === 'function'
 
 export const asArray = <T>(value: T | T[]) => (Array.isArray(value) ? value : [value])
@@ -54,13 +56,13 @@ export const devSlowDown: DevSlowDown | undefined = VITE_DEV_SLOW_DOWN_MS
       if (!slowResolveQueue.length) setResolveTimeout()
 
       await new Promise<void>((resolve) => slowResolveQueue.push(resolve))
-      return value
+      return await value
     }
   : undefined
 
 // https://stackoverflow.com/a/63116134
 export const toKebabCase = (str: string) =>
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- brevity
   str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
 
 // https://stackoverflow.com/a/7616484

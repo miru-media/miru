@@ -40,8 +40,9 @@ export interface WorkerErrorData {
 }
 
 // @ts-expect-error -- mediapipe uses this for debug messages
-self.dbg = console.debug // eslint-disable-line no-console
+self.dbg = console.debug // eslint-disable-line no-console -- debug
 
+const EXPECTED_TASK_FILE_BYTE_LENGTH = 3758596
 let landmarker: MediaPipe.FaceLandmarker | undefined
 
 Object.defineProperty(self, 'module', { value: self })
@@ -67,7 +68,8 @@ onmessage = async (event: MessageEvent<WorkerInitData | WorkerFrameData>) => {
         if (!response.ok || !response.body)
           throw new Error(`Couldn't load face detection model. ${response.status} ${response.statusText}.`)
 
-        const contentLength = parseInt(response.headers.get('content-length') ?? '0', 10) || 3758596
+        const contentLength =
+          parseInt(response.headers.get('content-length') ?? '0', 10) || EXPECTED_TASK_FILE_BYTE_LENGTH
 
         let receivedLength = 0
         const teedBody = response.body.tee()

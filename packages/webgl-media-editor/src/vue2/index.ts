@@ -5,7 +5,7 @@ import { SourcePreview } from '../components/source-preview'
 
 import { wrap } from './wrappers'
 
-export { MediaEditor as MediaEditor } from '../wrapper'
+export { MediaEditor } from '../wrapper'
 export const MediaEditorPreview = wrap(SourcePreview, 'media-editor-preview')
 export const MediaEditorCropper = wrap(CropView, 'media-editor-cropper')
 export const MediaEditorFilterMenu = wrap(FilterView, 'media-editor-filter-menu')

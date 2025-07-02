@@ -1,4 +1,4 @@
-import { type EffectDefinition } from 'webgl-effects'
+import type { EffectDefinition } from 'webgl-effects'
 
 interface Size {
   width: number

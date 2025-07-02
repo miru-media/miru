@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- -- */
 import * as gltf from '@gltf-transform/core'
 import { KHRLightsPunctual, Light } from '@gltf-transform/extensions'
 import { moveToDocument } from '@gltf-transform/functions'

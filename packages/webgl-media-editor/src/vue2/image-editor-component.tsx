@@ -1,5 +1,5 @@
 import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
-import { type Context2D, type EffectDefinition } from 'webgl-effects'
+import type { Context2D, EffectDefinition } from 'webgl-effects'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { EditorView, type ImageEditState, type ImageSource, type ImageSourceOption } from 'shared/types'
@@ -65,26 +65,21 @@ export default {
     return h('div')
   },
   methods: {
-    toBlob(this: VueInstance, sourceIndex: number, options?: { type: string; quality?: number }) {
-      return this.editor.toBlob(sourceIndex, options ?? {})
+    async toBlob(this: VueInstance, sourceIndex: number, options?: { type: string; quality?: number }) {
+      return await this.editor.toBlob(sourceIndex, options ?? {})
     },
-    renderPreviewTo(
+    async renderPreviewTo(
       this: VueInstance,
       sourceIndex: number,
       context: ImageBitmapRenderingContext | Context2D,
     ) {
-      return unwrap(this.editor).renderPreviewTo(sourceIndex, context)
+      await unwrap(this.editor).renderPreviewTo(sourceIndex, context)
     },
   },
   watch: {
     sources: {
       handler(this: VueInstance, value?: ImageSourceOption[], prev?: ImageSourceOption[]) {
-        if (
-          value != undefined &&
-          prev != undefined &&
-          (value === prev || value.every((v, i) => prev[i] === v))
-        )
-          return
+        if (value != null && prev != null && (value === prev || value.every((v, i) => prev[i] === v))) return
         unwrap(this.editor).setSources(value ?? [])
       },
       immediate: true,

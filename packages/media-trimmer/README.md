@@ -2,7 +2,9 @@
 
 [<img src="https://miru.media/media-trimmer-screenshot.jpg" alt="Screenshot">](https://miru.media/video-trimmer)
 
-https://miru.media/video-trimmer
+<https://miru.media/video-trimmer>
+
+<!-- #region main -->
 
 ```sh
 npm install media-trimmer
@@ -54,6 +56,8 @@ Powered by:
 - [ ] Webm support
 - [ ] Color profile preservation
 - [ ] Increased browser and codec support via [LibAVJS-WebCodecs-Polyfill](https://github.com/ennuicastr/libavjs-webcodecs-polyfill)
+
+<!-- #endregion main -->
 
 ## Funding
 

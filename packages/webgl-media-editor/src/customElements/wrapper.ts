@@ -1,8 +1,8 @@
 import { ref } from 'fine-jsx'
-import { type CropState, type Renderer } from 'webgl-effects'
+import type { CropState, Renderer } from 'webgl-effects'
 
-import { type Effect } from 'reactive-effects/effect'
-import { type Size } from 'shared/types'
+import type { Effect } from 'reactive-effects/effect'
+import type { Size } from 'shared/types'
 import { HTMLElementOrStub } from 'shared/utils/window'
 
 import { FilterView } from '../components/filter'
@@ -15,7 +15,8 @@ export { MediaEditor }
 
 export class MediaEditorPreviewElement extends HTMLElementOrStub {
   static observedAttributes = ['source-index']
-  #sourceIndex = ref(0)
+  readonly #sourceIndex = ref(0)
+  #editor?: MediaEditor
   get sourceIndex() {
     return this.#sourceIndex.value
   }
@@ -24,8 +25,13 @@ export class MediaEditorPreviewElement extends HTMLElementOrStub {
     this.#sourceIndex.value = value
   }
 
-  set editor(editor: MediaEditor) {
-    renderComponentTo(SourcePreview, { editor: unwrap(editor), sourceIndex: this.sourceIndex }, this)
+  get editor() {
+    return this.#editor
+  }
+  set editor(editor: MediaEditor | undefined) {
+    this.#editor = editor
+    if (editor)
+      renderComponentTo(SourcePreview, { editor: unwrap(editor), sourceIndex: this.sourceIndex }, this)
   }
 
   attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -35,9 +41,9 @@ export class MediaEditorPreviewElement extends HTMLElementOrStub {
 
 export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
   static observedAttributes = ['source-index']
-  #sourceIndex = ref(0)
-  #showPreview = ref(false)
-  #showIntensity = ref(true)
+  readonly #sourceIndex = ref(0)
+  readonly #showPreview = ref(false)
+  readonly #showIntensity = ref(true)
   #editor?: MediaEditor
   #unmount?: () => void
 
@@ -90,23 +96,23 @@ export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
 
   attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
     if (name === 'source-index') this.sourceIndex = parseInt(newValue ?? '0', 10) || 0
-    else if (name === 'show-preview') this.showPreview = newValue == null ? false : true
-    else if (name === 'show-slider') this.showIntensity = newValue == null ? false : true
+    else if (name === 'show-preview') this.showPreview = newValue != null
+    else if (name === 'show-slider') this.showIntensity = newValue != null
   }
 }
 
 export class WebglEffectsMenuElement extends HTMLElementOrStub {
   #renderer?: Renderer
-  #showIntensity = ref(true)
-  #sourceTexture = ref<WebGLTexture>()
-  #sourceSize = ref<Size>({ width: 1, height: 1 })
-  #thumbnailSize = ref<Size>({ width: 1, height: 1 })
-  #crop = ref<CropState>()
-  #effects = ref(new Map<string, Effect>())
-  #effect = ref<string>()
-  #intensity = ref(1)
-  #loading = ref(false)
-  #ref = ref<WebglEffectsMenuExpose>()
+  readonly #showIntensity = ref(true)
+  readonly #sourceTexture = ref<WebGLTexture>()
+  readonly #sourceSize = ref<Size>({ width: 1, height: 1 })
+  readonly #thumbnailSize = ref<Size>({ width: 1, height: 1 })
+  readonly #crop = ref<CropState>()
+  readonly #effects = ref(new Map<string, Effect>())
+  readonly #effect = ref<string>()
+  readonly #intensity = ref(1)
+  readonly #loading = ref(false)
+  readonly #ref = ref<WebglEffectsMenuExpose>()
   #unmount?: () => void
 
   get sourceTexture() {

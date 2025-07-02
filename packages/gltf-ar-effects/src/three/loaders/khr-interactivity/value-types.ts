@@ -1,4 +1,4 @@
-import { type ValueType } from '@behave-graph/core'
+import type { ValueType } from '@behave-graph/core'
 
 import { lerp } from 'shared/utils/math'
 
@@ -28,9 +28,7 @@ const float2: ValueType<[number, number]> = {
   creator: () => [NaN, NaN],
   deserialize: identity,
   serialize: identity,
-  lerp: (start, end, t) => {
-    return [lerp(start[0], end[0], t), lerp(start[1], end[1], t)]
-  },
+  lerp: (start, end, t) => [lerp(start[0], end[0], t), lerp(start[1], end[1], t)],
 }
 
 const float3: ValueType<[number, number, number]> = {
@@ -38,9 +36,7 @@ const float3: ValueType<[number, number, number]> = {
   creator: () => [NaN, NaN, NaN],
   deserialize: identity,
   serialize: identity,
-  lerp: (start, end, t) => {
-    return [lerp(start[0], end[0], t), lerp(start[1], end[1], t), lerp(start[2], end[2], t)]
-  },
+  lerp: (start, end, t) => [lerp(start[0], end[0], t), lerp(start[1], end[1], t), lerp(start[2], end[2], t)],
 }
 
 const float4: ValueType<[number, number, number, number]> = {
@@ -48,14 +44,12 @@ const float4: ValueType<[number, number, number, number]> = {
   creator: () => [NaN, NaN, NaN, NaN],
   deserialize: identity,
   serialize: identity,
-  lerp: (start, end, t) => {
-    return [
-      lerp(start[0], end[0], t),
-      lerp(start[1], end[1], t),
-      lerp(start[2], end[2], t),
-      lerp(start[3], end[3], t),
-    ]
-  },
+  lerp: (start, end, t) => [
+    lerp(start[0], end[0], t),
+    lerp(start[1], end[1], t),
+    lerp(start[2], end[2], t),
+    lerp(start[3], end[3], t),
+  ],
 }
 
 const float2x2 = {

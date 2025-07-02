@@ -85,10 +85,10 @@
     gap: var(--gap-default);
     justify-content: unset;
     height: var(--height-menu-row-scroll);
-    padding-left: 50%;
-    padding-right: 50%;
     padding-top: var(--gap-default);
+    padding-right: 50%;
     padding-bottom: calc(0.5rem + var(--gap-default)) !important;
+    padding-left: 50%;
     overflow: scroll hidden !important;
     scroll-snap-type: x proximity;
     scroll-behavior: smooth;
@@ -103,9 +103,4 @@
 /* For WebKit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 40px; /* Set to a large value */
-}
-
-/* For Firefox */
-* {
-  scrollbar-width: thick; /* Set the scrollbar width to 'thick' */
 }

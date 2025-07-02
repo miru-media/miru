@@ -5,11 +5,13 @@ export default {
     'stylelint-config-recess-order',
     'stylelint-config-standard',
   ],
+  plugins: ['stylelint-prettier'],
   rules: {
+    'prettier/prettier': true,
     'no-descending-specificity': null,
     'declaration-empty-line-before': null,
     'selector-class-pattern': null,
     'at-rule-no-unknown': [true, { ignoreAtRules: ['unocss'] }],
   },
-  ignoreFiles: ['dist'],
+  ignorePath: ['.gitignore'],
 }

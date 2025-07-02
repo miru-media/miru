@@ -1,5 +1,5 @@
 import { createEffectScope, effect, ref } from 'fine-jsx'
-import { type Context2D, type EffectDefinition } from 'webgl-effects'
+import type { Context2D, EffectDefinition } from 'webgl-effects'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { EditorView, type ImageEditState, type ImageSourceOption } from 'shared/types'
@@ -8,20 +8,22 @@ import { HTMLElementOrStub } from 'shared/utils/window'
 
 import { MediaEditorUI } from '../components/media-editor-ui'
 import { renderComponentTo } from '../components/render-to'
+import { DEFAULT_EXPORT_QUALITY } from '../constants'
 import { MediaEditor } from '../media-editor'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
+const UNMOUNT_TIMEOUT_MS = 500
 type ObservedAttr = (typeof OBSERVED_ATTRS)[number]
 
 export class MediaEditorElement extends HTMLElementOrStub {
   static observedAttributes = OBSERVED_ATTRS
 
-  #scope = createEffectScope()
-  #editor: MediaEditor
-  #effects = ref<EffectDefinition[]>([])
+  readonly #scope = createEffectScope()
+  readonly #editor: MediaEditor
+  readonly #effects = ref<EffectDefinition[]>([])
   #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
-  #view = ref(EditorView.Crop)
+  readonly #view = ref(EditorView.Crop)
 
   get sources(): ImageSourceOption[] {
     return this.#editor.sourceInputs
@@ -53,7 +55,7 @@ export class MediaEditorElement extends HTMLElementOrStub {
   }
 
   get isLoading() {
-    return !!this.#editor.isLoading
+    return this.#editor.isLoading
   }
 
   constructor() {
@@ -92,14 +94,12 @@ export class MediaEditorElement extends HTMLElementOrStub {
   connectedCallback() {
     clearTimeout(this.#disconnectTimeout)
 
-    if (!this.#unmount) {
-      this.#unmount = this.#scope.run(() =>
-        renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
-      )
-    }
+    this.#unmount ??= this.#scope.run(() =>
+      renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
+    )
   }
   disconnectedCallback() {
-    if (this.#unmount) this.#disconnectTimeout = setTimeout(this.#unmount, 500)
+    if (this.#unmount) this.#disconnectTimeout = setTimeout(this.#unmount, UNMOUNT_TIMEOUT_MS)
   }
 
   #dispatchEvent(type: string, detail: unknown) {
@@ -109,7 +109,7 @@ export class MediaEditorElement extends HTMLElementOrStub {
   async ready() {
     if (!this.isLoading) return
 
-    return new Promise<void>((resolve) => {
+    await new Promise<void>((resolve) => {
       this.#scope.run(() => {
         const stop = effect(() => {
           if (!this.#editor.isLoading) {
@@ -122,13 +122,16 @@ export class MediaEditorElement extends HTMLElementOrStub {
   }
 
   async toBlob(sourceIndex: number, options?: ImageEncodeOptions) {
-    return this.#editor.toBlob(sourceIndex, options ?? {})
+    return await this.#editor.toBlob(sourceIndex, options ?? {})
   }
-  renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
-    return this.#editor.renderPreviewTo(sourceIndex, context)
+  async renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
+    await this.#editor.renderPreviewTo(sourceIndex, context)
   }
 
-  async download(sourceIndex: number, { filename = 'edited.jpeg', type = 'image/jpeg', quality = 0.9 } = {}) {
+  async download(
+    sourceIndex: number,
+    { filename = 'edited.jpeg', type = 'image/jpeg', quality = DEFAULT_EXPORT_QUALITY } = {},
+  ) {
     const editor = this.#editor
 
     const blob = await editor.toBlob(sourceIndex, { type, quality })

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- lots of constants */
 export const READ_BUFFER = 0x0c02
 export const UNPACK_ROW_LENGTH = 0x0cf2
 export const UNPACK_SKIP_ROWS = 0x0cf3

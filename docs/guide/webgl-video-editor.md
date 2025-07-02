@@ -1,5 +1,4 @@
 ---
-title: Video editor docs
 outline: false
 ---
 
@@ -7,4 +6,4 @@ outline: false
 
 [<img src="/webgl-video-editor-screenshot.jpg" alt="Screenshot" class="max-h-30rem">](/video-editor)
 
-<!--@include: ../../packages/webgl-video-editor/README.md{7,}-->
+<!--@include: ../../packages/webgl-video-editor/README.md#main-->

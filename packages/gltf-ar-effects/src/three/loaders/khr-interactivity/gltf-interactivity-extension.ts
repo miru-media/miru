@@ -1,13 +1,9 @@
 import * as Behave from '@behave-graph/core'
 import * as THREE from 'three'
-import {
-  type GLTFLoaderPlugin,
-  type GLTFParser,
-  type GLTFReference,
-} from 'three/examples/jsm/loaders/GLTFLoader.js'
+import type { GLTFLoaderPlugin, GLTFParser, GLTFReference } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { KHR_INTERACTIVITY } from '../../../constants'
-import { type KHRInteractivityExtension } from '../../../types'
+import type { KHRInteractivityExtension } from '../../../types'
 
 import { registerNodes } from './behave-nodes'
 import { convertGraph } from './convert-graph'
@@ -52,10 +48,10 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
   afterRoot() {
     const interactivityExtension = this.json.extensions?.KHR_interactivity
 
-    if (interactivityExtension?.graph == undefined) return null
+    if (interactivityExtension?.graph == null || !interactivityExtension.graphs) return null
 
     this.parser.associations.forEach((reference, object) => {
-      if (!(reference as GLTFReference | undefined)) return
+      if (!(reference as GLTFReference | undefined)) return null
 
       if (reference.nodes != null && object instanceof THREE.Object3D)
         this.objectArrays.nodes[reference.nodes] = object

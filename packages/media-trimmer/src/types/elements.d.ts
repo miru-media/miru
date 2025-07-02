@@ -1,5 +1,5 @@
-import { type TrimState } from './media-trimmer'
-import { HTMLElementOrStub } from "./utils"
+import type { TrimState } from './media-trimmer'
+import { HTMLElementOrStub } from './utils'
 
 export declare class MediaTrimmerElement extends HTMLElementOrStub {
   get source(): string

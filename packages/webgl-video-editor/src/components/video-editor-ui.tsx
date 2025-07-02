@@ -1,16 +1,17 @@
+/* eslint-disable no-alert -- TODO */
 import { h } from 'fine-jsx/jsx-runtime'
 
 import { LoadingOverlay } from 'shared/components/loading-overlay'
-import { type I18nOptions, type InputEvent } from 'shared/types'
+import type { I18nOptions, InputEvent } from 'shared/types'
 import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
 import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants'
-import { type VideoEditor as VideoEditor_ } from '../VideoEditor'
+import type { VideoEditor as VideoEditor_ } from '../video-eidtor'
 
 import { PlaybackControls } from './playback-controls'
 import { SecondaryToolbar } from './secondary-toolbar'
-import { Timeline } from './teimline'
+import { Timeline } from './timeline'
 
 export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions }) => {
   const { editor } = props

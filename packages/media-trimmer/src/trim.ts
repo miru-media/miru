@@ -5,7 +5,7 @@ export const trim: typeof pub.trim = async (url: string, options: pub.TrimOption
   const { onProgress } = options
   const trimmer = new Trimmer(url, options)
 
-  if (!onProgress) return trimmer.trim().finally(() => trimmer.dispose())
+  if (!onProgress) return await trimmer.trim().finally(() => trimmer.dispose())
 
   let progress = 0
   let lastProgress = -1
@@ -20,7 +20,7 @@ export const trim: typeof pub.trim = async (url: string, options: pub.TrimOption
 
   options = { ...options, onProgress: (value) => (progress = value) }
 
-  return trimmer.trim().finally(() => {
+  return await trimmer.trim().finally(() => {
     trimmer.dispose()
     onProgress(progress)
     cancelAnimationFrame(rafId)

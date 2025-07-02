@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
+/* eslint-disable @typescript-eslint/triple-slash-reference, @typescript-eslint/consistent-type-imports -- needed for module autmentation */
 /// <reference types="vite/client" />
 /// <reference types="vitest/client" />
+/// <reference types="vitest/config" />
 /// <reference types="./auto-imports" />
 
 // remote assets
@@ -13,6 +14,10 @@ declare module 'https://*.mp4' {
   export default src
 }
 declare module 'https://*.mp3' {
+  const src: string
+  export default src
+}
+declare module 'https://*.hdr' {
   const src: string
   export default src
 }
@@ -62,8 +67,10 @@ declare module '*.vue' {
 
 declare module 'postcss-url' {}
 declare module 'postcss-import' {}
+declare module 'postcss-preset-env' {}
 declare module 'postcss-hover-media-feature' {}
-declare module 'eslint-plugin-import' {
+
+declare module 'markdown-it-task-lists' {
   const val: any
   export = val
 }
@@ -160,9 +167,9 @@ declare module 'videocontext' {
     protected _loadTriggered: boolean
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- false positive
   class CanvasNode extends SourceNode {}
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- false positive
   class ImageNode extends SourceNode {}
   class MediaNode extends SourceNode {
     constructor(
@@ -249,11 +256,7 @@ declare module 'videocontext' {
       preloadTime?: number,
       audioElementAttributes?: Record<string, unknown>,
     ): AudioNode
-    customSourceNode<T extends GraphNode>(
-      // eslint-disable-next-line @typescript-eslint/prefer-function-type
-      CustomSourceNode: { new (...args: any[]): T },
-      ...args: unknown[]
-    ): T
+    customSourceNode<T extends GraphNode>(CustomSourceNode: new (...args: any[]) => T, ...args: unknown[]): T
     compositor<T extends Record<string, any>>(definition: EffectDefinition): CompositingNode<T>
     transition<T extends Record<string, any>>(...args: any[]): TransitionNode<T>
 

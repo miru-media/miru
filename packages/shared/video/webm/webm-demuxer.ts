@@ -1,9 +1,9 @@
-import {
-  type AudioMetadata,
-  type EbmlChunk,
-  type EncodedMediaChunk,
-  type MediaContainerMetadata,
-  type VideoMetadata,
+import type {
+  AudioMetadata,
+  EbmlChunk,
+  EncodedMediaChunk,
+  MediaContainerMetadata,
+  VideoMetadata,
 } from 'shared/video/types'
 
 import { FileSignature } from '../file-signature'
@@ -13,9 +13,10 @@ import { EncodedChunkExtractor } from './encoded-chunk-extractor'
 import { MetadataExtractor } from './metadata-extractor'
 
 export class WebmDemuxer {
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- file signature magic numbers
   static signature = new FileSignature(0, new Uint8Array([0x1a, 0x45, 0xdf, 0xa3]))
 
-  #abort = new AbortController()
+  readonly #abort = new AbortController()
   #ebmlStream?: ReadableStream<EbmlChunk>
   encodedChunkExtractor = new EncodedChunkExtractor()
   #sampleExtractionStates: Record<
@@ -40,7 +41,9 @@ export class WebmDemuxer {
         .read()
     ).value
 
-    return (this.encodedChunkExtractor.metadata = metadata!)
+    if (!metadata) throw new Error(`Couldn't find WebM container metadata.`)
+
+    return (this.encodedChunkExtractor.metadata = metadata)
   }
 
   getChunkStream(track: VideoMetadata | AudioMetadata, firstFrameTimeS = 0, lastFrameTimeS = Infinity) {

@@ -1,11 +1,11 @@
 import { computed, ref } from 'fine-jsx'
 import { uid } from 'uid'
 
-import { type Size } from 'shared/types'
+import type { Size } from 'shared/types'
 import { remap0 } from 'shared/utils/math'
 import { assertCanDecodeMediaFile, hasVideoDecoder } from 'shared/video/utils'
 
-import { type ClipSnapshot, type HistoryOp } from '../types/internal'
+import type { ClipSnapshot, HistoryOp } from '../types/internal'
 
 import { MIN_CLIP_DURATION_S } from './constants'
 import { MovieExporter } from './export/movie-exporter'
@@ -19,11 +19,13 @@ const getClipAtTime = (track: Track<Clip>, time: number) => {
   }
 }
 
+const INITIAL_SECONDS_PER_PIXEL = 0.01
+
 export class VideoEditor {
   _movie: Movie
 
-  #selection = ref<Clip>()
-  _secondsPerPixel = ref(0.01)
+  readonly #selection = ref<Clip>()
+  _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
   _timelineSize = ref<Size>({ width: 1, height: 1 })
 
   _resize = ref<{
@@ -48,26 +50,26 @@ export class VideoEditor {
     return this._movie.currentTime
   }
 
-  #effects = computed(() => new Map(this._movie.effects.value?.map((effect) => [effect.id, effect])))
+  readonly #effects = computed(() => new Map(this._movie.effects.value?.map((effect) => [effect.id, effect])))
   get effects() {
     return this.#effects.value
   }
 
   _showStats = ref(false)
 
-  #exportResult = ref<{ blob: Blob; url: string }>()
+  readonly #exportResult = ref<{ blob: Blob; url: string }>()
   get exportResult() {
     return this.#exportResult.value
   }
 
-  #exportProgress = ref(-1)
+  readonly #exportProgress = ref(-1)
   get exportProgress() {
     return this.#exportProgress.value
   }
 
-  #isLoading = ref(0)
+  readonly #isLoading = ref(0)
 
-  #history = {
+  readonly #history = {
     actions: [] as HistoryOp[][],
     index: -1,
     pending: undefined as HistoryOp[] | undefined,
@@ -205,7 +207,7 @@ export class VideoEditor {
 
   async #withLoading<T>(fn: () => Promise<T>): Promise<T> {
     this.#isLoading.value++
-    return fn().finally(() => this.#isLoading.value--)
+    return await fn().finally(() => this.#isLoading.value--)
   }
 
   async clearAllContentAndHistory() {
@@ -242,11 +244,13 @@ export class VideoEditor {
           }),
         )
 
+        const setNode = nodes.set.bind(nodes)
+
         movie.children = movieInit.children.map((trackInit) => {
           const track = new Track(trackInit, movie, Clip)
           nodes.set(track)
 
-          track._forEachClip((clip) => nodes.set(clip))
+          track._forEachClip(setNode)
           return track
         })
       })
@@ -254,7 +258,7 @@ export class VideoEditor {
   }
 
   async createMediaAsset(source: string | Blob): Promise<MediaAsset> {
-    return MediaAsset.fromSource(uid(), this._movie, source)
+    return await MediaAsset.fromSource(uid(), this._movie, source)
   }
 
   async addClip(track: Track<Clip>, source: string | Blob) {
@@ -284,7 +288,7 @@ export class VideoEditor {
 
     if (!skipInsert) {
       track.pushSingleClip(clip)
-      if (index != undefined) track.positionClipAt(clip, index)
+      if (index != null) track.positionClipAt(clip, index)
     }
 
     this.#history.add([{ type: 'clip:update', from: undefined, to: clip.getSnapshot() }])
@@ -372,13 +376,6 @@ export class VideoEditor {
     if (!clip) return
 
     this.#deleteClip(clip)
-  }
-
-  _setTransition(_from: Clip, _to: Clip, _transition: Schema.Clip['transition']) {
-    throw new Error('Not Implemented.')
-  }
-  _clearTransition(_from: Clip, _to: Clip) {
-    throw new Error('Not Implemented.')
   }
 
   play() {
@@ -495,8 +492,7 @@ export class VideoEditor {
         })
         .finally(() => exporter.dispose())
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error)
+      // eslint-disable-next-line no-alert -- TODO
       alert(`Encountered an error while exporting: ${String(error)}`)
     } finally {
       this.#exportProgress.value = -1

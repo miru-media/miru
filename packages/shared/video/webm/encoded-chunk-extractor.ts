@@ -1,13 +1,13 @@
 import type * as ebml from 'ebml'
 import ebmlBlock from 'ebml-block'
 
-import {
-  type AudioMetadata,
-  type EbmlChunk,
-  type EncodedMediaChunk,
-  type MediaContainerMetadata,
-  type VideoMetadata,
-  type WebmTrack,
+import type {
+  AudioMetadata,
+  EbmlChunk,
+  EncodedMediaChunk,
+  MediaContainerMetadata,
+  VideoMetadata,
+  WebmTrack,
 } from '../types'
 
 interface TrackState {

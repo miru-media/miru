@@ -6,12 +6,12 @@ import { assertEncoderConfigIsSupported } from 'shared/video/utils'
 
 import { EXPORT_VIDEO_CODECS } from '../constants'
 
-import { type EncodedAudioChunk as EncodedAudioChunkPolyfill } from './polyfill'
+import type { EncodedAudioChunk as EncodedAudioChunkPolyfill } from './polyfill'
 
 export namespace AVEncoder {
   export interface Options {
-    video?: AVEncoder.VideoOptions
-    audio?: AVEncoder.AudioOptions
+    video?: VideoOptions
+    audio?: AudioOptions
     onOutput?: (type: 'audio' | 'video', timestamp: number) => void
   }
   export interface VideoOptions extends VideoEncoderConfig {
@@ -24,7 +24,7 @@ export namespace AVEncoder {
 }
 
 export class AVEncoder {
-  #options: AVEncoder.Options
+  readonly #options: AVEncoder.Options
   #video?: {
     config: AVEncoder.VideoOptions
     transform: VideoEncoderTransform
@@ -67,21 +67,20 @@ export class AVEncoder {
 
       for (const codec of EXPORT_VIDEO_CODECS) {
         video.config.codec = codec
-        const isSupported = await assertEncoderConfigIsSupported('video', video.config)
-          .then(() => true)
-          .catch((error: unknown) => {
-            lastError = error
-            return false
-          })
-        if (isSupported) break
+        try {
+          await assertEncoderConfigIsSupported('video', video.config)
+          break
+        } catch (error) {
+          lastError = error
+        }
       }
 
-      if (!video.config.codec) throw lastError
+      if (!video.config.codec) throw lastError as Error
 
       video.promise = video.transform.readable.pipeTo(
         new WritableStream({
           write: ([chunk, meta]) => {
-            if (this.firstVideoFrameTimeUs === undefined) this.firstVideoFrameTimeUs = chunk.timestamp
+            this.firstVideoFrameTimeUs ??= chunk.timestamp
             this.muxer.addVideoChunk(chunk, meta, chunk.timestamp - this.firstVideoFrameTimeUs)
             this.#options.onOutput?.('video', chunk.timestamp)
           },

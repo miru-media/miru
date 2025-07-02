@@ -1,29 +1,29 @@
 import type * as gltf from '@gltf-transform/core'
 
-import {
-  type InteractivityDeclaration,
-  type InteractivityEvent,
-  type InteractivityExtensionDeclaration,
-  type InteractivityFlow,
-  type InteractivityGraph,
-  type InteractivityNode,
-  type InteractivityType,
-  type InteractivityValue,
-  type InteractivityValueLiteral,
-  type InteractivityVariable,
+import type {
+  InteractivityDeclaration,
+  InteractivityEvent,
+  InteractivityExtensionDeclaration,
+  InteractivityFlow,
+  InteractivityGraph,
+  InteractivityNode,
+  InteractivityType,
+  InteractivityValue,
+  InteractivityValueLiteral,
+  InteractivityVariable,
 } from '../types'
 
-import { type Interactivity } from './interactivity'
-import { type Declaration } from './properties/declaration'
+import type { Interactivity } from './interactivity'
+import type { Declaration } from './properties/declaration'
 import { Event } from './properties/event'
-import { type Flow } from './properties/flow'
-import { type Node } from './properties/node'
+import type { Flow } from './properties/flow'
+import type { Node } from './properties/node'
 import { Type } from './properties/type'
 import { Value } from './properties/value'
 import { Variable } from './properties/variable'
 
 class PropJsonMap<T, U extends Record<string, any>> {
-  private map = new Map<T, { json: U; index: number }>()
+  private readonly map = new Map<T, { json: U; index: number }>()
 
   add(prop: T, json: U) {
     const { map } = this
@@ -89,7 +89,7 @@ export class InteractivityGraphWriterContext {
     if (!variable) throw new Error('Missing interactivity variable definition.')
 
     let index = this.variables.getIndex(variable)
-    if (index != undefined) return index
+    if (index != null) return index
 
     const json = getBaseJson(variable) as InteractivityVariable
 
@@ -107,7 +107,7 @@ export class InteractivityGraphWriterContext {
     if (!event) throw new Error('Missing interactivity custom event definition.')
 
     let index = this.events.getIndex(event)
-    if (index != undefined) return index
+    if (index != null) return index
 
     const json = getBaseJson(event) as InteractivityEvent
 
@@ -133,7 +133,7 @@ export class InteractivityGraphWriterContext {
 
     let index = this.declarations.getIndex(declaration)
 
-    if (index != undefined) return index
+    if (index != null) return index
 
     const op = declaration.getOp()
     const extensionName = declaration.getExtensionName()
@@ -141,9 +141,11 @@ export class InteractivityGraphWriterContext {
     index = this.declarations.add(declaration, json)
 
     if (extensionName) {
-      const extendedJson = { op, extension: extensionName } as InteractivityExtensionDeclaration
+      const extendedJson = json as InteractivityExtensionDeclaration
       const inputIds = declaration.listInputValueSocketIds()
       const outputIds = declaration.listInputValueSocketIds()
+
+      extendedJson.extension = extensionName
 
       if (inputIds.length) {
         extendedJson.inputValueSockets = Object.fromEntries(
@@ -164,7 +166,7 @@ export class InteractivityGraphWriterContext {
     if (!node) throw new Error('Missing interactivity node definition.')
 
     let index = this.nodes.getIndex(node)
-    if (index != undefined) return index
+    if (index != null) return index
 
     const json = getBaseJson(node) as InteractivityNode
     index = this.nodes.add(node, json)
@@ -258,8 +260,10 @@ export class InteractivityGraphWriterContext {
   }
 
   finalize() {
-    this.interactivity = undefined as never
-    const result = {} as InteractivityGraph
+    // @ts-expect-error -- cleanup
+    this.interactivity = undefined
+
+    const result: InteractivityGraph = {}
 
     const types = this.types.finalize()
     const variables = this.variables.finalize()

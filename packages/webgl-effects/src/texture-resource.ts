@@ -1,8 +1,8 @@
-import { type ImageSourceObject, type SyncImageSource } from 'shared/types'
+import type { ImageSourceObject, SyncImageSource } from 'shared/types'
 import { getImageData, isSyncSource, Janitor, loadAsyncImageSource } from 'shared/utils'
 
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
-import { type Renderer } from './renderer'
+import type { Renderer } from './renderer'
 
 export class TextureResource {
   canvas?: HTMLCanvasElement

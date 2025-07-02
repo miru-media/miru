@@ -2,7 +2,7 @@ import * as gltf from '@gltf-transform/core'
 import { expect, test } from 'vitest'
 
 import { KHR_INTERACTIVITY } from '../constants'
-import { type InteractivityType, type InteractivityVariable, type KHRInteractivityExtension } from '../types'
+import type { InteractivityType, InteractivityVariable, KHRInteractivityExtension } from '../types'
 
 import { Interactivity } from './interactivity'
 
@@ -84,7 +84,7 @@ test('Interactivity gltf-transform extension', async () => {
   const interactivityOutput = result.json.extensions?.[KHR_INTERACTIVITY] as KHRInteractivityExtension
 
   {
-    const { types, variables } = interactivityOutput.graphs[0]
+    const { types, variables } = interactivityOutput.graphs![0]
 
     expect(types?.sort((a, b) => a.signature.localeCompare(b.signature))).toEqual<InteractivityType[]>([
       { signature: 'bool' },

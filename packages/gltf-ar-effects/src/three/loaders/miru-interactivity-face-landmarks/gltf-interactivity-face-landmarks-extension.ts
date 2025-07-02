@@ -1,14 +1,10 @@
 import * as Behave from '@behave-graph/core'
 import * as THREE from 'three'
-import {
-  type GLTFLoaderPlugin,
-  type GLTFParser,
-  type GLTFReference,
-} from 'three/examples/jsm/loaders/GLTFLoader.js'
+import type { GLTFLoaderPlugin, GLTFParser, GLTFReference } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { KHR_INTERACTIVITY, MAX_LANDMARK_FACES, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../constants'
-import { type KHRInteractivityExtension } from '../../../types'
-import { type GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension'
+import type { KHRInteractivityExtension } from '../../../types'
+import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension'
 
 import { FaceLandmarksProcessor, type FaceTransform } from './face-landmarks-processor'
 import { EventOnFaceLandmarksChangeNode } from './interactivity-behave-nodes'
@@ -125,8 +121,8 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     })
   }
 
-  start(video: HTMLVideoElement) {
-    return this.processor.start(video)
+  async start(video: HTMLVideoElement) {
+    await this.processor.start(video)
   }
 
   destroy() {

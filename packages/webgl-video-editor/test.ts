@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-magic-numbers, no-console -- test file */
 import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
@@ -59,7 +59,7 @@ const test = async () => {
     videoEl.addEventListener('error', reject)
   })
     .then(() => videoEl.play())
-    .then(() => new Promise((r) => setTimeout(r, 200)))
+    .then(() => new Promise((resolve) => setTimeout(resolve, 200)))
   const videoInfo = (await demuxer.init((await fetch(url)).body!)).video!
 
   const chunks = demuxer.getChunkStream(videoInfo)

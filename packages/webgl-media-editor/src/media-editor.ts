@@ -2,8 +2,9 @@ import { computed, effect, type EffectScope, getCurrentScope, ref, type Ref, wat
 import { type Context2D, type EffectDefinition, Renderer } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/effect'
-import { type ImageEditState, type ImageSourceOption } from 'shared/types'
+import type { ImageEditState, ImageSourceOption } from 'shared/types'
 
+import { DEFAULT_EXPORT_QUALITY } from './constants'
 import { ImageSourceInternal } from './image-source-internal'
 
 export interface MediaEditorOptions {
@@ -15,21 +16,23 @@ export interface MediaEditorOptions {
 }
 
 export class MediaEditor {
-  #scope: EffectScope
+  readonly #scope: EffectScope
   renderer: Renderer
-  #adjustColorEffect: Effect
+  readonly #adjustColorEffect: Effect
   manualUpdate: boolean
 
   sourceInputs: ImageSourceOption[] = []
   sources = ref<ImageSourceInternal[]>([])
   editStatesIn = ref<(ImageEditState | undefined)[]>()
-  #effectsIn: Ref<EffectDefinition[]>
+  readonly #effectsIn: Ref<EffectDefinition[]>
   readonly effects = ref(new Map<string, Effect>())
-  #isLoadingSource = computed(() => this.sources.value.some((s) => s.isLoading))
-  #isLoadingEffects = computed(() => Array.from(this.effects.value.values()).some((e) => e.isLoading))
-  #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
-  #onRenderPreview: MediaEditorOptions['onRenderPreview']
-  #onEdit: MediaEditorOptions['onEdit']
+  readonly #isLoadingSource = computed(() => this.sources.value.some((s) => s.isLoading))
+  readonly #isLoadingEffects = computed(() =>
+    Array.from(this.effects.value.values()).some((e) => e.isLoading),
+  )
+  readonly #isLoading = computed(() => this.#isLoadingSource.value || this.#isLoadingEffects.value)
+  readonly #onRenderPreview: MediaEditorOptions['onRenderPreview']
+  readonly #onEdit: MediaEditorOptions['onEdit']
 
   get isLoadingSource() {
     return this.#isLoadingSource.value
@@ -45,7 +48,7 @@ export class MediaEditor {
 
   constructor(options: MediaEditorOptions) {
     const scope = getCurrentScope()
-    if (scope == undefined) throw new Error(`[webgl-media-editor] must be run in an EffectScope`)
+    if (scope == null) throw new Error(`[webgl-media-editor] must be run in an EffectScope`)
     this.#scope = scope
 
     this.renderer = options.renderer ?? new Renderer()
@@ -60,14 +63,13 @@ export class MediaEditor {
     this.#onEdit = options.onEdit
 
     watch([this.sources, this.editStatesIn], ([sources, states]) => {
-      states?.forEach((state, index) => state != undefined && sources[index]?.setState(state))
+      states?.forEach((state, index) => state != null && sources[index]?.setState(state))
     })
 
     watch([this.#effectsIn], ([effects]) => {
       this.#scope
         .run(() => this.#loadEffects((effects as EffectDefinition[] | undefined) ?? []))
-
-        // eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console -- TODO
         .catch((error: unknown) => console.error(`[webgl-media-editor] couldn't load effects`, error))
     })
   }
@@ -109,11 +111,14 @@ export class MediaEditor {
     prevSourcesByOption.clear()
   }
 
-  renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
-    return this.sources.value[sourceIndex]?.drawPreview(context)
+  async renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
+    await this.sources.value[sourceIndex]?.drawPreview(context)
   }
 
-  async toBlob(sourceIndex: number, { type = 'image/jpeg', quality = 0.9 }: ImageEncodeOptions = {}) {
+  async toBlob(
+    sourceIndex: number,
+    { type = 'image/jpeg', quality = DEFAULT_EXPORT_QUALITY }: ImageEncodeOptions = {},
+  ) {
     if (sourceIndex < 0 || sourceIndex >= this.sources.value.length)
       throw new Error(`[webgl-media-editor] No image at index ${sourceIndex}`)
 
@@ -121,7 +126,7 @@ export class MediaEditor {
 
     source.drawFullSize()
 
-    return this.renderer.toBlob({ type, quality })
+    return await this.renderer.toBlob({ type, quality })
   }
 
   async #loadEffects(definitions: EffectDefinition[]) {

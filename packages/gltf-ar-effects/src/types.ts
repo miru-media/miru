@@ -1,5 +1,5 @@
 export interface KHRInteractivityExtension {
-  graphs: InteractivityGraph[]
+  graphs?: InteractivityGraph[]
   graph?: number
   name?: string
   extras?: Record<string, unknown>

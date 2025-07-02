@@ -6,7 +6,7 @@ import { getImageSize, useMediaReadyState, useRafLoop } from 'shared/video/utils
 
 import { ReadyState } from '../constants'
 
-import { type MediaElementNode } from './media-element-node'
+import type { MediaElementNode } from './media-element-node'
 
 export class MediaNodeState {
   scope = new EffectScope()
@@ -19,7 +19,7 @@ export class MediaNodeState {
   time = ref(0)
 
   constructor(node: MediaElementNode, movieIsPaused: Ref<boolean>) {
-    const media = node.media
+    const { media } = node
 
     this.isPaused.value = media.paused
     useEventListener(media, 'play', () => (this.isPaused.value = false))

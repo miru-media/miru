@@ -1,13 +1,13 @@
 import * as gltf from '@gltf-transform/core'
 
-import { type Declaration } from './declaration'
-import { type Event } from './event'
+import type { Declaration } from './declaration'
+import type { Event } from './event'
 import { Flow } from './flow'
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
 import { InteractivityPropertyType } from './property-types'
-import { type Type } from './type'
-import { type Value } from './value'
-import { type Variable } from './variable'
+import type { Type } from './type'
+import type { Value } from './value'
+import type { Variable } from './variable'
 
 export interface INode extends IInteractivityGraphProperty {
   declaration: Declaration

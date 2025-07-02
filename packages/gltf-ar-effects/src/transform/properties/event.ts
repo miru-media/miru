@@ -2,7 +2,7 @@ import * as gltf from '@gltf-transform/core'
 
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
 import { InteractivityPropertyType } from './property-types'
-import { type Value } from './value'
+import type { Value } from './value'
 
 export interface IEvent extends IInteractivityGraphProperty {
   id: string | null

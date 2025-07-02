@@ -1,8 +1,14 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers, max-lines -- many constants */
 export const KHR_INTERACTIVITY = 'KHR_interactivity'
 export const MIRU_INTERACTIVITY_FACE_LANDMARKS = 'MIRU_interactivity_face_landmarks'
 
 export const MAX_LANDMARK_FACES = 4
 export const LANDMARKS_VERTEX_COUNT = 478
+
+// https:github.com/google-ai-edge/mediapipe/blob/232008b/mediapipe/tasks/cc/vision/face_geometry/face_geometry_from_landmarks_graph.cc#L71
+export const DETECTION_CAMERA_FOV = 63
+export const DETECTION_CAMERA_NEAR = 1
+export const DETECTION_CAMERA_FAR = 10_000
 
 /* prettier-ignore */
 export const CANONICAL_VERTICES = [

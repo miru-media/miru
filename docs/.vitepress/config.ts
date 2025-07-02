@@ -1,8 +1,8 @@
 import { resolve } from 'node:path'
 
+import taskLists from 'markdown-it-task-lists'
 import { defineConfig } from 'vitepress'
 
-// eslint-disable-next-line import/no-relative-packages
 import vite from '../../vite.config'
 
 // https://vitepress.dev/reference/site-config
@@ -73,8 +73,20 @@ export default defineConfig({
       },
     ],
 
-    socialLinks: [{ icon: 'gitea', link: 'https://gitea.com/miru/miru', ariaLabel: 'Source code' }],
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/miru-media/miru', ariaLabel: 'Source code on Github' },
+      {
+        icon: 'codeberg',
+        link: 'https://codeberg.org/miru-media/miru',
+        ariaLabel: 'Source code on Codeberg',
+      },
+    ],
 
     externalLinkIcon: true,
+  },
+  markdown: {
+    config(md) {
+      md.use(taskLists)
+    },
   },
 })

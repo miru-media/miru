@@ -1,25 +1,29 @@
-import { type FaceLandmarkerResult } from '@mediapipe/tasks-vision'
-// eslint-disable-next-line import/default
+import type { FaceLandmarkerResult } from '@mediapipe/tasks-vision'
 import mediaPipeTasksVisionUrl from '@mediapipe/tasks-vision?url'
 import modelAssetPath from 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task'
 import * as THREE from 'three'
 
-/* eslint-disable import/no-relative-packages */
 import { promiseWithResolvers } from 'shared/utils'
 
+/* eslint-disable import/no-relative-packages -- files aren't exposed */
 import wasmLoaderPath from '../../../../node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_internal.js?url'
 import wasmBinaryPath from '../../../../node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_internal.wasm?url'
 /* eslint-enable import/no-relative-packages */
-import { FACEMESH_VERTEX_INDICES, LANDMARKS_VERTEX_COUNT } from '../../../constants'
-
 import {
-  type WorkerErrorData,
-  type WorkerFetchProgressData,
-  type WorkerInitData,
-  type WorkerInitResponse,
-  type WorkerResultData,
+  DETECTION_CAMERA_FAR,
+  DETECTION_CAMERA_FOV,
+  DETECTION_CAMERA_NEAR,
+  FACEMESH_VERTEX_INDICES,
+  LANDMARKS_VERTEX_COUNT,
+} from '../../../constants'
+
+import type {
+  WorkerErrorData,
+  WorkerFetchProgressData,
+  WorkerInitData,
+  WorkerInitResponse,
+  WorkerResultData,
 } from './detector-worker'
-// eslint-disable-next-line import/default
 import DetectorWorker from './detector-worker?worker'
 
 export interface FaceTransform {
@@ -32,6 +36,8 @@ const WASM_FILESET = {
   wasmLoaderPath,
   wasmBinaryPath,
 }
+const REFERENCE_VERTEX_LEFT = 227
+const REFERENCE_VERTEX_RIGHT = 447
 
 export class FaceLandmarksProcessor {
   onDetect: (faceTransforms: FaceTransform[]) => void
@@ -50,8 +56,13 @@ export class FaceLandmarksProcessor {
   faceGeometryPositions: Record<number, THREE.Float32BufferAttribute | undefined> = {}
   faceGeometryIndex = new THREE.Uint16BufferAttribute(FACEMESH_VERTEX_INDICES, 1)
 
-  // https:github.com/google-ai-edge/mediapipe/blob/232008b/mediapipe/tasks/cc/vision/face_geometry/face_geometry_from_landmarks_graph.cc#L71
-  estimatedCamera = new THREE.PerspectiveCamera(63, 1, 1, 10_000)
+  estimatedCamera = new THREE.PerspectiveCamera(
+    DETECTION_CAMERA_FOV,
+    1,
+    DETECTION_CAMERA_NEAR,
+    DETECTION_CAMERA_FAR,
+  )
+
   video?: HTMLVideoElement
   rvfcHandle = -1
 
@@ -82,7 +93,7 @@ export class FaceLandmarksProcessor {
             break
           }
           case 'error': {
-            alert(data.error)
+            this.onError(data.error)
             break
           }
 
@@ -100,7 +111,10 @@ export class FaceLandmarksProcessor {
   }
 
   private async _init() {
-    if (this.workerInit) return this.workerInit.promise
+    if (this.workerInit) {
+      await this.workerInit.promise
+      return
+    }
 
     const init: WorkerInitData = {
       type: 'INIT',
@@ -196,8 +210,8 @@ export class FaceLandmarksProcessor {
         )
 
       // https:github.com/google-ai-edge/mediapipe/blob/232008b/mediapipe/tasks/cc/vision/face_geometry/data/canonical_face_model_uv_visualization.png
-      const referenceRight = landmarks[227]
-      const referenceLeft = landmarks[447]
+      const referenceRight = landmarks[REFERENCE_VERTEX_LEFT]
+      const referenceLeft = landmarks[REFERENCE_VERTEX_RIGHT]
       vector.set(0, 0, ((referenceRight.z + referenceLeft.z) / 2) * estimatedCamera.aspect)
       vector.unproject(estimatedCamera)
       const scale = facePosition.z / vector.z
@@ -208,7 +222,7 @@ export class FaceLandmarksProcessor {
       for (let i = 0; i < LANDMARKS_VERTEX_COUNT; i++) {
         const landmark = landmarks[i]
 
-        vector.x = (landmark.x * +2 - 1) * (mirror ? -1 : 1)
+        vector.x = (landmark.x * 2 - 1) * (mirror ? -1 : 1)
         vector.y = landmark.y * -2 + 1
         vector.z = landmark.z * estimatedCamera.aspect
 
@@ -259,7 +273,7 @@ export class FaceLandmarksProcessor {
     if (this.hasMirroredGeometry !== mirror) {
       const { array } = this.faceGeometryIndex
       let temp
-      for (let i = 0, length = array.length; i < length; i += 3) {
+      for (let i = 0, { length } = array; i < length; i += 3) {
         temp = array[i]
         array[i] = array[i + 2]
         array[i + 2] = temp

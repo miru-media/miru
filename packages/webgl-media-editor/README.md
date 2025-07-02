@@ -2,7 +2,9 @@
 
 [<img src="https://miru.media/webgl-media-editor-screenshot.jpg" alt="Screenshot">](https://miru.media/photo-editor)
 
-https://miru.media/photo-editor
+<https://miru.media/photo-editor>
+
+<!-- #region main -->
 
 ```sh
 npm install webgl-media-editor
@@ -67,6 +69,8 @@ Powered by:
 
 - [Cropper.js](https://fengyuanchen.github.io/cropperjs/)
 - [WebGL](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API)
+
+<!-- #endregion main -->
 
 ## Funding
 

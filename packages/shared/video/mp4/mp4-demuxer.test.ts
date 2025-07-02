@@ -5,7 +5,7 @@ import { Readable } from 'node:stream'
 import sampleUrl from 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
 import { expect, test, vi } from 'vitest'
 
-import { type MediaContainerMetadata } from '../types'
+import type { MediaContainerMetadata } from '../types'
 
 import { MP4Demuxer } from './mp4-demuxer'
 
