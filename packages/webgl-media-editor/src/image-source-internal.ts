@@ -186,51 +186,17 @@ export class ImageSourceInternal {
     this.#scope.run(() => {
       // rotate the original image
       watch(
-        [this.#original, () => this.crop.value?.rotate ?? 0, this.#error, this.pausePreview],
-        ([original, rotation, error, paused]) => {
-          if (paused > 0) return
-
+        [this.pausePreview, this.#error, this.#original, () => this.crop.value?.rotate ?? 0],
+        ([paused, error]) => {
           if (error != null) {
             this.#isLoading.value = false
             this.#original.value = this.#rotated.value = undefined
             return
           }
 
-          const load = (image: SyncImageSource) => {
-            this.#renderer.loadImage(this.#texture, image)
-            this.#isLoading.value = false
-            this.previewKey.value++
-          }
+          if (paused > 0) return
 
-          this.#isLoading.value = true
-
-          if (original == null || !rotation) {
-            this.#rotated.value = original
-            if (original != null) load(original)
-
-            return
-          }
-
-          const context = renderer.scratchPad2d
-          const { canvas } = context
-
-          if ((rotation / 90) % 2 === 0) {
-            canvas.width = original.width
-            canvas.height = original.height
-          } else {
-            canvas.width = original.height
-            canvas.height = original.width
-          }
-
-          context.save()
-
-          context.translate(canvas.width / 2, canvas.height / 2)
-          context.rotate((rotation * Math.PI) / 180)
-          drawImage(context, original, -original.width / 2, -original.height / 2)
-          context.restore()
-
-          this.#rotated.value = canvas
-          load(canvas)
+          this.#rotateOriginal()
         },
       )
 
@@ -274,6 +240,46 @@ export class ImageSourceInternal {
     this.crop.value = crop
   }
 
+  #rotateOriginal() {
+    const original = this.#original.value
+    const rotation = this.crop.value?.rotate ?? 0
+
+    const load = (image: SyncImageSource) => {
+      this.#renderer.loadImage(this.#texture, image)
+      this.previewKey.value++
+    }
+
+    this.#isLoading.value = original == null
+
+    if (original == null || !rotation) {
+      this.#rotated.value = original
+      if (original) load(original)
+
+      return
+    }
+
+    const context = this.#renderer.scratchPad2d
+    const { canvas } = context
+
+    if ((rotation / 90) % 2 === 0) {
+      canvas.width = original.width
+      canvas.height = original.height
+    } else {
+      canvas.width = original.height
+      canvas.height = original.width
+    }
+
+    context.save()
+
+    context.translate(canvas.width / 2, canvas.height / 2)
+    context.rotate((rotation * Math.PI) / 180)
+    drawImage(context, original, -original.width / 2, -original.height / 2)
+    context.restore()
+
+    this.#rotated.value = canvas
+    load(canvas)
+  }
+
   #applyEditValuesToRenderer(effect?: Effect, adjustments?: AdjustmentsState) {
     const renderer = this.#renderer
 
@@ -288,8 +294,10 @@ export class ImageSourceInternal {
   }
 
   drawFullSize() {
+    this.#rotateOriginal()
+
     const rotated = this.#rotated.value
-    if (this.isLoading || rotated == null) return
+    if (this.isLoading || rotated == null) throw new Error(`Source image isn't loaded.`)
 
     const renderer = this.#renderer
     const tempTexture = renderer.createTexture()

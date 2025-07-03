@@ -1,5 +1,3 @@
-const URL_REVOKE_TIMEOUT_MS = 60_000
-
 export class Janitor {
   private readonly _onDispose = new Set<() => void>()
   isDisposed = false
@@ -24,7 +22,7 @@ export const downloadBlob = (blob: Blob, fileName: string) => {
   anchor.download = fileName
   anchor.dispatchEvent(new MouseEvent('click'))
 
-  setTimeout(() => URL.revokeObjectURL(anchor.href), URL_REVOKE_TIMEOUT_MS)
+  URL.revokeObjectURL(anchor.href)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- needed for type narrowing
