@@ -30,16 +30,31 @@ It also comes with a Web Component UI:
 
 ```html
 <!-- after importing the library, the <media-trimmer> custom element will be defined -->
-<media-trimmer id="trimmer" source="video.mp4"></media-trimmer>
-
+<media-trimmer id="trimmer" source="video.webm"></media-trimmer>
 <button id="export" type="buton">Get trimmed video</button>
+<progress id="export-progress" max="1" />
 
-<script>
+<script type="module">
 const trimmer = document.getElementById('trimmer')
-const export = document.getElementById('export')
+const button = document.getElementById('export')
+const progress = document.getElementById('export-progress')
 
-button.addEventListener('click', () => console.log(await trimmer.toBlob()))
-trimmer.addEventListener('progress', (event) => console.log('progress:', event.detail.progress))
+// save the trimmed video to a file
+button.addEventListener('click', async () => {
+  const blob = await trimmer.toBlob()
+
+  const anchor = document.createElement('a')
+  const blobUrl = URL.createObjectURL(blob)
+
+  anchor.href = blobUrl
+  anchor.target = '_blank'
+  anchor.download = 'trimmed.webm'
+  anchor.dispatchEvent(new MouseEvent('click'))
+  URL.revokeObjectURL(blobUrl)
+})
+
+// display the trimming progress
+trimmer.addEventListener('progress', (event) => progress.value = event.detail.progress)
 <script>
 ```
 
