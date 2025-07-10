@@ -5,7 +5,7 @@ import {
   GLTFFaceLandmarkDetectionExtension,
   GLTFInteractivityExtension,
 } from 'gltf-interactivity/three'
-import envHdr from 'https://github.com/mrdoob/three.js/raw/refs/heads/master/examples/textures/equirectangular/venice_sunset_1k.hdr'
+import envHdr from 'https://raw.github.com/mrdoob/three.js/master/examples/textures/equirectangular/venice_sunset_1k.hdr'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
