@@ -4,8 +4,8 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
 - ## <span class="task-done" /> Photo editing with WebGL filters
 
-  Create A library and UI to crop, rotate, and apply WebGL filters to images. Filters are defined with simple JSON and can use built-in or custom shaders for blending, color adjustments, color LUTs ,etc. The web component UI includes:
-  - A view for cropping with aspect ratio buttons, rotate button and a zoom slider
+  Create A library and UI to crop, rotate, and apply WebGL filters to images. Filters are defined with simple JSON and can use built-in or custom shaders for blending, color adjustments, color LUTs, etc. The web component UI includes:
+  - A view for cropping with aspect ratio and rotate buttons, and a zoom slider
   - A view for adjusting brightness, contrast and saturation with a slider
   - A view for selecting a single filter from a horizontal scrolling list with a slider to set the filter intensity
 
@@ -15,7 +15,7 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
 - ## <span class="task-done" /> Mobile-friendly video editor
 
-  Multie-track editing of video and audio clips with WebGL filters in a simple, mobile-friendly UI.
+  Multi-track editing of video and audio clips with WebGL filters in a simple, mobile-friendly UI.
 
 - ## <span class="task-wip" /> Real-time AR effects
 
@@ -23,7 +23,7 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
 - ## <span class="task-wip" /> Documentation
 
-  Make it clear how to get started using Miru's various on a web site or app, how to create custom effects, and how to contribute to Miru's development. API reference pages should be generated with TypeDoc or something similar. Write guidelines for contributing translations for Miru's UIs.
+  Make it clear how to get started using Miru's various tools on a web site or app, how to create custom effects, and how to contribute to Miru's development. API reference pages should be generated with TypeDoc or something similar. Write guidelines for contributing translations for Miru's UIs.
 
 - ## <span class="task-todo" /> Advanced image filters
 

@@ -40,9 +40,9 @@ export default defineConfig({
         filesystem: [resolve('docs/parts/**/*.md')],
       },
       shortcuts: {
-        'task-done': 'inline-block align-middle i-tabler-circle-check-filled text-green',
-        'task-wip': 'inline-block align-middle i-tabler-progress-check text-yellow',
-        'task-todo': 'inline-block align-middle i-tabler-circle-dashed text-gray',
+        'task-done': 'inline-block align-middle i-tabler-circle-check-filled text-$vp-c-success-2',
+        'task-wip': 'inline-block align-middle i-tabler-progress-check text-$vp-c-warning-2',
+        'task-todo': 'inline-block align-middle i-tabler-circle-dashed text-$vp-c-text-2',
       },
     }),
     globImportFrag(),
