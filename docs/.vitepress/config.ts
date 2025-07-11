@@ -62,7 +62,13 @@ export default defineConfig({
           },
         ],
       },
-      { text: 'Roadmap', link: 'roadmap' },
+      {
+        text: 'About',
+        items: [
+          { text: 'Roadmap', link: 'roadmap' },
+          { text: 'Code of conduct', link: 'code-of-conduct' },
+        ],
+      },
       {
         text: 'Demos',
         link: '/demos',
