@@ -61,14 +61,15 @@ trimmer.addEventListener('progress', (event) => progress.value = event.detail.pr
 Powered by:
 
 - [mp4Box.js](https://gpac.github.io/mp4box.js/)
-- [mp4-muxer](https://gpac.github.io/mp4box.js/)
+- [mp4-muxer](https://github.com/Vanilagy/mp4-muxer)
+- [webm-muxer](https://github.com/Vanilagy/webm-muxer)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
 
 ## Roadmap
 
 - [ ] Lossless trimming
 - [ ] Bitrate/filesize controls
-- [ ] Webm support
+- [x] Webm support
 - [ ] Color profile preservation
 - [ ] Increased browser and codec support via [LibAVJS-WebCodecs-Polyfill](https://github.com/ennuicastr/libavjs-webcodecs-polyfill)
 

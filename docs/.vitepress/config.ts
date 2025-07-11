@@ -62,6 +62,7 @@ export default defineConfig({
           },
         ],
       },
+      { text: 'Roadmap', link: 'roadmap' },
       {
         text: 'Demos',
         link: '/demos',

@@ -39,6 +39,11 @@ export default defineConfig({
         },
         filesystem: [resolve('docs/parts/**/*.md')],
       },
+      shortcuts: {
+        'task-done': 'inline-block align-middle i-tabler-circle-check-filled text-green',
+        'task-wip': 'inline-block align-middle i-tabler-progress-check text-yellow',
+        'task-todo': 'inline-block align-middle i-tabler-circle-dashed text-gray',
+      },
     }),
     globImportFrag(),
     glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),

@@ -54,6 +54,10 @@ trimmer.addEventListener('progress', (event) => progress.value = event.detail.pr
 <script>
 ```
 
+## Roadmap
+
+We've outlined our development plans in our [roadmap here](https://miru.media/roadmap).
+
 ## Packages
 
 Miru's tools are published to npm as the following packages:
@@ -64,24 +68,6 @@ Miru's tools are published to npm as the following packages:
 | [`media-trimmer`](https://www.npmjs.com/package/media-trimmer)           | A simple MP4 video trimmer using the WebCodecs API               | [docs](/guide/media-trimmer)      |
 | [`webgl-effects`](https://www.npmjs.com/package/webgl-effects)           | A library for applying filters and effects to images with WebGL2 |                                   |
 | [`webgl-video-editor`](https://www.npmjs.com/package/video-editor)       | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](/guide/webgl-video-editor) |
-
-## Roadmap
-
-This project is still in its early stages. We're working on:
-
-- Still image editor with WebGL filters
-  - [x] Crop, rotate, adjustments, and simple filters
-  - [ ] Non-linear effect graph
-- Video editor
-  - Mobile-friendly UI
-  - [x] WebGL video effects
-  - [ ] Desktop usability improvements
-- Real-time AR effects using [MediaPipe](https://github.com/google-ai-edge/mediapipe) and [Three.js](https://threejs.org/)
-  - [x] [proof of concept](https://miru.media/ar-effects)
-  - [ ] glTF interactivity and face landmark detection extension implementations
-  - [ ] Sample effect collection
-- [ ] Thorough documentation
-- [ ] Translations
 
 <!-- #endregion main -->
 
