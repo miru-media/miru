@@ -61,6 +61,14 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Image segmentation
   - Motion tracking
 
+- ## <span class="task-todo" /> AR effects editor
+
+  An app to create AR effects with landmark tracking, post processing effects and filters, and visual scripting for interactivity. The app will include:
+  - A 3D scene editor for positioning and previewing objects
+  - 3D layer editor
+  - An outline for ordering 3D and 2D scenes
+  - A node-based visual scripting editor
+
 <style scoped>
 li:has(h2) {
   list-style: none;
