@@ -87,6 +87,7 @@ export default defineConfig({
         link: 'https://codeberg.org/miru-media/miru',
         ariaLabel: 'Source code on Codeberg',
       },
+      { icon: 'discord', link: 'https://discord.gg/mmwMvf4Pnv' },
     ],
 
     externalLinkIcon: true,

@@ -5,13 +5,16 @@
   </picture>
 </h1>
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+<p>
+  <a href="https://miru.media/code-of-conduct"><img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Contributor Covenant"></a>
+  <a href="https://discord.gg/mmwMvf4Pnv"><img alt="Discord" src="https://img.shields.io/discord/1393650023278842019?logo=discord"></a>
+</p>
 
 [Miru](https://miru.media) is a set of modular, extensible Web platform tools and components for still image and multi-track video editing and state-of-the-art, real-time AR. Using WebGL, WebAssembly, and open source, mobile-optimized machine learning models, Miru will give people on the social web the tools to edit images and apply interactive effects to recorded video without compromising on privacy and transparency. Miru aims to provide intuitive and user-friendly UIs which developers can easily integrate into their Web apps regardless of the front-end frameworks they use.
 
 <p class="flex justify-evenly flex-wrap">
-    <img src="/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" class="h-20rem">
-    <img src="/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" class="h-20rem">
+    <img src="/docs/public/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" class="h-20rem">
+    <img src="/docs/public/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" class="h-20rem">
 </p>
 
 <!-- #region main -->

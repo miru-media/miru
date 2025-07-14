@@ -1,6 +1,6 @@
 # Experimental AR effects for web browsers
 
-This package explores creating realtime, 3D AR effects such as filters with face landmark detection using on-device machine learning models from [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/guide). Effects are defined in [glTF format](https://www.khronos.org/gltf/), with a few extensions:
+This package explores creating realtime, 3D AR selfie-mode effects such as filters with face landmark detection using on-device machine learning models from [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/guide). Effects are defined in [glTF format](https://www.khronos.org/gltf/), with a few extensions:
 
 - [KHR_interactivity](https://github.com/KhronosGroup/glTF/blob/interactivity/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc), a draft specification for events and node-based scripting and
 - MIRU_interactivity_face_landmarks, an experimental extension for integrating face landmark detection from a video stream.
