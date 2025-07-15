@@ -54,7 +54,7 @@ button.addEventListener('click', async () => {
 
 // display the trimming progress
 trimmer.addEventListener('progress', (event) => progress.value = event.detail.progress)
-<script>
+</script>
 ```
 
 ## Roadmap
