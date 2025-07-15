@@ -3,8 +3,7 @@ import * as gltf from '@gltf-transform/core'
 import { KHRLightsPunctual, Light } from '@gltf-transform/extensions'
 import { moveToDocument } from '@gltf-transform/functions'
 import { Interactivity, InteractivityFaceLandmarks } from 'gltf-interactivity/transform'
-
-import sunglassesAsset from './sunglasses.glb'
+import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
 
 export const createSampleGltf = async () => {
   const io = new gltf.WebIO().registerExtensions([

@@ -26,7 +26,7 @@ export default defineConfig({
       awaitDownload: true,
       rules: [
         {
-          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3|hdr|task))(?=[`'")\]])/gi,
+          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3|hdr|gltf|glb|task))(?=[`'")\]])/gi,
         },
       ],
     }),
