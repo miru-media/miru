@@ -10,6 +10,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
+import { DeviceOrientationControls } from 'three-stdlib'
 
 const MIRROR = true as boolean
 
@@ -96,14 +97,28 @@ export const createDemo = (options: {
   // get camera video stream
   // start face landmarks detection
   // start renderer animation loop
-  const start = async () => {
+  const start = async (): Promise<boolean> => {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', height: 720 } })
       video.srcObject = stream
 
       await Promise.all([faceLandmarksDetector.start(video), video.play()])
 
-      renderer.setAnimationLoop(() => renderer.render(scene, camera))
+      const deviceOrientationControls = new DeviceOrientationControls(camera)
+
+      deviceOrientationControls.addEventListener('change', () => scene.quaternion.copy(camera.quaternion))
+
+      renderer.setAnimationLoop(() => {
+        {
+          const { type, alpha } = deviceOrientationControls.deviceOrientation
+          if (!type || alpha == null)
+            deviceOrientationControls.deviceOrientation = { alpha: 0, beta: 90, gamma: 0 }
+        }
+
+        deviceOrientationControls.update()
+
+        renderer.render(scene, camera)
+      })
 
       return true
     } catch {
@@ -111,7 +126,7 @@ export const createDemo = (options: {
     }
   }
 
-  const stop = () => {
+  const stop = (): void => {
     video.pause()
     video.srcObject = null
     renderer.dispose()
