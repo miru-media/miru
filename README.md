@@ -1,7 +1,7 @@
-<h1>
+<h1 align="center">
   <picture>
-    <source srcset="./docs/branding/logo/white-logo.svg" media="(prefers-color-scheme: dark)" height="170px" width="100%">
-    <img alt="Miru" src="./docs/branding/logo/dark-logo.svg" height="170px" width="100%">
+    <source srcset="./docs/branding/logo/white-logo.svg" media="(prefers-color-scheme: dark)" height="170">
+    <img alt="Miru" src="./docs/branding/logo/dark-logo.svg" height="170" >
   </picture>
 </h1>
 
@@ -12,9 +12,9 @@
 
 [Miru](https://miru.media) is a set of modular, extensible Web platform tools and components for still image and multi-track video editing and state-of-the-art, real-time AR. Using WebGL, WebAssembly, and open source, mobile-optimized machine learning models, Miru will give people on the social web the tools to edit images and apply interactive effects to recorded video without compromising on privacy and transparency. Miru aims to provide intuitive and user-friendly UIs which developers can easily integrate into their Web apps regardless of the front-end frameworks they use.
 
-<p class="flex justify-evenly flex-wrap">
-    <img src="/docs/public/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" class="h-20rem">
-    <img src="/docs/public/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" class="h-20rem">
+<p align="center">
+    <img src="./docs/public/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" height="320">
+    <img src="./docs/public/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" height="320">
 </p>
 
 <!-- #region main -->
