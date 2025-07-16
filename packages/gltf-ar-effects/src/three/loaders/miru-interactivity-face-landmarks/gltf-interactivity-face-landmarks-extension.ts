@@ -29,6 +29,8 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   video?: HTMLVideoElement
   interactivity!: GLTFInteractivityExtension
 
+  readonly #faceAttachmentObjects: THREE.Object3D[] = []
+
   get json(): JsonWithExtensions {
     return this.parser.json
   }
@@ -41,6 +43,15 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     this.processor = new FaceLandmarksProcessor({
       ...options,
       onDetect: (faceTransforms) => {
+        // TODO: should probably eventually rely only on the interactivity graph
+        if (faceTransforms.length)
+          this.#faceAttachmentObjects.forEach((object) => {
+            const { translation, rotation } = faceTransforms[0]
+            object.quaternion.setFromEuler(new THREE.Euler(rotation[0], rotation[1], rotation[2]))
+            object.position.set(translation[0], translation[1], translation[2])
+            object.updateMatrix()
+          })
+
         this.emitChanges(faceTransforms)
         options.onDetect?.(faceTransforms)
       },
@@ -81,6 +92,10 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
 
     // check each mesh for face landmark extension properties
     this.parser.associations.forEach((reference, object) => {
+      // Testing declaring attachments in Blender custom properties
+      if (object.userData.isFaceAttachment === true && object instanceof THREE.Object3D)
+        this.#faceAttachmentObjects.push(object)
+
       if (
         !(reference as GLTFReference | undefined) ||
         !(object instanceof THREE.Mesh) ||
