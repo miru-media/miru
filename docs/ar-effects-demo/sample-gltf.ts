@@ -6,6 +6,10 @@ import { Interactivity, InteractivityFaceLandmarks } from 'gltf-interactivity/tr
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
 import textureUrl from 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/UV_checker_Map_byValle.jpg/960px-UV_checker_Map_byValle.jpg'
 
+const ADD_TEST_FACE_MESH = false as boolean
+// set to -1 to not use the interactivity graph to transform a face attachment
+const FACE_ATTACHMENT_OBJECT_INDEX = 1
+
 export const createSampleGltf = async () => {
   const io = new gltf.WebIO().registerExtensions([
     InteractivityFaceLandmarks,
@@ -64,7 +68,7 @@ export const createSampleGltf = async () => {
       ),
   )
 
-  scene.addChild(faceNode)
+  if (ADD_TEST_FACE_MESH) scene.addChild(faceNode)
 
   const interactivity = doc.createExtension(Interactivity)
   const graph = interactivity.createGraph()
@@ -104,13 +108,16 @@ export const createSampleGltf = async () => {
     .setDeclaration(pointerSet)
     .setConfig('pointer', interactivity.createValue().setValue('/nodes/{node}/translation'))
     .setConfig('type', TYPES.float3)
-    .setValue('node', interactivity.createValue().setValue(1).setType(TYPES.int))
+    .setValue('node', interactivity.createValue().setValue(FACE_ATTACHMENT_OBJECT_INDEX).setType(TYPES.int))
     .setInput('value', onChangeFaceNode.createFlow('translation'))
 
   const setRotationNode = interactivity
     .createNode('update face attachment rotation')
     .setDeclaration(pointerSet)
-    .setConfig('pointer', interactivity.createValue().setValue('/nodes/1/rotation'))
+    .setConfig(
+      'pointer',
+      interactivity.createValue().setValue(`/nodes/${FACE_ATTACHMENT_OBJECT_INDEX}/rotation`),
+    )
     .setConfig('type', TYPES.float3)
     .setInput('value', onChangeFaceNode.createFlow('rotation'))
 

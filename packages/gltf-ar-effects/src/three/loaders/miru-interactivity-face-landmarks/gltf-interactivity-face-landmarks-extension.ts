@@ -90,9 +90,12 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
         return
 
       const primitive = meshes[reference.meshes].primitives[reference.primitives]
-      const faceDetection = primitive.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS]
+      const faceDetection: unknown =
+        primitive.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS] ??
+        // Testing exporting from Blender with custom properties instead of a custom extension
+        object.userData
 
-      if (faceDetection != null) {
+      if (faceDetection != null && typeof faceDetection === 'object' && 'faceId' in faceDetection) {
         processor.addFaceMesh(
           object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
           faceDetection as any,

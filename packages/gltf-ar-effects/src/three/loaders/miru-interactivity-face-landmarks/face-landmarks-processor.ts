@@ -303,7 +303,7 @@ export class FaceLandmarksProcessor {
         geometry.setAttribute('uv', positions.projected)
         // TODO: use interactivity graph instead
         mesh.userData.useVideoTexture = true
-      } else geometry.setAttribute('uv', this.CANONICAL_UVS)
+      } else if (uvMode === 'canonical') geometry.setAttribute('uv', this.CANONICAL_UVS)
 
       geometry.computeVertexNormals()
     }
