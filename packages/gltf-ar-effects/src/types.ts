@@ -100,3 +100,12 @@ export interface InteractivityFlow {
   extras?: Record<string, unknown>
   extensions?: Record<string, unknown>
 }
+
+export type FaceLandmarksUvMode = 'canonical' | 'projected'
+
+export interface FaceLandmarksGeometryProps {
+  name?: string
+  faceId: number
+  isOccluder?: boolean
+  uvMode?: FaceLandmarksUvMode
+}

@@ -13,9 +13,12 @@ import {
   DETECTION_CAMERA_FAR,
   DETECTION_CAMERA_FOV,
   DETECTION_CAMERA_NEAR,
-  FACEMESH_VERTEX_INDICES,
+  LANDMARK_INDICES,
   LANDMARKS_VERTEX_COUNT,
+  MAX_LANDMARK_FACES,
+  UVS,
 } from '../../../constants'
+import type { FaceLandmarksGeometryProps } from '../../../types'
 
 import type {
   WorkerErrorData,
@@ -52,9 +55,16 @@ export class FaceLandmarksProcessor {
   tempVector = new THREE.Vector3()
 
   hasMirroredGeometry = false
-  faceMeshGeometries: Record<number, THREE.BufferGeometry[] | undefined> = {}
-  faceGeometryPositions: Record<number, THREE.Float32BufferAttribute | undefined> = {}
-  faceGeometryIndex = new THREE.Uint16BufferAttribute(FACEMESH_VERTEX_INDICES, 1)
+  faceMeshGeometries: Record<
+    number,
+    { geometry: THREE.BufferGeometry; props: FaceLandmarksGeometryProps }[] | undefined
+  > = {}
+  facePositionAttributes: Record<
+    number,
+    Record<'projected' | 'unprojected', THREE.Float32BufferAttribute> | undefined
+  > = {}
+  INDEX_ATTR = new THREE.BufferAttribute(LANDMARK_INDICES, 1)
+  CANONICAL_UVS = new THREE.BufferAttribute(UVS, 2)
 
   estimatedCamera = new THREE.PerspectiveCamera(
     DETECTION_CAMERA_FOV,
@@ -110,7 +120,7 @@ export class FaceLandmarksProcessor {
     )
   }
 
-  private async _init() {
+  private async _init(): Promise<void> {
     if (this.workerInit) {
       await this.workerInit.promise
       return
@@ -128,7 +138,7 @@ export class FaceLandmarksProcessor {
     await this.workerInit.promise
   }
 
-  async start(video: HTMLVideoElement, mirror = true) {
+  async start(video: HTMLVideoElement, mirror = true): Promise<void> {
     await this._init()
     this.video?.cancelVideoFrameCallback(this.rvfcHandle)
     this.video = video
@@ -152,7 +162,7 @@ export class FaceLandmarksProcessor {
     this.rvfcHandle = video.requestVideoFrameCallback(onVideoFrame)
   }
 
-  async detect() {
+  async detect(): Promise<void> {
     const { isDetecting, video } = this
 
     if (isDetecting || !video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
@@ -216,11 +226,17 @@ export class FaceLandmarksProcessor {
       vector.unproject(estimatedCamera)
       const scale = facePosition.z / vector.z
 
-      const faceVertices = this.getFaceGeometryPosition(faceIndex).array
+      const positionBuffers = this.getFacePossitionAttributess(faceIndex)
+      const unprojected = positionBuffers.unprojected.array
+      const projected = positionBuffers.projected.array
 
       let offset = 0
       for (let i = 0; i < LANDMARKS_VERTEX_COUNT; i++) {
         const landmark = landmarks[i]
+
+        projected[offset + 0] = landmark.x
+        projected[offset + 1] = landmark.y
+        projected[offset + 2] = landmark.z
 
         vector.x = (landmark.x * 2 - 1) * (mirror ? -1 : 1)
         vector.y = landmark.y * -2 + 1
@@ -228,9 +244,9 @@ export class FaceLandmarksProcessor {
 
         vector.unproject(estimatedCamera)
 
-        faceVertices[offset + 0] = vector.x * scale
-        faceVertices[offset + 1] = vector.y * scale
-        faceVertices[offset + 2] = vector.z * scale
+        unprojected[offset + 0] = vector.x * scale
+        unprojected[offset + 1] = vector.y * scale
+        unprojected[offset + 2] = vector.z * scale
 
         offset += 3
       }
@@ -254,24 +270,49 @@ export class FaceLandmarksProcessor {
     return faceTransforms
   }
 
-  getFaceGeometryPosition(faceIndex: number) {
-    return (this.faceGeometryPositions[faceIndex] ??= new THREE.Float32BufferAttribute(
-      LANDMARKS_VERTEX_COUNT * 3,
-      3,
-    ))
+  getFacePossitionAttributess(faceIndex: number): NonNullable<this['facePositionAttributes'][number]> {
+    return (this.facePositionAttributes[faceIndex] ??= {
+      projected: new THREE.Float32BufferAttribute(LANDMARKS_VERTEX_COUNT * 3, 3),
+      unprojected: new THREE.Float32BufferAttribute(LANDMARKS_VERTEX_COUNT * 3, 3),
+    })
   }
 
-  addFaceGeometry(faceId: number, geometry: THREE.BufferGeometry) {
-    geometry.setAttribute('position', this.getFaceGeometryPosition(faceId))
+  addFaceMesh(
+    mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
+    props: FaceLandmarksGeometryProps,
+  ): void {
+    const { faceId, isOccluder, uvMode } = props
+
+    if (faceId >= MAX_LANDMARK_FACES)
+      throw new Error(`Maximum ${MAX_LANDMARK_FACES} detected faces. Got ${faceId}.`)
+
+    const { geometry, material } = mesh
+
+    material.flatShading = false
+
+    const positions = this.getFacePossitionAttributess(faceId)
+    geometry.setAttribute('position', positions.unprojected)
+    geometry.setIndex(this.INDEX_ATTR)
     geometry.attributes.position.needsUpdate = true
-    geometry.setIndex(this.faceGeometryIndex)
-    geometry.computeVertexNormals()
-    ;(this.faceMeshGeometries[faceId] ??= []).push(geometry)
+
+    if (isOccluder) {
+      mesh.renderOrder = -1
+      material.colorWrite = false
+    } else {
+      if (uvMode === 'projected') {
+        geometry.setAttribute('uv', positions.projected)
+        // TODO: use interactivity graph instead
+        mesh.userData.useVideoTexture = true
+      } else geometry.setAttribute('uv', this.CANONICAL_UVS)
+
+      geometry.computeVertexNormals()
+    }
+    ;(this.faceMeshGeometries[faceId] ??= []).push({ geometry, props })
   }
 
-  updateFaceGeometries(faceId: number, mirror: boolean) {
+  updateFaceGeometries(faceId: number, mirror: boolean): void {
     if (this.hasMirroredGeometry !== mirror) {
-      const { array } = this.faceGeometryIndex
+      const { array } = this.INDEX_ATTR
       let temp
       for (let i = 0, { length } = array; i < length; i += 3) {
         temp = array[i]
@@ -281,13 +322,18 @@ export class FaceLandmarksProcessor {
       this.hasMirroredGeometry = mirror
     }
 
-    this.faceMeshGeometries[faceId]?.forEach((geometry) => {
-      geometry.computeVertexNormals()
-      geometry.getAttribute('position').needsUpdate = true
+    this.faceMeshGeometries[faceId]?.forEach(({ geometry, props }) => {
+      geometry.attributes.position.needsUpdate = true
+
+      if (!props.isOccluder) {
+        if (props.uvMode === 'projected') geometry.attributes.uv.needsUpdate = true
+
+        geometry.computeVertexNormals()
+      }
     })
   }
 
-  dispose() {
+  dispose(): void {
     this.worker.terminate()
     this.video?.cancelVideoFrameCallback(this.rvfcHandle)
   }

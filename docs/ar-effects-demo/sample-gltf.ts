@@ -1,18 +1,21 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- -- */
 import * as gltf from '@gltf-transform/core'
-import { KHRLightsPunctual, Light } from '@gltf-transform/extensions'
+import { KHRLightsPunctual, KHRMaterialsUnlit, Light } from '@gltf-transform/extensions'
 import { moveToDocument } from '@gltf-transform/functions'
 import { Interactivity, InteractivityFaceLandmarks } from 'gltf-interactivity/transform'
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
+import textureUrl from 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/UV_checker_Map_byValle.jpg/960px-UV_checker_Map_byValle.jpg'
 
 export const createSampleGltf = async () => {
   const io = new gltf.WebIO().registerExtensions([
     InteractivityFaceLandmarks,
     Interactivity,
     KHRLightsPunctual,
+    KHRMaterialsUnlit,
   ])
   const doc = new gltf.Document()
 
+  const materialsUnlit = doc.createExtension(KHRMaterialsUnlit)
   const faceLandmarks = doc.createExtension(InteractivityFaceLandmarks)
   const lights = doc.createExtension(KHRLightsPunctual)
 
@@ -25,14 +28,30 @@ export const createSampleGltf = async () => {
       .addPrimitive(
         doc
           .createPrimitive()
-          .setExtension(faceLandmarks.extensionName, faceLandmarks.createFaceLandmarksGeometry().setFaceId(0))
+          .setExtension(
+            faceLandmarks.extensionName,
+            faceLandmarks
+              .createFaceLandmarksGeometry()
+              .setFaceId(0)
+              // set to 'projected' to use the video texture
+              // set to 'canonical' to use the mediapipe UV mapping and the imported `textureUrl`
+              .setUvMode('canonical'),
+          )
           .setMaterial(
             doc
               .createMaterial()
               .setBaseColorFactor([1, 0.6795424696265424, 0, 0.675])
               .setMetallicFactor(1)
               .setRoughnessFactor(0.001)
-              .setAlphaMode('BLEND'),
+              .setAlphaMode('BLEND')
+              // comment out to apply lights and shading to the face mesh
+              .setExtension(materialsUnlit.extensionName, materialsUnlit.createUnlit())
+              .setBaseColorTexture(
+                doc
+                  .createTexture()
+                  .setImage(new Uint8Array(await (await fetch(textureUrl)).arrayBuffer()))
+                  .setMimeType('image/png'),
+              ),
           ),
       )
       .addPrimitive(

@@ -16,6 +16,10 @@ declare module 'three/examples/jsm/loaders/GLTFLoader.d.ts' {
   }
 }
 
+interface JsonWithInteractivity {
+  extensions?: { KHR_interactivity?: KHRInteractivityExtension }
+}
+
 export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
   name: typeof KHR_INTERACTIVITY = KHR_INTERACTIVITY
   parser!: GLTFParser
@@ -34,18 +38,16 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
     meshes: [] as (THREE.Group | THREE.Mesh)[],
   } satisfies Record<string, THREE.Object3D[] | THREE.Material[]>
 
-  get json() {
-    return this.parser.json as {
-      extensions?: { KHR_interactivity?: KHRInteractivityExtension }
-    }
+  get json(): JsonWithInteractivity {
+    return this.parser.json
   }
 
-  init(parser: GLTFParser) {
+  init(parser: GLTFParser): this {
     this.parser = parser
     return this
   }
 
-  afterRoot() {
+  afterRoot(): null | Promise<void> {
     const interactivityExtension = this.json.extensions?.KHR_interactivity
 
     if (interactivityExtension?.graph == null || !interactivityExtension.graphs) return null
@@ -80,7 +82,7 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
     return null
   }
 
-  setProperty(path: string[], value: unknown) {
+  setProperty(path: string[], value: unknown): void {
     switch (path[0]) {
       case 'nodes': {
         const threeObject = this.objectArrays.nodes[parseInt(path[1], 10)] as THREE.Object3D | undefined
@@ -104,11 +106,11 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
     }
   }
 
-  emitCustomEvent(id: number | string, parameters: Record<string, unknown>) {
+  emitCustomEvent(id: number | string, parameters: Record<string, unknown>): void {
     this.engine.graph.customEvents[id].eventEmitter.emit(parameters)
   }
 
-  emit(op: string, emittedValues: any, filter = (_nodes: Behave.EventNode) => true) {
+  emit(op: string, emittedValues: any, filter = (_nodes: Behave.EventNode) => true): void {
     const eventNodes = this.engine.eventNodes.filter(
       (node) => node.description.typeName === op && filter(node),
     )

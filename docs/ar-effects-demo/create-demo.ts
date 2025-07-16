@@ -104,8 +104,16 @@ export const createDemo = (options: {
 
       await Promise.all([faceLandmarksDetector.start(video), video.play()])
 
-      const deviceOrientationControls = new DeviceOrientationControls(camera)
+      // Set video texture on face meshes with "projected" uvMode
+      const faceMesh = scene.getObjectByName('face0-mesh')
+      if (faceMesh instanceof THREE.Mesh && faceMesh.userData.useVideoTexture === true) {
+        const texture = new THREE.VideoTexture(video)
+        texture.flipY = false
+        texture.colorSpace = videoTexture.colorSpace
+        ;(faceMesh.material as THREE.MeshStandardMaterial).map = texture
+      }
 
+      const deviceOrientationControls = new DeviceOrientationControls(camera)
       deviceOrientationControls.addEventListener('change', () => scene.quaternion.copy(camera.quaternion))
 
       renderer.setAnimationLoop(() => {

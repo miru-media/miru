@@ -2,32 +2,35 @@ import * as Behave from '@behave-graph/core'
 import * as THREE from 'three'
 import type { GLTFLoaderPlugin, GLTFParser, GLTFReference } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-import { KHR_INTERACTIVITY, MAX_LANDMARK_FACES, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../constants'
-import type { KHRInteractivityExtension } from '../../../types'
+import { KHR_INTERACTIVITY, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../constants'
+import type { FaceLandmarksGeometryProps, KHRInteractivityExtension } from '../../../types'
 import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension'
 
 import { FaceLandmarksProcessor, type FaceTransform } from './face-landmarks-processor'
 import { EventOnFaceLandmarksChangeNode } from './interactivity-behave-nodes'
+
+interface JsonWithExtensions {
+  meshes?: {
+    primitives: {
+      extensions?: {
+        [MIRU_INTERACTIVITY_FACE_LANDMARKS]?: FaceLandmarksGeometryProps
+      }
+    }[]
+  }[]
+  extensions?: { [KHR_INTERACTIVITY]?: KHRInteractivityExtension }
+}
 
 export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   name: typeof MIRU_INTERACTIVITY_FACE_LANDMARKS = MIRU_INTERACTIVITY_FACE_LANDMARKS
   parser!: GLTFParser
 
   processor: FaceLandmarksProcessor
+  deviceOrientation = { alpha: 0, beta: 0, gamma: 0 }
   video?: HTMLVideoElement
   interactivity!: GLTFInteractivityExtension
 
-  get json() {
-    return this.parser.json as {
-      meshes?: {
-        primitives: {
-          extensions?: {
-            [MIRU_INTERACTIVITY_FACE_LANDMARKS]?: { faceId: number; isOccluder?: boolean }
-          }
-        }[]
-      }[]
-      extensions?: { [KHR_INTERACTIVITY]?: KHRInteractivityExtension }
-    }
+  get json(): JsonWithExtensions {
+    return this.parser.json
   }
 
   constructor(options: {
@@ -44,12 +47,12 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     })
   }
 
-  init(parser: GLTFParser) {
+  init(parser: GLTFParser): this {
     this.parser = parser
     return this
   }
 
-  beforeRoot() {
+  beforeRoot(): null | Promise<void> {
     const interactivityJson = this.json.extensions?.[KHR_INTERACTIVITY]
     if (!interactivityJson) return null
 
@@ -72,11 +75,11 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     return null
   }
 
-  afterRoot() {
+  afterRoot(): null | Promise<void> {
     const { processor, json } = this
     const { meshes = [] } = json
 
-    // check each mesh for face detection `extra` properties
+    // check each mesh for face landmark extension properties
     this.parser.associations.forEach((reference, object) => {
       if (
         !(reference as GLTFReference | undefined) ||
@@ -89,29 +92,18 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
       const primitive = meshes[reference.meshes].primitives[reference.primitives]
       const faceDetection = primitive.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS]
 
-      if (faceDetection) {
-        const { faceId, isOccluder } = faceDetection
-
-        if (faceId >= MAX_LANDMARK_FACES)
-          throw new Error(`Maximum ${MAX_LANDMARK_FACES} detected faces. Got ${faceId}.`)
-
-        const { geometry, material } = object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>
-
-        material.flatShading = false
-
-        if (isOccluder) {
-          object.renderOrder = -1
-          material.colorWrite = false
-        }
-
-        processor.addFaceGeometry(faceId, geometry)
+      if (faceDetection != null) {
+        processor.addFaceMesh(
+          object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
+          faceDetection as any,
+        )
       }
     })
 
     return null
   }
 
-  emitChanges(faceTransforms: FaceTransform[]) {
+  private emitChanges(faceTransforms: FaceTransform[]): void {
     faceTransforms.forEach((transform, faceIndex) => {
       this.interactivity.emit(
         EventOnFaceLandmarksChangeNode.OP,
@@ -121,11 +113,11 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     })
   }
 
-  async start(video: HTMLVideoElement) {
+  async start(video: HTMLVideoElement): Promise<void> {
     await this.processor.start(video)
   }
 
-  destroy() {
+  destroy(): void {
     this.processor.dispose()
   }
 }

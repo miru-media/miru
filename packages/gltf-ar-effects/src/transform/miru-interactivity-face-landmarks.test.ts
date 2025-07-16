@@ -69,6 +69,7 @@ test('reads and writes face mesh primitive extension', async () => {
               "extensions": {
                 "MIRU_interactivity_face_landmarks": {
                   "faceId": 0,
+                  "uvMode": undefined,
                 },
               },
               "mode": 4,
@@ -84,6 +85,7 @@ test('reads and writes face mesh primitive extension', async () => {
                 "MIRU_interactivity_face_landmarks": {
                   "faceId": 1,
                   "isOccluder": true,
+                  "uvMode": undefined,
                 },
               },
               "mode": 4,

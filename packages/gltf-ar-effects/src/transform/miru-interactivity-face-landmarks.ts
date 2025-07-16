@@ -2,6 +2,7 @@ import * as gltf from '@gltf-transform/core'
 import type { IProperty } from '@gltf-transform/core'
 
 import { MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../constants'
+import type { FaceLandmarksGeometryProps, FaceLandmarksUvMode } from '../types'
 
 import { Interactivity } from './interactivity'
 
@@ -10,7 +11,7 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
   extensionName = MIRU_INTERACTIVITY_FACE_LANDMARKS
   interactivity = this.document.createExtension(Interactivity)
 
-  createFaceLandmarksGeometry(name?: string) {
+  createFaceLandmarksGeometry(name?: string): FaceLandmarksGeometry {
     return new FaceLandmarksGeometry(this.document.getGraph(), name)
   }
 
@@ -18,7 +19,7 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
     context.jsonDoc.json.meshes?.forEach((meshDef, meshIndex) => {
       meshDef.primitives.forEach((primitivDef, primitiveIndex) => {
         const faceLandmarksDetection = primitivDef.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS] as
-          | { name?: string; faceId: number; isOccluder?: boolean }
+          | FaceLandmarksGeometryProps
           | undefined
         if (!faceLandmarksDetection) return
 
@@ -28,7 +29,8 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
           MIRU_INTERACTIVITY_FACE_LANDMARKS,
           this.createFaceLandmarksGeometry(faceLandmarksDetection.name)
             .setFaceId(faceLandmarksDetection.faceId)
-            .setIsOccluder(faceLandmarksDetection.isOccluder ?? false),
+            .setIsOccluder(faceLandmarksDetection.isOccluder ?? null)
+            .setUvMode(faceLandmarksDetection.uvMode ?? null),
         )
       })
     })
@@ -55,6 +57,7 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
 
           const extensionJson: Record<string, unknown> = {
             faceId: faceLandmarksDetection.getFaceId(),
+            uvMode: faceLandmarksDetection.getUvMode() ?? undefined,
           }
 
           if (faceLandmarksDetection.getIsOccluder()) extensionJson.isOccluder = true
@@ -69,7 +72,8 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
 
 interface IFaceLandmarksGeometry extends IProperty {
   faceId: number
-  isOccluder: boolean
+  isOccluder: boolean | null
+  uvMode: FaceLandmarksUvMode | null
 }
 
 export class FaceLandmarksGeometry extends gltf.ExtensionProperty<IFaceLandmarksGeometry> {
@@ -78,25 +82,40 @@ export class FaceLandmarksGeometry extends gltf.ExtensionProperty<IFaceLandmarks
   propertyType!: string
   parentTypes!: gltf.PropertyType[]
 
-  init() {
+  init(): void {
     this.extensionName = MIRU_INTERACTIVITY_FACE_LANDMARKS
     this.propertyType = 'FaceLandmarksGeometry'
     this.parentTypes = [gltf.PropertyType.PRIMITIVE]
   }
 
-  setFaceId(faceId: number) {
+  getDefaults() {
+    return Object.assign(super.getDefaults(), {
+      faceId: 0,
+      isOccluder: false,
+    })
+  }
+
+  setFaceId(faceId: number): this {
     return this.set('faceId', faceId)
   }
 
-  getFaceId() {
+  getFaceId(): number {
     return this.get('faceId')
   }
 
-  setIsOccluder(isOccluder: boolean) {
+  setIsOccluder(isOccluder: boolean | null): this {
     return this.set('isOccluder', isOccluder)
   }
 
-  getIsOccluder() {
+  getIsOccluder(): boolean | null {
     return this.get('isOccluder')
+  }
+
+  // TODO: this should be done in the interactivity graph
+  setUvMode(mode: FaceLandmarksUvMode | null): this {
+    return this.set('uvMode', mode)
+  }
+  getUvMode(): IFaceLandmarksGeometry['uvMode'] {
+    return this.get('uvMode')
   }
 }
