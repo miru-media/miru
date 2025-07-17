@@ -48,7 +48,7 @@ const start = async () => {
   isReady.value = true
 }
 
-onScopeDispose(() => ar.stop)
+onScopeDispose(() => ar.stop())
 
 const canvas = ref()
 </script>

@@ -281,7 +281,7 @@ export class FaceLandmarksProcessor {
     mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
     props: FaceLandmarksGeometryProps,
   ): void {
-    const { faceId, isOccluder, uvMode } = props
+    const { faceId, uvMode } = props
 
     if (faceId >= MAX_LANDMARK_FACES)
       throw new Error(`Maximum ${MAX_LANDMARK_FACES} detected faces. Got ${faceId}.`)
@@ -295,18 +295,13 @@ export class FaceLandmarksProcessor {
     geometry.setIndex(this.INDEX_ATTR)
     geometry.attributes.position.needsUpdate = true
 
-    if (isOccluder) {
-      mesh.renderOrder = -1
-      material.colorWrite = false
-    } else {
-      if (uvMode === 'projected') {
-        geometry.setAttribute('uv', positions.projected)
-        // TODO: use interactivity graph instead
-        mesh.userData.useVideoTexture = true
-      } else if (uvMode === 'canonical') geometry.setAttribute('uv', this.CANONICAL_UVS)
+    if (uvMode === 'projected') {
+      geometry.setAttribute('uv', positions.projected)
+      // TODO: use interactivity graph instead
+      mesh.userData.useVideoTexture = true
+    } else if (uvMode === 'canonical') geometry.setAttribute('uv', this.CANONICAL_UVS)
 
-      geometry.computeVertexNormals()
-    }
+    geometry.computeVertexNormals()
     ;(this.faceMeshGeometries[faceId] ??= []).push({ geometry, props })
   }
 
