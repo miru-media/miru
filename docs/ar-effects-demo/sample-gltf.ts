@@ -8,7 +8,7 @@ import textureUrl from 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f
 
 const ADD_TEST_FACE_MESH = false as boolean
 // set to -1 to not use the interactivity graph to transform a face attachment
-const FACE_ATTACHMENT_OBJECT_INDEX = 1
+const FACE_ATTACHMENT_OBJECT_INDEX = -1
 
 export const createSampleGltf = async () => {
   const io = new gltf.WebIO().registerExtensions([
