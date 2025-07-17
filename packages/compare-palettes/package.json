@@ -1,0 +1,21 @@
+{
+  "name": "compare-palettes",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@lokesh.dhakar/quantize": "^1.4.0",
+    "color-diff": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/color-diff": "^1.2.5"
+  }
+}
