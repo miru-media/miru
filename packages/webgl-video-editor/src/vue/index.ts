@@ -9,7 +9,7 @@ import { VideoEditorUI } from '../components/video-editor-ui'
 import type * as nodes from '../nodes'
 import { VideoEditor as VideoEditor_ } from '../video-eidtor'
 
-export { type VideoEditor } from '../../types/webgl-video-editor'
+export type { VideoEditor } from '../../types/webgl-video-editor'
 
 export * from '../constants'
 

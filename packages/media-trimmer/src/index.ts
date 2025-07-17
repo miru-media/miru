@@ -6,6 +6,6 @@ if (typeof customElements !== 'undefined' && 'define' in customElements) {
 
 export * from './trim'
 
-export { type LoadInfo, type TrimState } from './types/ui'
+export type { LoadInfo, TrimState } from './types/ui'
 
 export { MediaTrimmerElement }
