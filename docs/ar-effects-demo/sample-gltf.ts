@@ -4,11 +4,22 @@ import { KHRLightsPunctual, KHRMaterialsUnlit, Light } from '@gltf-transform/ext
 import { moveToDocument } from '@gltf-transform/functions'
 import { Interactivity, InteractivityFaceLandmarks } from 'gltf-interactivity/transform'
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
-import textureUrl from 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/UV_checker_Map_byValle.jpg/960px-UV_checker_Map_byValle.jpg'
 
-const ADD_TEST_FACE_MESH = false as boolean
-// set to -1 to not use the interactivity graph to transform a face attachment
-const FACE_ATTACHMENT_OBJECT_INDEX = -1
+const USE_UNMODIFIED_ASSET = import.meta.env.DEV
+const FACE_ATTACHMENT_OBJECT_INDEX = 1
+
+const setObjectUrls = (jsonDoc: gltf.JSONDocument) => {
+  const { json, resources } = jsonDoc
+
+  const [buffers, images] = [json.buffers, json.images].map((dataItems) =>
+    dataItems?.map((dataItem) => {
+      if (!dataItem.uri) return dataItem
+      return { ...dataItem, uri: URL.createObjectURL(new Blob([resources[dataItem.uri]])) }
+    }),
+  )
+
+  return { ...json, buffers, images }
+}
 
 export const createSampleGltf = async () => {
   const io = new gltf.WebIO().registerExtensions([
@@ -17,9 +28,14 @@ export const createSampleGltf = async () => {
     KHRLightsPunctual,
     KHRMaterialsUnlit,
   ])
+
+  if (USE_UNMODIFIED_ASSET) {
+    const jsonDoc = await io.writeJSON(await io.read(sunglassesAsset))
+    return setObjectUrls(jsonDoc)
+  }
+
   const doc = new gltf.Document()
 
-  const materialsUnlit = doc.createExtension(KHRMaterialsUnlit)
   const faceLandmarks = doc.createExtension(InteractivityFaceLandmarks)
   const lights = doc.createExtension(KHRLightsPunctual)
 
@@ -47,15 +63,7 @@ export const createSampleGltf = async () => {
               .setBaseColorFactor([1, 0.6795424696265424, 0, 0.675])
               .setMetallicFactor(1)
               .setRoughnessFactor(0.001)
-              .setAlphaMode('BLEND')
-              // comment out to apply lights and shading to the face mesh
-              .setExtension(materialsUnlit.extensionName, materialsUnlit.createUnlit())
-              .setBaseColorTexture(
-                doc
-                  .createTexture()
-                  .setImage(new Uint8Array(await (await fetch(textureUrl)).arrayBuffer()))
-                  .setMimeType('image/png'),
-              ),
+              .setAlphaMode('BLEND'),
           ),
       )
       .addPrimitive(
@@ -68,7 +76,7 @@ export const createSampleGltf = async () => {
       ),
   )
 
-  if (ADD_TEST_FACE_MESH) scene.addChild(faceNode)
+  scene.addChild(faceNode)
 
   const interactivity = doc.createExtension(Interactivity)
   const graph = interactivity.createGraph()
@@ -161,12 +169,5 @@ export const createSampleGltf = async () => {
       .setRotation([-0.2798481423331213, 0.3647051996310008, 0.11591689595929511, 0.8804762392171493]),
   )
 
-  const { json, resources } = await io.writeJSON(doc)
-
-  ;[...(json.buffers ?? []), ...(json.images ?? [])].forEach((dataItem) => {
-    if (!dataItem.uri) return
-    dataItem.uri = URL.createObjectURL(new Blob([resources[dataItem.uri]]))
-  })
-
-  return json
+  return setObjectUrls(await io.writeJSON(doc))
 }

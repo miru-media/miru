@@ -50,8 +50,6 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
   afterRoot(): null | Promise<void> {
     const interactivityExtension = this.json.extensions?.KHR_interactivity
 
-    if (interactivityExtension?.graph == null || !interactivityExtension.graphs) return null
-
     this.parser.associations.forEach((reference, object) => {
       if (!(reference as GLTFReference | undefined)) return null
 
@@ -65,7 +63,10 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
       // TODO: other object types
     })
 
-    const graphJson = interactivityExtension.graphs[interactivityExtension.graph]
+    const graphJson =
+      interactivityExtension?.graph != null && interactivityExtension.graphs
+        ? interactivityExtension.graphs[interactivityExtension.graph]
+        : {}
 
     this.typeNames.push(...(graphJson.types?.map((t) => t.signature) ?? []))
 

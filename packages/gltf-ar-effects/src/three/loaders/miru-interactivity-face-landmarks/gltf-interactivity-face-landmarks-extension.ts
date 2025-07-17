@@ -67,9 +67,6 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   }
 
   beforeRoot(): null | Promise<void> {
-    const interactivityJson = this.json.extensions?.[KHR_INTERACTIVITY]
-    if (!interactivityJson) return null
-
     const interactivity = this.parser.plugins[KHR_INTERACTIVITY] as GLTFInteractivityExtension | undefined
     if (!interactivity) throw new Error(`Missing ${KHR_INTERACTIVITY} extension.`)
 
@@ -110,15 +107,20 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
         return
 
       const primitive = meshes[reference.meshes].primitives[reference.primitives]
-      const faceDetection: unknown =
+      const extensionProps =
         primitive.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS] ??
         // Testing exporting from Blender with custom properties instead of a custom extension
-        object.userData
+        (object.userData as Partial<FaceLandmarksGeometryProps>)
 
-      if (faceDetection != null && typeof faceDetection === 'object' && 'faceId' in faceDetection) {
+      if (extensionProps.isOccluder === true) {
+        object.renderOrder = -1
+        object.material.colorWrite = false
+      }
+
+      if ('faceId' in extensionProps) {
         processor.addFaceMesh(
           object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
-          faceDetection as any,
+          extensionProps as any,
         )
       }
     })
