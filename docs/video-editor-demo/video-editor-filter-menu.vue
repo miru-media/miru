@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onScopeDispose, ref, watch, Reactive } from 'vue'
+import { onScopeDispose, ref, watch } from 'vue'
+import type { Reactive } from 'vue'
 import { type WebglEffectsMenuElement } from 'webgl-media-editor'
 import 'webgl-media-editor'
 
 import sampleImage from 'shared/assets/320px-bianchi.jpg'
 import { fit, useEventListener } from 'shared/utils'
 
-import { VideoEditor } from 'webgl-video-editor'
+import type { VideoEditor } from 'webgl-video-editor'
 
 const { editor } = defineProps<{ editor: Reactive<VideoEditor> }>()
 
