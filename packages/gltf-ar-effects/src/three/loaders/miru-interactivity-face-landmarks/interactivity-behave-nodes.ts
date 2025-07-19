@@ -1,34 +1,36 @@
 import * as Behave from '@behave-graph/core'
 
-import { MAX_LANDMARK_FACES } from '../../../constants'
+import { LandmarkOps, MAX_LANDMARK_FACES } from '../../../constants'
 
-export class EventOnFaceLandmarksChangeNode extends Behave.EventNode {
-  static OP = 'faceLandmarks/change'
+const assertIsValidFaceId = (faceId: unknown): number => {
+  if (
+    typeof faceId !== 'number' ||
+    !Number.isInteger(faceId) ||
+    Number.isNaN(faceId) ||
+    faceId < 0 ||
+    faceId > MAX_LANDMARK_FACES
+  )
+    throw new Error(`Invalid faceId of "${String(faceId)}"`)
+
+  return faceId
+}
+
+export class LandmarksFaceNode extends Behave.EventNode {
+  static OP = LandmarkOps.Face as const
 
   faceId: number
 
-  get key() {
-    return `${this.description.typeName}:${this.faceId}`
-  }
-
   constructor(description: Behave.NodeDescription, graph: Behave.Graph, config: Behave.NodeConfiguration) {
-    const { faceId } = config
-
-    if (
-      typeof faceId !== 'number' ||
-      !Number.isInteger(faceId) ||
-      Number.isNaN(faceId) ||
-      faceId < 0 ||
-      faceId > MAX_LANDMARK_FACES
-    )
-      throw new Error(`Invalid faceId of "${faceId}"`)
+    const faceId = assertIsValidFaceId(config.faceId)
 
     super(
       description,
       graph,
       [],
       [
-        new Behave.Socket('flow', 'flow:out', undefined, `${description.label} (${faceId}) flow`),
+        new Behave.Socket('flow', 'flow:start', undefined, `${description.label} (${faceId}) update`),
+        new Behave.Socket('flow', 'flow:change', undefined, `${description.label} (${faceId}) update`),
+        new Behave.Socket('flow', 'flow:end', undefined, `${description.label} (${faceId}) update`),
         ...[
           { name: 'translation', type: 'float3' },
           { name: 'rotation', type: 'float4' },

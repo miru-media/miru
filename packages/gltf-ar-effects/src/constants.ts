@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers, max-lines -- many constants */
 export const KHR_INTERACTIVITY = 'KHR_interactivity'
+export const KHR_NODE_VISIBILITY = 'KHR_node_visibility'
 export const MIRU_INTERACTIVITY_FACE_LANDMARKS = 'MIRU_interactivity_face_landmarks'
+
+export const enum LandmarkOps {
+  Face = 'landmarks/faceUpdate',
+}
 
 export const MAX_LANDMARK_FACES = 4
 export const LANDMARKS_VERTEX_COUNT = 478

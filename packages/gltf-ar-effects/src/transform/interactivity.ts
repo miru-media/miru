@@ -15,9 +15,10 @@ import { Event } from './properties/event'
 import { Flow } from './properties/flow'
 import { Graph } from './properties/graph'
 import { InteractivityRoot } from './properties/interactivity-root'
+import { LiteralValue } from './properties/literal-value'
+import type { LiteralValueValue } from './properties/literal-value-container'
 import { Node } from './properties/node'
 import { Type } from './properties/type'
-import { Value } from './properties/value'
 import { Variable } from './properties/variable'
 
 const enum ContainerType {
@@ -67,8 +68,8 @@ export class Interactivity extends gltf.Extension {
     return new Flow(this.document.getGraph(), name).setNode(node).setSocket(socket)
   }
 
-  createValue(name?: string) {
-    return new Value(this.document.getGraph(), name)
+  createLiteralValue(type: Type, value: LiteralValueValue) {
+    return new LiteralValue(this.document.getGraph()).setType(type).setValue(value)
   }
 
   read(gltfReaderContext: gltf.ReaderContext): this {
@@ -105,11 +106,15 @@ export class Interactivity extends gltf.Extension {
         containerJson: InteractivityValue | InteractivityVariable,
       ) => {
         const valueContainer =
-          containerType === ContainerType.Value ? new Value(this.document.getGraph()) : this.createVariable()
+          containerType === ContainerType.Value
+            ? new LiteralValue(this.document.getGraph())
+            : this.createVariable()
 
         return setBaseProps(valueContainer, containerJson)
           .setValueFromJson(containerJson)
-          .setType(context.types[containerJson.type]) as T extends ContainerType.Value ? Value : Variable
+          .setType(context.types[containerJson.type]) as T extends ContainerType.Value
+          ? LiteralValue
+          : Variable
       }
 
       // types
@@ -184,6 +189,7 @@ export class Interactivity extends gltf.Extension {
           context.readNodeConfigJson(node, nodeJson)
 
           // node values and input flows
+          // TODO: resolve int references to actual Property instances
           Object.entries(nodeJson.values ?? {}).forEach(([id, valueJson]) => {
             if ('value' in valueJson)
               node.setValue(id, readValueContainerJson(ContainerType.Value, valueJson))
@@ -217,7 +223,7 @@ export class Interactivity extends gltf.Extension {
 
     result.graphs = graphs.map((graph, graphIndex): InteractivityGraph => {
       const context = (gltfWriterContext.extensionData[KHR_INTERACTIVITY] =
-        new InteractivityGraphWriterContext(this))
+        new InteractivityGraphWriterContext(this.document))
 
       graph.listTypes().forEach(context.addType.bind(context))
       graph.listVariables().forEach(context.addVariable.bind(context))

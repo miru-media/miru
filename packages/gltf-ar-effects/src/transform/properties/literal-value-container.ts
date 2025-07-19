@@ -3,15 +3,15 @@ import type { InteractivityConfiguration, InteractivityValue } from '../../types
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
 import type { Type } from './type'
 
-type Literal = boolean | number | string | number[] | string[] | null
+export type LiteralValueValue = boolean | number | string | number[] | string[] | null
 
-export interface IValue extends IInteractivityGraphProperty {
+export interface ILiteralValue extends IInteractivityGraphProperty {
   type: Type
-  value: Literal
+  value: LiteralValueValue
 }
 
-export abstract class ValueContainer extends InteractivityGraphProperty<IValue> {
-  setValue(value: Literal) {
+export abstract class LiteralValueContainer extends InteractivityGraphProperty<ILiteralValue> {
+  setValue(value: LiteralValueValue) {
     return this.set('value', value)
   }
 
@@ -26,13 +26,8 @@ export abstract class ValueContainer extends InteractivityGraphProperty<IValue> 
     return this.getRef('type')
   }
 
-  serializeAsJson() {
-    const value = this.getValue()
-    return value == null ? null : Array.isArray(value) ? value : ([value] as boolean[] | number[] | string[])
-  }
-
   setValueFromJson(valueJson: InteractivityValue | InteractivityConfiguration[string] | undefined) {
     const value = valueJson?.value
-    return this.setValue(value == null ? null : value.length === 1 ? value[0] : (value as Literal))
+    return this.setValue(value == null ? null : value.length === 1 ? value[0] : (value as LiteralValueValue))
   }
 }

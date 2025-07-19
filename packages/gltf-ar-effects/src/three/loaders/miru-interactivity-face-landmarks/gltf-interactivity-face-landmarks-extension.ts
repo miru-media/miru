@@ -7,7 +7,7 @@ import type { FaceLandmarksGeometryProps, KHRInteractivityExtension } from '../.
 import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension'
 
 import { FaceLandmarksProcessor, type FaceTransform } from './face-landmarks-processor'
-import { EventOnFaceLandmarksChangeNode } from './interactivity-behave-nodes'
+import { LandmarksFaceNode } from './interactivity-behave-nodes'
 
 interface JsonWithExtensions {
   meshes?: {
@@ -29,7 +29,8 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   video?: HTMLVideoElement
   interactivity!: GLTFInteractivityExtension
 
-  readonly #faceAttachmentObjects: THREE.Object3D[] = []
+  private prevEmittedFaceCount = 0
+  private readonly faceAttachmentObjects: THREE.Object3D[] = []
 
   get json(): JsonWithExtensions {
     return this.parser.json
@@ -45,7 +46,7 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
       onDetect: (faceTransforms) => {
         // TODO: should probably eventually rely only on the interactivity graph
         if (faceTransforms.length)
-          this.#faceAttachmentObjects.forEach((object) => {
+          this.faceAttachmentObjects.forEach((object) => {
             const forTargetFace = faceTransforms.at(object.userData.faceId ?? 0)
             if (!forTargetFace) return
 
@@ -74,12 +75,12 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
 
     interactivity.registry.nodes.register(
       new Behave.NodeDescription(
-        EventOnFaceLandmarksChangeNode.OP,
-        'Event',
-        EventOnFaceLandmarksChangeNode.OP,
-        (description, graph, config) => new EventOnFaceLandmarksChangeNode(description, graph, config),
+        LandmarksFaceNode.OP,
+        'Flow',
+        LandmarksFaceNode.OP,
+        (description, graph, config) => new LandmarksFaceNode(description, graph, config),
         undefined,
-        `An event that's fired when a face's detected landmarks change.`,
+        `An event that's fired when a face's landmarks are found, lost, or updated.`,
       ),
     )
 
@@ -94,7 +95,7 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     this.parser.associations.forEach((reference, object) => {
       // Testing declaring attachments in Blender custom properties
       if (object.userData.isFaceAttachment === true && object instanceof THREE.Object3D) {
-        this.#faceAttachmentObjects.push(object)
+        this.faceAttachmentObjects.push(object)
         return
       }
 
@@ -129,13 +130,31 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   }
 
   private emitChanges(faceTransforms: FaceTransform[]): void {
+    const { prevEmittedFaceCount } = this
+
+    for (let i = faceTransforms.length; i < prevEmittedFaceCount; i++) {
+      this.interactivity.emit(LandmarksFaceNode.OP, {}, (node) => node.configuration.faceId === i, ['end'])
+    }
+
     faceTransforms.forEach((transform, faceIndex) => {
+      if (faceIndex >= prevEmittedFaceCount) {
+        this.interactivity.emit(
+          LandmarksFaceNode.OP,
+          transform,
+          (node) => node.configuration.faceId === faceIndex,
+          ['start'],
+        )
+      }
+
       this.interactivity.emit(
-        EventOnFaceLandmarksChangeNode.OP,
+        LandmarksFaceNode.OP,
         transform,
         (node) => node.configuration.faceId === faceIndex,
+        ['change'],
       )
     })
+
+    this.prevEmittedFaceCount = faceTransforms.length
   }
 
   async start(video: HTMLVideoElement): Promise<void> {

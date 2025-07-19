@@ -1,4 +1,6 @@
-import type * as gltf from '@gltf-transform/core'
+import * as gltf from '@gltf-transform/core'
+
+import type { MaybeArray } from 'shared/types'
 
 import type {
   InteractivityDeclaration,
@@ -13,14 +15,15 @@ import type {
   InteractivityVariable,
 } from '../types'
 
-import type { Interactivity } from './interactivity'
 import type { Declaration } from './properties/declaration'
 import { Event } from './properties/event'
-import type { Flow } from './properties/flow'
+import { Flow } from './properties/flow'
+import { LiteralValue } from './properties/literal-value'
 import type { Node } from './properties/node'
+import type { LiteralOrPropertyValue } from './properties/node-config-value'
 import { Type } from './properties/type'
-import { Value } from './properties/value'
 import { Variable } from './properties/variable'
+import { isSingleLiteral } from './utils'
 
 class PropJsonMap<T, U extends Record<string, any>> {
   private readonly map = new Map<T, { json: U; index: number }>()
@@ -48,7 +51,8 @@ class PropJsonMap<T, U extends Record<string, any>> {
   }
 }
 
-const getBaseJson = (prop: gltf.Property) => {
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- used for return type
+const getBaseJson = <T>(prop: gltf.Property): T => {
   const json: Partial<gltf.IProperty> = {}
 
   const name = prop.getName()
@@ -57,7 +61,7 @@ const getBaseJson = (prop: gltf.Property) => {
   if (name) json.name = name
   if (Object.keys(extras).length) json.extras = extras
 
-  return json
+  return json as T
 }
 
 export class InteractivityGraphWriterContext {
@@ -69,9 +73,9 @@ export class InteractivityGraphWriterContext {
 
   private _intTypeForPropertyIndexValues!: Type
 
-  constructor(private interactivity: Interactivity) {}
+  constructor(private document: gltf.Document) {}
 
-  addType(type: Type | null) {
+  addType(type: Type | null): number {
     if (!type) throw new Error('Missing interactivity type definition.')
 
     if (type.getSignature() === 'int') this._intTypeForPropertyIndexValues = type
@@ -79,19 +83,19 @@ export class InteractivityGraphWriterContext {
     return (
       this.types.getIndex(type) ??
       this.types.add(type, {
-        ...(getBaseJson(type) as gltf.IProperty),
+        ...getBaseJson<gltf.IProperty>(type),
         signature: type.getSignature(),
       })
     )
   }
 
-  addVariable(variable: Variable | null) {
+  addVariable(variable: Variable | null): number {
     if (!variable) throw new Error('Missing interactivity variable definition.')
 
     let index = this.variables.getIndex(variable)
     if (index != null) return index
 
-    const json = getBaseJson(variable) as InteractivityVariable
+    const json = getBaseJson<InteractivityVariable>(variable)
 
     index = this.variables.add(variable, json)
 
@@ -103,13 +107,13 @@ export class InteractivityGraphWriterContext {
     return index
   }
 
-  addEvent(event: Event | null) {
+  addEvent(event: Event | null): number {
     if (!event) throw new Error('Missing interactivity custom event definition.')
 
     let index = this.events.getIndex(event)
     if (index != null) return index
 
-    const json = getBaseJson(event) as InteractivityEvent
+    const json = getBaseJson<InteractivityEvent>(event)
 
     index = this.events.add(event, json)
 
@@ -120,7 +124,7 @@ export class InteractivityGraphWriterContext {
     if (valueIds.length) {
       const values = (json.values ??= {})
       valueIds.forEach((id) => {
-        const valueJson = this.toJsonValue(event.getValue(id)!)
+        const valueJson = this.toJsonValue(event.getValue(id))
         if (valueJson) values[id] = valueJson
       })
     }
@@ -128,7 +132,7 @@ export class InteractivityGraphWriterContext {
     return index
   }
 
-  addDeclaration(declaration: Declaration | null) {
+  addDeclaration(declaration: Declaration | null): number {
     if (!declaration) throw new Error('Missing interactivity declaration definition.')
 
     let index = this.declarations.getIndex(declaration)
@@ -137,7 +141,7 @@ export class InteractivityGraphWriterContext {
 
     const op = declaration.getOp()
     const extensionName = declaration.getExtensionName()
-    const json: InteractivityDeclaration = { op, ...getBaseJson(declaration) }
+    const json = { ...getBaseJson<InteractivityDeclaration>(declaration), op }
     index = this.declarations.add(declaration, json)
 
     if (extensionName) {
@@ -162,13 +166,13 @@ export class InteractivityGraphWriterContext {
     return index
   }
 
-  addNode(node: Node | null) {
+  addNode(node: Node | null): number {
     if (!node) throw new Error('Missing interactivity node definition.')
 
     let index = this.nodes.getIndex(node)
     if (index != null) return index
 
-    const json = getBaseJson(node) as InteractivityNode
+    const json = getBaseJson<InteractivityNode>(node)
     index = this.nodes.add(node, json)
 
     const declaration = node.getDeclaration()
@@ -182,7 +186,8 @@ export class InteractivityGraphWriterContext {
       const values = (json.values ??= {})
 
       valueIds.forEach((id) => {
-        const jsonValue = this.toJsonValue(node.getValue(id)!)
+        const value = node.getValue(id)
+        const jsonValue = this.toJsonValue(value)
         if (jsonValue) values[id] = jsonValue
       })
     }
@@ -209,11 +214,11 @@ export class InteractivityGraphWriterContext {
     return index
   }
 
-  serializeFlow(flow: Flow) {
+  serializeFlow(flow: Flow): InteractivityFlow {
     return { node: this.addNode(flow.getNode()), socket: flow.getSocket() }
   }
 
-  writeNodeConfigJson(node: Node, json: InteractivityNode) {
+  writeNodeConfigJson(node: Node, json: InteractivityNode): void {
     const configIds = node.listConfigIds()
 
     if (configIds.length) {
@@ -222,46 +227,67 @@ export class InteractivityGraphWriterContext {
       configIds.forEach((id) => {
         const prop = node.getConfig(id)!
         const serialized = this.toValueLiteralJson(prop)
-        if (serialized) configuration[id] = { value: serialized }
+        if (serialized != null) configuration[id] = { value: [serialized as any] }
       })
     }
   }
 
-  toJsonValue(source: Value | Type): InteractivityValue | null
-  toJsonValue(source: Flow): InteractivityFlow | null
-  toJsonValue(source: Value | Flow | Type): InteractivityValue | InteractivityFlow | null {
+  toJsonValue(source: Type | Variable | Event | Node | gltf.Node): InteractivityValue
+  toJsonValue(source: LiteralValue | null): InteractivityValue | null
+  toJsonValue(source: Flow | null): InteractivityFlow
+  toJsonValue(
+    source: Type | Variable | Event | Node | LiteralValue | Flow | gltf.Node | null,
+  ): InteractivityValue | InteractivityFlow | null
+  toJsonValue(
+    source: Type | Variable | Event | Node | LiteralValue | Flow | gltf.Node | null,
+  ): InteractivityValue | InteractivityFlow | null {
+    if (source == null) return null
+
     const type = this.addType(
-      source instanceof Value ? source.getType() : this._intTypeForPropertyIndexValues,
+      source instanceof LiteralValue ? source.getType() : this._intTypeForPropertyIndexValues,
     )
     let value: InteractivityValueLiteral | null
 
-    if (source instanceof Value) {
+    if (source instanceof LiteralValue) {
       value = source.serializeAsJson()
       if (value == null) return null
-    } else if (source instanceof Variable) value = [this.addVariable(source)]
-    else if (source instanceof Type) value = [this.addType(source)]
-    else value = [this.addNode(source.getNode())]
+    } else if (source instanceof gltf.Node) {
+      value = [this.document.getRoot().listNodes().indexOf(source)]
+    } else if (source instanceof Flow) value = [this.addNode(source.getNode())]
+    else value = [this.getPropertyIndex(source)]
 
     return { value, type }
   }
 
-  toValueLiteralJson(source: Type | Value | Variable | Event | Node) {
-    if (source instanceof Value) return source.serializeAsJson()
-
-    return [
-      source instanceof Type
-        ? this.addType(source)
-        : source instanceof Variable
-          ? this.addVariable(source)
-          : source instanceof Event
-            ? this.addEvent(source)
-            : this.addNode(source),
-    ]
+  getPropertyIndex(property: Type | Variable | Event | Node) {
+    return property instanceof Type
+      ? this.addType(property)
+      : property instanceof Variable
+        ? this.addVariable(property)
+        : property instanceof Event
+          ? this.addEvent(property)
+          : this.addNode(property)
   }
 
-  finalize() {
-    // @ts-expect-error -- cleanup
-    this.interactivity = undefined
+  toValueLiteralJson(source: MaybeArray<LiteralOrPropertyValue> | null): unknown {
+    if (source == null) return null
+    if (isSingleLiteral(source)) return source
+    if (source instanceof LiteralValue) return source.getValue()
+
+    if (Array.isArray(source)) {
+      return source.map((v) => {
+        if (isSingleLiteral(v)) return v
+        return this.toValueLiteralJson(v)
+      })
+    }
+
+    if (source instanceof Flow) throw new Error('Unexpected Flow')
+
+    return this.getPropertyIndex(source)
+  }
+
+  finalize(): InteractivityGraph {
+    this.document = undefined as never
 
     const result: InteractivityGraph = {}
 

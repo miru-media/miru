@@ -3,9 +3,9 @@ import type { InteractivityNode } from '../types'
 import type { Interactivity } from './interactivity'
 import type { Declaration } from './properties/declaration'
 import type { Event } from './properties/event'
+import { LiteralValue } from './properties/literal-value'
 import type { Node } from './properties/node'
 import type { Type } from './properties/type'
-import { Value } from './properties/value'
 import type { Variable } from './properties/variable'
 
 export class InteractivityGraphReaderContext {
@@ -29,7 +29,7 @@ export class InteractivityGraphReaderContext {
     Object.entries(config).forEach(([id, valueJson]) => {
       const typeName = configReferenceTypes?.[id]
       if (typeName) node.setConfig(id, this[`${typeName}s`][valueJson?.value?.[0] as number])
-      else node.setConfig(id, new Value(node.getGraph()).setValueFromJson(valueJson))
+      else node.setConfig(id, new LiteralValue(node.getGraph()).setValueFromJson(valueJson))
     })
   }
 }

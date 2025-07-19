@@ -1,12 +1,12 @@
 import * as gltf from '@gltf-transform/core'
 
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
+import type { LiteralValue } from './literal-value'
 import { InteractivityPropertyType } from './property-types'
-import type { Value } from './value'
 
 export interface IEvent extends IInteractivityGraphProperty {
   id: string | null
-  values: gltf.RefMap<Value>
+  values: gltf.RefMap<LiteralValue>
 }
 
 export class Event extends InteractivityGraphProperty<IEvent> {
@@ -27,7 +27,7 @@ export class Event extends InteractivityGraphProperty<IEvent> {
     return this.get('id')
   }
 
-  setValue(id: string, value: Value) {
+  setValue(id: string, value: LiteralValue) {
     return this.setRefMap('values', id, value)
   }
   getValue(id: string) {

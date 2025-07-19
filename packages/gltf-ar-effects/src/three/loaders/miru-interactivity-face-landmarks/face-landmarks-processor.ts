@@ -226,7 +226,7 @@ export class FaceLandmarksProcessor {
       vector.unproject(estimatedCamera)
       const scale = facePosition.z / vector.z
 
-      const positionBuffers = this.getFacePossitionAttributess(faceIndex)
+      const positionBuffers = this.getFacePossitionAttributes(faceIndex)
       const unprojected = positionBuffers.unprojected.array
       const projected = positionBuffers.projected.array
 
@@ -270,7 +270,7 @@ export class FaceLandmarksProcessor {
     return faceTransforms
   }
 
-  getFacePossitionAttributess(faceIndex: number): NonNullable<this['facePositionAttributes'][number]> {
+  getFacePossitionAttributes(faceIndex: number): NonNullable<this['facePositionAttributes'][number]> {
     return (this.facePositionAttributes[faceIndex] ??= {
       projected: new THREE.Float32BufferAttribute(LANDMARKS_VERTEX_COUNT * 3, 3),
       unprojected: new THREE.Float32BufferAttribute(LANDMARKS_VERTEX_COUNT * 3, 3),
@@ -290,7 +290,7 @@ export class FaceLandmarksProcessor {
 
     material.flatShading = false
 
-    const positions = this.getFacePossitionAttributess(faceId)
+    const positions = this.getFacePossitionAttributes(faceId)
     geometry.setAttribute('position', positions.unprojected)
     geometry.setIndex(this.INDEX_ATTR)
     geometry.attributes.position.needsUpdate = true
@@ -322,9 +322,10 @@ export class FaceLandmarksProcessor {
 
       if (!props.isOccluder) {
         if (props.uvMode === 'projected') geometry.attributes.uv.needsUpdate = true
-
         geometry.computeVertexNormals()
       }
+
+      geometry.computeBoundingSphere()
     })
   }
 

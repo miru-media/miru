@@ -1,21 +1,24 @@
 import * as gltf from '@gltf-transform/core'
 
+import type { MaybeArray } from 'shared/types'
+
 import type { Declaration } from './declaration'
 import type { Event } from './event'
 import { Flow } from './flow'
 import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
+import type { LiteralValue } from './literal-value'
+import { type LiteralOrPropertyValue, NodeConfigValue } from './node-config-value'
 import { InteractivityPropertyType } from './property-types'
 import type { Type } from './type'
-import type { Value } from './value'
 import type { Variable } from './variable'
 
 export interface INode extends IInteractivityGraphProperty {
   declaration: Declaration
-  config: gltf.RefMap<Type | Value | Variable | Event | Node>
+  config: gltf.RefMap<NodeConfigValue>
   flows: gltf.RefMap<Flow>
   inputs: gltf.RefMap<Flow>
-  outputs: gltf.RefMap<Value>
-  values: gltf.RefMap<Value>
+  outputs: gltf.RefMap<LiteralValue>
+  values: gltf.RefMap<LiteralValue | Type | Variable | Event | Node | gltf.Node | Flow>
 }
 
 export class Node extends InteractivityGraphProperty<INode> {
@@ -40,7 +43,7 @@ export class Node extends InteractivityGraphProperty<INode> {
     return this.getRef('declaration')
   }
 
-  setValue(id: string, value: Value | null) {
+  setValue(id: string, value: Type | Variable | Event | Node | LiteralValue | Flow | gltf.Node | null) {
     return this.setRefMap('values', id, value)
   }
   getValue(id: string) {
@@ -70,17 +73,18 @@ export class Node extends InteractivityGraphProperty<INode> {
     return this.listRefMapKeys('inputs')
   }
 
-  setConfig(id: string, value: Type | Value | Variable | Event | Node | null) {
-    return this.setRefMap('config', id, value)
+  setConfig(id: string, value: MaybeArray<LiteralOrPropertyValue>) {
+    return this.setRefMap('config', id, new NodeConfigValue(this.graph).setValue(value))
   }
   getConfig(id: string) {
-    return this.getRefMap('config', id)
+    const value = this.getRefMap('config', id)
+    return value ? value.getValue() : null
   }
   listConfigIds() {
     return this.listRefMapKeys('config')
   }
 
-  createFlow(id?: string, name?: string): Flow {
-    return new Flow(this.getGraph(), name).setNode(this).setSocket(id ?? 'in')
+  createFlow(id?: string): Flow {
+    return new Flow(this.getGraph()).setNode(this).setSocket(id ?? 'in')
   }
 }
