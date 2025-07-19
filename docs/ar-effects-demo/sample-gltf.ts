@@ -2,11 +2,12 @@
 import * as gltf from '@gltf-transform/core'
 import { KHRLightsPunctual, KHRMaterialsUnlit, Light } from '@gltf-transform/extensions'
 import { moveToDocument } from '@gltf-transform/functions'
-import { Interactivity, InteractivityFaceLandmarks } from 'gltf-interactivity/transform'
+import { LandmarkOps } from 'gltf-interactivity/three'
+import { Interactivity, InteractivityFaceLandmarks, KHRNodeVisibility } from 'gltf-interactivity/transform'
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
 
 const USE_UNMODIFIED_ASSET = import.meta.env.DEV
-const FACE_ATTACHMENT_OBJECT_INDEX = 1
+const FACE_ATTACHMENT_OBJECT_INDEX = 0
 
 const setObjectUrls = (jsonDoc: gltf.JSONDocument) => {
   const { json, resources } = jsonDoc
@@ -27,6 +28,7 @@ export const createSampleGltf = async () => {
     Interactivity,
     KHRLightsPunctual,
     KHRMaterialsUnlit,
+    KHRNodeVisibility,
   ])
 
   if (USE_UNMODIFIED_ASSET) {
@@ -38,14 +40,19 @@ export const createSampleGltf = async () => {
 
   const faceLandmarks = doc.createExtension(InteractivityFaceLandmarks)
   const lights = doc.createExtension(KHRLightsPunctual)
+  const visibility = doc.createExtension(KHRNodeVisibility)
 
   const scene = doc.createScene()
   doc.getRoot().setDefaultScene(scene)
 
-  const faceNode = doc.createNode('face0').setMesh(
-    doc
-      .createMesh('face0-mesh')
-      .addPrimitive(
+  const glassesNode = doc
+    .createNode('glasses-attachment')
+    .setExtension(visibility.extensionName, visibility.createVisibility().setVisible(false))
+
+  const faceNode = doc
+    .createNode('face0')
+    .setMesh(
+      doc.createMesh('face0-mesh').addPrimitive(
         doc
           .createPrimitive()
           .setExtension(
@@ -65,24 +72,31 @@ export const createSampleGltf = async () => {
               .setRoughnessFactor(0.001)
               .setAlphaMode('BLEND'),
           ),
-      )
-      .addPrimitive(
-        doc
-          .createPrimitive()
-          .setExtension(
-            InteractivityFaceLandmarks.EXTENSION_NAME,
-            faceLandmarks.createFaceLandmarksGeometry().setFaceId(0).setIsOccluder(true),
-          ),
       ),
-  )
+    )
+    .setExtension(visibility.extensionName, visibility.createVisibility().setVisible(false))
 
-  scene.addChild(faceNode)
+  const faceOccluder = doc
+    .createNode('face0-occluder')
+    .setMesh(
+      doc
+        .createMesh('face0-occluder-mesh')
+        .addPrimitive(
+          doc
+            .createPrimitive()
+            .setExtension(
+              faceLandmarks.extensionName,
+              faceLandmarks.createFaceLandmarksGeometry().setFaceId(0).setIsOccluder(true),
+            ),
+        ),
+    )
 
   const interactivity = doc.createExtension(Interactivity)
   const graph = interactivity.createGraph()
   const TYPES = {
     float3: interactivity.createType().setSignature('float3'),
     int: interactivity.createType().setSignature('int'),
+    bool: interactivity.createType().setSignature('bool'),
   }
   const pointerSet = interactivity.createDeclaration().setOp('pointer/set')
 
@@ -95,51 +109,67 @@ export const createSampleGltf = async () => {
         interactivity
           .createEvent()
           .setId('test-event')
-          .setValue('testValue', interactivity.createValue().setValue(0).setType(TYPES.int)),
+          .setValue('testValue', interactivity.createLiteralValue(TYPES.int, 0)),
       ),
   )
 
-  const onChangeFaceNode = interactivity
+  const makeVisibilityUpdate = (node: gltf.Node, visible: boolean) =>
+    interactivity
+      .createNode()
+      .setDeclaration(pointerSet)
+      .setConfig('pointer', `/nodes/{node}/extensions/KHR_node_visibility/visible`)
+      .setConfig('type', TYPES.bool)
+      .setValue('value', interactivity.createLiteralValue(TYPES.bool, visible))
+      .setValue('node', node)
+
+  const faceUpdateNode = interactivity
     .createNode('on face landmarks change')
     .setDeclaration(
       interactivity
         .createDeclaration()
-        .setOp('faceLandmarks/change')
+        .setOp(LandmarkOps.Face)
         .setOutputValueSocket('translation', TYPES.float3)
         .setOutputValueSocket('rotation', TYPES.float3)
         .setOutputValueSocket('scale', TYPES.float3),
     )
-    .setConfig('faceId', interactivity.createValue().setValue(0).setType(TYPES.int))
+    .setConfig('faceId', 0)
+    .setFlow(
+      'start',
+      makeVisibilityUpdate(glassesNode, true)
+        .setFlow('out', makeVisibilityUpdate(faceNode, true).createFlow())
+        .createFlow(),
+    )
+    .setFlow(
+      'end',
+      makeVisibilityUpdate(glassesNode, false)
+        .setFlow('out', makeVisibilityUpdate(faceNode, false).createFlow())
+        .createFlow(),
+    )
 
   const setTranslationNode = interactivity
     .createNode('update face attachment position')
     .setDeclaration(pointerSet)
-    .setConfig('pointer', interactivity.createValue().setValue('/nodes/{node}/translation'))
+    .setConfig('pointer', '/nodes/{node}/translation')
     .setConfig('type', TYPES.float3)
-    .setValue('node', interactivity.createValue().setValue(FACE_ATTACHMENT_OBJECT_INDEX).setType(TYPES.int))
-    .setInput('value', onChangeFaceNode.createFlow('translation'))
+    .setValue('node', glassesNode)
+    .setInput('value', faceUpdateNode.createFlow('translation'))
 
   const setRotationNode = interactivity
     .createNode('update face attachment rotation')
     .setDeclaration(pointerSet)
-    .setConfig(
-      'pointer',
-      interactivity.createValue().setValue(`/nodes/${FACE_ATTACHMENT_OBJECT_INDEX}/rotation`),
-    )
+    .setConfig('pointer', `/nodes/${FACE_ATTACHMENT_OBJECT_INDEX}/rotation`)
     .setConfig('type', TYPES.float3)
-    .setInput('value', onChangeFaceNode.createFlow('rotation'))
+    .setInput('value', faceUpdateNode.createFlow('rotation'))
 
-  onChangeFaceNode.setFlow('out', setTranslationNode.createFlow())
+  faceUpdateNode.setFlow('change', setTranslationNode.createFlow())
   setTranslationNode.setFlow('out', setRotationNode.createFlow())
 
   doc
     .getRoot()
     .setExtension(
       interactivity.extensionName,
-      interactivity.createRoot().setDefaultGraph(graph.addNode(onChangeFaceNode)),
+      interactivity.createRoot().setDefaultGraph(graph.addNode(faceUpdateNode)),
     )
-
-  const glassesNode = doc.createNode('glasses-attachment')
 
   {
     const glassesDoc = await io.read(sunglassesAsset)
@@ -156,18 +186,20 @@ export const createSampleGltf = async () => {
     glassesSourceNodes.forEach((sourceNode) => glassesNode.addChild(map.get(sourceNode) as gltf.Node))
   }
 
-  scene.addChild(glassesNode)
-
-  scene.addChild(
-    doc
-      .createNode('directional light')
-      .setExtension(
-        lights.extensionName,
-        lights.createLight().setType(Light.Type.DIRECTIONAL).setColor([1, 1, 1]).setIntensity(2),
-      )
-      .setTranslation([10, 10, 10])
-      .setRotation([-0.2798481423331213, 0.3647051996310008, 0.11591689595929511, 0.8804762392171493]),
-  )
+  scene
+    .addChild(glassesNode)
+    .addChild(faceNode)
+    .addChild(faceOccluder)
+    .addChild(
+      doc
+        .createNode('directional light')
+        .setExtension(
+          lights.extensionName,
+          lights.createLight().setType(Light.Type.DIRECTIONAL).setColor([1, 1, 1]).setIntensity(2),
+        )
+        .setTranslation([10, 10, 10])
+        .setRotation([-0.2798481423331213, 0.3647051996310008, 0.11591689595929511, 0.8804762392171493]),
+    )
 
   return setObjectUrls(await io.writeJSON(doc))
 }

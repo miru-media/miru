@@ -14,6 +14,8 @@ import { DeviceOrientationControls } from 'three-stdlib'
 
 const MIRROR = true as boolean
 
+const UPDATE_VISIBILITY = import.meta.env.DEV
+
 export const createDemo = (options: {
   onInitProgress: (progress: number) => void
   onError: (error: unknown) => void
@@ -47,14 +49,14 @@ export const createDemo = (options: {
   }
 
   const contentGroup = new THREE.Group()
-  contentGroup.visible = false
+  if (UPDATE_VISIBILITY) contentGroup.visible = false
   scene.add(contentGroup)
 
   const interactivity = new GLTFInteractivityExtension()
   const faceLandmarksDetector = new GLTFFaceLandmarkDetectionExtension({
     ...options,
     onDetect(faceTransforms) {
-      contentGroup.visible = faceTransforms.length > 0
+      if (UPDATE_VISIBILITY) contentGroup.visible = faceTransforms.length > 0
     },
   })
 

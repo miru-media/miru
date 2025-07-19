@@ -31,12 +31,23 @@ const getValue = (valueJson: InteractivityValue | InteractivityVariable, types: 
  *  - Change `{ event: { value [0] }} ` custom event config to `{ customEventId: idOrIndex }`
  */
 export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON => {
+  const singleElementTypeRe = /^(int|float|bool)$/
+  const { types = [] } = graphJson
+
+  const readValue = (valueJson: InteractivityValue) => {
+    const value = singleElementTypeRe.test(types[valueJson.type].signature)
+      ? valueJson.value?.[0]
+      : valueJson.value
+
+    return { value: value as Behave.ValueJSON }
+  }
+
   const variables = graphJson.variables?.map(
     (variable, i): Behave.VariableJSON => ({
       id: i.toString(10),
       name: variable.name ?? '',
-      valueTypeName: graphJson.types![variable.type].signature,
-      initialValue: getValue(variable, graphJson.types!),
+      valueTypeName: types[variable.type].signature,
+      initialValue: getValue(variable, types),
       metadata: variable.extras as BehaveMetadata,
     }),
   )
@@ -49,8 +60,8 @@ export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON =>
       parameters: Object.entries(event.values ?? {}).map(
         ([id, value]): Behave.CustomEventParameterJSON => ({
           name: `value:${id}`,
-          valueTypeName: graphJson.types![value.type].signature,
-          defaultValue: getValue(value, graphJson.types!),
+          valueTypeName: types[value.type].signature,
+          defaultValue: getValue(value, types),
         }),
       ),
       metadata: event.extras as BehaveMetadata,
@@ -83,7 +94,7 @@ export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON =>
         Object.entries(node.values ?? {}).map(([key, valueJson]): [string, Behave.NodeParameterJSON] => [
           `value:${key}`,
           !('node' in valueJson) || (valueJson.node as unknown) == null
-            ? { value: (valueJson as InteractivityValue).value?.[0] as Behave.ValueJSON }
+            ? readValue(valueJson as InteractivityValue)
             : {
                 link: { nodeId: valueJson.node.toString(10), socket: `value:${valueJson.socket ?? 'value'}` },
               },

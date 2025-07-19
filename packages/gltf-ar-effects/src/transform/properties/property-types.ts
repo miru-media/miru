@@ -10,4 +10,5 @@ export enum InteractivityPropertyType {
   NODE = 'InteractivityNode',
   FLOW = 'InteractivityFlow',
   VALUE = 'InteractivityValue',
+  NODE_CONFIG_VALUE = 'InteractivityNodeConfigValue',
 }

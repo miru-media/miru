@@ -13,6 +13,7 @@ import type {
   Xywh,
 } from '../types'
 import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent'
+import { getImageSize } from '../video/utils'
 
 const getCanvasContext = (
   canvas: HTMLCanvasElement | OffscreenCanvas | undefined,
@@ -56,7 +57,7 @@ export const getImageData = (
   if (source instanceof ImageData) return source
 
   const { canvas } = context
-  const { width, height } = source
+  const { width, height } = getImageSize(source)
 
   canvas.width = width
   canvas.height = height
@@ -277,7 +278,10 @@ export const resizeImageSync = (
   } else {
     if (crop != null)
       context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, size.width, size.height)
-    else context.drawImage(source, 0, 0, source.width, source.height, 0, 0, size.width, size.height)
+    else {
+      const { width, height } = getImageSize(source)
+      context.drawImage(source, 0, 0, width, height, 0, 0, size.width, size.height)
+    }
   }
 }
 

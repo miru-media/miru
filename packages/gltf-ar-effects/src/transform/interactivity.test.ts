@@ -34,10 +34,7 @@ test('Interactivity gltf-transform extension', async () => {
       interactivity
         .createNode('pointer set')
         .setDeclaration(DECLARATIONS.pointerSet)
-        .setConfig(
-          'pointer',
-          interactivity.createValue('pointer string').setValue('nodes/{node}/translation'),
-        )
+        .setConfig('pointer', 'nodes/{node}/translation')
         .setConfig('type', TYPES.float3)
         .setInput(
           'value',
@@ -56,10 +53,7 @@ test('Interactivity gltf-transform extension', async () => {
         )
         .createFlow('in'),
     )
-    .setValue(
-      'non-existent-input',
-      interactivity.createValue('value for non existent input').setType(TYPES.float).setValue(2.5),
-    )
+    .setValue('non-existent-input', interactivity.createLiteralValue(TYPES.float, 2.5))
 
   const mesh = doc.createNode().setMesh(doc.createMesh())
 

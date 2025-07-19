@@ -100,6 +100,13 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
           case 'scale':
             threeObject.scale.fromArray(value as number[])
             break
+          case 'extensions':
+            switch (path[3]) {
+              case 'KHR_node_visibility': {
+                if (path[4] === 'visible') threeObject.visible = value as boolean
+              }
+            }
+            break
         }
 
         break
@@ -107,23 +114,39 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
     }
   }
 
-  emitCustomEvent(id: number | string, parameters: Record<string, unknown>): void {
-    this.engine.graph.customEvents[id].eventEmitter.emit(parameters)
+  triggerCustomFlows(op: string, updateValues: any, filter = (_node: Behave.Node) => true): void {
+    const nodes = Object.values(this.engine.graph.nodes).filter(
+      (node): node is Behave.FlowNode => node.description.typeName === op && filter(node),
+    )
+
+    nodes.forEach((node) => {
+      Object.keys(updateValues).forEach((key) => node.writeOutput(`value:${key}`, updateValues[key]))
+    })
   }
 
-  emit(op: string, emittedValues: any, filter = (_nodes: Behave.EventNode) => true): void {
+  emitCustomEvent(id: number | string, parameters: Record<string, unknown>): void {
+    this.emit('event/receive', parameters, (node) => node.configuration.customEventId === id)
+  }
+
+  emit(
+    op: string,
+    emittedValues: any,
+    filter = (_node: Behave.EventNode) => true,
+    sockets: string[] = ['out'],
+  ): void {
     const eventNodes = this.engine.eventNodes.filter(
       (node) => node.description.typeName === op && filter(node),
     )
 
     eventNodes.forEach((eventNode) => {
-      Object.keys(emittedValues).forEach((key) => {
-        eventNode.writeOutput(`value:${key}`, emittedValues[key])
-      })
+      Object.keys(emittedValues).forEach((key) => eventNode.writeOutput(`value:${key}`, emittedValues[key]))
+      sockets.forEach((id) => this.engine.commitToNewFiber(eventNode, `flow:${id}`))
     })
 
-    eventNodes.forEach((eventNode) => this.engine.commitToNewFiber(eventNode, `flow:out`))
-
     this.engine.executeAllSync()
+  }
+
+  dispose(): void {
+    this.engine.dispose()
   }
 }
