@@ -2,12 +2,11 @@
 import * as gltf from '@gltf-transform/core'
 import { KHRLightsPunctual, KHRMaterialsUnlit, Light } from '@gltf-transform/extensions'
 import { moveToDocument } from '@gltf-transform/functions'
-import { LandmarkOps } from 'gltf-interactivity/three'
-import { Interactivity, InteractivityFaceLandmarks, KHRNodeVisibility } from 'gltf-interactivity/transform'
+import { LandmarkOps } from 'gltf-ar-effects/three'
+import { Interactivity, InteractivityFaceLandmarks, KHRNodeVisibility } from 'gltf-ar-effects/transform'
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
 
 const USE_UNMODIFIED_ASSET = import.meta.env.DEV
-const FACE_ATTACHMENT_OBJECT_INDEX = 0
 
 const setObjectUrls = (jsonDoc: gltf.JSONDocument) => {
   const { json, resources } = jsonDoc
@@ -157,8 +156,9 @@ export const createSampleGltf = async () => {
   const setRotationNode = interactivity
     .createNode('update face attachment rotation')
     .setDeclaration(pointerSet)
-    .setConfig('pointer', `/nodes/${FACE_ATTACHMENT_OBJECT_INDEX}/rotation`)
+    .setConfig('pointer', `/nodes/{node}/rotation`)
     .setConfig('type', TYPES.float3)
+    .setValue('node', glassesNode)
     .setInput('value', faceUpdateNode.createFlow('rotation'))
 
   faceUpdateNode.setFlow('change', setTranslationNode.createFlow())

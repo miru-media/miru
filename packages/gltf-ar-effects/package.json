@@ -1,5 +1,5 @@
 {
-  "name": "gltf-interactivity",
+  "name": "gltf-ar-effects",
   "private": true,
   "version": "0.0.0",
   "description": "",
@@ -13,6 +13,9 @@
     },
     "./detector": {
       "import": "./src/detector/index.ts"
+    },
+    "./player": {
+      "import": "./src/effect-player.ts"
     }
   },
   "scripts": {
@@ -27,6 +30,7 @@
     "@mediapipe/tasks-vision": "^0.10.21",
     "json-pointer": "^0.6.2",
     "property-graph": "^3.0.0",
-    "three": "catalog:"
+    "three": "catalog:",
+    "three-stdlib": "^2.36.0"
   }
 }
