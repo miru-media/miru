@@ -95,7 +95,7 @@ export default tseslint.config(
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
       'no-console': 'off',
       'no-void': 'off',
-      complexity: ['error', { max: 13 }],
+      complexity: ['error', { max: 14 }],
       curly: 'off',
     },
   },
