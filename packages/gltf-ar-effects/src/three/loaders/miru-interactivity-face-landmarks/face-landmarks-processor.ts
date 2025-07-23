@@ -283,6 +283,7 @@ export class FaceLandmarksProcessor {
   ): void {
     const { faceId, uvMode } = props
 
+    if (faceId < 0) throw new Error(`Invalid faceId of ${faceId}.`)
     if (faceId >= MAX_LANDMARK_FACES)
       throw new Error(`Maximum ${MAX_LANDMARK_FACES} detected faces. Got ${faceId}.`)
 
