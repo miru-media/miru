@@ -93,38 +93,21 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
 
     // check each mesh for face landmark extension properties
     this.parser.associations.forEach((reference, object) => {
-      // Testing declaring attachments in Blender custom properties
-      const { userData } = object
-      let skipFaceMesh = false
-      if (userData.isFaceAttachment === true && object instanceof THREE.Object3D) {
-        this.faceAttachmentObjects.push(object)
-        skipFaceMesh = true
-      }
-
-      if (!(reference as GLTFReference | undefined) || !(object instanceof THREE.Mesh)) return
-
-      if (userData.isOccluder === true) {
-        object.renderOrder = -1
-        ;(object.material as THREE.MeshStandardMaterial).colorWrite = false
-      }
-
-      if (skipFaceMesh || reference.meshes === undefined || reference.primitives === undefined) return
+      if (
+        !(reference as GLTFReference | undefined) ||
+        !(object instanceof THREE.Mesh) ||
+        reference.meshes === undefined ||
+        reference.primitives === undefined
+      )
+        return
 
       const primitive = meshes[reference.meshes].primitives[reference.primitives]
-      const extensionProps =
-        primitive.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS] ??
-        // Testing exporting from Blender with custom properties instead of a custom extension
-        (userData as Partial<FaceLandmarksGeometryProps>)
+      const extensionProps = primitive.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS]
 
-      if (extensionProps.isOccluder === true) {
-        object.renderOrder = -1
-        object.material.colorWrite = false
-      }
-
-      if (extensionProps.faceId != null) {
+      if (extensionProps) {
         processor.addFaceMesh(
           object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
-          extensionProps as FaceLandmarksGeometryProps,
+          extensionProps,
         )
       }
     })

@@ -295,6 +295,9 @@ export class FaceLandmarksProcessor {
     geometry.setAttribute('position', positions.unprojected)
     geometry.setIndex(this.INDEX_ATTR)
     geometry.attributes.position.needsUpdate = true
+    geometry.computeBoundingSphere()
+    geometry.computeBoundingBox()
+    geometry.computeVertexNormals()
 
     if (uvMode === 'projected') {
       geometry.setAttribute('uv', positions.projected)
@@ -320,12 +323,9 @@ export class FaceLandmarksProcessor {
 
     this.faceMeshGeometries[faceId]?.forEach(({ geometry, props }) => {
       geometry.attributes.position.needsUpdate = true
+      if (props.uvMode === 'projected') geometry.attributes.uv.needsUpdate = true
 
-      if (!props.isOccluder) {
-        if (props.uvMode === 'projected') geometry.attributes.uv.needsUpdate = true
-        geometry.computeVertexNormals()
-      }
-
+      geometry.computeVertexNormals()
       geometry.computeBoundingSphere()
     })
   }
