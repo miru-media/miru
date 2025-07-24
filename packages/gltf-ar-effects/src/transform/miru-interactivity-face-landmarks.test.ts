@@ -1,8 +1,7 @@
 import * as gltf from '@gltf-transform/core'
 import { expect, test } from 'vitest'
 
-import { MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../constants'
-
+import { MIRUMeshOccluder } from './mesh-occluder'
 import { InteractivityFaceLandmarks } from './miru-interactivity-face-landmarks'
 
 test('reads and writes face mesh primitive extension', async () => {
@@ -21,34 +20,34 @@ test('reads and writes face mesh primitive extension', async () => {
               doc
                 .createPrimitive()
                 .setExtension(
-                  MIRU_INTERACTIVITY_FACE_LANDMARKS,
+                  faceLandmarksExtension.extensionName,
                   faceLandmarksExtension.createFaceLandmarksGeometry().setFaceId(0),
                 ),
             ),
         ),
     )
     .addChild(
-      doc
-        .createNode('group')
-        .addChild(
+      doc.createNode('group').addChild(
+        doc.createNode('face1').setMesh(
           doc
-            .createNode('face1')
-            .setMesh(
+            .createMesh('face1-mesh')
+            .addPrimitive(
               doc
-                .createMesh('face1-mesh')
-                .addPrimitive(
-                  doc
-                    .createPrimitive()
-                    .setExtension(
-                      MIRU_INTERACTIVITY_FACE_LANDMARKS,
-                      faceLandmarksExtension.createFaceLandmarksGeometry().setFaceId(1).setIsOccluder(true),
-                    ),
+                .createPrimitive()
+                .setExtension(
+                  faceLandmarksExtension.extensionName,
+                  faceLandmarksExtension.createFaceLandmarksGeometry().setFaceId(1),
                 ),
+            )
+            .setExtension(
+              MIRUMeshOccluder.EXTENSION_NAME,
+              doc.createExtension(MIRUMeshOccluder).createOccluder(),
             ),
         ),
+      ),
     )
 
-  const io = new gltf.WebIO().registerExtensions([InteractivityFaceLandmarks])
+  const io = new gltf.WebIO().registerExtensions([InteractivityFaceLandmarks, MIRUMeshOccluder])
 
   const result = await io.writeJSON(doc)
   expect(result.json).toMatchInlineSnapshot(`
@@ -59,6 +58,7 @@ test('reads and writes face mesh primitive extension', async () => {
       },
       "extensionsUsed": [
         "MIRU_interactivity_face_landmarks",
+        "MIRU_mesh_occluder",
       ],
       "meshes": [
         {
@@ -77,6 +77,9 @@ test('reads and writes face mesh primitive extension', async () => {
           ],
         },
         {
+          "extensions": {
+            "MIRU_mesh_occluder": {},
+          },
           "name": "face1-mesh",
           "primitives": [
             {
@@ -84,7 +87,6 @@ test('reads and writes face mesh primitive extension', async () => {
               "extensions": {
                 "MIRU_interactivity_face_landmarks": {
                   "faceId": 1,
-                  "isOccluder": true,
                   "uvMode": undefined,
                 },
               },

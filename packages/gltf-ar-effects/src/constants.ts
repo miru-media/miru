@@ -2,6 +2,7 @@
 export const KHR_INTERACTIVITY = 'KHR_interactivity'
 export const KHR_NODE_VISIBILITY = 'KHR_node_visibility'
 export const MIRU_INTERACTIVITY_FACE_LANDMARKS = 'MIRU_interactivity_face_landmarks'
+export const MIRU_MESH_OCCLUDER = 'MIRU_mesh_occluder'
 
 export const enum LandmarkOps {
   Face = 'landmarks/faceUpdate',
@@ -1397,14 +1398,15 @@ export const LANDMARK_INDICES = new Uint16Array([
   88, 80, 95,
   415, 310, 324,
   191, 95, 80,
-  468, 471, 472,
-  469, 468, 472,
-  470, 468, 469,
-  470, 471, 468,
-  473, 476, 477,
-  474, 473, 477,
-  475, 473, 474,
-  475, 476, 473,
+  // left and right irises
+  // 468, 471, 472,
+  // 469, 468, 472,
+  // 470, 468, 469,
+  // 470, 471, 468,
+  // 473, 476, 477,
+  // 474, 473, 477,
+  // 475, 473, 474,
+  // 475, 476, 473,
 ])
 
 // https://github.com/tensorflow/tfjs-models/blob/838611c02f51159afdd77469ce67f0e26b7bbb23/face-landmarks-detection/src/mediapipe-facemesh/uv_coords.ts

@@ -29,7 +29,6 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
           MIRU_INTERACTIVITY_FACE_LANDMARKS,
           this.createFaceLandmarksGeometry(faceLandmarksDetection.name)
             .setFaceId(faceLandmarksDetection.faceId)
-            .setIsOccluder(faceLandmarksDetection.isOccluder ?? null)
             .setUvMode(faceLandmarksDetection.uvMode ?? null),
         )
       })
@@ -60,8 +59,6 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
             uvMode: faceLandmarksDetection.getUvMode() ?? undefined,
           }
 
-          if (faceLandmarksDetection.getIsOccluder()) extensionJson.isOccluder = true
-
           primitiveExtensions[MIRU_INTERACTIVITY_FACE_LANDMARKS] = extensionJson
         })
       })
@@ -72,7 +69,6 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
 
 interface IFaceLandmarksGeometry extends IProperty {
   faceId: number
-  isOccluder: boolean | null
   uvMode: FaceLandmarksUvMode | null
 }
 
@@ -91,7 +87,6 @@ export class FaceLandmarksGeometry extends gltf.ExtensionProperty<IFaceLandmarks
   getDefaults() {
     return Object.assign(super.getDefaults(), {
       faceId: 0,
-      isOccluder: false,
     })
   }
 
@@ -101,14 +96,6 @@ export class FaceLandmarksGeometry extends gltf.ExtensionProperty<IFaceLandmarks
 
   getFaceId(): number {
     return this.get('faceId')
-  }
-
-  setIsOccluder(isOccluder: boolean | null): this {
-    return this.set('isOccluder', isOccluder)
-  }
-
-  getIsOccluder(): boolean | null {
-    return this.get('isOccluder')
   }
 
   // TODO: this should be done in the interactivity graph

@@ -32,7 +32,7 @@ onMounted(async () => {
   player.addEventListener('info', (event)=> info.value = event.info)
   player.addEventListener('error', window.alert)
 
-  player.loadUrl(URL.createObjectURL(new Blob([JSON.stringify(await createSampleGltf())])))
+  player.loadEffect(await createSampleGltf())
 
   if (import.meta.env.DEV) return start()
 })

@@ -12,10 +12,9 @@ import {
   GLTFFaceLandmarkDetectionExtension,
   GLTFInteractivityExtension,
 } from './three'
+import { GLTFMeshOccluderExtension } from './three/loaders/miru-mesh-occluder'
 
 const MIRROR = true as boolean
-
-const UPDATE_VISIBILITY = import.meta.env.DEV
 
 class EffectPlayerEvent extends Event {
   progress?: number
@@ -68,7 +67,7 @@ export class EffectPlayer {
     this.canvas = options.canvas ?? document.createElement('canvas')
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas })
 
-    const { video, scene, contentGroup, camera, canvas } = this
+    const { video, scene, camera, canvas } = this
     video.playsInline = video.muted = true
 
     if (import.meta.env.DEV) {
@@ -80,20 +79,15 @@ export class EffectPlayer {
       scene.add(new THREE.GridHelper())
       scene.add(new THREE.AxesHelper())
     }
-
-    if (UPDATE_VISIBILITY) contentGroup.visible = false
   }
 
-  async loadUrl(url: string): Promise<void> {
+  async loadEffect(source: string | ArrayBuffer): Promise<void> {
     const { renderer, scene, contentGroup, camera, animationMixer, videoTexture, video } = this
 
     this.interactivity = new GLTFInteractivityExtension()
     this.faceLandmarksDetector = new GLTFFaceLandmarkDetectionExtension({
       onError: this.#onError.bind(this),
       onInitProgress: this.#onInitProgress.bind(this),
-      onDetect(faceTransforms) {
-        if (UPDATE_VISIBILITY) contentGroup.visible = faceTransforms.length > 0
-      },
     })
 
     // load environment texture
@@ -105,15 +99,18 @@ export class EffectPlayer {
       .catch(this.#onError.bind(this))
 
     // load glTF asset with interactivity extensions
-    const gltfPromise = new GLTFLoader()
+    const loader = new GLTFLoader()
+      .register((parser) => new GLTFMeshOccluderExtension(parser))
       .register(this.interactivity.init.bind(this.interactivity))
       .register(this.faceLandmarksDetector.init.bind(this.faceLandmarksDetector))
-      .loadAsync(url)
-      .then((result) => {
-        contentGroup.add(result.scene)
 
-        result.animations.forEach((clip) => animationMixer.clipAction(clip).play())
-      })
+    const gltfPromise = (
+      typeof source === 'string' ? loader.loadAsync(source) : loader.parseAsync(source, '')
+    ).then((result) => {
+      contentGroup.add(result.scene)
+
+      result.animations.forEach((clip) => animationMixer.clipAction(clip).play())
+    })
 
     // set video background texture
     videoTexture.colorSpace = 'srgb'

@@ -1,8 +1,7 @@
 export { Interactivity } from './interactivity'
-
 export { InteractivityFaceLandmarks } from './miru-interactivity-face-landmarks'
-
 export { KHRNodeVisibility } from './node-visibility'
+export { MIRUMeshOccluder } from './mesh-occluder'
 
 export {
   KHR_INTERACTIVITY,
