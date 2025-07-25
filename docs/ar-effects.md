@@ -24,6 +24,10 @@ const isStoppingRecording = ref(false)
 const recordedBlobUrl = ref('')
 const { width: canvasWidth } = useElementSize(() => recordedBlobUrl.value ? recordedVideo.value : canvas.value)
 
+const effectUrlParam = import.meta.env.DEV
+  ? (new URL(location.href).searchParams.get('effect-url') ?? undefined)
+  : undefined
+
 onMounted(async () => {
   if (!canvas.value) throw new Error('No canvas')
   const player = playerRef.value = markRaw(new EffectPlayer({ canvas: canvas.value }))
@@ -32,7 +36,7 @@ onMounted(async () => {
   player.addEventListener('info', (event)=> info.value = event.info)
   player.addEventListener('error', window.alert)
 
-  player.loadEffect(await createSampleGltf())
+  player.loadEffect(await createSampleGltf(effectUrlParam))
 
   if (import.meta.env.DEV) return start()
 })

@@ -16,8 +16,6 @@ import {
 } from 'gltf-ar-effects/transform'
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
 
-const EFFECT_URL = sunglassesAsset
-
 const EXTENSIONS = [
   InteractivityFaceLandmarks,
   Interactivity,
@@ -28,13 +26,13 @@ const EXTENSIONS = [
   KHRMaterialsClearcoat,
 ]
 
-export const createSampleGltf = async () => {
+export const createSampleGltf = async (url = sunglassesAsset) => {
   const io = new gltf.WebIO().registerExtensions(EXTENSIONS)
 
   const doc =
-    EFFECT_URL === sunglassesAsset
+    url === sunglassesAsset
       ? await createMaskEffectWithAsset(io)
-      : convertExtrasToExtensions(await io.read(EFFECT_URL))
+      : convertExtrasToExtensions(await io.read(url))
 
   return (await io.writeBinary(doc)).buffer
 }
@@ -271,7 +269,7 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
   graph.addNode(faceUpdateNode)
 
   {
-    const glassesDoc = await io.read(EFFECT_URL)
+    const glassesDoc = await io.read(sunglassesAsset)
 
     glassesDoc
       .getRoot()
