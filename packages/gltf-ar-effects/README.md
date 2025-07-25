@@ -19,15 +19,6 @@ You can try out a demo effect at <https://miru.media/ar-effects>.
 ```json
 {
   "asset": { "generator": "glTF-Transform v4.2.0", "version": "2.0" },
-  "materials": [
-    {
-      "alphaMode": "BLEND",
-      "pbrMetallicRoughness": {
-        "baseColorFactor": [1, 0.6795424696265424, 0, 0.675],
-        "roughnessFactor": 0.001
-      }
-    }
-  ],
   "meshes": [
     {
       "name": "face0-mesh",
@@ -35,68 +26,125 @@ You can try out a demo effect at <https://miru.media/ar-effects>.
         {
           "attributes": {},
           "mode": 4,
-          "material": 0,
           "extensions": { "MIRU_interactivity_face_landmarks": { "faceId": 0 } }
-        },
+        }
+      ]
+    },
+    {
+      "name": "face0-occluder-mesh",
+      "primitives": [
         {
           "attributes": {},
           "mode": 4,
-          "extensions": {
-            "MIRU_interactivity_face_landmarks": { "faceId": 0, "isOccluder": true }
-          }
+          "extensions": { "MIRU_interactivity_face_landmarks": { "faceId": 0 } }
         }
-      ]
+      ],
+      "extensions": { "MIRU_mesh_occluder": {} }
     }
   ],
-  "nodes": [{ "name": "face0", "mesh": 0 }, { "name": "glasses-attachment" }],
-  "scenes": [{ "nodes": [0] }],
+  "nodes": [
+    { "name": "attachment" },
+    { "name": "face0", "mesh": 0 },
+    { "name": "face0-occluder", "mesh": 1 }
+  ],
+  "scenes": [{ "nodes": [0, 1, 2] }],
   "scene": 0,
-  "extensionsUsed": ["KHR_interactivity", "MIRU_interactivity_face_landmarks"],
+  "extensionsUsed": ["KHR_interactivity", "MIRU_interactivity_face_landmarks", "MIRU_mesh_occluder"],
   "extensions": {
     "KHR_interactivity": {
       "graph": 0,
       "graphs": [
         {
-          "types": [{ "signature": "int" }, { "signature": "float3" }],
-          "events": [
-            {
-              "id": "test-event",
-              "values": { "testValue": { "value": [0], "type": 0 } }
-            }
-          ],
-          "declarations": [{ "op": "event/send" }, { "op": "faceLandmarks/change" }, { "op": "pointer/set" }],
+          "types": [{ "signature": "float3" }, { "signature": "int" }, { "signature": "bool" }],
+          "declarations": [{ "op": "landmarks/faceUpdate" }, { "op": "pointer/set" }],
           "nodes": [
             {
-              "name": "test event",
-              "declaration": 0,
-              "configuration": { "event": { "value": [0] } }
-            },
-            {
               "name": "on face landmarks change",
-              "declaration": 1,
-              "flows": { "out": { "node": 2, "socket": "in" } },
+              "declaration": 0,
+              "flows": {
+                "start": { "node": 1, "socket": "in" },
+                "end": { "node": 3, "socket": "in" },
+                "change": { "node": 5, "socket": "in" }
+              },
               "configuration": { "faceId": { "value": [0] } }
             },
             {
-              "name": "update face attachment position",
-              "declaration": 2,
+              "declaration": 1,
               "values": {
-                "node": { "value": [1], "type": 0 },
-                "value": { "node": 1, "socket": "translation" }
+                "value": { "value": [true], "type": 2 },
+                "node": { "value": [0], "type": 1 }
               },
-              "flows": { "out": { "node": 3, "socket": "in" } },
+              "flows": { "out": { "node": 2, "socket": "in" } },
+              "configuration": {
+                "pointer": {
+                  "value": ["/nodes/{node}/extensions/KHR_node_visibility/visible"]
+                },
+                "type": { "value": [2] }
+              }
+            },
+            {
+              "declaration": 1,
+              "values": {
+                "value": { "value": [true], "type": 2 },
+                "node": { "value": [1], "type": 1 }
+              },
+              "configuration": {
+                "pointer": {
+                  "value": ["/nodes/{node}/extensions/KHR_node_visibility/visible"]
+                },
+                "type": { "value": [2] }
+              }
+            },
+            {
+              "declaration": 1,
+              "values": {
+                "value": { "value": [false], "type": 2 },
+                "node": { "value": [0], "type": 1 }
+              },
+              "flows": { "out": { "node": 4, "socket": "in" } },
+              "configuration": {
+                "pointer": {
+                  "value": ["/nodes/{node}/extensions/KHR_node_visibility/visible"]
+                },
+                "type": { "value": [2] }
+              }
+            },
+            {
+              "declaration": 1,
+              "values": {
+                "value": { "value": [false], "type": 2 },
+                "node": { "value": [1], "type": 1 }
+              },
+              "configuration": {
+                "pointer": {
+                  "value": ["/nodes/{node}/extensions/KHR_node_visibility/visible"]
+                },
+                "type": { "value": [2] }
+              }
+            },
+            {
+              "name": "update face attachment position",
+              "declaration": 1,
+              "values": {
+                "node": { "value": [0], "type": 1 },
+                "value": { "node": 0, "socket": "translation" }
+              },
+              "flows": { "out": { "node": 6, "socket": "in" } },
               "configuration": {
                 "pointer": { "value": ["/nodes/{node}/translation"] },
-                "type": { "value": [1] }
+                "type": { "value": [0] }
               }
             },
             {
               "name": "update face attachment rotation",
-              "declaration": 2,
-              "values": { "value": { "node": 1, "socket": "rotation" } },
+              "declaration": 1,
+              "values": {
+                "node": { "value": [0], "type": 1 },
+                "value": { "node": 0, "socket": "rotation" }
+              },
               "configuration": {
-                "pointer": { "value": ["/nodes/1/rotation"] },
-                "type": { "value": [1] }
+                "pointer": { "value": ["/nodes/{node}/rotation"] },
+                "type": { "value": [0] }
               }
             }
           ]
