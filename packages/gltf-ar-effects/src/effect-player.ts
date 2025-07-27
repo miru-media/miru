@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import { DeviceOrientationControls } from 'three-stdlib'
 
+import { type EnvInfo, EnvMatcher } from './match-environment'
 import {
   DETECTION_CAMERA_FAR,
   DETECTION_CAMERA_FOV,
@@ -15,6 +16,8 @@ import {
 import { GLTFMeshOccluderExtension } from './three/loaders/miru-mesh-occluder'
 
 const MIRROR = true as boolean
+const ENV_MATCH_INTERVAL_MS = 10_000
+const ENV_INTENSITY_UPDATE_INTERVAL_MS = 200
 
 class EffectPlayerEvent extends Event {
   progress?: number
@@ -38,6 +41,7 @@ export class EffectPlayer {
   contentGroup = new THREE.Group()
   scene = new THREE.Scene().add(this.contentGroup)
   animationMixer = new THREE.AnimationMixer(this.scene)
+  environmentOptions: EnvInfo[] | undefined
 
   video = document.createElement('video')
   videoTexture = new THREE.VideoTexture(this.video)
@@ -55,6 +59,8 @@ export class EffectPlayer {
   #canvasTrack?: MediaStreamTrack
   #recorder?: MediaRecorder
 
+  readonly #intervalHandles: (NodeJS.Timeout | number)[] = []
+
   get isRecording(): boolean {
     return !!this.#recorder
   }
@@ -63,9 +69,10 @@ export class EffectPlayer {
 
   readonly #eventTarget = new EventTarget()
 
-  constructor(options: { canvas?: HTMLCanvasElement } = {}) {
+  constructor(options: { canvas?: HTMLCanvasElement; environmentOptions?: EnvInfo[] } = {}) {
     this.canvas = options.canvas ?? document.createElement('canvas')
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas })
+    this.environmentOptions = options.environmentOptions
 
     const { video, scene, camera, canvas } = this
     video.playsInline = video.muted = true
@@ -185,6 +192,41 @@ export class EffectPlayer {
       renderer.render(scene, camera)
       this.prevTimeS = timeS
     })
+
+    const { environmentOptions } = this
+    if (environmentOptions && environmentOptions.length > 0) {
+      const envMatcher = new EnvMatcher({ environmentOptions })
+
+      if (envMatcher.debug) {
+        this.canvas.parentNode?.parentNode?.appendChild(envMatcher.debug.element)
+      }
+
+      const textureLoader = new THREE.TextureLoader()
+
+      envMatcher.addEventListener('change', () => {
+        if (!envMatcher.result) return
+
+        const { closestEnv, lightnessRatio } = envMatcher.result
+
+        textureLoader
+          .loadAsync(closestEnv.url)
+          .then((texture) => {
+            scene.environment = new THREE.PMREMGenerator(renderer).fromEquirectangular(texture).texture
+            scene.environmentIntensity = lightnessRatio
+          })
+          .catch(this.#onError.bind(this))
+      })
+      envMatcher.matchImage(video)
+
+      this.#intervalHandles.push(
+        setInterval(envMatcher.matchImage.bind(envMatcher, video), ENV_MATCH_INTERVAL_MS),
+      )
+      this.#intervalHandles.push(
+        setInterval(() => {
+          scene.environmentIntensity = envMatcher.updateLightnessRatio(video)
+        }, ENV_INTENSITY_UPDATE_INTERVAL_MS),
+      )
+    }
   }
 
   async play(): Promise<void> {
@@ -264,5 +306,6 @@ export class EffectPlayer {
     video.srcObject = null
     renderer.dispose()
     stream?.getTracks().forEach((track) => track.stop())
+    this.#intervalHandles.forEach(clearInterval)
   }
 }

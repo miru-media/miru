@@ -28,6 +28,7 @@
     "@behave-graph/core": "^0.9.13",
     "@gltf-transform/core": "catalog:",
     "@mediapipe/tasks-vision": "^0.10.21",
+    "compare-palettes": "workspace:^",
     "json-pointer": "^0.6.2",
     "property-graph": "^3.0.0",
     "three": "catalog:",
