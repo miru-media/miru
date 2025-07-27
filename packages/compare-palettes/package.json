@@ -3,19 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "description": "",
+  "type": "module",
   "exports": {
     ".": {
-      "import": "./src/index.ts"
+      "import": "./src/index.js"
     }
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@lokesh.dhakar/quantize": "^1.4.0",
-    "color-diff": "^1.4.0"
-  },
-  "devDependencies": {
-    "@types/color-diff": "^1.2.5"
+    "@lokesh.dhakar/quantize": "catalog:",
+    "color-diff": "catalog:"
   }
 }

@@ -60,6 +60,11 @@ declare module '*.glsl' {
   export default src
 }
 
+declare module 'virtual:ar-effects-environment-options.js' {
+  const environmentOptions: import('./packages/gltf-ar-effects/src/match-environment/environment-matcher').EnvInfo[]
+  export default environmentOptions
+}
+
 declare module '*.vue' {
   const component: import('vue').Component
   export default component
@@ -69,6 +74,11 @@ declare module 'postcss-url' {}
 declare module 'postcss-import' {}
 declare module 'postcss-preset-env' {}
 declare module 'postcss-hover-media-feature' {}
+
+declare module '@lokesh.dhakar/quantize' {
+  const quantize = (await import('quantize')).default
+  export default quantize
+}
 
 declare module 'markdown-it-task-lists' {
   const val: any

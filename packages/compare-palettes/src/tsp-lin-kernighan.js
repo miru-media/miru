@@ -24,12 +24,12 @@
 
 /**
  * Calculates the total distance of a tour by summing distances between consecutive cities.
- * @param tour Array of city indices representing the tour order
- * @param distanceMatrix 2D array containing distances between all city pairs
- * @returns Total distance of the tour
+ * @param {number[]} tour Array of city indices representing the tour order
+ * @param {ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
+ * @returns {number} Total distance of the tour
  */
 
-const calculateTourDistance = (tour: number[], distanceMatrix: ArrayLike<number>[]): number => {
+const calculateTourDistance = (tour, distanceMatrix) => {
   let totalDistance = 0
   for (let i = 0; i < tour.length; i++) {
     const from = tour[i]
@@ -42,13 +42,14 @@ const calculateTourDistance = (tour: number[], distanceMatrix: ArrayLike<number>
 /**
  * Generates an initial tour using the nearest neighbor heuristic.
  * Starts from city 0 and always visits the nearest unvisited city next.
- * @param distanceMatrix 2D array containing distances between all city pairs
- * @returns Array of city indices representing the initial tour
+ * @param { ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
+ * @returns {number[]} Array of city indices representing the initial tour
  */
 
-const nearestNeighborTour = (distanceMatrix: ArrayLike<number>[]): number[] => {
+const nearestNeighborTour = (distanceMatrix) => {
   const n = distanceMatrix.length
-  const visited = new Array<boolean>(n).fill(false)
+  /** @type {boolean[]} */
+  const visited = new Array(n).fill(false)
   const tour = [0]
   visited[0] = true
 
@@ -73,18 +74,13 @@ const nearestNeighborTour = (distanceMatrix: ArrayLike<number>[]): number[] => {
 /**
  * Calculates the improvement delta for a 2-opt swap without performing it.
  * This avoids recalculating the entire tour distance.
- * @param tour Current tour as array of city indices
- * @param i Start position for the segment to reverse
- * @param k End position for the segment to reverse
- * @param distanceMatrix 2D array containing distances between all city pairs
- * @returns The change in tour distance (negative if improvement)
+ * @param {number[]} tour Current tour as array of city indices
+ * @param {number} i Start position for the segment to reverse
+ * @param {number} k End position for the segment to reverse
+ * @param {ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
+ * @returns {number} The change in tour distance (negative if improvement)
  */
-const calculate2OptDelta = (
-  tour: number[],
-  i: number,
-  k: number,
-  distanceMatrix: ArrayLike<number>[],
-): number => {
+const calculate2OptDelta = (tour, i, k, distanceMatrix) => {
   const n = tour.length
 
   // Current edges that will be removed
@@ -107,11 +103,12 @@ const calculate2OptDelta = (
 /**
  * Performs a 2-opt swap by reversing the segment between two positions in-place.
  * This modifies the tour array directly to avoid memory allocations.
- * @param tour Current tour as array of city indices (modified in-place)
- * @param i Start position for the segment to reverse
- * @param k End position for the segment to reverse
+ * @param {number[]} tour Current tour as array of city indices (modified in-place)
+ * @param {number} i Start position for the segment to reverse
+ * @param {number} k End position for the segment to reverse
+ * @returns {void}
  */
-const twoOptSwapInPlace = (tour: number[], i: number, k: number): void => {
+const twoOptSwapInPlace = (tour, i, k) => {
   // Reverse the segment between i+1 and k
   let left = i + 1
   let right = k
@@ -126,12 +123,12 @@ const twoOptSwapInPlace = (tour: number[], i: number, k: number): void => {
 /**
  * Implements the Lin-Kernighan algorithm to optimize the tour.
  * Uses 2-opt and 3-opt edge swapping to find better tour configurations.
- * @param tour Initial tour as array of city indices
- * @param distanceMatrix 2D array containing distances between all city pairs
- * @returns Optimized tour as array of city indices
+ * @param {number[]} tour Initial tour as array of city indices
+ * @param {ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
+ * @returns {number[]} Optimized tour as array of city indices
  */
 
-const linKernighan = (tour: number[], distanceMatrix: ArrayLike<number>[]): number[] => {
+const linKernighan = (tour, distanceMatrix) => {
   const n = tour.length
   let bestTour = [...tour]
   let bestDistance = calculateTourDistance(bestTour, distanceMatrix)
@@ -202,12 +199,11 @@ const linKernighan = (tour: number[], distanceMatrix: ArrayLike<number>[]): numb
 /**
  * Solves the Traveling Salesman Problem using the Lin-Kernighan algorithm.
  * Takes a distance matrix and returns an optimized tour order of the source points.
- * @param distanceMatrix The distance matrix computed from the points
- * @param distanceFunc A function that calculates the distance between two points
- * @returns Array of indices of points in optimized tour order
+ * @param {ArrayLike<number>[]} distanceMatrix The distance matrix computed from the points
+ * @returns {number[]} Array of indices of points in optimized tour order
  */
 
-const tsp = (distanceMatrix: ArrayLike<number>[]): number[] => {
+const tsp = (distanceMatrix) => {
   if (distanceMatrix.length <= 1 || distanceMatrix.length === 2) {
     return distanceMatrix.map((_, i) => i)
   }

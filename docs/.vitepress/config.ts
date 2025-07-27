@@ -1,9 +1,13 @@
 import { resolve } from 'node:path'
 
 import taskLists from 'markdown-it-task-lists'
+import { mergeConfig } from 'vite'
 import { defineConfig } from 'vitepress'
 
+import createEnvironmentOptions from '../../tools/create-environment-options'
 import vite from '../../vite.config'
+
+const VIRTUAL_ENV_OPTIONS_ID = 'virtual:ar-effects-environment-options.js'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -16,7 +20,19 @@ export default defineConfig({
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:image', content: '/og.png' }],
   ],
-  vite,
+  vite: mergeConfig(vite, {
+    plugins: [
+      {
+        name: 'app:create-ar-effects-environment-options',
+        resolveId(id: string) {
+          if (id === VIRTUAL_ENV_OPTIONS_ID) return id
+        },
+        load(id: string): Promise<string> | undefined {
+          if (id === VIRTUAL_ENV_OPTIONS_ID) return createEnvironmentOptions()
+        },
+      },
+    ],
+  }),
   cleanUrls: true,
   srcExclude: [resolve(__dirname, '_vitePress')],
   vue: {

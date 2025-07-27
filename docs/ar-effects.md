@@ -12,6 +12,8 @@ import { ref, markRaw, onMounted, onScopeDispose, watchEffect } from 'vue'
 import { EffectPlayer } from 'gltf-ar-effects/player'
 import { createSampleGltf } from './ar-effects-demo/sample-gltf'
 
+import environmentOptions from 'virtual:ar-effects-environment-options.js'
+
 const canvas = ref<HTMLCanvasElement>()
 const recordedVideo = ref<HTMLVideoElement>()
 const initProgress = ref(0)
@@ -30,7 +32,7 @@ const effectUrlParam = import.meta.env.DEV
 
 onMounted(async () => {
   if (!canvas.value) throw new Error('No canvas')
-  const player = playerRef.value = markRaw(new EffectPlayer({ canvas: canvas.value }))
+  const player = playerRef.value = markRaw(new EffectPlayer({ canvas: canvas.value, environmentOptions }))
 
   player.addEventListener('progress', (event) => initProgress.value = event.progress!)
   player.addEventListener('info', (event)=> info.value = event.info)

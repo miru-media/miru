@@ -63,6 +63,7 @@ const replacements = {
     'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
     'import.meta.env.ASSETS_PATH': '"/assets/"',
     'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
+    'import.meta.env.VITE_SHOW_ENV_MATCHER_DEBUG': 'undefined',
   },
   preventAssignment: true,
 }
