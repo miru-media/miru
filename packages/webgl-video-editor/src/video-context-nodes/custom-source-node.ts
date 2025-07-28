@@ -17,11 +17,6 @@ import type { Schema } from '../nodes'
 const rangeContainsTime = (range: { start: number; end: number }, time: number) =>
   range.start <= time && time < range.end
 
-const closeTextureImageSource = (image: TexImageSource): void => {
-  if (!('close' in image) || IS_FIREFOX) return
-  image.close()
-}
-
 export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   declare media?: TexImageSource | HTMLAudioElement
   mediaSize: Size = { width: 1, height: 1 }
@@ -50,6 +45,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   })
 
   abstract everHadEnoughData: boolean
+  imageChanged = true
 
   get clipTime() {
     return this.getClipTime()
@@ -175,7 +171,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
     this.updateSize()
 
     const { renderer } = this
-    renderer.loadImage(this.mediaTexture, image)
+    if (this.imageChanged) renderer.loadImage(this.mediaTexture, image)
 
     const gl = this._gl as WebGL2RenderingContext
     const resolution = this.movieResolution.value
@@ -199,7 +195,6 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
     renderer.draw({ framebuffer: this.framebuffer })
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
 
-    closeTextureImageSource(image)
     return true
   }
 

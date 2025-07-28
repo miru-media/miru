@@ -26,7 +26,8 @@ export default defineConfig({
       awaitDownload: true,
       rules: [
         {
-          match: /\b(https?:\/\/[\w#&?./-]*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/gi,
+          match:
+            /\b(https:\/\/(assets\.miru\.media|upload.wikimedia.org|storage.googleapis.com\/mediapipe-models|commondatastorage.googleapis.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/gi,
         },
       ],
     }),

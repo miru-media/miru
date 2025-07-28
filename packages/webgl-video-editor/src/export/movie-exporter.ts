@@ -204,11 +204,12 @@ export class MovieExporter {
         const totalFrames = duration * framerate
         const frameDurationUs = 1e6 / framerate
 
+        setObjectSize(movie.gl.canvas, movie.resolution)
+
         for (let i = 0; i < totalFrames && !signal?.aborted; i++) {
           const timeS = duration * (i / totalFrames)
           await Promise.all(this.clips.map((clip) => clip.node.seekVideo(timeS)))
 
-          setObjectSize(movie.gl.canvas, movie.resolution)
           videoContext.currentTime = timeS
           videoContext.update(0)
 

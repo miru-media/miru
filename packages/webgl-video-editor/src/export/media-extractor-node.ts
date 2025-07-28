@@ -129,6 +129,8 @@ export class MediaExtractorNode extends CustomSourceNode {
     this.currentVideoFrame?.close()
     const { done, value } = await this.videoReader.read()
     this.currentVideoFrame = this.media = value
+    this.imageChanged = false
+    if (value) this.renderer.loadImage(this.mediaTexture, value)
 
     return done
   }

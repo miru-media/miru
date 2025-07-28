@@ -26,18 +26,23 @@ export interface WorkerResultData {
   result?: MediaPipe.FaceLandmarkerResult
   error?: unknown
   timestamp: number
+  image: VideoFrame
+  state: unknown
 }
 
 export interface WorkerFrameData {
   type: 'frame'
   image: VideoFrame
   timestamp: number
+  state: unknown
 }
 
 export interface WorkerErrorData {
   type: 'error'
   error: unknown
 }
+
+declare const self: Worker
 
 // @ts-expect-error -- mediapipe uses this for debug messages
 self.dbg = console.debug // eslint-disable-line no-console -- debug
@@ -51,9 +56,10 @@ Object.defineProperty(self, 'exports', {
   set: (ModuleFactory: unknown) => ((self as any).ModuleFactory = ModuleFactory),
 })
 
-const postMessage = self.postMessage as (
+const postMessage = (
   data: WorkerInitResponse | WorkerResultData | WorkerFetchProgressData | WorkerErrorData,
-) => void
+  transfer: Transferable[] = [],
+): void => self.postMessage(data, transfer)
 
 onmessage = async (event: MessageEvent<WorkerInitData | WorkerFrameData>) => {
   const { data } = event
@@ -109,20 +115,18 @@ onmessage = async (event: MessageEvent<WorkerInitData | WorkerFrameData>) => {
     }
     case 'frame':
       {
-        const { image, timestamp } = data
+        const { image, timestamp, state } = data
+        const response: WorkerResultData = { type: 'result', result: undefined, image, timestamp, state }
 
-        if (!landmarker) {
-          postMessage({ type: 'result', result: undefined, timestamp })
-          return
+        if (landmarker) {
+          try {
+            response.result = landmarker.detectForVideo(image, timestamp)
+          } catch (error) {
+            response.error = error
+          }
         }
 
-        try {
-          const result = landmarker.detectForVideo(image, timestamp)
-          image.close()
-          postMessage({ type: 'result', result, timestamp })
-        } catch (error) {
-          postMessage({ type: 'result', error, timestamp })
-        }
+        postMessage(response, [image])
       }
       break
   }

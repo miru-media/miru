@@ -1,4 +1,4 @@
-import { computed } from 'fine-jsx'
+import { computed, watch } from 'fine-jsx'
 
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
@@ -36,6 +36,10 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
   }
 
   const Labels = () => {
+    const formattedDurations = new Map<number, string>()
+
+    watch([languages], formattedDurations.clear.bind(formattedDurations))
+
     const getChildren = () => {
       const timelineWidth = editor._timelineSize.value.width
       const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
@@ -53,9 +57,18 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
         const timeS = fromS + i * labelIntervalS
         const left = editor.secondsToPixels(timeS) + halfTimelineWidth
 
+        let durationText = formattedDurations.get(timeS)
+        if (!durationText) {
+          formattedDurations.set(timeS, (durationText = formatDuration(timeS, languages.value)))
+          if (formattedDurations.size > nLabels * 2) {
+            const [[key]] = formattedDurations
+            formattedDurations.delete(key)
+          }
+        }
+
         children.push(
           <div class="ruler-label text-small" style={`translate:calc(${left}px - 50%)`}>
-            {formatDuration(timeS, languages.value)}
+            {durationText}
           </div>,
         )
       }

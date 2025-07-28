@@ -1,8 +1,6 @@
-import envHdr from 'https://raw.github.com/mrdoob/three.js/master/examples/textures/equirectangular/venice_sunset_1k.hdr'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import { DeviceOrientationControls } from 'three-stdlib'
 
 import { type EnvInfo, EnvMatcher } from './match-environment'
@@ -17,7 +15,7 @@ import { GLTFMeshOccluderExtension } from './three/loaders/miru-mesh-occluder'
 
 const MIRROR = true as boolean
 const ENV_MATCH_INTERVAL_MS = 10_000
-const ENV_INTENSITY_UPDATE_INTERVAL_MS = 200
+const ENV_INTENSITY_UPDATE_INTERVAL_MS = 500
 
 class EffectPlayerEvent extends Event {
   progress?: number
@@ -42,12 +40,18 @@ export class EffectPlayer {
   scene = new THREE.Scene().add(this.contentGroup)
   animationMixer = new THREE.AnimationMixer(this.scene)
   environmentOptions: EnvInfo[] | undefined
+  readonly textureLoader = new THREE.TextureLoader()
+  readonly envMatcher: EnvMatcher
+  readonly #pmremGenerator: THREE.PMREMGenerator
+  #currentEnvTexture?: THREE.Texture
 
   video = document.createElement('video')
-  videoTexture = new THREE.VideoTexture(this.video)
+  videoTexture = new THREE.VideoFrameTexture()
   stream?: MediaStream
   camera = new THREE.PerspectiveCamera(DETECTION_CAMERA_FOV, 1, DETECTION_CAMERA_NEAR, DETECTION_CAMERA_FAR)
-  deviceOrientationControls = new DeviceOrientationControls(this.camera)
+  deviceOrientationControls = new DeviceOrientationControls(
+    new THREE.Object3D() as DeviceOrientationControls['object'],
+  )
   controls?: OrbitControls
 
   startTimeS = 0
@@ -72,7 +76,9 @@ export class EffectPlayer {
   constructor(options: { canvas?: HTMLCanvasElement; environmentOptions?: EnvInfo[] } = {}) {
     this.canvas = options.canvas ?? document.createElement('canvas')
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas })
+    this.#pmremGenerator = new THREE.PMREMGenerator(this.renderer)
     this.environmentOptions = options.environmentOptions
+    this.envMatcher = new EnvMatcher({ environmentOptions: this.environmentOptions ?? [] })
 
     const { video, scene, camera, canvas } = this
     video.playsInline = video.muted = true
@@ -93,17 +99,16 @@ export class EffectPlayer {
 
     this.interactivity = new GLTFInteractivityExtension()
     this.faceLandmarksDetector = new GLTFFaceLandmarkDetectionExtension({
-      onError: this.#onError.bind(this),
       onInitProgress: this.#onInitProgress.bind(this),
+      onProcess: this.#onProcess.bind(this),
+      onError: this.#onError.bind(this),
+      getState: () => ({ cameraRotation: this.deviceOrientationControls.object.quaternion.toArray() }),
     })
 
     // load environment texture
-    const environmentPromise = new RGBELoader()
-      .loadAsync(envHdr)
-      .then((texture) => {
-        scene.environment = new THREE.PMREMGenerator(renderer).fromEquirectangular(texture).texture
-      })
-      .catch(this.#onError.bind(this))
+    const environmentPromise = this.envMatcher.envs.length
+      ? this.#setEnvironmentMap(this.envMatcher.envs[0].url).catch(() => undefined)
+      : undefined
 
     // load glTF asset with interactivity extensions
     const loader = new GLTFLoader()
@@ -168,7 +173,6 @@ export class EffectPlayer {
     }
 
     const { deviceOrientationControls } = this
-    deviceOrientationControls.addEventListener('change', () => scene.quaternion.copy(camera.quaternion))
 
     await Promise.all([this.faceLandmarksDetector!.start(video), video.play()])
 
@@ -193,29 +197,21 @@ export class EffectPlayer {
       this.prevTimeS = timeS
     })
 
-    const { environmentOptions } = this
-    if (environmentOptions && environmentOptions.length > 0) {
-      const envMatcher = new EnvMatcher({ environmentOptions })
+    const { envMatcher } = this
 
-      if (envMatcher.debug) {
-        this.canvas.parentNode?.parentNode?.appendChild(envMatcher.debug.element)
-      }
-
-      const textureLoader = new THREE.TextureLoader()
+    if (envMatcher.envs.length > 0) {
+      if (envMatcher.debug) this.canvas.parentNode?.parentNode?.appendChild(envMatcher.debug.element)
 
       envMatcher.addEventListener('change', () => {
-        if (!envMatcher.result) return
+        const { result } = this.envMatcher
+        if (!result) return
 
-        const { closestEnv, lightnessRatio } = envMatcher.result
+        const { closestEnv } = result
+        const { url } = closestEnv
 
-        textureLoader
-          .loadAsync(closestEnv.url)
-          .then((texture) => {
-            scene.environment = new THREE.PMREMGenerator(renderer).fromEquirectangular(texture).texture
-            scene.environmentIntensity = lightnessRatio
-          })
-          .catch(this.#onError.bind(this))
+        void this.#setEnvironmentMap(url)
       })
+
       envMatcher.matchImage(video)
 
       this.#intervalHandles.push(
@@ -223,10 +219,24 @@ export class EffectPlayer {
       )
       this.#intervalHandles.push(
         setInterval(() => {
-          scene.environmentIntensity = envMatcher.updateLightnessRatio(video)
+          scene.environmentIntensity = this.envMatcher.updateLightnessRatio(video)
         }, ENV_INTENSITY_UPDATE_INTERVAL_MS),
       )
     }
+  }
+
+  async #setEnvironmentMap(url: string): Promise<void> {
+    const newTexture = await this.textureLoader.loadAsync(url)
+
+    const lightnessRatio = this.envMatcher.result?.lightnessRatio ?? 1
+    const { scene } = this
+
+    scene.environment?.dispose()
+    scene.environment = this.#pmremGenerator.fromEquirectangular(newTexture).texture
+    scene.environmentIntensity = lightnessRatio
+
+    this.#currentEnvTexture?.dispose()
+    this.#currentEnvTexture = newTexture
   }
 
   async play(): Promise<void> {
@@ -296,6 +306,16 @@ export class EffectPlayer {
     this.#eventTarget.dispatchEvent(new EffectPlayerEvent('progress', progress))
   }
 
+  #onProcess({ image, state }: { image: VideoFrame; state: unknown }) {
+    ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
+    const { cameraRotation } = state as { cameraRotation: THREE.QuaternionTuple }
+
+    this.scene.quaternion.fromArray(cameraRotation)
+    this.camera.quaternion.fromArray(cameraRotation)
+
+    this.videoTexture.setFrame(image)
+  }
+
   #onError(error: unknown): void {
     this.#eventTarget.dispatchEvent(new EffectPlayerEvent('error', error))
   }
@@ -307,5 +327,18 @@ export class EffectPlayer {
     renderer.dispose()
     stream?.getTracks().forEach((track) => track.stop())
     this.#intervalHandles.forEach(clearInterval)
+    ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
+    this.videoTexture.dispose()
+    this.#currentEnvTexture?.dispose()
+    this.#pmremGenerator.dispose()
+    this.controls?.dispose()
+    this.deviceOrientationControls.dispose()
+    this.interactivity?.dispose()
+    this.faceLandmarksDetector?.dispose()
+
+    this.#recorder?.stop()
+    this.#canvasTrack?.stop()
+    this.#recorder = this.#canvasTrack = undefined
+    this.#recorderChunks.length = 0
   }
 }

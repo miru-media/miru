@@ -35,6 +35,12 @@ export interface FaceTransform {
   scale: number[]
 }
 
+export type OnDetect = (result: {
+  faceTransforms: FaceTransform[]
+  image: VideoFrame
+  state: unknown
+}) => void
+
 const WASM_FILESET = {
   wasmLoaderPath,
   wasmBinaryPath,
@@ -43,9 +49,9 @@ const REFERENCE_VERTEX_LEFT = 227
 const REFERENCE_VERTEX_RIGHT = 447
 
 export class FaceLandmarksProcessor {
-  onDetect: (faceTransforms: FaceTransform[]) => void
+  onProcess: OnDetect
   onError: (error: unknown) => void
-  timestamp = -1
+  getState: () => unknown
   isDetecting = false
   result: FaceLandmarkerResult | undefined
   static isSync = false
@@ -79,12 +85,14 @@ export class FaceLandmarksProcessor {
   workerInit?: ReturnType<typeof promiseWithResolvers<void>>
 
   constructor(options: {
-    onDetect: (faceTransforms: FaceTransform[]) => void
+    onProcess: OnDetect
     onInitProgress: (progress: number) => void
     onError: (error: unknown) => void
+    getState: () => unknown
   }) {
-    this.onDetect = options.onDetect
+    this.onProcess = options.onProcess
     this.onError = options.onError
+    this.getState = options.getState
     const { onInitProgress } = options
 
     this.worker.addEventListener(
@@ -108,10 +116,11 @@ export class FaceLandmarksProcessor {
           }
 
           case 'result': {
-            const { result } = data
+            const { result, image, state } = data
             this.result = result
+            const faceTransforms = this._processResult(result)
 
-            this.onDetect(this._processResult(result))
+            this.onProcess({ faceTransforms, image, state })
 
             this.isDetecting = false
           }
@@ -156,13 +165,13 @@ export class FaceLandmarksProcessor {
     estimatedCamera.updateProjectionMatrix()
 
     const onVideoFrame: VideoFrameRequestCallback = () => {
-      this.detect().catch(this.onError)
+      this.detect()
       this.rvfcHandle = video.requestVideoFrameCallback(onVideoFrame)
     }
     this.rvfcHandle = video.requestVideoFrameCallback(onVideoFrame)
   }
 
-  async detect(): Promise<void> {
+  detect(): void {
     const { isDetecting, video } = this
 
     if (isDetecting || !video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
@@ -171,8 +180,12 @@ export class FaceLandmarksProcessor {
 
     try {
       this.isDetecting = true
-      const image = await createImageBitmap(video)
-      this.worker.postMessage({ type: 'frame', image, timestamp }, [image])
+      const image = new VideoFrame(video, {
+        timestamp: video.currentTime * 1e9,
+        displayWidth: video.videoWidth,
+        displayHeight: video.videoHeight,
+      })
+      this.worker.postMessage({ type: 'frame', image, timestamp, state: this.getState() }, [image])
     } catch (error) {
       this.onError(error)
       this.isDetecting = false
@@ -302,7 +315,7 @@ export class FaceLandmarksProcessor {
     if (uvMode === 'projected') {
       geometry.setAttribute('uv', positions.projected)
       // TODO: use interactivity graph instead
-      mesh.userData.useVideoTexture = true
+      mesh.material.map = this.videoTexture
     } else if (uvMode === 'canonical') geometry.setAttribute('uv', this.CANONICAL_UVS)
 
     geometry.computeVertexNormals()

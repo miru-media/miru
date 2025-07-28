@@ -6,7 +6,7 @@ import { KHR_INTERACTIVITY, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../c
 import type { FaceLandmarksGeometryProps, KHRInteractivityExtension } from '../../../types'
 import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension'
 
-import { FaceLandmarksProcessor, type FaceTransform } from './face-landmarks-processor'
+import { FaceLandmarksProcessor, type FaceTransform, type OnDetect } from './face-landmarks-processor'
 import { LandmarksFaceNode } from './interactivity-behave-nodes'
 
 interface JsonWithExtensions {
@@ -30,34 +30,22 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   interactivity!: GLTFInteractivityExtension
 
   private prevEmittedFaceCount = 0
-  private readonly faceAttachmentObjects: THREE.Object3D[] = []
 
   get json(): JsonWithExtensions {
     return this.parser.json
   }
 
   constructor(options: {
-    onDetect?: (faceTransforms: FaceTransform[]) => void
+    onProcess?: OnDetect
     onInitProgress: (progress: number) => void
     onError: (error: unknown) => void
+    getState: () => unknown
   }) {
     this.processor = new FaceLandmarksProcessor({
       ...options,
-      onDetect: (faceTransforms) => {
-        // TODO: should probably eventually rely only on the interactivity graph
-        if (faceTransforms.length)
-          this.faceAttachmentObjects.forEach((object) => {
-            const forTargetFace = faceTransforms.at(object.userData.faceId ?? 0)
-            if (!forTargetFace) return
-
-            const { translation, rotation } = forTargetFace
-            object.quaternion.fromArray(rotation)
-            object.position.fromArray(translation)
-            object.updateMatrix()
-          })
-
-        this.emitChanges(faceTransforms)
-        options.onDetect?.(faceTransforms)
+      onProcess: (result) => {
+        this.emitChanges(result.faceTransforms)
+        options.onProcess?.(result)
       },
     })
   }
@@ -147,7 +135,7 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     await this.processor.start(video)
   }
 
-  destroy(): void {
+  dispose(): void {
     this.processor.dispose()
   }
 }
