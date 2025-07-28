@@ -80,6 +80,7 @@ export class FaceLandmarksProcessor {
   )
 
   video?: HTMLVideoElement
+  videoTexture = new THREE.VideoFrameTexture()
   rvfcHandle = -1
 
   workerInit?: ReturnType<typeof promiseWithResolvers<void>>
@@ -94,6 +95,9 @@ export class FaceLandmarksProcessor {
     this.onError = options.onError
     this.getState = options.getState
     const { onInitProgress } = options
+
+    this.videoTexture.flipY = false
+    this.videoTexture.colorSpace = 'srgb'
 
     this.worker.addEventListener(
       'message',
@@ -121,6 +125,7 @@ export class FaceLandmarksProcessor {
             const faceTransforms = this._processResult(result)
 
             this.onProcess({ faceTransforms, image, state })
+            this.videoTexture.setFrame(image)
 
             this.isDetecting = false
           }
