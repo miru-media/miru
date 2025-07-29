@@ -49,7 +49,7 @@ const start = async () => {
   if (!player) return
 
   wasStarted.value = true
-  await player.init()
+  await player.start()
   isReady.value = true
 }
 

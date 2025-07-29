@@ -62,8 +62,9 @@ export class EffectPlayer {
 
   #canvasTrack?: MediaStreamTrack
   #recorder?: MediaRecorder
+  #effectScene?: THREE.Group
 
-  readonly #intervalHandles: (NodeJS.Timeout | number)[] = []
+  readonly #envMatchIntervalHandles: (NodeJS.Timeout | number)[] = []
 
   get isRecording(): boolean {
     return !!this.#recorder
@@ -122,7 +123,13 @@ export class EffectPlayer {
     const gltfPromise = (
       typeof source === 'string' ? loader.loadAsync(source) : loader.parseAsync(source, '')
     ).then((result) => {
+      this.#effectScene = result.scene
       contentGroup.add(result.scene)
+
+      if (result.scene.userData.disableEnvironmentLighting === true) {
+        this.scene.environment = null
+        this.#envMatchIntervalHandles.forEach(clearInterval)
+      }
 
       result.animations.forEach((clip) => animationMixer.clipAction(clip).play())
     })
@@ -150,7 +157,7 @@ export class EffectPlayer {
   // get camera video stream
   // start face landmarks detection
   // start renderer animation loop
-  async init(): Promise<void> {
+  async start(): Promise<void> {
     const { interactivity } = this
 
     if (!interactivity) throw new Error('Not initialized')
@@ -217,10 +224,10 @@ export class EffectPlayer {
 
       envMatcher.matchImage(video)
 
-      this.#intervalHandles.push(
+      this.#envMatchIntervalHandles.push(
         setInterval(envMatcher.matchImage.bind(envMatcher, video), ENV_MATCH_INTERVAL_MS),
       )
-      this.#intervalHandles.push(
+      this.#envMatchIntervalHandles.push(
         setInterval(() => {
           scene.environmentIntensity = this.envMatcher.updateLightnessRatio(video)
         }, ENV_INTENSITY_UPDATE_INTERVAL_MS),
@@ -230,6 +237,8 @@ export class EffectPlayer {
 
   async #setEnvironmentMap(url: string): Promise<void> {
     const newTexture = await this.textureLoader.loadAsync(url)
+
+    if (this.#effectScene?.userData.disableEnvironmentLighting === true) return
 
     const lightnessRatio = this.envMatcher.result?.lightnessRatio ?? 1
     const { scene } = this
@@ -329,7 +338,7 @@ export class EffectPlayer {
     video.srcObject = null
     renderer.dispose()
     stream?.getTracks().forEach((track) => track.stop())
-    this.#intervalHandles.forEach(clearInterval)
+    this.#envMatchIntervalHandles.forEach(clearInterval)
     ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
     this.videoTexture.dispose()
     this.#currentEnvTexture?.dispose()
