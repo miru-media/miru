@@ -6,8 +6,8 @@ import {
   KHRMaterialsUnlit,
   Light,
 } from '@gltf-transform/extensions'
-import { moveToDocument } from '@gltf-transform/functions'
-import { LandmarkOps } from 'gltf-ar-effects/three'
+import { dedup, moveToDocument, prune, unpartition } from '@gltf-transform/functions'
+import { CANONICAL_VERTICES, LANDMARK_INDICES, LandmarkOps, UVS } from 'gltf-ar-effects/three'
 import {
   Interactivity,
   InteractivityFaceLandmarks,
@@ -126,30 +126,30 @@ const convertExtrasToExtensions = (doc: gltf.Document) => {
       node.getMesh()?.setExtension(occluder.extensionName, occluder.createOccluder())
 
     if (typeof extras.faceId === 'number') {
-      if (extras.isFaceAttachment === true) {
-        const setTranslationNode = interactivity
-          .createNode(`update face attachment position (${i})`)
-          .setDeclaration(pointerSetDeclaration)
-          .setConfig('pointer', '/nodes/{node}/translation')
-          .setConfig('type', TYPES.float3)
-          .setValue('node', node)
-          .setInput('value', faceUpdateNode.createFlow('translation'))
+      const setTranslationNode = interactivity
+        .createNode(`update face attachment position (${i})`)
+        .setDeclaration(pointerSetDeclaration)
+        .setConfig('pointer', '/nodes/{node}/translation')
+        .setConfig('type', TYPES.float3)
+        .setValue('node', node)
+        .setInput('value', faceUpdateNode.createFlow('translation'))
 
-        const setRotationNode = interactivity
-          .createNode(`update face attachment rotation (${i})`)
-          .setDeclaration(pointerSetDeclaration)
-          .setConfig('pointer', `/nodes/{node}/rotation`)
-          .setConfig('type', TYPES.float3)
-          .setValue('node', node)
-          .setInput('value', faceUpdateNode.createFlow('rotation'))
+      const setRotationNode = interactivity
+        .createNode(`update face attachment rotation (${i})`)
+        .setDeclaration(pointerSetDeclaration)
+        .setConfig('pointer', `/nodes/{node}/rotation`)
+        .setConfig('type', TYPES.float3)
+        .setValue('node', node)
+        .setInput('value', faceUpdateNode.createFlow('rotation'))
 
-        lastAttachmentFlowNode.setFlow(
-          lastAttachmentFlowNode === faceUpdateNode ? 'change' : 'out',
-          setTranslationNode.createFlow(),
-        )
-        setTranslationNode.setFlow('out', setRotationNode.createFlow())
-        lastAttachmentFlowNode = setRotationNode
-      } else {
+      lastAttachmentFlowNode.setFlow(
+        lastAttachmentFlowNode === faceUpdateNode ? 'change' : 'out',
+        setTranslationNode.createFlow(),
+      )
+      setTranslationNode.setFlow('out', setRotationNode.createFlow())
+      lastAttachmentFlowNode = setRotationNode
+
+      if (extras.isFaceAttachment !== true) {
         node
           .getMesh()
           ?.listPrimitives()[0]
@@ -189,21 +189,24 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
     .createNode('glasses-attachment')
     .setExtension(visibility.extensionName, visibility.createVisibility().setVisible(false))
 
+  const buffer = doc.createBuffer()
+  const canonicalVertices = doc
+    .createAccessor('canonical verts', buffer)
+    .setArray(CANONICAL_VERTICES)
+    .setType('VEC3')
+  const canonicalUvs = doc.createAccessor('canonical uvs', buffer).setArray(UVS).setType('VEC2')
+  const canonicalIndices = doc.createAccessor('canonical indices', buffer).setArray(LANDMARK_INDICES)
+
   const faceNode = doc
     .createNode('face0')
     .setMesh(
       doc.createMesh('face0-mesh').addPrimitive(
         doc
           .createPrimitive()
-          .setExtension(
-            faceLandmarks.extensionName,
-            faceLandmarks
-              .createFaceLandmarksGeometry()
-              .setFaceId(0)
-              // set to 'projected' to use the video texture
-              // set to 'canonical' to use the mediapipe UV mapping and the imported `textureUrl`
-              .setUvMode('canonical'),
-          )
+          .setAttribute('POSITION', canonicalVertices)
+          .setAttribute('TEXCOORD_0', canonicalUvs)
+          .setIndices(canonicalIndices)
+          .setExtension(faceLandmarks.extensionName, faceLandmarks.createFaceLandmarksGeometry().setFaceId(0))
           .setMaterial(
             doc
               .createMaterial()
@@ -223,6 +226,8 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
       .addPrimitive(
         doc
           .createPrimitive()
+          .setAttribute('POSITION', canonicalVertices)
+          .setIndices(canonicalIndices)
           .setExtension(
             faceLandmarks.extensionName,
             faceLandmarks.createFaceLandmarksGeometry().setFaceId(0),
@@ -247,7 +252,7 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
         .createFlow(),
     )
 
-  const setTranslationNode = interactivity
+  const setAttachmentTranslationNode = interactivity
     .createNode('update face attachment position')
     .setDeclaration(pointerSetDeclaration)
     .setConfig('pointer', '/nodes/{node}/translation')
@@ -255,7 +260,7 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
     .setValue('node', glassesNode)
     .setInput('value', faceUpdateNode.createFlow('translation'))
 
-  const setRotationNode = interactivity
+  const setAttachmentRotationNode = interactivity
     .createNode('update face attachment rotation')
     .setDeclaration(pointerSetDeclaration)
     .setConfig('pointer', `/nodes/{node}/rotation`)
@@ -263,8 +268,13 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
     .setValue('node', glassesNode)
     .setInput('value', faceUpdateNode.createFlow('rotation'))
 
-  faceUpdateNode.setFlow('change', setTranslationNode.createFlow())
-  setTranslationNode.setFlow('out', setRotationNode.createFlow())
+  const setFaceTranslationNode = setAttachmentTranslationNode.clone().setValue('node', faceNode)
+  const setFaceRotationNode = setAttachmentRotationNode.clone().setValue('node', faceNode)
+
+  faceUpdateNode.setFlow('change', setAttachmentTranslationNode.createFlow())
+  setAttachmentTranslationNode.setFlow('out', setAttachmentRotationNode.createFlow())
+  setAttachmentRotationNode.setFlow('out', setFaceTranslationNode.createFlow())
+  setFaceTranslationNode.setFlow('out', setFaceRotationNode.createFlow())
 
   graph.addNode(faceUpdateNode)
 
@@ -298,5 +308,5 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO) => {
         .setRotation([-0.2798481423331213, 0.3647051996310008, 0.11591689595929511, 0.8804762392171493]),
     )
 
-  return doc
+  return await doc.transform(dedup(), prune(), unpartition())
 }

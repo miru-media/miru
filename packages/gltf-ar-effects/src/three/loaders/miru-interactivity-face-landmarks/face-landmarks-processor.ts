@@ -48,6 +48,16 @@ const WASM_FILESET = {
 const REFERENCE_VERTEX_LEFT = 227
 const REFERENCE_VERTEX_RIGHT = 447
 
+const quaternionMirrored = (quat: THREE.Quaternion): THREE.Quaternion => {
+  const { x, y, z, w } = quat
+  return new THREE.Quaternion(-x, -y, z, -w)
+}
+
+const quaternionReversed = (quat: THREE.Quaternion): THREE.Quaternion => {
+  const { x, y, z, w } = quat
+  return new THREE.Quaternion(x, -y, z, -w)
+}
+
 export class FaceLandmarksProcessor {
   onProcess: OnDetect
   onError: (error: unknown) => void
@@ -69,7 +79,7 @@ export class FaceLandmarksProcessor {
     number,
     Record<'projected' | 'unprojected', THREE.Float32BufferAttribute> | undefined
   > = {}
-  INDEX_ATTR = new THREE.BufferAttribute(LANDMARK_INDICES, 1)
+  INDEX_ATTR = new THREE.BufferAttribute(LANDMARK_INDICES.slice(), 1)
   CANONICAL_UVS = new THREE.BufferAttribute(UVS, 2)
 
   estimatedCamera = new THREE.PerspectiveCamera(
@@ -211,17 +221,14 @@ export class FaceLandmarksProcessor {
 
       const facialMatrix = new THREE.Matrix4().fromArray(facialTransformationMatrixes[faceIndex].data)
       const facePosition = new THREE.Vector3().setFromMatrixPosition(facialMatrix)
-      const faceRotationQuat = new THREE.Quaternion().setFromRotationMatrix(facialMatrix)
       const faceScale = new THREE.Vector3().setFromMatrixScale(facialMatrix)
+      let faceRotation = new THREE.Quaternion().setFromRotationMatrix(facialMatrix)
 
       if (mirror) {
         facePosition.x *= -1
-
-        {
-          const { x, y, z, w } = faceRotationQuat
-          faceRotationQuat.set(-x, -y, z, -w)
-        }
+        faceRotation = quaternionMirrored(faceRotation)
       }
+      const faceRotationReversed = quaternionReversed(faceRotation)
 
       const rotationToOrigin = new THREE.Euler().setFromRotationMatrix(
         new THREE.Matrix4().lookAt(estimatedCamera.position, facePosition, estimatedCamera.up),
@@ -233,7 +240,7 @@ export class FaceLandmarksProcessor {
         .multiply(new THREE.Matrix4().makeShear(0, 0, 0, 0, -rotationToOrigin.y / 2, 0))
         .multiply(
           new THREE.Matrix4().makeTranslation(
-            new THREE.Vector3(rotationToOrigin.y + new THREE.Euler().setFromQuaternion(faceRotationQuat).y),
+            new THREE.Vector3(rotationToOrigin.y + new THREE.Euler().setFromQuaternion(faceRotation).y),
           ),
         )
 
@@ -244,12 +251,11 @@ export class FaceLandmarksProcessor {
       vector.unproject(estimatedCamera)
       const scale = facePosition.z / vector.z
 
-      const positionBuffers = this.getFacePossitionAttributes(faceIndex)
+      const positionBuffers = this.getFacePositionAttributes(faceIndex)
       const unprojected = positionBuffers.unprojected.array
       const projected = positionBuffers.projected.array
 
-      let offset = 0
-      for (let i = 0; i < LANDMARKS_VERTEX_COUNT; i++) {
+      for (let i = 0, offset = 0; i < LANDMARKS_VERTEX_COUNT; i++) {
         const landmark = landmarks[i]
 
         projected[offset + 0] = landmark.x
@@ -261,10 +267,13 @@ export class FaceLandmarksProcessor {
         vector.z = landmark.z * estimatedCamera.aspect
 
         vector.unproject(estimatedCamera)
+        vector.multiplyScalar(scale)
+        vector.sub(facePosition)
+        vector.applyQuaternion(faceRotationReversed)
 
-        unprojected[offset + 0] = vector.x * scale
-        unprojected[offset + 1] = vector.y * scale
-        unprojected[offset + 2] = vector.z * scale
+        unprojected[offset + 0] = vector.x
+        unprojected[offset + 1] = vector.y
+        unprojected[offset + 2] = vector.z
 
         offset += 3
       }
@@ -273,10 +282,10 @@ export class FaceLandmarksProcessor {
       let maybeMirroredRotation
 
       if (mirror) {
-        maybeMirroredRotation = faceRotationQuat.clone()
-        const { x, y, z, w } = faceRotationQuat
+        maybeMirroredRotation = faceRotation.clone()
+        const { x, y, z, w } = faceRotation
         maybeMirroredRotation.set(x, -y, z, w)
-      } else maybeMirroredRotation = faceRotationQuat
+      } else maybeMirroredRotation = faceRotation
 
       faceTransforms.push({
         translation: facePosition.toArray(),
@@ -288,7 +297,7 @@ export class FaceLandmarksProcessor {
     return faceTransforms
   }
 
-  getFacePossitionAttributes(faceIndex: number): NonNullable<this['facePositionAttributes'][number]> {
+  getFacePositionAttributes(faceIndex: number): NonNullable<this['facePositionAttributes'][number]> {
     return (this.facePositionAttributes[faceIndex] ??= {
       projected: new THREE.Float32BufferAttribute(LANDMARKS_VERTEX_COUNT * 3, 3),
       unprojected: new THREE.Float32BufferAttribute(LANDMARKS_VERTEX_COUNT * 3, 3),
@@ -309,7 +318,7 @@ export class FaceLandmarksProcessor {
 
     material.flatShading = false
 
-    const positions = this.getFacePossitionAttributes(faceId)
+    const positions = this.getFacePositionAttributes(faceId)
     geometry.setAttribute('position', positions.unprojected)
     geometry.setIndex(this.INDEX_ATTR)
     geometry.attributes.position.needsUpdate = true
