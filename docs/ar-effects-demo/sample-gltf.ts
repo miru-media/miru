@@ -103,10 +103,6 @@ const convertExtrasToExtensions = (doc: gltf.Document) => {
   const nodes = doc.getRoot().listNodes()
 
   const visibilityGroup = doc.createNode()
-  scene.listChildren().forEach((node) => {
-    scene.removeChild(node)
-    visibilityGroup.addChild(node)
-  })
   scene.addChild(visibilityGroup)
 
   const faceUpdateNode = interactivity
@@ -148,6 +144,11 @@ const convertExtrasToExtensions = (doc: gltf.Document) => {
       )
       setTranslationNode.setFlow('out', setRotationNode.createFlow())
       lastAttachmentFlowNode = setRotationNode
+
+      if (!node.getParentNode()) {
+        scene.removeChild(node)
+        visibilityGroup.addChild(node)
+      }
 
       if (extras.isFaceAttachment !== true) {
         node
