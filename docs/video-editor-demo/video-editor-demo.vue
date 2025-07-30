@@ -20,6 +20,19 @@ const MOVIE_CONTENT_KEY = `${LOCAL_STORAGE_PREFIX}content`
 
 const { t } = useI18n()
 
+const onClickLoadDemo = async () => {
+  const editor = editorRef.value
+  if (!editor) return
+
+  try {
+    await editor.clearAllContentAndHistory()
+    await editor.replaceContent(demoMovie)
+  } catch (error) {
+    console.error(error)
+    alert(t('error_cannot_set_content'))
+  }
+}
+
 if (!import.meta.env.SSR) {
   watch(
     editorRef,
@@ -125,7 +138,7 @@ if (!import.meta.env.SSR) {
         slot="empty"
         type="button"
         class="demo-video-button"
-        @click="() => editorRef?.replaceContent(demoMovie)"
+        @click="onClickLoadDemo"
       >
         {{ t('load_demo_video') }}
       </button>

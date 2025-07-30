@@ -24,9 +24,10 @@ useEventListener(
   },
 )
 
-const onClickClearAll = (prompt: string) => {
+const onClickClearAll = async (prompt: string) => {
   if (!window.confirm(prompt)) return
-  return editor.clearAllContentAndHistory()
+  await editor.clearAllContentAndHistory()
+  isOpen.value = false
 }
 </script>
 
@@ -68,7 +69,6 @@ const onClickClearAll = (prompt: string) => {
         :title="$t('settings')"
         type="button"
         @click="() => onClickClearAll($t('confirm_delete_all_content'))"
-        :disabled="editor.isEmpty"
       >
         <div class="icon i-tabler-trash" />
         &nbsp;{{ $t('delete_all_content') }}

@@ -18,6 +18,7 @@ const assets = {
   waves: {
     id: 'demo:waves',
     type: 'av_media_asset',
+    mimeType: 'video/mp4',
     name: `Ocean bird's eye view`,
     url: waves,
     duration: 7.021333,
@@ -26,6 +27,7 @@ const assets = {
   wavesRocks: {
     id: 'demo:wavesRocks',
     type: 'av_media_asset',
+    mimeType: 'video/mp4',
     name: 'Rocky shore',
     url: wavesRocks,
     duration: 7.07,
@@ -34,6 +36,7 @@ const assets = {
   waveBreaking: {
     id: 'demo:waveBreaking',
     type: 'av_media_asset',
+    mimeType: 'video/mp4',
     name: 'Wave breaking',
     url: waveBreaking,
     duration: 10,
@@ -42,6 +45,7 @@ const assets = {
   turtle: {
     id: 'demo:turtle',
     type: 'av_media_asset',
+    mimeType: 'video/mp4',
     name: 'Turtle swimming',
     url: turtle,
     duration: 10,
@@ -50,18 +54,20 @@ const assets = {
   wavesAudio: {
     id: 'demo:wavesAudio',
     type: 'av_media_asset',
+    mimeType: 'audio/mp3',
     name: 'Waves crashing sounds',
     url: wavesAudio,
     duration: 51.330594,
-    video: { duration: 51.330594, rotation: 0 },
+    audio: { duration: 51.330594 },
   },
   underwaterAudio: {
     id: 'demo:underwaterAudio',
     type: 'av_media_asset',
+    mimeType: 'audio/mp3',
     name: 'Underwater sounds',
     url: underwaterAudio,
     duration: 46.92,
-    video: { duration: 46.92, rotation: 0 },
+    audio: { duration: 46.92 },
   },
 } satisfies Record<string, Schema.AvMediaAsset>
 

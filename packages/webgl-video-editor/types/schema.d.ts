@@ -21,6 +21,7 @@ export interface Movie extends Base {
 
 export interface AvMediaAsset extends Base {
   type: 'av_media_asset'
+  mimeType: string
   url?: string
   duration: number
   audio?: {

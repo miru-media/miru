@@ -3,6 +3,8 @@ import { ref } from 'fine-jsx'
 import { Effect } from 'reactive-effects/effect'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
+import { storage } from '../storage'
+
 import type { Schema } from '.'
 
 import { BaseNode } from './base-node'
@@ -25,31 +27,9 @@ abstract class Asset<T extends Schema.Asset> extends BaseNode {
   }
 }
 
-let askedToPersist = false
-
-const CACHE_NAME = `video-editor:assets`
-const openCache = () => caches.open(CACHE_NAME)
-const getCacheKey = (assetId: string) => `/${CACHE_NAME}/${assetId}`
-const getCachedBlob = (assetId: string) =>
-  openCache().then((cache) => cache.match(getCacheKey(assetId)).then((res) => res?.blob()))
-
-const addToCache = async (assetId: string, blob: Blob) => {
-  const cache = await openCache()
-
-  await cache.put(getCacheKey(assetId), new Response(blob))
-
-  if (
-    !askedToPersist &&
-    'storage' in navigator &&
-    !(await navigator.storage.persisted().catch(() => false))
-  ) {
-    askedToPersist = true
-    navigator.storage.persist().catch(() => undefined)
-  }
-}
-
 export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   duration: number
+  mimeType: string
   audio?: { duration: number }
   video?: { duration: number; rotation: number }
 
@@ -71,7 +51,9 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
 
     this.#setBlob(options.blob)
     this.blob = options.blob
-    const { duration, audio, video } = init
+    const { mimeType, duration, audio, video } = init
+
+    this.mimeType = mimeType
     this.duration = duration
     this.audio = audio
     this.video = video
@@ -89,19 +71,19 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     if (this.#isRefreshing) return
     this.#isRefreshing = true
 
-    const url = this.objectUrl
     try {
-      const res = await fetch(url)
+      const res = await fetch(this.objectUrl)
       res.body?.cancel().catch(() => undefined)
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
     } catch (error) {
       // eslint-disable-next-line no-console -- dev error message
       if (import.meta.env.DEV) console.error(error)
 
-      const cachedBlob = await getCachedBlob(this.id)
-      if (!cachedBlob) throw new Error(`[video-editor] couldn't get asset data from cache (${this.id})`)
+      if (!(await storage.hasCompleteFile(this.id)))
+        throw new Error(`[video-editor] couldn't get asset data from storage (${this.id})`)
 
-      this.#setBlob(cachedBlob)
+      const blob = await storage.getFile(this.id)
+      this.#setBlob(blob)
     } finally {
       this.#isRefreshing = false
     }
@@ -109,36 +91,63 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
 
   dispose() {
     URL.revokeObjectURL(this.objectUrl)
-    openCache()
-      .then((cache) => cache.delete(getCacheKey(this.id)))
-      .catch(() => undefined)
+    storage.delete(this.id).catch(() => undefined)
   }
 
   static async fromInit(init: Schema.AvMediaAsset, root: Movie) {
-    const blob = await getCachedBlob(init.id)
+    const { id } = init
+    const storageHasFile = await storage.hasCompleteFile(id)
 
-    if (!blob && init.url) return await this.fromSource(init.id, root, init.url, init)
+    if (!storageHasFile) {
+      if (init.url) return await this.fromSource(id, root, init.url, init)
 
-    if (!blob) throw new Error('[video-editor] Asset data was never fetched and cached')
+      throw new Error('[video-editor] Asset data was never fetched and cached')
+    }
+
+    const blob = await storage.getFile(id)
 
     return new MediaAsset(init, { blob, root })
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- internal
   static async fromSource(
     id: string,
     root: Movie,
     urlOrBlob: string | (Blob & { name?: string }),
     init?: Schema.AvMediaAsset,
-  ) {
+    signal?: AbortSignal,
+  ): Promise<MediaAsset> {
     const isBlobSource = typeof urlOrBlob !== 'string'
+    let mimeType = init?.mimeType ?? ''
     const name = isBlobSource
       ? 'name' in urlOrBlob
         ? urlOrBlob.name
         : undefined
       : urlOrBlob.replace(/.*\//, '')
 
-    const blob = isBlobSource ? urlOrBlob : await fetch(urlOrBlob).then((res) => res.blob())
-    await addToCache(id, blob)
+    let size: number | undefined
+    let stream: ReadableStream<Uint8Array>
+
+    if (isBlobSource) {
+      stream = urlOrBlob.stream()
+      ;({ size } = urlOrBlob)
+      mimeType ||= urlOrBlob.type
+    } else {
+      try {
+        const res = await fetch(urlOrBlob, { signal })
+        const { body } = res
+        if (!res.ok || !body) throw new Error('Fetch failed')
+
+        stream = body
+        mimeType ||= res.headers.get('content-type') ?? ''
+      } catch (error) {
+        throw new Error(`[video-editor] Failed to fetch asset from "${urlOrBlob}".`, { cause: error })
+      }
+    }
+
+    await storage.fromStream(id, stream, { size, signal })
+
+    const blob = isBlobSource ? urlOrBlob : await storage.getFile(id, init?.name, { type: mimeType })
 
     if (init) return new MediaAsset({ ...init, id }, { blob, root })
 
@@ -172,6 +181,7 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
       {
         id,
         type: 'av_media_asset',
+        mimeType,
         name,
         duration,
         audio,
@@ -181,8 +191,8 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     )
   }
 
-  static async clearCache() {
-    return await caches.delete(CACHE_NAME)
+  static async clearCache(): Promise<void> {
+    await storage.deleteAll()
   }
 }
 
