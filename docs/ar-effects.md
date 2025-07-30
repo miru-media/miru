@@ -23,6 +23,7 @@ const info = ref<any>()
 const playerRef = ref<EffectPlayer>()
 const isRecording = ref(false)
 const isStoppingRecording = ref(false)
+const recordedFile = ref<File>()
 const recordedBlobUrl = ref('')
 const { width: canvasWidth } = useElementSize(() => recordedBlobUrl.value ? recordedVideo.value : canvas.value)
 
@@ -58,7 +59,12 @@ const onClickRecord = async () => {
   if (isRecording.value) {
     player.pause()
     isStoppingRecording.value = true
-    recordedBlobUrl.value = URL.createObjectURL(await player.stopRecording())
+
+    const blob = await player.stopRecording()
+    const { type } = blob
+
+    recordedFile.value = new File([blob], 'recorded-video.' + (type.includes('webm') ? 'webm' : 'mp4'), { type })
+    recordedBlobUrl.value = URL.createObjectURL(recordedFile.value)
     isRecording.value = false
     recordedVideo.value?.classList.remove('canplay')
   } else {
@@ -71,6 +77,7 @@ const onClickRecord = async () => {
 
 const onClickRetake = () => {
   URL.revokeObjectURL(recordedBlobUrl.value)
+  recordedFile.value = undefined
   recordedBlobUrl.value = ''
   playerRef.value!.play()
 }
@@ -101,7 +108,7 @@ onScopeDispose(() => playerRef.value?.dispose())
   <template v-if="recordedBlobUrl">
     <video ref="recordedVideo" :src="recordedBlobUrl" class="recorded-video" playsInline controls muted autoplay @canplay="onCanplayRecording" />
     <div class="recorded-output-btns">
-      <a :href="recordedBlobUrl" title="Download video" target="_blank" download="recording" class="output-btn">
+      <a :href="recordedBlobUrl" title="Download video" target="_blank" :download="recordedFile.name" class="output-btn">
         <span class="i-tabler:download" />
       </a>
       <button title="Retake video" class="output-btn" @click="onClickRetake"><span class="i-tabler:x" /></button>

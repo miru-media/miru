@@ -81,7 +81,10 @@ export class EffectPlayer {
     this.envMatcher = new EnvMatcher({ environmentOptions: this.environmentOptions ?? [] })
 
     const { video, scene, camera, canvas } = this
+
     video.playsInline = video.muted = true
+    video.setAttribute('style', 'width:1px;height:1px;position:fixed;top:-1px;left:-1px')
+    document.body.appendChild(video)
 
     if (import.meta.env.DEV) {
       const controls = (this.controls = new OrbitControls(camera, canvas))
@@ -253,13 +256,13 @@ export class EffectPlayer {
   }
 
   startRecording(): void {
-    const { stream, interactivity } = this
-    if (!stream || !interactivity) throw new Error('Video playback not yet started')
+    const { interactivity } = this
+    if (!interactivity) throw new Error('Video playback not yet started')
 
     const canvasStream = this.canvas.captureStream()
     this.#canvasTrack = canvasStream.getVideoTracks()[0]
 
-    const tracks = [canvasStream.getTracks()[0], ...stream.getAudioTracks()]
+    const tracks = [canvasStream.getTracks()[0], ...(this.stream?.getAudioTracks() ?? [])]
 
     try {
       this.#recorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/mp4' })

@@ -69,6 +69,9 @@ export const getImagePalette = (image, length, quantized) => {
 
 const QUANTIZE_IMAGE_SIZE = { width: 50, height: 50 }
 
+/** @type {OffscreenCanvas | HTMLCanvasElement | undefined} */
+let canvas
+
 /**
  * @param {Exclude<CanvasImageSource, SVGElement> | Uint8ClampedArray} image
  * @returns {[number, number, number][]}
@@ -79,8 +82,16 @@ export const getImagePixelArray = (image) => {
   if (image instanceof Uint8ClampedArray) data = image
   else if (typeof ImageData !== 'undefined' && image instanceof ImageData) ({ data } = image)
   else {
-    const canvas = new OffscreenCanvas(QUANTIZE_IMAGE_SIZE.width, QUANTIZE_IMAGE_SIZE.height)
-    const context = canvas.getContext('2d')
+    canvas ??=
+      typeof OffscreenCanvas === 'function'
+        ? new OffscreenCanvas(QUANTIZE_IMAGE_SIZE.width, QUANTIZE_IMAGE_SIZE.height)
+        : document.createElement('canvas')
+    canvas.width = QUANTIZE_IMAGE_SIZE.width
+    canvas.height = QUANTIZE_IMAGE_SIZE.height
+
+    const context =
+      /** @type {OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null} */
+      (canvas.getContext('2d'))
     if (!context) throw new Error(`Couldn't get canvas context.`)
 
     let width = 0
