@@ -44,7 +44,6 @@ export class Effect implements Effect_ {
       return resource.texture
     }
 
-    // eslint-disable-next-line complexity -- simple switch
     this.ops = ops.map((op) => {
       let fragmentShader: string
 

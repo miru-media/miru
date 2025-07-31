@@ -52,7 +52,6 @@ export class Trimmer {
     return blob
   }
 
-  // eslint-disable-next-line complexity -- TODO
   async _trim() {
     assertHasRequiredApis()
     const { options } = this

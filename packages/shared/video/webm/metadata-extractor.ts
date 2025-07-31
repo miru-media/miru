@@ -41,7 +41,6 @@ export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainer
     let currentClusterTimecodeTicks = 0
 
     super({
-      // eslint-disable-next-line complexity -- TODO
       transform: (chunk, controller) => {
         if (this.#isDone) return
 

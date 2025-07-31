@@ -1,7 +1,7 @@
 import { rgb_to_lab } from 'color-diff'
 import { describe, expect, test } from 'vitest'
 
-import type { ColorLab, ColorRGB } from "."
+import type { ColorLab, ColorRGB } from '.'
 
 import { getClosestPaletteIndex, getSinglePaletteSortedIndices } from './compare-palettes'
 import { paletteToLab } from './utils'
