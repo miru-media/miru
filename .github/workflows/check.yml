@@ -1,0 +1,39 @@
+name: Check
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.remote-assets
+            docs/node_modules/.remote-assets
+          key: ${{ runner.os }}-remote-assets
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - run: pnpm check
+      - run: pnpm lint
+      - run: pnpm test
