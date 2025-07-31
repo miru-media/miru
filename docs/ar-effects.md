@@ -15,7 +15,6 @@ import EffectCatalog from './ar-effects-demo/effect-catalog.vue'
 
 import environmentOptions from 'virtual:ar-effects-environment-options.js'
 
-import testVideo from 'shared/assets/videos/test-dude.mp4'
 import { catalog } from './ar-effects-demo/catalog'
 
 const catalogIsOpen = ref(false)
