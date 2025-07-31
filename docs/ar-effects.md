@@ -7,7 +7,7 @@ pageClass: demo-page
 
 <script setup lang="ts">
 import { useElementSize, useEventListener } from '@vueuse/core'
-import { ref, markRaw, onBeforeUnmount, onScopeDispose, watch } from 'vue'
+import { ref, markRaw, nextTick, onBeforeUnmount, onScopeDispose, watch } from 'vue'
 
 import { EffectPlayer } from 'gltf-ar-effects/player'
 import { createSampleGltf } from './ar-effects-demo/sample-gltf'
@@ -15,7 +15,13 @@ import EffectCatalog from './ar-effects-demo/effect-catalog.vue'
 
 import environmentOptions from 'virtual:ar-effects-environment-options.js'
 
-import { catalog } from './ar-effects-demo/catalog'
+import { catalog as catalog_ } from './ar-effects-demo/catalog'
+
+const localCatalog = Object.values<string>(
+  import.meta.glob('./ar-effects-demo/effects/**/*.glb', { eager: true, import: 'default' }),
+).map((url) => ({ name: url.slice(25).replace(/\.gl(b|tf).*$/, '') ?? url, url }))
+
+const catalog = [...localCatalog, ...catalog_]
 
 const catalogIsOpen = ref(false)
 const video = ref<HTMLVideoElement>()
@@ -97,6 +103,7 @@ const start = async () => {
   wasStarted.value = true
   await player.start()
   isReady.value = true
+  setTimeout(() => catalogIsOpen.value = true)
 }
 
 const onClickRecord = async () => {
@@ -169,7 +176,7 @@ onScopeDispose(() => playerRef.value?.dispose())
       <span :class="['recording-indicator', isRecording && 'is-recording']" />
     </button>
     <template v-if="!isRecording">
-      <effect-catalog v-model="effect" v-model:open="catalogIsOpen" >
+      <effect-catalog v-model="effect" v-model:open="catalogIsOpen" :options="catalog">
         <button class="icon-btn catalog-btn" @click="() => catalogIsOpen = !catalogIsOpen">
           <span class="i-tabler:mood-spark"></span>
         </button>
