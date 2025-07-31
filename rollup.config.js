@@ -17,10 +17,10 @@ import autoImport from 'unplugin-auto-import/rollup'
 import icons from 'unplugin-icons/rollup'
 
 import rootPkg from './package.json' with { type: 'json' }
+import { autoImportOptions } from './scripts/auto-import-ptions.js'
+import { globImportFrag } from './scripts/glob-import-frag.js'
+import { packageOptions } from './scripts/package-build-options.cjs'
 import { getPublickPackageDirs, ROOT } from './scripts/utils.js'
-import { autoImportOptions } from './tools/auto-import-ptions.js'
-import { globImportFrag } from './tools/glob-import-frag.js'
-import { packageOptions } from './tools/package-build-options.cjs'
 
 const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'

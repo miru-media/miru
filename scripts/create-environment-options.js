@@ -11,7 +11,7 @@ import {
   sortSinglePalette,
 } from 'compare-palettes'
 
-import { ROOT } from '../scripts/utils.js'
+import { ROOT } from './utils.js'
 
 const URLS = [
   'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Fredenbaumpark_Panorama.jpg/1024px-Fredenbaumpark_Panorama.jpg',
