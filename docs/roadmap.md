@@ -33,6 +33,8 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Text and image overlays
 
 - ## <span class="task-date">2025-Q3</span> <span class="task-todo" /> Media trimmer improvements
+
+  <!---->
   - Mediabunny is a robust WebCodecs-focused library that will give us support for more formats and enable a smoother editing experience
   - Lossless trimming
   - Bitrate/filesize controls

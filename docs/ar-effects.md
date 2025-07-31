@@ -155,7 +155,7 @@ onScopeDispose(() => playerRef.value?.dispose())
   <template v-if="recordedBlobUrl">
     <video ref="recordedVideo" :src="recordedBlobUrl" class="recorded-video" playsInline controls muted autoplay loop @canplay="onCanplayRecording" />
     <div class="recorded-output-btns">
-      <a :href="recordedBlobUrl" title="Download video" target="_blank" :download="recordedFile.name" class="output-btn">
+      <a :href="recordedBlobUrl" title="Download video" target="_blank" :download="recordedFile?.name" class="output-btn">
         <span class="i-tabler:download" />
       </a>
       <button title="Retake video" class="icon-btn" @click="onClickRetake"><span class="i-tabler:x" /></button>
