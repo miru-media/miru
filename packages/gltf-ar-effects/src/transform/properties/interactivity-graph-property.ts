@@ -1,7 +1,7 @@
 import * as gltf from '@gltf-transform/core'
 import type { IProperty } from '@gltf-transform/core'
 
-import { KHR_INTERACTIVITY } from '../../constants'
+import { KHR_INTERACTIVITY } from '../../constants.ts'
 
 export interface IInteractivityGraphProperty extends IProperty {
   extensions: gltf.RefMap<gltf.ExtensionProperty>

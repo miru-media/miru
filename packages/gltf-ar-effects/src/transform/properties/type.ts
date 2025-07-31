@@ -1,8 +1,11 @@
-import type { InteractivityTypeSignature } from '../../types'
+import type { InteractivityTypeSignature } from '../../types.ts'
 
-import type { Graph } from './graph'
-import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
-import { InteractivityPropertyType } from './property-types'
+import type { Graph } from './graph.ts'
+import {
+  type IInteractivityGraphProperty,
+  InteractivityGraphProperty,
+} from './interactivity-graph-property.ts'
+import { InteractivityPropertyType } from './property-types.ts'
 
 export interface IType extends IInteractivityGraphProperty {
   _graph: Graph

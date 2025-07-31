@@ -31,6 +31,14 @@ export default tseslint.config(
       'import/resolver': { typescript: { project: '.' } },
       'import/internal-regex':
         '^(webgl-media-editor|webgl-video-editor|reactive-effects|webgl-effects|shared)/',
+      node: {
+        typescriptExtensionMap: [
+          ['.ts', '.ts'],
+          ['.cts', '.cts'],
+          ['.mts', '.mts'],
+          ['.tsx', '.jsx'],
+        ],
+      },
     },
     rules: {
       ...importPlugin.flatConfigs.recommended.rules,
@@ -90,6 +98,7 @@ export default tseslint.config(
       '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/init-declarations': 'off',
       'import/default': 'off',
+      'n/file-extension-in-import': ['error', 'always'],
       'promise/avoid-new': 'off',
       'promise/param-names': 'off',
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],

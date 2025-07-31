@@ -4,9 +4,9 @@ import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { EditorView, type ImageEditState, type ImageSource, type ImageSourceOption } from 'shared/types'
 
-import { MediaEditorUI } from '../components/media-editor-ui'
-import { renderComponentTo } from '../components/render-to'
-import { MediaEditor, unwrap } from '../wrapper'
+import { MediaEditorUI } from '../components/media-editor-ui.jsx'
+import { renderComponentTo } from '../components/render-to.ts'
+import { MediaEditor, unwrap } from '../wrapper.ts'
 
 interface VueInstance {
   editor: MediaEditor

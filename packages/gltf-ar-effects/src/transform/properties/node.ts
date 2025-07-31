@@ -2,15 +2,18 @@ import * as gltf from '@gltf-transform/core'
 
 import type { MaybeArray } from 'shared/types'
 
-import type { Declaration } from './declaration'
-import type { Event } from './event'
-import { Flow } from './flow'
-import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
-import type { LiteralValue } from './literal-value'
-import { type LiteralOrPropertyValue, NodeConfigValue } from './node-config-value'
-import { InteractivityPropertyType } from './property-types'
-import type { Type } from './type'
-import type { Variable } from './variable'
+import type { Declaration } from './declaration.ts'
+import type { Event } from './event.ts'
+import { Flow } from './flow.ts'
+import {
+  type IInteractivityGraphProperty,
+  InteractivityGraphProperty,
+} from './interactivity-graph-property.ts'
+import type { LiteralValue } from './literal-value.ts'
+import { type LiteralOrPropertyValue, NodeConfigValue } from './node-config-value.ts'
+import { InteractivityPropertyType } from './property-types.ts'
+import type { Type } from './type.ts'
+import type { Variable } from './variable.ts'
 
 export interface INode extends IInteractivityGraphProperty {
   declaration: Declaration

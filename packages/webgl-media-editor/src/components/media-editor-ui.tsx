@@ -2,12 +2,12 @@ import { computed, getCurrentScope, type MaybeRefOrGetter, ref, type Ref, toRef 
 
 import { EditorView } from 'shared/types'
 
-import type { ImageSourceInternal } from '../image-source-internal'
-import type { MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal.ts'
+import type { MediaEditor } from '../media-editor.ts'
 
-import { AdjustmentsView } from './adjustments'
-import { CropView } from './cropper'
-import { FilterView } from './filter'
+import { AdjustmentsView } from './adjustments.jsx'
+import { CropView } from './cropper.jsx'
+import { FilterView } from './filter.jsx'
 
 export interface MediaEditorUIProps {
   editor: MediaEditor

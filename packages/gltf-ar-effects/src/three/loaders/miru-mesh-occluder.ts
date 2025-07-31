@@ -2,7 +2,7 @@ import type * as gltf from '@gltf-transform/core'
 import * as THREE from 'three'
 import type { GLTFLoaderPlugin, GLTFParser, GLTFReference } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-import { MIRU_MESH_OCCLUDER } from '../../constants'
+import { MIRU_MESH_OCCLUDER } from '../../constants.ts'
 
 export class GLTFMeshOccluderExtension implements GLTFLoaderPlugin {
   name: typeof MIRU_MESH_OCCLUDER = MIRU_MESH_OCCLUDER

@@ -1,13 +1,12 @@
 import { computed, createEffectScope, type Ref, ref } from 'fine-jsx'
 
-import type { ClipTime } from '../../types/core'
-import { TRANSITION_DURATION_S } from '../constants'
-import type { ExportMovie } from '../export/export-movie'
+import type { ClipTime } from '../../types/core.ts'
+import { TRANSITION_DURATION_S } from '../constants.ts'
+import type { ExportMovie } from '../export/export-movie.ts'
 
-import type { Movie, Schema, Track } from '.'
-
-import type { MediaAsset } from './assets'
-import { BaseNode } from './base-node'
+import type { MediaAsset } from './assets.ts'
+import { BaseNode } from './base-node.ts'
+import type { Movie, Schema, Track } from './index.ts'
 
 export abstract class BaseClip extends BaseNode {
   id: string

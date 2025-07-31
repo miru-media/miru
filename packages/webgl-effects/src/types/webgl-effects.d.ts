@@ -1,7 +1,7 @@
 import type * as twgl from 'twgl.js'
 
-export { Renderer, Effect } from './classes'
-export type * from './core'
+export { Renderer, Effect } from './classes.ts'
+export type * from './core.ts'
 
 export declare const getDefaultFilterDefinitions: (assetsPath?: string) => EffectDefinition[]
 

@@ -4,14 +4,13 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 import { createHiddenMediaElement } from 'shared/utils'
 import { useMediaError } from 'shared/video/utils'
 
-import type { ClipSnapshot, CustomSourceNodeOptions } from '../../types/internal'
-import { AudioElementNode, VideoElementNode } from '../video-context-nodes'
+import type { ClipSnapshot, CustomSourceNodeOptions } from '../../types/internal.ts'
+import { AudioElementNode, VideoElementNode } from '../video-context-nodes/index.ts'
 
-import type { Schema } from '.'
-
-import type { MediaAsset, VideoEffectAsset } from './assets'
-import { BaseClip } from './base-clip'
-import type { Track } from './track'
+import type { MediaAsset, VideoEffectAsset } from './assets.ts'
+import { BaseClip } from './base-clip.ts'
+import type { Schema } from './index.ts'
+import type { Track } from './track.ts'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 

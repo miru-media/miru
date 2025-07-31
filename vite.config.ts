@@ -12,8 +12,8 @@ import { defineConfig } from 'vite'
 import analyzer from 'vite-bundle-analyzer'
 import remoteAssets from 'vite-plugin-remote-assets'
 
-import { autoImportOptions } from './scripts/auto-import-ptions'
-import { globImportFrag } from './scripts/glob-import-frag'
+import { autoImportOptions } from './scripts/auto-import-ptions.js'
+import { globImportFrag } from './scripts/glob-import-frag.js'
 
 const isProd = process.env.NODE_ENV === 'production'
 

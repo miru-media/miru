@@ -1,7 +1,7 @@
 import { createEffectScope, type EffectScope, ref, type Ref } from 'fine-jsx'
 
-import { renderComponentTo } from '../components/render-to'
-import { MediaEditor, type MediaEditor_, unwrap } from '../wrapper'
+import { renderComponentTo } from '../components/render-to.ts'
+import { MediaEditor, type MediaEditor_, unwrap } from '../wrapper.ts'
 
 export interface VueInstance {
   editor: MediaEditor

@@ -1,8 +1,8 @@
 import * as Comlink from 'comlink'
 import * as kv from 'idb-keyval'
 
-import { KeyParts, SUPPORTS_WRITABLE_FILE_STREAM, WRITE_QUEUING_STRATEGY } from './constants'
-import { byteCounter, deleteFile, getDir, getFileHandle, isFileComplete, kvStore } from './utils'
+import { KeyParts, SUPPORTS_WRITABLE_FILE_STREAM, WRITE_QUEUING_STRATEGY } from './constants.ts'
+import { byteCounter, deleteFile, getDir, getFileHandle, isFileComplete, kvStore } from './utils.ts'
 
 export interface StorageWorkerFileInfo {
   size?: number

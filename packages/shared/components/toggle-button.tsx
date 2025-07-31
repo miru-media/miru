@@ -1,6 +1,6 @@
 import { type Component, type MaybeRef, type MaybeRefOrGetter, toRef, toValue, unref } from 'fine-jsx'
 
-import { IconButton } from './icon-button'
+import { IconButton } from './icon-button.jsx'
 
 export const ToggleButton = ({
   isActive,

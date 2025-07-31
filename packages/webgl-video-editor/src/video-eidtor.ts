@@ -5,11 +5,11 @@ import type { Size } from 'shared/types'
 import { remap0 } from 'shared/utils/math'
 import { assertCanDecodeMediaFile, hasVideoDecoder } from 'shared/video/utils'
 
-import type { ClipSnapshot, HistoryOp } from '../types/internal'
+import type { ClipSnapshot, HistoryOp } from '../types/internal.ts'
 
-import { MIN_CLIP_DURATION_S } from './constants'
-import { MovieExporter } from './export/movie-exporter'
-import { Clip, MediaAsset, Movie, type Schema, Track, type VideoEffectAsset } from './nodes'
+import { MIN_CLIP_DURATION_S } from './constants.ts'
+import { MovieExporter } from './export/movie-exporter.ts'
+import { Clip, MediaAsset, Movie, type Schema, Track, type VideoEffectAsset } from './nodes/index.ts'
 
 const getClipAtTime = (track: Track<Clip>, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {

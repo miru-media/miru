@@ -3,10 +3,10 @@ import { toValue } from 'fine-jsx'
 
 import type { InputEvent } from 'shared/types'
 
-import type { MediaEditor } from '../media-editor'
+import type { MediaEditor } from '../media-editor.ts'
 
-import { RowSlider } from './row-slider'
-import { useCrop } from './use-crop'
+import { RowSlider } from './row-slider.jsx'
+import { useCrop } from './use-crop.ts'
 
 const ASPECT_9_16 = 0.5625
 

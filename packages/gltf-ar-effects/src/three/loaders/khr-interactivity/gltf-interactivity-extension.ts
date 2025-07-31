@@ -2,13 +2,13 @@ import * as Behave from '@behave-graph/core'
 import * as THREE from 'three'
 import type { GLTFLoaderPlugin, GLTFParser, GLTFReference } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-import { KHR_INTERACTIVITY } from '../../../constants'
-import type { KHRInteractivityExtension } from '../../../types'
+import { KHR_INTERACTIVITY } from '../../../constants.ts'
+import type { KHRInteractivityExtension } from '../../../types.ts'
 
-import { registerNodes } from './behave-nodes'
-import { convertGraph } from './convert-graph'
-import { CustomRegistry } from './custom-registry'
-import { TYPES } from './value-types'
+import { registerNodes } from './behave-nodes.ts'
+import { convertGraph } from './convert-graph.ts'
+import { CustomRegistry } from './custom-registry.ts'
+import { TYPES } from './value-types.ts'
 
 declare module 'three/examples/jsm/loaders/GLTFLoader.d.ts' {
   export interface GLTFReference {

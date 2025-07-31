@@ -1,1 +1,1 @@
-export * from './environment-matcher'
+export * from './environment-matcher.ts'

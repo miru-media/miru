@@ -16,9 +16,9 @@ import { Effect } from 'reactive-effects/effect'
 import type { InputEvent, Size } from 'shared/types'
 import { getCenter, useElementSize } from 'shared/utils'
 
-import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants'
+import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants.ts'
 
-import { RowSlider } from './row-slider'
+import { RowSlider } from './row-slider.jsx'
 
 const EffectItem = (props: {
   effect: Effect

@@ -2,7 +2,7 @@
 import type * as ebml from 'ebml'
 import ebmlBlock from 'ebml-block'
 
-import type { AudioMetadata, EbmlChunk, MediaContainerMetadata, VideoMetadata, WebmTrack } from '../types'
+import type { AudioMetadata, EbmlChunk, MediaContainerMetadata, VideoMetadata, WebmTrack } from '../types.ts'
 
 export class MetadataExtractor extends TransformStream<EbmlChunk, MediaContainerMetadata> {
   #segmentTimescale = 1000000

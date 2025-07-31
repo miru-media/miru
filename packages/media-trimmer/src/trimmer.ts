@@ -12,11 +12,11 @@ import {
   setVideoEncoderConfigCodec,
 } from 'shared/video/utils'
 
-import type { FrameExtractor } from './frame-extractor'
-import { RvfcExtractor } from './rvfc-extractor'
-import type { TrimOptions } from './types/media-trimmer'
-import { assertHasRequiredApis } from './utils'
-import { VideoDecoderExtractor } from './video-decoder-extractor'
+import type { FrameExtractor } from './frame-extractor.ts'
+import { RvfcExtractor } from './rvfc-extractor.ts'
+import type { TrimOptions } from './types/media-trimmer.ts'
+import { assertHasRequiredApis } from './utils.ts'
+import { VideoDecoderExtractor } from './video-decoder-extractor.ts'
 
 const MUXER_CODEC_ID_MAP: Record<'webm' | 'mp4', Record<string, string>> = {
   mp4: { vp09: 'vp9', av01: 'av1', avc1: 'avc', hev1: 'hevc', opus: 'opus', mp4a: 'aac' },

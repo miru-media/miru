@@ -11,9 +11,9 @@ import type {
   SyncImageSource,
   Tlwh,
   Xywh,
-} from '../types'
-import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent'
-import { getImageSize } from '../video/utils'
+} from '../types.ts'
+import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent.ts'
+import { getImageSize } from '../video/utils.ts'
 
 const getCanvasContext = (
   canvas: HTMLCanvasElement | OffscreenCanvas | undefined,
@@ -332,7 +332,7 @@ export const normalizeSourceOption = <T extends ImageSource>(
   source: T | ImageSourceObject,
   type?: AssetType,
 ) =>
-  (isObjectWithSource(source) ? source : { source: source, type }) as T extends ImageSource
+  (isObjectWithSource(source) ? source : { source, type }) as T extends ImageSource
     ? { source: T } & ImageSourceObject
     : ImageSourceObject
 

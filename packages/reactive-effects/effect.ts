@@ -2,7 +2,7 @@ import { ref } from 'fine-jsx'
 import { Effect as BaseEffect, type EffectDefinition, type Renderer } from 'webgl-effects'
 
 // eslint-disable-next-line import/no-relative-packages -- internal
-import type { Effect as Effect_ } from '../webgl-effects/src/types/classes'
+import type { Effect as Effect_ } from '../webgl-effects/src/types/classes.ts'
 
 export class Effect implements Effect_ {
   readonly #effect: BaseEffect

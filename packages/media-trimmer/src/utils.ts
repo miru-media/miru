@@ -1,7 +1,7 @@
 import { IS_LIKE_MAC, IS_SAFARI_16, IS_SAFARI_17 } from 'shared/userAgent'
 import { assertCanExtractVideoFrames } from 'shared/video/utils'
 
-import type * as pub from './types/media-trimmer'
+import type * as pub from './types/media-trimmer.ts'
 
 const hasVideoEncoder = () => typeof VideoEncoder === 'function'
 

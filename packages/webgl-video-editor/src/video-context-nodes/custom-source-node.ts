@@ -9,10 +9,10 @@ import { IS_FIREFOX } from 'shared/userAgent'
 import { fit, setObjectSize } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 
-import type { ClipTime } from '../../types/core'
-import type { CustomSourceNodeOptions } from '../../types/internal'
-import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants'
-import type { Schema } from '../nodes'
+import type { ClipTime } from '../../types/core.ts'
+import type { CustomSourceNodeOptions } from '../../types/internal.ts'
+import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants.ts'
+import type { Schema } from '../nodes/index.ts'
 
 const rangeContainsTime = (range: { start: number; end: number }, time: number) =>
   range.start <= time && time < range.end

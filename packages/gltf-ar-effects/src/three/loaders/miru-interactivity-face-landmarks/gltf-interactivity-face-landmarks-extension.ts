@@ -2,12 +2,12 @@ import * as Behave from '@behave-graph/core'
 import * as THREE from 'three'
 import type { GLTFLoaderPlugin, GLTFParser, GLTFReference } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-import { KHR_INTERACTIVITY, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../constants'
-import type { FaceLandmarksGeometryProps, KHRInteractivityExtension } from '../../../types'
-import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension'
+import { KHR_INTERACTIVITY, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../constants.ts'
+import type { FaceLandmarksGeometryProps, KHRInteractivityExtension } from '../../../types.ts'
+import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension.ts'
 
-import { FaceLandmarksProcessor, type FaceTransform, type OnDetect } from './face-landmarks-processor'
-import { LandmarksFaceNode } from './interactivity-behave-nodes'
+import { FaceLandmarksProcessor, type FaceTransform, type OnDetect } from './face-landmarks-processor.ts'
+import { LandmarksFaceNode } from './interactivity-behave-nodes.ts'
 
 interface JsonWithExtensions {
   meshes?: {

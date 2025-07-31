@@ -4,9 +4,9 @@ import { win } from 'shared/utils'
 import { AudioEncoderTransform, VideoEncoderTransform } from 'shared/video/coder-transforms'
 import { assertEncoderConfigIsSupported } from 'shared/video/utils'
 
-import { EXPORT_VIDEO_CODECS } from '../constants'
+import { EXPORT_VIDEO_CODECS } from '../constants.ts'
 
-import type { EncodedAudioChunk as EncodedAudioChunkPolyfill } from './polyfill'
+import type { EncodedAudioChunk as EncodedAudioChunkPolyfill } from './polyfill.ts'
 
 export namespace AVEncoder {
   export interface Options {
@@ -93,7 +93,7 @@ export class AVEncoder {
       const useAudioEncoderPolyfil = typeof AudioEncoder !== 'function'
 
       if (useAudioEncoderPolyfil) {
-        const polyfill = await import('./polyfill')
+        const polyfill = await import('./polyfill.ts')
         await polyfill.init()
         AudioEncoder = polyfill.AudioEncoder as typeof AudioEncoder
         this.AudioData = polyfill.AudioData

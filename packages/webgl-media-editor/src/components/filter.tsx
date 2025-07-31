@@ -2,11 +2,11 @@ import { computed, type MaybeRefOrGetter, ref, toValue, watch } from 'fine-jsx'
 
 import { Effect } from 'reactive-effects/effect'
 
-import type { ImageSourceInternal } from '../image-source-internal'
-import type { MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal.ts'
+import type { MediaEditor } from '../media-editor.ts'
 
-import { SourcePreview } from './source-preview'
-import { WebglEffectsMenu, type WebglEffectsMenuExpose } from './webgl-effects-menu'
+import { SourcePreview } from './source-preview.jsx'
+import { WebglEffectsMenu, type WebglEffectsMenuExpose } from './webgl-effects-menu.jsx'
 
 export const FilterView = ({
   editor,

@@ -13,8 +13,8 @@ import {
   useMediaReadyState,
 } from 'shared/video/utils'
 
-import type { LoadInfo, TrimState } from './types/ui'
-import { hasRequiredApis } from './utils'
+import type { LoadInfo, TrimState } from './types/ui.ts'
+import { hasRequiredApis } from './utils.ts'
 
 const MIN_CLIP_DURATION_S = 0.25
 const MIN_CLIP_WIDTH_PX = 1

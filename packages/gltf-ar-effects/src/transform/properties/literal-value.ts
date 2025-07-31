@@ -1,5 +1,5 @@
-import { LiteralValueContainer } from './literal-value-container'
-import { InteractivityPropertyType } from './property-types'
+import { LiteralValueContainer } from './literal-value-container.ts'
+import { InteractivityPropertyType } from './property-types.ts'
 
 export class LiteralValue extends LiteralValueContainer {
   init() {

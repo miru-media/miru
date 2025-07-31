@@ -3,12 +3,11 @@ import { ref } from 'fine-jsx'
 import { Effect } from 'reactive-effects/effect'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
-import { storage } from '../storage'
+import { storage } from '../storage/index.ts'
 
-import type { Schema } from '.'
-
-import { BaseNode } from './base-node'
-import type { Movie } from './movie'
+import { BaseNode } from './base-node.ts'
+import type { Schema } from './index.ts'
+import type { Movie } from './movie.ts'
 
 abstract class Asset<T extends Schema.Asset> extends BaseNode {
   id: string

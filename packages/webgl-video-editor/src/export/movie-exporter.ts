@@ -3,13 +3,13 @@ import { Demuxer } from 'shared/video/demuxer'
 import type { MediaContainerMetadata } from 'shared/video/types'
 import { assertDecoderConfigIsSupported, setVideoEncoderConfigCodec } from 'shared/video/utils'
 
-import { VIDEO_DECODER_HW_ACCEL_PREF } from '../constants'
-import type { MediaAsset, Movie } from '../nodes'
+import { VIDEO_DECODER_HW_ACCEL_PREF } from '../constants.ts'
+import type { MediaAsset, Movie } from '../nodes/index.ts'
 
-import { AVEncoder } from './av-encoder'
-import { ExportMovie } from './export-movie'
-import type { ExtractorClip } from './exporter-clip'
-import type { MediaExtractorNode } from './media-extractor-node'
+import { AVEncoder } from './av-encoder.ts'
+import { ExportMovie } from './export-movie.ts'
+import type { ExtractorClip } from './exporter-clip.ts'
+import type { MediaExtractorNode } from './media-extractor-node.ts'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -177,7 +177,7 @@ export class MovieExporter {
     const videoEncoderConfig: VideoEncoderConfig = {
       codec: '',
       ...resolution,
-      framerate: framerate,
+      framerate,
       // bitrate: 1e7,
     }
 

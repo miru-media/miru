@@ -1,7 +1,7 @@
 import { VideoDecoderTransform } from 'shared/video/coder-transforms'
 import type { Demuxer } from 'shared/video/demuxer'
 
-import { FrameExtractor } from './frame-extractor'
+import { FrameExtractor } from './frame-extractor.ts'
 
 export class VideoDecoderExtractor extends FrameExtractor {
   demuxer: Demuxer

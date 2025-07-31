@@ -12,9 +12,9 @@ import {
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
-import type { I18nOptions } from '../types'
+import type { I18nOptions } from '../types.ts'
 
-import { win } from './window'
+import { win } from './window.ts'
 
 export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | undefined>) => {
   const initialElement = toValue(element)

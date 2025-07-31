@@ -1,8 +1,8 @@
 import * as gltf from '@gltf-transform/core'
 import { expect, test } from 'vitest'
 
-import { MIRUMeshOccluder } from './mesh-occluder'
-import { InteractivityFaceLandmarks } from './miru-interactivity-face-landmarks'
+import { MIRUMeshOccluder } from './mesh-occluder.ts'
+import { InteractivityFaceLandmarks } from './miru-interactivity-face-landmarks.ts'
 
 test('reads and writes face mesh primitive extension', async () => {
   const doc = new gltf.Document()

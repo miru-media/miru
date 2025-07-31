@@ -1,10 +1,10 @@
 import * as gltf from '@gltf-transform/core'
 import type { IProperty } from '@gltf-transform/core'
 
-import { MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../constants'
-import type { FaceLandmarksGeometryProps, FaceLandmarksUvMode } from '../types'
+import { MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../constants.ts'
+import type { FaceLandmarksGeometryProps, FaceLandmarksUvMode } from '../types.ts'
 
-import { Interactivity } from './interactivity'
+import { Interactivity } from './interactivity.ts'
 
 export class InteractivityFaceLandmarks extends gltf.Extension {
   static EXTENSION_NAME = MIRU_INTERACTIVITY_FACE_LANDMARKS

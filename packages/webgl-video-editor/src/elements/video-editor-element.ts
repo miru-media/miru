@@ -3,11 +3,11 @@ import { createEffectScope, effect, ref } from 'fine-jsx'
 import { HTMLElementOrStub } from 'shared/utils/window'
 import { renderComponentTo } from 'shared/video/render-to'
 
-import type * as schema from '../../types/schema'
-import type * as pub from '../../types/webgl-video-editor'
-import { VideoEditorUI } from '../components/video-editor-ui'
-import type * as nodes from '../nodes'
-import { VideoEditor } from '../video-eidtor'
+import type * as schema from '../../types/schema.ts'
+import type * as pub from '../../types/webgl-video-editor.ts'
+import { VideoEditorUI } from '../components/video-editor-ui.jsx'
+import type * as nodes from '../nodes/index.ts'
+import { VideoEditor } from '../video-eidtor.ts'
 
 const UNMOUNT_TIMEOUT_MS = 500
 

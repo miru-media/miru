@@ -1,7 +1,7 @@
 import * as gltf from '@gltf-transform/core'
 import type { IProperty } from '@gltf-transform/core'
 
-import { KHR_NODE_VISIBILITY } from '../constants'
+import { KHR_NODE_VISIBILITY } from '../constants.ts'
 
 export class KHRNodeVisibility extends gltf.Extension {
   public static readonly EXTENSION_NAME: typeof KHR_NODE_VISIBILITY = KHR_NODE_VISIBILITY

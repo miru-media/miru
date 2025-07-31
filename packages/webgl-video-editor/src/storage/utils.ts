@@ -1,6 +1,6 @@
 import * as kv from 'idb-keyval'
 
-import { DB_NAME, DIRNAME, KeyParts, STORE_NAME, SUPPORTS_STORAGE } from './constants'
+import { DB_NAME, DIRNAME, KeyParts, STORE_NAME, SUPPORTS_STORAGE } from './constants.ts'
 
 export const kvStore = kv.createStore(DB_NAME, STORE_NAME)
 

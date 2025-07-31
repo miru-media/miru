@@ -4,8 +4,8 @@ import { type Context2D, type EffectDefinition, Renderer } from 'webgl-effects'
 import { Effect } from 'reactive-effects/effect'
 import type { ImageEditState, ImageSourceOption } from 'shared/types'
 
-import { DEFAULT_EXPORT_QUALITY } from './constants'
-import { ImageSourceInternal } from './image-source-internal'
+import { DEFAULT_EXPORT_QUALITY } from './constants.ts'
+import { ImageSourceInternal } from './image-source-internal.ts'
 
 export interface MediaEditorOptions {
   effects: Ref<EffectDefinition[]>

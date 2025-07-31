@@ -6,11 +6,11 @@ import type {
   VideoMetadata,
 } from 'shared/video/types'
 
-import { FileSignature } from '../file-signature'
+import { FileSignature } from '../file-signature.ts'
 
-import { EbmlDecoder } from './ebml-decoder'
-import { EncodedChunkExtractor } from './encoded-chunk-extractor'
-import { MetadataExtractor } from './metadata-extractor'
+import { EbmlDecoder } from './ebml-decoder.ts'
+import { EncodedChunkExtractor } from './encoded-chunk-extractor.ts'
+import { MetadataExtractor } from './metadata-extractor.ts'
 
 export class WebmDemuxer {
   // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- file signature magic numbers

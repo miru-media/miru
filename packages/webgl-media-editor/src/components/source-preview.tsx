@@ -2,8 +2,8 @@ import { computed, type MaybeRefOrGetter, toValue } from 'fine-jsx'
 
 import { useEventListener } from 'shared/utils'
 
-import type { ImageSourceInternal } from '../image-source-internal'
-import type { MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal.ts'
+import type { MediaEditor } from '../media-editor.ts'
 
 export const SourcePreview = ({
   editor,

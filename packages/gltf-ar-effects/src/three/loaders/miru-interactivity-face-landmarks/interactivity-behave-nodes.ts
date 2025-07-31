@@ -1,6 +1,6 @@
 import * as Behave from '@behave-graph/core'
 
-import { LandmarkOps, MAX_LANDMARK_FACES } from '../../../constants'
+import { LandmarkOps, MAX_LANDMARK_FACES } from '../../../constants.ts'
 
 const assertIsValidFaceId = (faceId: unknown): number => {
   if (
@@ -16,7 +16,7 @@ const assertIsValidFaceId = (faceId: unknown): number => {
 }
 
 export class LandmarksFaceNode extends Behave.EventNode {
-  static OP = LandmarkOps.Face as const
+  static OP = LandmarkOps.Face
 
   faceId: number
 

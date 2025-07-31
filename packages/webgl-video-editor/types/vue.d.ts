@@ -1,4 +1,4 @@
-export * from './public-constants'
+export * from './public-constants.ts'
 
 declare const VideoEditor: {
   name: 'VideoEditor'

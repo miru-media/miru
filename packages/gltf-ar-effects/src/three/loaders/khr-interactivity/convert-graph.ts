@@ -5,9 +5,9 @@ import type {
   InteractivityType,
   InteractivityValue,
   InteractivityVariable,
-} from '../../../types'
+} from '../../../types.ts'
 
-import { TYPES } from './value-types'
+import { TYPES } from './value-types.ts'
 
 type BehaveMetadata = Record<string, string>
 

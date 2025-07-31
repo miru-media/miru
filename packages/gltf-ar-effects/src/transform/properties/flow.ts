@@ -1,8 +1,8 @@
 import * as gltf from '@gltf-transform/core'
 import type { IProperty } from '@gltf-transform/core'
 
-import type { Node } from './node'
-import { InteractivityPropertyType } from './property-types'
+import type { Node } from './node.ts'
+import { InteractivityPropertyType } from './property-types.ts'
 
 export interface IFlow extends IProperty {
   node: Node

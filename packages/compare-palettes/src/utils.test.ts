@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { computeDistanceMatrix } from './utils'
+import { computeDistanceMatrix } from './utils.js'
 
 test('labDistanceMatrix', () => {
   const diff = (a: number, b: number): number => Math.abs(a - b)

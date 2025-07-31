@@ -2,26 +2,31 @@ import * as gltf from '@gltf-transform/core'
 
 import type { MaybeArray } from 'shared/types'
 
-import { isSingleLiteral } from '../utils'
+import { isSingleLiteral } from '../utils.ts'
 
-import type { Event } from './event'
-import type { Flow } from './flow'
-import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
-import type { Node } from './node'
-import { InteractivityPropertyType } from './property-types'
-import type { Type } from './type'
-import type { Variable } from './variable'
+import type { Event } from './event.ts'
+import type { Flow } from './flow.ts'
+import {
+  type IInteractivityGraphProperty,
+  InteractivityGraphProperty,
+} from './interactivity-graph-property.ts'
+import type { Node } from './node.ts'
+import { InteractivityPropertyType } from './property-types.ts'
+import type { Type } from './type.ts'
+import type { Variable } from './variable.ts'
 
 type PropertyValueType = Type | Variable | Event | Node | Flow
 type LiteralValueType = string | number | boolean
 
 export type LiteralOrPropertyValue = PropertyValueType | LiteralValueType
 
-const enum ValueType {
-  Ref,
-  Literal,
-  Array,
-}
+type ValueType = (typeof ValueType)[keyof typeof ValueType]
+
+const ValueType = {
+  Ref: 0,
+  Literal: 1,
+  Array: 2,
+} as const
 
 export interface INodeConfigValue extends IInteractivityGraphProperty {
   valueType: ValueType

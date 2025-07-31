@@ -8,8 +8,8 @@ import {
 } from 'shared/video/coder-transforms'
 import type { EncodedMediaChunk } from 'shared/video/types'
 
-import type { CustomSourceNodeOptions } from '../../types/internal'
-import { CustomSourceNode } from '../video-context-nodes'
+import type { CustomSourceNodeOptions } from '../../types/internal.ts'
+import { CustomSourceNode } from '../video-context-nodes/index.ts'
 
 export interface ExtractorNodeOptions extends CustomSourceNodeOptions {
   targetFrameRate: number

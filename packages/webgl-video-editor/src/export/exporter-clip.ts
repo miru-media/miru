@@ -1,11 +1,11 @@
 import { type Ref, ref, toRef } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 
-import type { Schema, Track } from '../nodes'
-import type { MediaAsset, VideoEffectAsset } from '../nodes/assets'
-import { BaseClip } from '../nodes/base-clip'
+import type { MediaAsset, VideoEffectAsset } from '../nodes/assets.ts'
+import { BaseClip } from '../nodes/base-clip.ts'
+import type { Schema, Track } from '../nodes/index.ts'
 
-import { type ExtractorNodeOptions, MediaExtractorNode } from './media-extractor-node'
+import { type ExtractorNodeOptions, MediaExtractorNode } from './media-extractor-node.ts'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 

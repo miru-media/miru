@@ -1,7 +1,10 @@
-import type { InteractivityConfiguration, InteractivityValue } from '../../types'
+import type { InteractivityConfiguration, InteractivityValue } from '../../types.ts'
 
-import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
-import type { Type } from './type'
+import {
+  type IInteractivityGraphProperty,
+  InteractivityGraphProperty,
+} from './interactivity-graph-property.ts'
+import type { Type } from './type.ts'
 
 export type LiteralValueValue = boolean | number | string | number[] | string[] | null
 

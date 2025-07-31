@@ -1,6 +1,6 @@
-import { MP4Demuxer } from './mp4/mp4-demuxer'
-import type { AudioMetadata, MediaContainerMetadata, VideoMetadata } from './types'
-import { WebmDemuxer } from './webm/webm-demuxer'
+import { MP4Demuxer } from './mp4/mp4-demuxer.ts'
+import type { AudioMetadata, MediaContainerMetadata, VideoMetadata } from './types.ts'
+import { WebmDemuxer } from './webm/webm-demuxer.ts'
 
 export class Demuxer {
   #demuxer?: MP4Demuxer | WebmDemuxer

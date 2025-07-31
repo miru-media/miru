@@ -1,5 +1,5 @@
-import { Trimmer } from './trimmer'
-import type * as pub from './types/media-trimmer'
+import { Trimmer } from './trimmer.ts'
+import type * as pub from './types/media-trimmer.ts'
 
 export const trim: typeof pub.trim = async (url: string, options: pub.TrimOptions): Promise<Blob> => {
   const { onProgress } = options
@@ -28,4 +28,4 @@ export const trim: typeof pub.trim = async (url: string, options: pub.TrimOption
 }
 
 export default trim
-export * from './utils'
+export * from './utils.ts'

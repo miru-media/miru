@@ -11,11 +11,11 @@ import {
   setObjectSize,
 } from 'shared/utils/images'
 
-import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants'
-import * as GL from './gl'
+import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants.ts'
+import * as GL from './gl.ts'
 import vs from './glsl/main.vert'
 import passthrough from './glsl/passthrough.frag'
-import type { Renderer as Renderer_ } from './types/classes'
+import type { Renderer as Renderer_ } from './types/classes.ts'
 import type {
   AssetType,
   Context2D,
@@ -23,7 +23,7 @@ import type {
   RendererDrawOptions,
   RendererEffect,
   RendererEffectOp,
-} from './types/core'
+} from './types/core.ts'
 
 interface Size {
   width: number

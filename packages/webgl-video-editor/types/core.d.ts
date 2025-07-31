@@ -2,7 +2,7 @@ import type { Renderer } from 'webgl-effects'
 
 import type { Effect } from 'reactive-effects/effect'
 
-export type * as Schema from './schema'
+export type * as Schema from './schema.ts'
 
 type TrackType = 'video' | 'audio'
 

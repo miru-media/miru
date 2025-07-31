@@ -9,15 +9,14 @@ import { getWebgl2Context, setObjectSize, useDocumentVisibility } from 'shared/u
 import { clamp } from 'shared/utils/math'
 import { useRafLoop } from 'shared/video/utils'
 
-import type { AnyNode, NodeMap as NodeMapType } from '../../types/internal'
-import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants'
+import type { AnyNode, NodeMap as NodeMapType } from '../../types/internal.ts'
+import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants.ts'
 
-import type { Schema } from '.'
-
-import { MediaAsset, VideoEffectAsset } from './assets'
-import { Clip } from './clip'
-import { ParentNode } from './parent-node'
-import { Track } from './track'
+import { MediaAsset, VideoEffectAsset } from './assets.ts'
+import { Clip } from './clip.ts'
+import type { Schema } from './index.ts'
+import { ParentNode } from './parent-node.ts'
+import { Track } from './track.ts'
 
 export const enum VideoContextState {
   PLAYING = 0,

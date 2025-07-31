@@ -5,11 +5,11 @@ import type { Effect } from 'reactive-effects/effect'
 import type { Size } from 'shared/types'
 import { HTMLElementOrStub } from 'shared/utils/window'
 
-import { FilterView } from '../components/filter'
-import { renderComponentTo } from '../components/render-to'
-import { SourcePreview } from '../components/source-preview'
-import { WebglEffectsMenu, type WebglEffectsMenuExpose } from '../components/webgl-effects-menu'
-import { MediaEditor, unwrap } from '../wrapper'
+import { FilterView } from '../components/filter.jsx'
+import { renderComponentTo } from '../components/render-to.ts'
+import { SourcePreview } from '../components/source-preview.jsx'
+import { WebglEffectsMenu, type WebglEffectsMenuExpose } from '../components/webgl-effects-menu.jsx'
+import { MediaEditor, unwrap } from '../wrapper.ts'
 
 export { MediaEditor }
 
@@ -191,7 +191,7 @@ export class WebglEffectsMenuElement extends HTMLElementOrStub {
         sourceSize: this.#sourceSize,
         thumbnailSize: this.#thumbnailSize,
         crop: this.#crop,
-        renderer: renderer,
+        renderer,
         effects: this.#effects,
         effect: this.#effect,
         intensity: this.#intensity,

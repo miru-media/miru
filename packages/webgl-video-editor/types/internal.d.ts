@@ -3,9 +3,9 @@ import type { Renderer } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 
-import type { Clip, MediaAsset, Movie, Track, VideoEffectAsset } from '../src/nodes'
+import type { Clip, MediaAsset, Movie, Track, VideoEffectAsset } from '../src/nodes/index.ts'
 
-import type { Schema } from './core'
+import type { Schema } from './core.ts'
 
 export interface CustomSourceNodeOptions {
   videoEffect?: Ref<VideoEffectAsset | undefined>

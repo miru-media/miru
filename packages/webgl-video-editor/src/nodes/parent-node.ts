@@ -1,4 +1,4 @@
-import { BaseNode } from './base-node'
+import { BaseNode } from './base-node.ts'
 
 export abstract class ParentNode extends BaseNode {
   abstract children: BaseNode[]

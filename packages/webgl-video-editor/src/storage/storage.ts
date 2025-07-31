@@ -7,15 +7,15 @@ import {
   SUPPORTS_TRANSFERABLE_STREAM,
   WRITE_QUEUING_STRATEGY,
   WRITTEN_SIZE_UPDATE_INTERVAL_MS,
-} from './constants'
-import type { FileStorage, StorageWorkerFileInfo } from './storage-worker'
-import { getFileHandle } from './utils'
+} from './constants.ts'
+import type { FileStorage, StorageWorkerFileInfo } from './storage-worker.ts'
+import { getFileHandle } from './utils.ts'
 
 let hasRequestedPersistence = false
 let storage_: Comlink.Remote<FileStorage>
 
 if (!import.meta.env.SSR) {
-  const worker = new Worker(new URL('./storage-worker.js', import.meta.url), {
+  const worker = new Worker(new URL('./storage-worker.ts', import.meta.url), {
     name: 'webgl-video-editor-storage',
     type: 'module',
   })

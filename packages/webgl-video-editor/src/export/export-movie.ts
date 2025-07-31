@@ -4,12 +4,12 @@ import type { Renderer } from 'webgl-effects'
 
 import { setObjectSize } from 'shared/utils'
 
-import type { NodeMap } from '../../types/internal'
-import type { Movie } from '../nodes'
-import { ParentNode } from '../nodes/parent-node'
-import { Track } from '../nodes/track'
+import type { NodeMap } from '../../types/internal.ts'
+import type { Movie } from '../nodes/index.ts'
+import { ParentNode } from '../nodes/parent-node.ts'
+import { Track } from '../nodes/track.ts'
 
-import { ExtractorClip } from './exporter-clip'
+import { ExtractorClip } from './exporter-clip.ts'
 
 export type TrackMovie = Pick<
   Movie,

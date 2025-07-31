@@ -28,7 +28,7 @@ import {
   win,
 } from 'shared/utils'
 
-import { DEFAULT_INTENSITY } from './constants'
+import { DEFAULT_INTENSITY } from './constants.ts'
 
 interface ImageSourceInternalOptions {
   sourceOption: ImageSourceOption

@@ -4,14 +4,14 @@ import * as Vue from 'vue'
 import * as interop from 'shared/utils/interop'
 import { renderComponentTo } from 'shared/video/render-to'
 
-import type * as pub from '../../types/webgl-video-editor'
-import { VideoEditorUI } from '../components/video-editor-ui'
-import type * as nodes from '../nodes'
-import { VideoEditor as VideoEditor_ } from '../video-eidtor'
+import type * as pub from '../../types/webgl-video-editor.ts'
+import { VideoEditorUI } from '../components/video-editor-ui.jsx'
+import type * as nodes from '../nodes/index.ts'
+import { VideoEditor as VideoEditor_ } from '../video-eidtor.ts'
 
-export type { VideoEditor } from '../../types/webgl-video-editor'
+export type { VideoEditor } from '../../types/webgl-video-editor.ts'
 
-export * from '../constants'
+export * from '../constants.ts'
 
 type Mappings =
   | [nodes.Track<nodes.Clip>, pub.Track]

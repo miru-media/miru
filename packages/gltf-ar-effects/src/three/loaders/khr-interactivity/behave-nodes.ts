@@ -1,7 +1,7 @@
 import * as Behave from '@behave-graph/core'
 import jsonPointer from 'json-pointer'
 
-import type { CustomRegistry } from './custom-registry'
+import type { CustomRegistry } from './custom-registry.ts'
 
 export class EventReceive extends Behave.EventNode {
   static Description = new Behave.NodeDescription(

@@ -1,6 +1,6 @@
 import { type MaybeRefOrGetter, ref, toRef, toValue, watch } from 'fine-jsx'
 
-import type { ImageSourceInternal } from '../image-source-internal'
+import type { ImageSourceInternal } from '../image-source-internal.ts'
 
 export const useToggleEdit = <T>(
   source: MaybeRefOrGetter<ImageSourceInternal | undefined>,

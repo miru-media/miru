@@ -1,3 +1,3 @@
-export type * from './core'
-export type * as Schema from './schema'
-export * from './public-constants'
+export type * from './core.ts'
+export type * as Schema from './schema.ts'
+export * from './public-constants.ts'

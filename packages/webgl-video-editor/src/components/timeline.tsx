@@ -5,12 +5,12 @@ import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
-import { ACCEPT_VIDEO_FILE_TYPES } from '../constants'
-import type { Clip as ClipType, Track } from '../nodes'
-import type { VideoEditor } from '../video-eidtor'
+import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
+import type { Clip as ClipType, Track } from '../nodes/index.ts'
+import type { VideoEditor } from '../video-eidtor.ts'
 
-import { Clip } from './clip'
-import { Ruler } from './ruler'
+import { Clip } from './clip.jsx'
+import { Ruler } from './ruler.jsx'
 
 const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()

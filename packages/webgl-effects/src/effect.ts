@@ -1,10 +1,10 @@
 import { Janitor, normalizeSourceOption } from 'shared/utils'
 
-import { FRAGMENT_SHADERS } from './all-fragment-shaders'
-import type { Renderer } from './renderer'
-import { TextureResource } from './texture-resource'
-import type { Effect as Effect_ } from './types/classes'
-import type { AssetType, EffectDefinition, RendererEffectOp } from './types/core'
+import { FRAGMENT_SHADERS } from './all-fragment-shaders.ts'
+import type { Renderer } from './renderer.ts'
+import { TextureResource } from './texture-resource.ts'
+import type { Effect as Effect_ } from './types/classes.ts'
+import type { AssetType, EffectDefinition, RendererEffectOp } from './types/core.ts'
 
 export class Effect implements Effect_ {
   id?: string

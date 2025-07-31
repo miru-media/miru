@@ -3,15 +3,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { DeviceOrientationControls } from 'three-stdlib'
 
-import { type EnvInfo, EnvMatcher } from './match-environment'
+import { type EnvInfo, EnvMatcher } from './match-environment/index.ts'
 import {
   DETECTION_CAMERA_FAR,
   DETECTION_CAMERA_FOV,
   DETECTION_CAMERA_NEAR,
   GLTFFaceLandmarkDetectionExtension,
   GLTFInteractivityExtension,
-} from './three'
-import { GLTFMeshOccluderExtension } from './three/loaders/miru-mesh-occluder'
+} from './three/index.ts'
+import { GLTFMeshOccluderExtension } from './three/loaders/miru-mesh-occluder.ts'
 
 const MIRROR = true as boolean
 const ENV_MATCH_INTERVAL_MS = 10_000

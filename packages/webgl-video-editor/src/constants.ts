@@ -1,6 +1,6 @@
 import { IS_FIREFOX } from 'shared/userAgent'
 
-export * from './public-constants'
+export * from './public-constants.ts'
 
 export const MOBILE_MAX_WIDTH = 640
 

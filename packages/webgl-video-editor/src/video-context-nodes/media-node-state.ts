@@ -4,9 +4,9 @@ import { setObjectSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 import { getImageSize, useMediaReadyState, useRafLoop } from 'shared/video/utils'
 
-import { ReadyState } from '../constants'
+import { ReadyState } from '../constants.ts'
 
-import type { MediaElementNode } from './media-element-node'
+import type { MediaElementNode } from './media-element-node.ts'
 
 export class MediaNodeState {
   scope = new EffectScope()

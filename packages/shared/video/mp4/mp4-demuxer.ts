@@ -1,7 +1,7 @@
 /* eslint-disable  @typescript-eslint/no-magic-numbers -- file signature magic numbers */
 import * as MP4Box from 'mp4box'
 
-import { FileSignature } from '../file-signature'
+import { FileSignature } from '../file-signature.ts'
 import type {
   AudioMetadata,
   EncodedMediaChunk,
@@ -9,7 +9,7 @@ import type {
   MP4BoxAudioTrack,
   MP4BoxVideoTrack,
   VideoMetadata,
-} from '../types'
+} from '../types.ts'
 
 const PRIMARIES: Record<number, VideoColorSpaceInit['primaries']> = {
   1: 'bt709',

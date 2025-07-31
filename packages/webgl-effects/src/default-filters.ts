@@ -37,7 +37,7 @@ import Toon_Shadow from 'shared/assets/luts/06_Crushed/Toon_Shadow.jpg'
 import Toon_Sketch from 'shared/assets/luts/06_Crushed/Toon_Sketch.jpg'
 import Violent_Violet from 'shared/assets/luts/06_Crushed/Violent_Violet.jpg'
 
-import type { EffectDefinition } from './types/core'
+import type { EffectDefinition } from './types/core.ts'
 
 export const getDefaultFilterDefinitions = (assetsPath?: string): EffectDefinition[] => {
   const rebaseAssetUrl = (path: string) =>

@@ -1,11 +1,10 @@
 import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
 import VideoContext, { type CompositingNode } from 'videocontext'
 
-import type { ExportMovie } from '../export/export-movie'
+import type { ExportMovie } from '../export/export-movie.ts'
 
-import type { BaseClip, Movie, Schema } from '.'
-
-import { ParentNode } from './parent-node'
+import type { BaseClip, Movie, Schema } from './index.ts'
+import { ParentNode } from './parent-node.ts'
 
 type TrackType = 'video' | 'audio'
 

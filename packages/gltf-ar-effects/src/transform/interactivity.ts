@@ -1,30 +1,32 @@
 import * as gltf from '@gltf-transform/core'
 
-import { KHR_INTERACTIVITY } from '../constants'
+import { KHR_INTERACTIVITY } from '../constants.ts'
 import type {
   InteractivityGraph,
   InteractivityValue,
   InteractivityVariable,
   KHRInteractivityExtension,
-} from '../types'
+} from '../types.ts'
 
-import { InteractivityGraphReaderContext } from './interactivity-graph-reader-context'
-import { InteractivityGraphWriterContext } from './interactivity-graph-writer-context'
-import { Declaration } from './properties/declaration'
-import { Event } from './properties/event'
-import { Flow } from './properties/flow'
-import { Graph } from './properties/graph'
-import { InteractivityRoot } from './properties/interactivity-root'
-import { LiteralValue } from './properties/literal-value'
-import type { LiteralValueValue } from './properties/literal-value-container'
-import { Node } from './properties/node'
-import { Type } from './properties/type'
-import { Variable } from './properties/variable'
+import { InteractivityGraphReaderContext } from './interactivity-graph-reader-context.ts'
+import { InteractivityGraphWriterContext } from './interactivity-graph-writer-context.ts'
+import { Declaration } from './properties/declaration.ts'
+import { Event } from './properties/event.ts'
+import { Flow } from './properties/flow.ts'
+import { Graph } from './properties/graph.ts'
+import { InteractivityRoot } from './properties/interactivity-root.ts'
+import type { LiteralValueValue } from './properties/literal-value-container.ts'
+import { LiteralValue } from './properties/literal-value.ts'
+import { Node } from './properties/node.ts'
+import { Type } from './properties/type.ts'
+import { Variable } from './properties/variable.ts'
 
-const enum ContainerType {
-  Variable,
-  Value,
-}
+type ContainerType = (typeof ContainerType)[keyof typeof ContainerType]
+
+const ContainerType = {
+  Variable: 'VARIABLE',
+  Value: 'VALUE',
+} as const
 
 export class Interactivity extends gltf.Extension {
   static EXTENSION_NAME = KHR_INTERACTIVITY
@@ -112,7 +114,7 @@ export class Interactivity extends gltf.Extension {
 
         return setBaseProps(valueContainer, containerJson)
           .setValueFromJson(containerJson)
-          .setType(context.types[containerJson.type]) as T extends ContainerType.Value
+          .setType(context.types[containerJson.type]) as T extends typeof ContainerType.Value
           ? LiteralValue
           : Variable
       }

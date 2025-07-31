@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { EnvMatcher } from './environment-matcher'
+import { EnvMatcher } from './environment-matcher.ts'
 
 test('EnvMatcher', () => {
   const matcher = new EnvMatcher({

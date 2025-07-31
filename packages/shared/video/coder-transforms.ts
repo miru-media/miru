@@ -1,7 +1,5 @@
-import { win } from 'shared/utils'
+import { promiseWithResolvers, win } from 'shared/utils'
 import type { EncodedMediaChunk } from 'shared/video/types'
-
-import { promiseWithResolvers } from '../utils'
 
 export interface AudioBufferData {
   timestamp: number

@@ -1,2 +1,2 @@
-export * from '../public-constants'
-export { VideoEditorElement } from './video-editor-element'
+export * from '../public-constants.ts'
+export { VideoEditorElement } from './video-editor-element.ts'

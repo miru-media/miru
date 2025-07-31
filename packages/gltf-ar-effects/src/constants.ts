@@ -4,8 +4,8 @@ export const KHR_NODE_VISIBILITY = 'KHR_node_visibility'
 export const MIRU_INTERACTIVITY_FACE_LANDMARKS = 'MIRU_interactivity_face_landmarks'
 export const MIRU_MESH_OCCLUDER = 'MIRU_mesh_occluder'
 
-export const enum LandmarkOps {
-  Face = 'landmarks/faceUpdate',
+export const LandmarkOps = {
+  Face: 'landmarks/faceUpdate',
 }
 
 export const MAX_LANDMARK_FACES = 4

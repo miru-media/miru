@@ -10,7 +10,7 @@ import type {
   RendererEffect,
   RendererEffectOp,
   Size,
-} from './core'
+} from './core.ts'
 
 export declare class Effect {
   id?: string

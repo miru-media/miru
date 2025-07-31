@@ -1,10 +1,10 @@
 import * as gltf from '@gltf-transform/core'
 import { expect, test } from 'vitest'
 
-import { KHR_INTERACTIVITY } from '../constants'
-import type { InteractivityType, InteractivityVariable, KHRInteractivityExtension } from '../types'
+import { KHR_INTERACTIVITY } from '../constants.ts'
+import type { InteractivityType, InteractivityVariable, KHRInteractivityExtension } from '../types.ts'
 
-import { Interactivity } from './interactivity'
+import { Interactivity } from './interactivity.ts'
 
 test('Interactivity gltf-transform extension', async () => {
   const doc = new gltf.Document()

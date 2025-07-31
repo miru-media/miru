@@ -2,8 +2,8 @@ import { createEffectScope, type EffectScope, onScopeDispose, ref, type Ref } fr
 
 import { renderComponentTo } from 'shared/video/render-to'
 
-import type { TrimState } from './types/media-trimmer'
-import { VideoTrimmerUI } from './video-trimmer-ui'
+import type { TrimState } from './types/media-trimmer.ts'
+import { VideoTrimmerUI } from './video-trimmer-ui.jsx'
 
 interface VueInstance {
   __scope: EffectScope
@@ -68,4 +68,4 @@ export const MediaTrimmer = {
   },
 }
 
-export * from './trim'
+export * from './trim.ts'

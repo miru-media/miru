@@ -6,12 +6,12 @@ import type { I18nOptions, InputEvent } from 'shared/types'
 import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
-import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants'
-import type { VideoEditor as VideoEditor_ } from '../video-eidtor'
+import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants.ts'
+import type { VideoEditor as VideoEditor_ } from '../video-eidtor.ts'
 
-import { PlaybackControls } from './playback-controls'
-import { SecondaryToolbar } from './secondary-toolbar'
-import { Timeline } from './timeline'
+import { PlaybackControls } from './playback-controls.jsx'
+import { SecondaryToolbar } from './secondary-toolbar.jsx'
+import { Timeline } from './timeline.jsx'
 
 export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions }) => {
   const { editor } = props

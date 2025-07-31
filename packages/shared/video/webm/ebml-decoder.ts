@@ -3,7 +3,7 @@ import type { Buffer as NodeBuffer } from 'node:buffer'
 import { Buffer } from 'buffer/'
 import * as ebml from 'ebml'
 
-import type { EbmlChunk } from '../types'
+import type { EbmlChunk } from '../types.ts'
 
 const TAG_RENAMES: Record<string, string | undefined> = {
   Timecode: 'Timestamp',

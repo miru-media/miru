@@ -1,10 +1,10 @@
 import { rgb_to_lab } from 'color-diff'
 import { describe, expect, test } from 'vitest'
 
-import type { ColorLab, ColorRGB } from '.'
+import type { ColorLab, ColorRGB } from './index.js'
 
-import { getClosestPaletteIndex, getSinglePaletteSortedIndices } from './compare-palettes'
-import { paletteToLab } from './utils'
+import { getClosestPaletteIndex, getSinglePaletteSortedIndices } from './compare-palettes.js'
+import { paletteToLab } from './utils.js'
 
 const RED_PALETTE = paletteToLab([
   { R: 190, G: 0, B: 0 },

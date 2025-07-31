@@ -2,10 +2,10 @@ import type { GLTF } from '@gltf-transform/core'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { expect, test, vi } from 'vitest'
 
-import { KHR_INTERACTIVITY } from '../../../constants'
-import type { KHRInteractivityExtension } from '../../../types'
+import { KHR_INTERACTIVITY } from '../../../constants.ts'
+import type { KHRInteractivityExtension } from '../../../types.ts'
 
-import { GLTFInteractivityExtension } from './gltf-interactivity-extension'
+import { GLTFInteractivityExtension } from './gltf-interactivity-extension.ts'
 
 test('receive and send custom events', async () => {
   const onSend = vi.fn()

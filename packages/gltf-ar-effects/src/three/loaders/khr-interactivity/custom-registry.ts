@@ -6,7 +6,9 @@ export interface IRegistryEnv {
 }
 
 export class CustomRegistry extends Behave.Registry {
-  constructor(public env: IRegistryEnv) {
+  public env: IRegistryEnv
+  constructor(env: IRegistryEnv) {
     super()
+    this.env = env
   }
 }

@@ -1,21 +1,24 @@
-import type { InteractivityNode } from '../types'
+import type { InteractivityNode } from '../types.ts'
 
-import type { Interactivity } from './interactivity'
-import type { Declaration } from './properties/declaration'
-import type { Event } from './properties/event'
-import { LiteralValue } from './properties/literal-value'
-import type { Node } from './properties/node'
-import type { Type } from './properties/type'
-import type { Variable } from './properties/variable'
+import type { Interactivity } from './interactivity.ts'
+import type { Declaration } from './properties/declaration.ts'
+import type { Event } from './properties/event.ts'
+import { LiteralValue } from './properties/literal-value.ts'
+import type { Node } from './properties/node.ts'
+import type { Type } from './properties/type.ts'
+import type { Variable } from './properties/variable.ts'
 
 export class InteractivityGraphReaderContext {
+  private readonly interactivity: Interactivity
   types: Type[] = []
   variables: Variable[] = []
   events: Event[] = []
   declarations: Declaration[] = []
   nodes: Node[] = []
 
-  constructor(private readonly interactivity: Interactivity) {}
+  constructor(interactivity: Interactivity) {
+    this.interactivity = interactivity
+  }
 
   readNodeConfigJson(node: Node, json: InteractivityNode): void {
     const config = json.configuration

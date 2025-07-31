@@ -1,7 +1,7 @@
-import '@interactjs/actions/resize/index.js'
-import '@interactjs/actions/drag/index.js'
-import '@interactjs/modifiers/index.js'
-import '@interactjs/auto-start/index.js'
+import '@interactjs/actions/resize'
+import '@interactjs/actions/drag'
+import '@interactjs/modifiers'
+import '@interactjs/auto-start'
 import type { DragEvent } from '@interactjs/actions/drag/plugin.js'
 import type { ResizeEvent } from '@interactjs/actions/resize/plugin.js'
 import interact from '@interactjs/interact'
@@ -10,9 +10,9 @@ import { computed, effect, ref, toRef } from 'fine-jsx'
 import { IconButton } from 'shared/components/icon-button'
 import { stringHashCode, useI18n } from 'shared/utils'
 
-import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants'
-import type { Clip as ClipType } from '../nodes'
-import type { VideoEditor } from '../video-eidtor'
+import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants.ts'
+import type { Clip as ClipType } from '../nodes/index.ts'
+import type { VideoEditor } from '../video-eidtor.ts'
 
 const CLIP_COLORS = [
   'var(--red-dark)',

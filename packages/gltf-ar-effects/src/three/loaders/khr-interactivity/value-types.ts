@@ -20,7 +20,7 @@ const float = {
   creator: () => NaN,
   deserialize: identity,
   serialize: identity,
-  lerp: lerp,
+  lerp,
 }
 
 const float2: ValueType<[number, number]> = {

@@ -1,12 +1,12 @@
 import * as gltf from '@gltf-transform/core'
 import type { IProperty } from '@gltf-transform/core'
 
-import type { Declaration } from './declaration'
-import type { Event } from './event'
-import type { Node } from './node'
-import { InteractivityPropertyType } from './property-types'
-import type { Type } from './type'
-import type { Variable } from './variable'
+import type { Declaration } from './declaration.ts'
+import type { Event } from './event.ts'
+import type { Node } from './node.ts'
+import { InteractivityPropertyType } from './property-types.ts'
+import type { Type } from './type.ts'
+import type { Variable } from './variable.ts'
 
 export interface IGraph extends IProperty {
   types: gltf.RefSet<Type>

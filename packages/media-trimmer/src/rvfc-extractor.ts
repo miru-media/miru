@@ -3,7 +3,7 @@ import { debounce } from 'throttle-debounce'
 import { Janitor, loadAsyncImageSource } from 'shared/utils'
 import { seekAndWait } from 'shared/video/utils'
 
-import { FrameExtractor } from './frame-extractor'
+import { FrameExtractor } from './frame-extractor.ts'
 
 interface Options extends FrameExtractor.Options {
   crossOrigin?: 'anonymous' | 'use-credentials' | null

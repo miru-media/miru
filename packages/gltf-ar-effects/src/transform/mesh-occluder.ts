@@ -1,6 +1,6 @@
 import * as gltf from '@gltf-transform/core'
 
-import { MIRU_MESH_OCCLUDER } from '../constants'
+import { MIRU_MESH_OCCLUDER } from '../constants.ts'
 
 export class MIRUMeshOccluder extends gltf.Extension {
   public static readonly EXTENSION_NAME: typeof MIRU_MESH_OCCLUDER = MIRU_MESH_OCCLUDER

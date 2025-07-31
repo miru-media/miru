@@ -13,17 +13,17 @@ import type {
   InteractivityValue,
   InteractivityValueLiteral,
   InteractivityVariable,
-} from '../types'
+} from '../types.ts'
 
-import type { Declaration } from './properties/declaration'
-import { Event } from './properties/event'
-import { Flow } from './properties/flow'
-import { LiteralValue } from './properties/literal-value'
-import type { Node } from './properties/node'
-import type { LiteralOrPropertyValue } from './properties/node-config-value'
-import { Type } from './properties/type'
-import { Variable } from './properties/variable'
-import { isSingleLiteral } from './utils'
+import type { Declaration } from './properties/declaration.ts'
+import { Event } from './properties/event.ts'
+import { Flow } from './properties/flow.ts'
+import { LiteralValue } from './properties/literal-value.ts'
+import type { LiteralOrPropertyValue } from './properties/node-config-value.ts'
+import type { Node } from './properties/node.ts'
+import { Type } from './properties/type.ts'
+import { Variable } from './properties/variable.ts'
+import { isSingleLiteral } from './utils.ts'
 
 class PropJsonMap<T, U extends Record<string, any>> {
   private readonly map = new Map<T, { json: U; index: number }>()
@@ -65,6 +65,7 @@ const getBaseJson = <T>(prop: gltf.Property): T => {
 }
 
 export class InteractivityGraphWriterContext {
+  private document: gltf.Document
   types = new PropJsonMap<Type, InteractivityType>()
   variables = new PropJsonMap<Variable, InteractivityVariable>()
   events = new PropJsonMap<Event, InteractivityEvent>()
@@ -73,7 +74,9 @@ export class InteractivityGraphWriterContext {
 
   private _intTypeForPropertyIndexValues!: Type
 
-  constructor(private document: gltf.Document) {}
+  constructor(document: gltf.Document) {
+    this.document = document
+  }
 
   addType(type: Type | null): number {
     if (!type) throw new Error('Missing interactivity type definition.')

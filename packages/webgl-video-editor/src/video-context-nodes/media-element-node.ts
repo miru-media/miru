@@ -5,11 +5,11 @@ import { IS_ANDROID, IS_FIREFOX } from 'shared/userAgent'
 import { useEventListener } from 'shared/utils'
 import { getImageSize, useInterval } from 'shared/video/utils'
 
-import type { CustomSourceNodeOptions } from '../../types/internal'
-import { MEDIA_SYNC_INTERVAL_MS, MEDIA_SYNC_TOLERANCE_S } from '../constants'
+import type { CustomSourceNodeOptions } from '../../types/internal.ts'
+import { MEDIA_SYNC_INTERVAL_MS, MEDIA_SYNC_TOLERANCE_S } from '../constants.ts'
 
-import { CustomSourceNode } from './custom-source-node'
-import { MediaNodeState } from './media-node-state'
+import { CustomSourceNode } from './custom-source-node.ts'
+import { MediaNodeState } from './media-node-state.ts'
 
 export abstract class MediaElementNode extends CustomSourceNode {
   media: HTMLVideoElement | HTMLAudioElement

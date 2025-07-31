@@ -17,8 +17,8 @@ import {
   LANDMARKS_VERTEX_COUNT,
   MAX_LANDMARK_FACES,
   UVS,
-} from '../../../constants'
-import type { FaceLandmarksGeometryProps } from '../../../types'
+} from '../../../constants.ts'
+import type { FaceLandmarksGeometryProps } from '../../../types.ts'
 
 import type {
   WorkerErrorData,
@@ -26,8 +26,7 @@ import type {
   WorkerInitData,
   WorkerInitResponse,
   WorkerResultData,
-} from './detector-worker'
-import DetectorWorker from './detector-worker?worker'
+} from './detector-worker.ts'
 
 export interface FaceTransform {
   translation: number[]
@@ -65,7 +64,10 @@ export class FaceLandmarksProcessor {
   isDetecting = false
   result: FaceLandmarkerResult | undefined
   static isSync = false
-  worker = new DetectorWorker()
+  worker = new Worker(new URL('./detector-worker.ts', import.meta.url), {
+    name: 'face-landmark-detector',
+    type: 'module',
+  })
   workerIsInitialized = false
   mirror = true
   tempVector = new THREE.Vector3()

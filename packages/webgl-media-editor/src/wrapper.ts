@@ -5,7 +5,7 @@ import { getDefaultFilterDefinitions } from 'webgl-effects'
 import type { ImageEditState, ImageSourceOption } from 'shared/types'
 import { canvasToBlob } from 'shared/utils'
 
-import { MediaEditor as MediaEditor_ } from './media-editor'
+import { MediaEditor as MediaEditor_ } from './media-editor.ts'
 
 interface MediaEditorProps {
   effects?: EffectDefinition[] | (() => EffectDefinition[])

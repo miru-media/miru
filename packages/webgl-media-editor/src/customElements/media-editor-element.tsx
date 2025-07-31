@@ -6,10 +6,10 @@ import { EditorView, type ImageEditState, type ImageSourceOption } from 'shared/
 import { downloadBlob } from 'shared/utils'
 import { HTMLElementOrStub } from 'shared/utils/window'
 
-import { MediaEditorUI } from '../components/media-editor-ui'
-import { renderComponentTo } from '../components/render-to'
-import { DEFAULT_EXPORT_QUALITY } from '../constants'
-import { MediaEditor } from '../media-editor'
+import { MediaEditorUI } from '../components/media-editor-ui.jsx'
+import { renderComponentTo } from '../components/render-to.ts'
+import { DEFAULT_EXPORT_QUALITY } from '../constants.ts'
+import { MediaEditor } from '../media-editor.ts'
 
 const OBSERVED_ATTRS = ['sources', 'effects', 'view', 'assetsPath'] as const
 const UNMOUNT_TIMEOUT_MS = 500

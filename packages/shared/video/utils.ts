@@ -1,14 +1,13 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
 
 import type { Size } from 'shared/types'
-import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener } from 'shared/utils'
+import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener, win } from 'shared/utils'
 
-import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent'
-import { win } from '../utils'
+import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent.ts'
 
-import { EXPORT_VIDEO_CODECS } from './constants'
-import { Demuxer } from './demuxer'
-import type { AudioMetadata, VideoMetadata } from './types'
+import { EXPORT_VIDEO_CODECS } from './constants.ts'
+import { Demuxer } from './demuxer.ts'
+import type { AudioMetadata, VideoMetadata } from './types.ts'
 
 export const hasVideoDecoder = () => typeof VideoDecoder === 'function'
 export const hasAudioDecoder = () => typeof AudioDecoder === 'function'

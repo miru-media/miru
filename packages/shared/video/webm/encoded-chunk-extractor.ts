@@ -8,7 +8,7 @@ import type {
   MediaContainerMetadata,
   VideoMetadata,
   WebmTrack,
-} from '../types'
+} from '../types.ts'
 
 interface TrackState {
   track: VideoMetadata | AudioMetadata

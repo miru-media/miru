@@ -1,6 +1,6 @@
 import { h, render } from 'fine-jsx'
 
-import { setShadowStyles } from './set-shadow-styles'
+import { setShadowStyles } from './set-shadow-styles.ts'
 
 export const renderComponentTo = <P extends Record<string, unknown>>(
   Component: (props: P) => JSX.Element,

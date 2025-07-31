@@ -4,8 +4,8 @@ import taskLists from 'markdown-it-task-lists'
 import { mergeConfig } from 'vite'
 import { defineConfig } from 'vitepress'
 
-import createEnvironmentOptions from '../../scripts/create-environment-options'
-import vite from '../../vite.config'
+import createEnvironmentOptions from '../../scripts/create-environment-options.js'
+import vite from '../../vite.config.ts'
 
 const VIRTUAL_ENV_OPTIONS_ID = 'virtual:ar-effects-environment-options.js'
 

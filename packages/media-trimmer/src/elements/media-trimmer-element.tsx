@@ -3,9 +3,9 @@ import { createEffectScope, ref } from 'fine-jsx'
 import { HTMLElementOrStub } from 'shared/utils'
 import { renderComponentTo } from 'shared/video/render-to'
 
-import { trim } from '../trim'
-import type { TrimState } from '../types/ui'
-import { VideoTrimmerUI } from '../video-trimmer-ui'
+import { trim } from '../trim.ts'
+import type { TrimState } from '../types/ui.ts'
+import { VideoTrimmerUI } from '../video-trimmer-ui.jsx'
 
 const OBSERVED_ATTRS = ['source', 'start', 'end', 'mute'] as const
 const UNMOUNT_TIMEOUT_MS = 500

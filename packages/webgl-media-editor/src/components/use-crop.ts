@@ -13,8 +13,8 @@ import {
   setObjectSize,
 } from 'shared/utils'
 
-import type { ImageSourceInternal } from '../image-source-internal'
-import type { MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal.ts'
+import type { MediaEditor } from '../media-editor.ts'
 
 export type CropContext = ReturnType<typeof useCrop>
 

@@ -1,8 +1,11 @@
 import * as gltf from '@gltf-transform/core'
 
-import { type IInteractivityGraphProperty, InteractivityGraphProperty } from './interactivity-graph-property'
-import type { LiteralValue } from './literal-value'
-import { InteractivityPropertyType } from './property-types'
+import {
+  type IInteractivityGraphProperty,
+  InteractivityGraphProperty,
+} from './interactivity-graph-property.ts'
+import type { LiteralValue } from './literal-value.ts'
+import { InteractivityPropertyType } from './property-types.ts'
 
 export interface IEvent extends IInteractivityGraphProperty {
   id: string | null

@@ -3,7 +3,7 @@ import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 import { remap } from 'shared/utils/math'
 
-import type { VideoEditor } from '../video-eidtor'
+import type { VideoEditor } from '../video-eidtor.ts'
 
 const MIN_PPS = 0.005
 const MIN_MAX_PPS = 0.2

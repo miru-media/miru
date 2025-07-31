@@ -2,11 +2,11 @@ import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
 
 import type { AdjustmentsState, InputEvent } from 'shared/types'
 
-import type { ImageSourceInternal } from '../image-source-internal'
-import type { MediaEditor } from '../media-editor'
+import type { ImageSourceInternal } from '../image-source-internal.ts'
+import type { MediaEditor } from '../media-editor.ts'
 
-import { RowSlider } from './row-slider'
-import { SourcePreview } from './source-preview'
+import { RowSlider } from './row-slider.jsx'
+import { SourcePreview } from './source-preview.jsx'
 
 const SNAP_MARGIN = 0.15
 
