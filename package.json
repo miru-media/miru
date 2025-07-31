@@ -19,6 +19,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
+    "gltf-optimize": "NODE_OPTIONS='--experimental-strip-types' gltf-transform optimize --config=scripts/gltf-transform-cli-config.mjs --texture-size=512 --{compress,join,weld,simplify,flatten}=false",
     "update-deps": "taze minor --recursive --interactive --write --install --update && pnpm update && pnpm dedupe",
     "test": "vitest run"
   },
@@ -27,6 +28,7 @@
   "dependencies": {
     "compare-palettes": "workspace:^",
     "filesize": "^10.1.6",
+    "gltf-ar-effects": "workspace:^",
     "reactive-effects": "workspace:^",
     "shared": "workspace:^",
     "uid": "catalog:",
@@ -39,6 +41,10 @@
     "@eslint/compat": "^1.3.1",
     "@eslint/js": "^9.30.0",
     "@eslint/markdown": "^6.6.0",
+    "@gltf-transform/cli": "catalog:",
+    "@gltf-transform/core": "catalog:",
+    "@gltf-transform/extensions": "catalog:",
+    "@gltf-transform/functions": "catalog:",
     "@iconify-json/tabler": "^1.2.19",
     "@lokesh.dhakar/quantize": "catalog:",
     "@rollup/plugin-alias": "^5.1.1",

@@ -3,6 +3,7 @@ packages:
   - docs
 
 catalog:
+  '@gltf-transform/cli': ^4.2.0
   '@gltf-transform/core': ^4.2.0
   '@gltf-transform/extensions': ^4.2.0
   '@gltf-transform/functions': ^4.2.0

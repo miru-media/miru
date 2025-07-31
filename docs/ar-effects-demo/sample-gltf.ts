@@ -1,14 +1,10 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- -- */
 import * as gltf from '@gltf-transform/core'
-import {
-  KHRLightsPunctual,
-  KHRMaterialsClearcoat,
-  KHRMaterialsUnlit,
-  Light,
-} from '@gltf-transform/extensions'
+import { ALL_EXTENSIONS, KHRLightsPunctual, Light } from '@gltf-transform/extensions'
 import { dedup, moveToDocument, prune, unpartition } from '@gltf-transform/functions'
 import { CANONICAL_VERTICES, LANDMARK_INDICES, LandmarkOps, UVS } from 'gltf-ar-effects/three'
 import {
+  CUSTOM_EXTENSIONS,
   Interactivity,
   InteractivityFaceLandmarks,
   KHRNodeVisibility,
@@ -16,18 +12,8 @@ import {
 } from 'gltf-ar-effects/transform'
 import sunglassesAsset from 'https://assets.miru.media/gltf/sunglasses.glb'
 
-const EXTENSIONS = [
-  InteractivityFaceLandmarks,
-  Interactivity,
-  MIRUMeshOccluder,
-  KHRLightsPunctual,
-  KHRMaterialsUnlit,
-  KHRNodeVisibility,
-  KHRMaterialsClearcoat,
-]
-
 export const createSampleGltf = async (url = sunglassesAsset) => {
-  const io = new gltf.WebIO().registerExtensions(EXTENSIONS)
+  const io = new gltf.WebIO().registerExtensions([...CUSTOM_EXTENSIONS, ...ALL_EXTENSIONS])
 
   const doc =
     url === sunglassesAsset
