@@ -31,29 +31,29 @@ vanilla JS or any major front-end framework like Vue or React.
 <progress id="export-progress" max="1" />
 
 <script type="module">
-// assuming a bundler like Vite is used
-import 'media-trimmer'
+  // assuming a bundler like Vite is used
+  import 'media-trimmer'
 
-const trimmer = document.getElementById('trimmer')
-const button = document.getElementById('export')
-const progress = document.getElementById('export-progress')
+  const trimmer = document.getElementById('trimmer')
+  const button = document.getElementById('export')
+  const progress = document.getElementById('export-progress')
 
-// save the trimmed video to a file
-button.addEventListener('click', async () => {
-  const blob = await trimmer.toBlob()
+  // save the trimmed video to a file
+  button.addEventListener('click', async () => {
+    const blob = await trimmer.toBlob()
 
-  const anchor = document.createElement('a')
-  const blobUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    const blobUrl = URL.createObjectURL(blob)
 
-  anchor.href = blobUrl
-  anchor.target = '_blank'
-  anchor.download = 'trimmed.webm'
-  anchor.dispatchEvent(new MouseEvent('click'))
-  URL.revokeObjectURL(blobUrl)
-})
+    anchor.href = blobUrl
+    anchor.target = '_blank'
+    anchor.download = 'trimmed.webm'
+    anchor.dispatchEvent(new MouseEvent('click'))
+    URL.revokeObjectURL(blobUrl)
+  })
 
-// display the trimming progress
-trimmer.addEventListener('progress', (event) => progress.value = event.detail.progress)
+  // display the trimming progress
+  trimmer.addEventListener('progress', (event) => (progress.value = event.detail.progress))
 </script>
 ```
 
@@ -73,6 +73,10 @@ Miru's tools are published to npm as the following packages:
 | [`webgl-video-editor`](https://www.npmjs.com/package/video-editor)       | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](/guide/webgl-video-editor) |
 
 <!-- #endregion main -->
+
+## Contributing
+
+Read our [code of conduct](./CODE_OF_CONDUCT.md) and [contributing guide](./CONTRIBUTING.md) to learn how you can contribute.
 
 ## Funding
 
