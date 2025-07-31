@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "pnpm run docs:dev",
     "dev:slow": "VITE_DEV_SLOW_DOWN_MS=5000 pnpm run dev",
-    "build": "vue-tsc -b tsconfig.check.json && NODE_ENV=production rollup --config rollup.config.js",
-    "build:dev": "NODE_ENV=development rollup --config rollup.config.js",
+    "libs:build": "NODE_ENV=production rollup --config rollup.config.js",
+    "libs:build:dev": "NODE_ENV=development rollup --config rollup.config.js",
     "check": "vue-tsc -b tsconfig.check.json --incremental",
     "lint:markdown": "markdownlint --ignore-path .gitignore --ignore '**/CHANGELOG.md' '**/*.md'",
     "lint:prettier": "prettier --check '**/*.{ts,js,tsx,jsx,cjs,vue,md,html,yaml,yml,json}'",

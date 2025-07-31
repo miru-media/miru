@@ -9,14 +9,16 @@ import {
   WRITTEN_SIZE_UPDATE_INTERVAL_MS,
 } from './constants'
 import type { FileStorage, StorageWorkerFileInfo } from './storage-worker'
-import StorageWorker from './storage-worker?worker'
 import { getFileHandle } from './utils'
 
 let hasRequestedPersistence = false
 let storage_: Comlink.Remote<FileStorage>
 
 if (!import.meta.env.SSR) {
-  const worker = new StorageWorker({ name: 'storage' })
+  const worker = new Worker(new URL('./storage-worker.js', import.meta.url), {
+    name: 'webgl-video-editor-storage',
+    type: 'module',
+  })
   storage_ = Comlink.wrap<FileStorage>(worker)
 }
 

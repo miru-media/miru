@@ -1,4 +1,4 @@
-name: Check
+name: Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: ['main']
 
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -32,6 +32,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - run: pnpm check
+      - run: pnpm vue-tsc -b tsconfig.check.json
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm libs:build
+      - run: pnpm docs:build

@@ -34,7 +34,7 @@ BASIC_SSL=1 pnpm dev --host
 We use [Rollup](https://rollupjs.org/) to build our published libraries and Vite to build the webste.
 
 ```sh
-pnpm run build
+pnpm run libs:build
 pnpm run docs:build
 ```
 
