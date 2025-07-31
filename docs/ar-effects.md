@@ -44,7 +44,7 @@ const effect = ref(effectUrlParam ? { name: 'Unknown', url: effectUrlParam } : c
 
 useEventListener<'progress', any>(playerRef, 'progress', (event) => initProgress.value = event.progress!)
 useEventListener<'info', any>(playerRef, 'info', (event)=> info.value = event.info)
-useEventListener<'error', any>(playerRef, 'error', window.alert)
+useEventListener<'error', any>(playerRef, 'error', (error) => alert(error))
 
 watch([video, canvas, effect], async ([video, canvas, effect], _, onCleanup) => {
   if (!video || !canvas) return
