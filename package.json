@@ -20,7 +20,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "update-deps": "taze minor --recursive --interactive --write --install --update && pnpm update && pnpm dedupe",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
