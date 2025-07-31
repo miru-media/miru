@@ -6,14 +6,21 @@ pageClass: demo-page
 ---
 
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
-import { ref, markRaw, onMounted, onScopeDispose, watchEffect } from 'vue'
+import { useElementSize, useEventListener } from '@vueuse/core'
+import { ref, markRaw, onBeforeUnmount, onScopeDispose, watch } from 'vue'
 
 import { EffectPlayer } from 'gltf-ar-effects/player'
 import { createSampleGltf } from './ar-effects-demo/sample-gltf'
+import EffectCatalog from './ar-effects-demo/effect-catalog.vue'
 
 import environmentOptions from 'virtual:ar-effects-environment-options.js'
 
+import testVideo from 'shared/assets/videos/test-dude.mp4'
+import { catalog } from './ar-effects-demo/catalog'
+
+const catalogIsOpen = ref(false)
+const video = ref<HTMLVideoElement>()
+let stream: MediaStream | undefined
 const canvas = ref<HTMLCanvasElement>()
 const recordedVideo = ref<HTMLVideoElement>()
 const initProgress = ref(0)
@@ -25,29 +32,69 @@ const isRecording = ref(false)
 const isStoppingRecording = ref(false)
 const recordedFile = ref<File>()
 const recordedBlobUrl = ref('')
-const { width: canvasWidth } = useElementSize(() => recordedBlobUrl.value ? recordedVideo.value : canvas.value)
+const {
+  width: canvasWidth,
+  height: canvasHeight
+} = useElementSize(() => recordedBlobUrl.value ? recordedVideo.value : canvas.value)
 
 const effectUrlParam = import.meta.env.DEV
   ? (new URL(location.href).searchParams.get('effect-url') ?? undefined)
   : undefined
+  
+const effect = ref(effectUrlParam ? { name: 'Unknown', url: effectUrlParam } : catalog[0])
 
-onMounted(async () => {
-  if (!canvas.value) throw new Error('No canvas')
-  const player = playerRef.value = markRaw(new EffectPlayer({ canvas: canvas.value, environmentOptions }))
+useEventListener<'progress', any>(playerRef, 'progress', (event) => initProgress.value = event.progress!)
+useEventListener<'info', any>(playerRef, 'info', (event)=> info.value = event.info)
+useEventListener<'error', any>(playerRef, 'error', window.alert)
 
-  player.addEventListener('progress', (event) => initProgress.value = event.progress!)
-  player.addEventListener('info', (event)=> info.value = event.info)
-  player.addEventListener('error', window.alert)
+watch([video, canvas, effect], async ([video, canvas, effect], _, onCleanup) => {
+  if (!video || !canvas) return
 
-  player.loadEffect(await createSampleGltf(effectUrlParam))
+    console.log(effect)
 
-  if (import.meta.env.DEV) return start()
+  let player = playerRef.value
+  let stale = false
+
+  onCleanup(() => {
+    stale = true
+  })
+
+  const effectData = await createSampleGltf(effect?.url)
+  if (stale) return
+
+  if (player) {
+    const newPlayer = markRaw(await player.replaceWithNewPlayer(effectData))
+    if (stale) newPlayer.dispose()
+    else playerRef.value = newPlayer
+    return
+  }
+
+  player = playerRef.value = markRaw(new EffectPlayer({ video, canvas, environmentOptions }))
+
+  player.loadEffect(effectData)
+  if (stale) return
+
+  if (import.meta.env.DEV) await start()
 })
+
+onBeforeUnmount(() => playerRef.value?.dispose())
 
 const start = async () => {
   const player = playerRef.value
   if (!player) return
 
+  if (!wasStarted.value) {
+    const videoConstraints = { facingMode: 'user', height: 720 }
+  
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true })
+    } catch {
+      stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false })
+    }
+
+    video.value!.srcObject = stream
+  }
+  
   wasStarted.value = true
   await player.start()
   isReady.value = true
@@ -68,7 +115,7 @@ const onClickRecord = async () => {
     isRecording.value = false
     recordedVideo.value?.classList.remove('canplay')
   } else {
-    player.startRecording()
+    player.startRecording(stream?.getAudioTracks())
     isRecording.value = true
   }
 
@@ -79,7 +126,7 @@ const onClickRetake = () => {
   URL.revokeObjectURL(recordedBlobUrl.value)
   recordedFile.value = undefined
   recordedBlobUrl.value = ''
-  playerRef.value!.play()
+  playerRef.value!.start()
 }
 
 const onCanplayRecording = () => recordedVideo.value!.classList.add('canplay')
@@ -103,23 +150,33 @@ onScopeDispose(() => playerRef.value?.dispose())
 
 <progress v-else-if="!isReady" :value="initProgress" max="1" class="progress w-full" />
 
-<div ref="container" :class="['canvas-container relative w-full overflow-hidden', !!recordedBlobUrl && 'has-recording']">
+<div ref="container" :class="['canvas-container demo-container relative w-full overflow-hidden', !!recordedBlobUrl && 'has-recording']">
+  <video ref="video" class="input-video" playsinline muted loop />
   <canvas ref="canvas" class="player-canvas" />
   <template v-if="recordedBlobUrl">
-    <video ref="recordedVideo" :src="recordedBlobUrl" class="recorded-video" playsInline controls muted autoplay @canplay="onCanplayRecording" />
+    <video ref="recordedVideo" :src="recordedBlobUrl" class="recorded-video" playsInline controls muted autoplay loop @canplay="onCanplayRecording" />
     <div class="recorded-output-btns">
       <a :href="recordedBlobUrl" title="Download video" target="_blank" :download="recordedFile.name" class="output-btn">
         <span class="i-tabler:download" />
       </a>
-      <button title="Retake video" class="output-btn" @click="onClickRetake"><span class="i-tabler:x" /></button>
+      <button title="Retake video" class="icon-btn" @click="onClickRetake"><span class="i-tabler:x" /></button>
     </div>
   </template>
-  <button v-else-if="isReady" class="record-btn" :title="isRecording ? 'Stop recording' : 'Start recording'" :disabled="isStoppingRecording" @click="onClickRecord">
-    <span class="sr-only">
-     {{ isRecording ? 'Stop recording' : 'Start recording' }}
-    </span>
-    <span :class="['recording-indicator', isRecording && 'is-recording']" />
-  </button>
+  <template v-else-if="isReady">
+    <button v-if="!catalogIsOpen" class="record-btn" :title="isRecording ? 'Stop recording' : 'Start recording'" :disabled="isStoppingRecording" @click="onClickRecord">
+      <span class="sr-only">
+       {{ isRecording ? 'Stop recording' : 'Start recording' }}
+      </span>
+      <span :class="['recording-indicator', isRecording && 'is-recording']" />
+    </button>
+    <template v-if="!isRecording">
+      <effect-catalog v-model="effect" v-model:open="catalogIsOpen" >
+        <button class="icon-btn catalog-btn" @click="() => catalogIsOpen = !catalogIsOpen">
+          <span class="i-tabler:mood-spark"></span>
+        </button>
+      </effect-catalog>
+    </template>
+  </template>
 </div>
 
 <pre>{{ info }}</pre>
@@ -128,14 +185,27 @@ onScopeDispose(() => playerRef.value?.dispose())
 .progress {
   height: 2rem;
 }
+
+.input-video{
+  width:1px;
+  height:1px;
+  position:fixed;
+  top:-1px;
+  left:-1px
+}
+
 .canvas-container {
   position: relative;
+  --canvas-width: v-bind("canvasWidth + 'px'");
+  --canvas-height: v-bind("canvasHeight + 'px'");
 }
 
 .player-canvas, .recorded-video {
   max-width: 100%;
-  max-height: 90vh;
+  max-height: var(--demo-height);
   object-fit: contain;
+  border-radius: 1.5rem;
+  margin: auto;
 }
 
 .has-recording {
@@ -151,8 +221,8 @@ onScopeDispose(() => playerRef.value?.dispose())
 .record-btn {
   position: absolute;
   bottom: 1rem;
-  left: 0;
-  transform: translateX(v-bind("canvasWidth / 2 + 'px'")) translateX(-50%);
+  left: 50%;
+  transform: translateX(-50%);
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
@@ -180,7 +250,7 @@ onScopeDispose(() => playerRef.value?.dispose())
   position: absolute;
   left: 0;
   bottom: 5rem;
-  width: v-bind("canvasWidth + 'px'");
+  width: var(--canvas-width);
   height: 0;
   display: flex;
   gap: 1rem;
@@ -188,12 +258,22 @@ onScopeDispose(() => playerRef.value?.dispose())
   align-items: end;
 }
 
-.output-btn {
+.icon-btn {
   display: inline-flex;
   font-size: 4rem;
   height: 6rem;
   background-color: rgba(0 0 0 / 25%);
   border-radius: 50%;
   padding: 1rem;
+}
+
+.catalog-btn {
+  position: absolute;
+  left: 2rem;
+  top: -1rem;
+  transform: translateY(-100%);
+  font-size: 2rem;
+  height: 4rem;
+  color: yellow;
 }
 </style>

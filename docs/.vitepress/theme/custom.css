@@ -25,14 +25,15 @@
 
 .demo-container {
   /* minus height of mobile sidebar top menu */
-  height: calc(100dvh - 48px);
+  --demo-height: calc(100dvh - 48px);
+  height: var(--demo-height);
 
   @media (width >= 768px) {
-    height: calc(100dvh - 24px);
+    --demo-height: calc(100dvh - 24px);
   }
 
   @media (width >= 960px) {
-    height: 100dvh;
+    --demo-height: 100dvh;
   }
 }
 

@@ -45,9 +45,8 @@ export class EffectPlayer {
   readonly #pmremGenerator: THREE.PMREMGenerator
   #currentEnvTexture?: THREE.Texture
 
-  video = document.createElement('video')
+  video: HTMLVideoElement
   videoTexture = new THREE.VideoFrameTexture()
-  stream?: MediaStream
   camera = new THREE.PerspectiveCamera(DETECTION_CAMERA_FOV, 1, DETECTION_CAMERA_NEAR, DETECTION_CAMERA_FAR)
   deviceOrientationControls = new DeviceOrientationControls(
     new THREE.Object3D() as DeviceOrientationControls['object'],
@@ -65,6 +64,7 @@ export class EffectPlayer {
   #effectScene?: THREE.Group
 
   readonly #envMatchIntervalHandles: (NodeJS.Timeout | number)[] = []
+  #wasReplaced = false
 
   get isRecording(): boolean {
     return !!this.#recorder
@@ -73,19 +73,22 @@ export class EffectPlayer {
   readonly #recorderChunks: Blob[] = []
 
   readonly #eventTarget = new EventTarget()
+  readonly #onVideoLoaded = this.#updateCanvasSize.bind(this)
 
-  constructor(options: { canvas?: HTMLCanvasElement; environmentOptions?: EnvInfo[] } = {}) {
+  constructor(options: {
+    video: HTMLVideoElement
+    canvas?: HTMLCanvasElement
+    renderer?: THREE.WebGLRenderer
+    environmentOptions?: EnvInfo[]
+  }) {
+    this.video = options.video
     this.canvas = options.canvas ?? document.createElement('canvas')
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas })
+    this.renderer = options.renderer ?? new THREE.WebGLRenderer({ canvas: this.canvas })
     this.#pmremGenerator = new THREE.PMREMGenerator(this.renderer)
     this.environmentOptions = options.environmentOptions
     this.envMatcher = new EnvMatcher({ environmentOptions: this.environmentOptions ?? [] })
 
-    const { video, scene, camera, canvas } = this
-
-    video.playsInline = video.muted = true
-    video.setAttribute('style', 'width:1px;height:1px;position:fixed;top:-1px;left:-1px')
-    document.body.appendChild(video)
+    const { scene, camera, canvas } = this
 
     if (import.meta.env.DEV) {
       const controls = (this.controls = new OrbitControls(camera, canvas))
@@ -99,7 +102,7 @@ export class EffectPlayer {
   }
 
   async loadEffect(source: string | ArrayBuffer): Promise<void> {
-    const { renderer, scene, contentGroup, camera, animationMixer, videoTexture, video } = this
+    const { scene, contentGroup, animationMixer, videoTexture, video } = this
 
     this.interactivity = new GLTFInteractivityExtension()
     this.faceLandmarksDetector = new GLTFFaceLandmarkDetectionExtension({
@@ -143,18 +146,12 @@ export class EffectPlayer {
     scene.background = videoTexture
 
     // set camera aspect ratio and canvas size to match video
-    video.addEventListener('loadedmetadata', () => {
-      const { videoWidth, videoHeight } = video
-
-      camera.aspect = videoWidth / videoHeight
-      camera.updateProjectionMatrix()
-      renderer.setSize(videoWidth, videoHeight, false)
-    })
+    if (video.readyState >= video.HAVE_METADATA) this.#onVideoLoaded()
+    else video.addEventListener('loadedmetadata', this.#onVideoLoaded, { once: true })
 
     await Promise.all([environmentPromise, gltfPromise])
   }
 
-  // get camera video stream
   // start face landmarks detection
   // start renderer animation loop
   async start(): Promise<void> {
@@ -163,15 +160,6 @@ export class EffectPlayer {
     if (!interactivity) throw new Error('Not initialized')
 
     const { renderer, scene, camera, animationMixer, videoTexture, video } = this
-    const videoConstraints = { facingMode: 'user', height: 720 }
-
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true })
-    } catch {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false })
-    }
-
-    video.srcObject = this.stream
 
     // Set video texture on face meshes with "projected" uvMode
     const faceMesh = scene.getObjectByName('face0-mesh')
@@ -184,7 +172,7 @@ export class EffectPlayer {
 
     const { deviceOrientationControls } = this
 
-    await Promise.all([this.faceLandmarksDetector!.start(video), video.play()])
+    await Promise.all([this.faceLandmarksDetector!.start(video), video.play().catch(() => undefined)])
 
     renderer.setAnimationLoop((timeMs) => {
       if (video.paused) return
@@ -264,14 +252,12 @@ export class EffectPlayer {
     this.video.pause()
   }
 
-  startRecording(): void {
+  startRecording(audioTracks: MediaStreamTrack[] = []): void {
     const { interactivity } = this
     if (!interactivity) throw new Error('Video playback not yet started')
 
-    const canvasStream = this.canvas.captureStream()
-    this.#canvasTrack = canvasStream.getVideoTracks()[0]
-
-    const tracks = [canvasStream.getTracks()[0], ...(this.stream?.getAudioTracks() ?? [])]
+    this.#canvasTrack = this.canvas.captureStream().getVideoTracks()[0]
+    const tracks = [this.#canvasTrack, ...audioTracks]
 
     try {
       this.#recorder = new MediaRecorder(new MediaStream(tracks), { mimeType: 'video/mp4' })
@@ -314,6 +300,23 @@ export class EffectPlayer {
     this.#eventTarget.addEventListener(type, listener as any, options)
   }
 
+  removeEventListener(
+    type: 'progress' | 'error' | 'info',
+    listener: (event: EffectPlayerEvent) => void,
+    options?: AddEventListenerOptions,
+  ): void {
+    this.#eventTarget.removeEventListener(type, listener as any, options)
+  }
+
+  #updateCanvasSize() {
+    const { camera, renderer, video } = this
+    const { videoWidth, videoHeight } = video
+
+    camera.aspect = videoWidth / videoHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(videoWidth, videoHeight, false)
+  }
+
   #onInitProgress(progress: number): void {
     this.#eventTarget.dispatchEvent(new EffectPlayerEvent('progress', progress))
   }
@@ -332,25 +335,37 @@ export class EffectPlayer {
     this.#eventTarget.dispatchEvent(new EffectPlayerEvent('error', error))
   }
 
+  async replaceWithNewPlayer(source: string | ArrayBuffer): Promise<EffectPlayer> {
+    this.#wasReplaced = true
+
+    const newPlayer = new EffectPlayer(this)
+    await newPlayer.loadEffect(source)
+    await newPlayer.start()
+
+    this.dispose()
+
+    return newPlayer
+  }
+
   dispose(): void {
-    const { video, renderer, stream } = this
-    video.pause()
-    video.srcObject = null
-    renderer.dispose()
-    stream?.getTracks().forEach((track) => track.stop())
-    this.#envMatchIntervalHandles.forEach(clearInterval)
-    ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
-    this.videoTexture.dispose()
+    this.video.removeEventListener('loadedmetadata', this.#onVideoLoaded)
     this.#currentEnvTexture?.dispose()
     this.#pmremGenerator.dispose()
     this.controls?.dispose()
     this.deviceOrientationControls.dispose()
     this.interactivity?.dispose()
     this.faceLandmarksDetector?.dispose()
-
+    this.animationMixer.stopAllAction()
     this.#recorder?.stop()
     this.#canvasTrack?.stop()
-    this.#recorder = this.#canvasTrack = undefined
     this.#recorderChunks.length = 0
+    this.#envMatchIntervalHandles.forEach(clearInterval)
+    ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
+    this.videoTexture.dispose()
+
+    this.#recorder = this.#canvasTrack = undefined
+    this.interactivity = this.faceLandmarksDetector = undefined
+
+    if (!this.#wasReplaced) this.renderer.dispose()
   }
 }
