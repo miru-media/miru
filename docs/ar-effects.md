@@ -7,13 +7,11 @@ pageClass: demo-page
 
 <script setup lang="ts">
 import { useElementSize, useEventListener } from '@vueuse/core'
-import { ref, markRaw, nextTick, onBeforeUnmount, onScopeDispose, watch } from 'vue'
+import { ref, markRaw, onBeforeUnmount, onScopeDispose, watch } from 'vue'
 
 import { EffectPlayer } from 'gltf-ar-effects/player'
 import { createSampleGltf } from './ar-effects-demo/sample-gltf'
 import EffectCatalog from './ar-effects-demo/effect-catalog.vue'
-
-import environmentOptions from 'virtual:ar-effects-environment-options.js'
 
 import { catalog as catalog_ } from './ar-effects-demo/catalog'
 
@@ -74,7 +72,7 @@ watch([video, canvas, effect], async ([video, canvas, effect], _, onCleanup) => 
     return
   }
 
-  player = playerRef.value = markRaw(new EffectPlayer({ video, canvas, environmentOptions }))
+  player = playerRef.value = markRaw(new EffectPlayer({ video, canvas }))
 
   player.loadEffect(effectData)
   if (stale) return
