@@ -14,6 +14,7 @@ import {
   DETECTION_CAMERA_FOV,
   DETECTION_CAMERA_NEAR,
   LANDMARK_INDICES,
+  LANDMARKS_SCALE,
   LANDMARKS_VERTEX_COUNT,
   MAX_LANDMARK_FACES,
   UVS,
@@ -47,14 +48,15 @@ const WASM_FILESET = {
 const REFERENCE_VERTEX_LEFT = 227
 const REFERENCE_VERTEX_RIGHT = 447
 
-const quaternionMirrored = (quat: THREE.Quaternion): THREE.Quaternion => {
-  const { x, y, z, w } = quat
-  return new THREE.Quaternion(-x, -y, z, -w)
+const mirrorQuaterion = (quat: THREE.Quaternion): void => {
+  quat.x = -quat.x
+  quat.y = -quat.y
+  quat.w = -quat.w
 }
 
-const quaternionReversed = (quat: THREE.Quaternion): THREE.Quaternion => {
-  const { x, y, z, w } = quat
-  return new THREE.Quaternion(x, -y, z, -w)
+const reverseQuaternion = (quat: THREE.Quaternion): void => {
+  quat.y = -quat.y
+  quat.w = -quat.w
 }
 
 export class FaceLandmarksProcessor {
@@ -222,29 +224,19 @@ export class FaceLandmarksProcessor {
       const landmarks = faceLandmarks[faceIndex]
 
       const facialMatrix = new THREE.Matrix4().fromArray(facialTransformationMatrixes[faceIndex].data)
-      const facePosition = new THREE.Vector3().setFromMatrixPosition(facialMatrix)
+      const facePosition = new THREE.Vector3()
+        .setFromMatrixPosition(facialMatrix)
+        .multiplyScalar(LANDMARKS_SCALE)
       const faceScale = new THREE.Vector3().setFromMatrixScale(facialMatrix)
-      let faceRotation = new THREE.Quaternion().setFromRotationMatrix(facialMatrix)
+      const faceRotation = new THREE.Quaternion().setFromRotationMatrix(facialMatrix)
 
       if (mirror) {
         facePosition.x *= -1
-        faceRotation = quaternionMirrored(faceRotation)
+        mirrorQuaterion(faceRotation)
       }
-      const faceRotationReversed = quaternionReversed(faceRotation)
 
-      const rotationToOrigin = new THREE.Euler().setFromRotationMatrix(
-        new THREE.Matrix4().lookAt(estimatedCamera.position, facePosition, estimatedCamera.up),
-      )
-
-      // Try to resolve some issues with the transform matrix rotation and the face mesh distortion
-      // https://github.com/google-ai-edge/mediapipe/issues/4759
-      facialMatrix
-        .multiply(new THREE.Matrix4().makeShear(0, 0, 0, 0, -rotationToOrigin.y / 2, 0))
-        .multiply(
-          new THREE.Matrix4().makeTranslation(
-            new THREE.Vector3(rotationToOrigin.y + new THREE.Euler().setFromQuaternion(faceRotation).y),
-          ),
-        )
+      const faceRotationReversed = faceRotation.clone()
+      reverseQuaternion(faceRotationReversed)
 
       // https:github.com/google-ai-edge/mediapipe/blob/232008b/mediapipe/tasks/cc/vision/face_geometry/data/canonical_face_model_uv_visualization.png
       const referenceRight = landmarks[REFERENCE_VERTEX_LEFT]

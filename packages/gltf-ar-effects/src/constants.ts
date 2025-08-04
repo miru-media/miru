@@ -11,10 +11,12 @@ export const LandmarkOps = {
 export const MAX_LANDMARK_FACES = 4
 export const LANDMARKS_VERTEX_COUNT = 478
 
+export const LANDMARKS_SCALE = 0.01
+
 // https:github.com/google-ai-edge/mediapipe/blob/232008b/mediapipe/tasks/cc/vision/face_geometry/face_geometry_from_landmarks_graph.cc#L71
 export const DETECTION_CAMERA_FOV = 63
-export const DETECTION_CAMERA_NEAR = 1
-export const DETECTION_CAMERA_FAR = 10_000
+export const DETECTION_CAMERA_NEAR = 1 * LANDMARKS_SCALE
+export const DETECTION_CAMERA_FAR = 10_000 * LANDMARKS_SCALE
 
 /* prettier-ignore */
 export const CANONICAL_VERTICES = new Float32Array([
