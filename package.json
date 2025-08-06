@@ -19,7 +19,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "gltf-optimize": "NODE_OPTIONS='--experimental-strip-types' gltf-transform optimize --config=scripts/gltf-transform-cli-config.mjs --texture-size=512 --{compress,join,weld,simplify,flatten}=false",
+    "gltf-optimize": "node --experimental-strip-types ./scripts/gltf-optimize.js",
     "update-deps": "taze minor --recursive --interactive --write --install --update && pnpm update && pnpm dedupe",
     "test": "vitest run"
   },

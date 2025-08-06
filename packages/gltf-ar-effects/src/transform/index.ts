@@ -8,6 +8,7 @@ export {
   MIRU_INTERACTIVITY_FACE_LANDMARKS,
   MAX_LANDMARK_FACES,
   LANDMARKS_VERTEX_COUNT,
+  LandmarkOps,
 } from '../constants.ts'
 
 export const CUSTOM_EXTENSIONS = [

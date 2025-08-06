@@ -62,7 +62,9 @@ watch([video, canvas, effect], async ([video, canvas, effect], _, onCleanup) => 
     stale = true
   })
 
-  const effectData = await createSampleGltf(effect?.url)
+  const effectData = import.meta.env.DEV
+    ? await createSampleGltf(effect.url)
+    : await (await fetch(effect.url)).arrayBuffer()
   if (stale) return
 
   if (player) {

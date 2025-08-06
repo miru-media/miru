@@ -4,6 +4,11 @@ import { expect, test } from 'vitest'
 import { MIRUMeshOccluder } from './mesh-occluder.ts'
 import { InteractivityFaceLandmarks } from './miru-interactivity-face-landmarks.ts'
 
+const removeGenerator = (jsonDoc: gltf.JSONDocument): typeof jsonDoc => {
+  delete jsonDoc.json.asset.generator
+  return jsonDoc
+}
+
 test('reads and writes face mesh primitive extension', async () => {
   const doc = new gltf.Document()
   const faceLandmarksExtension = doc.createExtension(InteractivityFaceLandmarks)
@@ -49,11 +54,11 @@ test('reads and writes face mesh primitive extension', async () => {
 
   const io = new gltf.WebIO().registerExtensions([InteractivityFaceLandmarks, MIRUMeshOccluder])
 
-  const result = await io.writeJSON(doc)
+  const result = removeGenerator(await io.writeJSON(doc))
+
   expect(result.json).toMatchInlineSnapshot(`
     {
       "asset": {
-        "generator": "glTF-Transform v4.2.0",
         "version": "2.0",
       },
       "extensionsUsed": [
@@ -122,5 +127,7 @@ test('reads and writes face mesh primitive extension', async () => {
     }
   `)
 
-  await expect(io.readJSON(result).then((doc) => io.writeJSON(doc))).resolves.toEqual(result)
+  await expect(io.readJSON(result).then((doc) => io.writeJSON(doc).then(removeGenerator))).resolves.toEqual(
+    result,
+  )
 })

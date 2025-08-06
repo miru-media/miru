@@ -3,10 +3,10 @@ packages:
   - docs
 
 catalog:
-  '@gltf-transform/cli': ^4.2.0
-  '@gltf-transform/core': ^4.2.0
-  '@gltf-transform/extensions': ^4.2.0
-  '@gltf-transform/functions': ^4.2.0
+  '@gltf-transform/cli': ^4.2.1
+  '@gltf-transform/core': ^4.2.1
+  '@gltf-transform/extensions': ^4.2.1
+  '@gltf-transform/functions': ^4.2.1
   '@libav.js/variant-opus': ^6.7.7
   '@lokesh.dhakar/quantize': '^1.4.0'
   '@types/three': ^0.177.0

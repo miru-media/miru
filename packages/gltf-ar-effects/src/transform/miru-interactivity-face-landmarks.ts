@@ -7,8 +7,8 @@ import type { FaceLandmarksGeometryProps, FaceLandmarksUvMode } from '../types.t
 import { Interactivity } from './interactivity.ts'
 
 export class InteractivityFaceLandmarks extends gltf.Extension {
-  static EXTENSION_NAME = MIRU_INTERACTIVITY_FACE_LANDMARKS
-  extensionName = MIRU_INTERACTIVITY_FACE_LANDMARKS
+  static EXTENSION_NAME: typeof MIRU_INTERACTIVITY_FACE_LANDMARKS = MIRU_INTERACTIVITY_FACE_LANDMARKS
+  extensionName: typeof MIRU_INTERACTIVITY_FACE_LANDMARKS = MIRU_INTERACTIVITY_FACE_LANDMARKS
   interactivity = this.document.createExtension(Interactivity)
 
   createFaceLandmarksGeometry(name?: string): FaceLandmarksGeometry {
@@ -74,9 +74,9 @@ interface IFaceLandmarksGeometry extends IProperty {
 
 export class FaceLandmarksGeometry extends gltf.ExtensionProperty<IFaceLandmarksGeometry> {
   static EXTENSION_NAME = MIRU_INTERACTIVITY_FACE_LANDMARKS
-  extensionName!: string
-  propertyType!: string
-  parentTypes!: gltf.PropertyType[]
+  declare extensionName: string
+  declare propertyType: string
+  declare parentTypes: gltf.PropertyType[]
 
   init(): void {
     this.extensionName = MIRU_INTERACTIVITY_FACE_LANDMARKS
