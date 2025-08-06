@@ -11,6 +11,7 @@ import {
   GLTFFaceLandmarkDetectionExtension,
   GLTFInteractivityExtension,
 } from './three/index.ts'
+import { FaceLandmarksProcessor } from './three/loaders/miru-interactivity-face-landmarks/face-landmarks-processor.ts'
 import { GLTFMeshOccluderExtension } from './three/loaders/miru-mesh-occluder.ts'
 
 const MIRROR = true as boolean
@@ -36,7 +37,7 @@ export class EffectPlayer {
   renderer: THREE.WebGLRenderer
   contentGroup = new THREE.Group()
   scene = new THREE.Scene().add(this.contentGroup)
-  animationMixer = new THREE.AnimationMixer(this.scene)
+  animationMixer?: THREE.AnimationMixer
   readonly textureLoader = new THREE.TextureLoader()
   readonly #pmremGenerator: THREE.PMREMGenerator
 
@@ -53,12 +54,11 @@ export class EffectPlayer {
 
   interactivity?: GLTFInteractivityExtension
   faceLandmarksDetector?: GLTFFaceLandmarkDetectionExtension
+  landmarksProcessor: FaceLandmarksProcessor
 
   #canvasTrack?: MediaStreamTrack
   #recorder?: MediaRecorder
   #effectScene?: THREE.Group
-
-  #wasReplaced = false
 
   get isRecording(): boolean {
     return !!this.#recorder
@@ -68,24 +68,29 @@ export class EffectPlayer {
 
   readonly #eventTarget = new EventTarget()
   readonly #onVideoLoaded = this.#updateCanvasSize.bind(this)
+  readonly #onProcess = this.#onProcess_.bind(this)
 
-  constructor(options: {
-    video: HTMLVideoElement
-    canvas?: HTMLCanvasElement
-    renderer?: THREE.WebGLRenderer
-  }) {
+  constructor(options: { video: HTMLVideoElement; canvas?: HTMLCanvasElement }) {
     // @ts-expect-error for debugging
     if (import.meta.env.DEV) window.player = this
 
     this.video = options.video
     this.canvas = options.canvas ?? document.createElement('canvas')
-    this.renderer = options.renderer ?? new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true })
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true })
     this.#pmremGenerator = new THREE.PMREMGenerator(this.renderer)
 
     const { scene, camera, canvas } = this
 
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1
+
+    this.landmarksProcessor = new FaceLandmarksProcessor({
+      onInitProgress: this.#onInitProgress.bind(this),
+      onError: this.#onError.bind(this),
+      getState: () => ({ cameraRotation: this.deviceOrientationControls.object.quaternion.toArray() }),
+    })
+
+    this.landmarksProcessor.addEventListener('process', this.#onProcess as any)
 
     if (import.meta.env.DEV) {
       const controls = (this.controls = new OrbitControls(camera, canvas))
@@ -99,15 +104,8 @@ export class EffectPlayer {
   }
 
   async loadEffect(source: string | ArrayBuffer): Promise<void> {
-    const { scene, contentGroup, animationMixer, videoTexture, video } = this
-
-    this.interactivity = new GLTFInteractivityExtension()
-    this.faceLandmarksDetector = new GLTFFaceLandmarkDetectionExtension({
-      onInitProgress: this.#onInitProgress.bind(this),
-      onProcess: this.#onProcess.bind(this),
-      onError: this.#onError.bind(this),
-      getState: () => ({ cameraRotation: this.deviceOrientationControls.object.quaternion.toArray() }),
-    })
+    this.reset()
+    const { scene, contentGroup, videoTexture, video } = this
 
     // load environment texture
     this.#setEnvironmentMap()
@@ -115,13 +113,21 @@ export class EffectPlayer {
     // load glTF asset with interactivity extensions
     const loader = new GLTFLoader()
       .register((parser) => new GLTFMeshOccluderExtension(parser))
-      .register(this.interactivity.init.bind(this.interactivity))
-      .register(this.faceLandmarksDetector.init.bind(this.faceLandmarksDetector))
+      .register((parser) => (this.interactivity = new GLTFInteractivityExtension(parser)))
+      .register(
+        (parser) =>
+          (this.faceLandmarksDetector = new GLTFFaceLandmarkDetectionExtension({
+            parser,
+            processor: this.landmarksProcessor,
+          })),
+      )
 
     const gltfPromise = (
       typeof source === 'string' ? loader.loadAsync(source) : loader.parseAsync(source, '')
     ).then((result) => {
       this.#effectScene = result.scene
+      const animationMixer = (this.animationMixer = new THREE.AnimationMixer(this.scene))
+
       contentGroup.add(result.scene)
 
       if (result.scene.userData.disableEnvironmentLighting === true) {
@@ -153,7 +159,7 @@ export class EffectPlayer {
 
     if (!interactivity) throw new Error('Not initialized')
 
-    const { renderer, scene, camera, animationMixer, videoTexture, video } = this
+    const { renderer, scene, camera, videoTexture, video } = this
 
     // Set video texture on face meshes with "projected" uvMode
     const faceMesh = scene.getObjectByName('face0-mesh')
@@ -164,9 +170,8 @@ export class EffectPlayer {
       ;(faceMesh.material as THREE.MeshStandardMaterial).map = texture
     }
 
-    const { deviceOrientationControls } = this
-
-    await Promise.all([this.faceLandmarksDetector!.start(video), video.play().catch(() => undefined)])
+    await Promise.all([this.landmarksProcessor.start(video), video.play().catch(() => undefined)])
+    this.animationMixer?.setTime(0)
 
     renderer.setAnimationLoop((timeMs) => {
       if (video.paused) return
@@ -175,15 +180,17 @@ export class EffectPlayer {
       const timeSinceLastTick = timeS - this.prevTimeS
       const timeSinceStart = timeS - this.startTimeS
 
+      const { deviceOrientationControls } = this
+
       {
         const { type, alpha } = deviceOrientationControls.deviceOrientation
         if (!type || alpha == null)
-          deviceOrientationControls.deviceOrientation = { alpha: 0, beta: 90, gamma: 0 }
+          deviceOrientationControls.deviceOrientation = { type: '', alpha: 0, beta: 90, gamma: 0 }
       }
 
       deviceOrientationControls.update()
       if (this.isRecording) interactivity.emit('event/onTick', { timeSinceStart, timeSinceLastTick })
-      animationMixer.update(timeSinceLastTick)
+      this.animationMixer?.update(timeSinceLastTick)
 
       renderer.render(scene, camera)
       this.prevTimeS = timeS
@@ -284,7 +291,7 @@ export class EffectPlayer {
     this.#eventTarget.dispatchEvent(new EffectPlayerEvent('progress', progress))
   }
 
-  #onProcess({ image, state }: { image: VideoFrame; state: unknown }) {
+  #onProcess_({ image, state }: { image: VideoFrame; state: unknown }) {
     ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
     const { cameraRotation } = state as { cameraRotation: THREE.QuaternionTuple }
 
@@ -298,35 +305,35 @@ export class EffectPlayer {
     this.#eventTarget.dispatchEvent(new EffectPlayerEvent('error', error))
   }
 
-  async replaceWithNewPlayer(source: string | ArrayBuffer): Promise<EffectPlayer> {
-    this.#wasReplaced = true
+  reset() {
+    this.#effectScene?.removeFromParent()
+    this.#effectScene = undefined
+    this.animationMixer?.stopAllAction()
+    this.renderer.renderLists.dispose()
+    ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
 
-    const newPlayer = new EffectPlayer(this)
-    await newPlayer.loadEffect(source)
-    await newPlayer.start()
+    this.landmarksProcessor.reset()
+    this.interactivity?.dispose()
+    this.faceLandmarksDetector?.dispose()
+    this.interactivity = this.faceLandmarksDetector = undefined
 
-    this.dispose()
+    this.#recorder?.stop()
+    this.#canvasTrack?.stop()
+    this.#recorderChunks.length = 0
 
-    return newPlayer
+    this.#recorder = this.#canvasTrack = undefined
   }
 
   dispose(): void {
+    this.reset()
     this.video.removeEventListener('loadedmetadata', this.#onVideoLoaded)
     this.#pmremGenerator.dispose()
     this.controls?.dispose()
     this.deviceOrientationControls.dispose()
-    this.interactivity?.dispose()
-    this.faceLandmarksDetector?.dispose()
-    this.animationMixer.stopAllAction()
-    this.#recorder?.stop()
-    this.#canvasTrack?.stop()
-    this.#recorderChunks.length = 0
-    ;(this.videoTexture.image as Partial<VideoFrame> | undefined)?.close?.()
     this.videoTexture.dispose()
 
-    this.#recorder = this.#canvasTrack = undefined
-    this.interactivity = this.faceLandmarksDetector = undefined
-
-    if (!this.#wasReplaced) this.renderer.dispose()
+    this.landmarksProcessor.removeEventListener('process', this.#onProcess as any)
+    this.landmarksProcessor.dispose()
+    this.renderer.dispose()
   }
 }

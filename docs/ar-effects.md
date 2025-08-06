@@ -67,19 +67,13 @@ watch([video, canvas, effect], async ([video, canvas, effect], _, onCleanup) => 
     : await (await fetch(effect.url)).arrayBuffer()
   if (stale) return
 
-  if (player) {
-    const newPlayer = markRaw(await player.replaceWithNewPlayer(effectData))
-    if (stale) newPlayer.dispose()
-    else playerRef.value = newPlayer
-    return
-  }
+  player ??= (playerRef.value = markRaw(new EffectPlayer({ video, canvas })))
 
-  player = playerRef.value = markRaw(new EffectPlayer({ video, canvas }))
-
-  player.loadEffect(effectData)
+  await player.loadEffect(effectData)
   if (stale) return
 
-  if (import.meta.env.DEV) await start()
+  if (wasStarted.value) await player.start()
+  else if (import.meta.env.DEV) await start()
 })
 
 onBeforeUnmount(() => playerRef.value?.dispose())

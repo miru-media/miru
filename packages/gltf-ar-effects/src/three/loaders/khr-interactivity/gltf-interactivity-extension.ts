@@ -42,9 +42,8 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
     return this.parser.json
   }
 
-  init(parser: GLTFParser): this {
+  constructor(parser: GLTFParser) {
     this.parser = parser
-    return this
   }
 
   afterRoot(): null | Promise<void> {

@@ -10,8 +10,10 @@ import { GLTFInteractivityExtension } from './gltf-interactivity-extension.ts'
 test('receive and send custom events', async () => {
   const onSend = vi.fn()
 
-  const interactivity = new GLTFInteractivityExtension()
-  const loader = new GLTFLoader().register((parser) => interactivity.init(parser))
+  let interactivity!: GLTFInteractivityExtension
+  const loader = new GLTFLoader().register(
+    (parser) => (interactivity = new GLTFInteractivityExtension(parser)),
+  )
 
   await loader.parseAsync(
     JSON.stringify({
@@ -54,8 +56,10 @@ test('receive and send custom events', async () => {
 })
 
 test('property/set', async () => {
-  const interactivity = new GLTFInteractivityExtension()
-  const loader = new GLTFLoader().register((parser) => interactivity.init(parser))
+  let interactivity!: GLTFInteractivityExtension
+  const loader = new GLTFLoader().register(
+    (parser) => (interactivity = new GLTFInteractivityExtension(parser)),
+  )
 
   const gltf = await loader.parseAsync(
     JSON.stringify({

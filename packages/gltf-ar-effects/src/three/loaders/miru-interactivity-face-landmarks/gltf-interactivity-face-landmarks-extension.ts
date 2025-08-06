@@ -6,7 +6,7 @@ import { KHR_INTERACTIVITY, MIRU_INTERACTIVITY_FACE_LANDMARKS } from '../../../c
 import type { FaceLandmarksGeometryProps, KHRInteractivityExtension } from '../../../types.ts'
 import type { GLTFInteractivityExtension } from '../khr-interactivity/gltf-interactivity-extension.ts'
 
-import { FaceLandmarksProcessor, type FaceTransform, type OnDetect } from './face-landmarks-processor.ts'
+import type { FaceLandmarksProcessor, FaceTransform, ProcessEvent } from './face-landmarks-processor.ts'
 import { LandmarksFaceNode } from './interactivity-behave-nodes.ts'
 
 interface JsonWithExtensions {
@@ -22,7 +22,7 @@ interface JsonWithExtensions {
 
 export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   name: typeof MIRU_INTERACTIVITY_FACE_LANDMARKS = MIRU_INTERACTIVITY_FACE_LANDMARKS
-  parser!: GLTFParser
+  parser: GLTFParser
 
   processor: FaceLandmarksProcessor
   deviceOrientation = { alpha: 0, beta: 0, gamma: 0 }
@@ -35,24 +35,13 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
     return this.parser.json
   }
 
-  constructor(options: {
-    onProcess?: OnDetect
-    onInitProgress: (progress: number) => void
-    onError: (error: unknown) => void
-    getState: () => unknown
-  }) {
-    this.processor = new FaceLandmarksProcessor({
-      ...options,
-      onProcess: (result) => {
-        this.emitChanges(result.faceTransforms)
-        options.onProcess?.(result)
-      },
-    })
-  }
+  readonly #onProcess = (result: ProcessEvent): void => this.emitChanges(result.faceTransforms)
 
-  init(parser: GLTFParser): this {
-    this.parser = parser
-    return this
+  constructor(options: { parser: GLTFParser; processor: FaceLandmarksProcessor }) {
+    this.parser = options.parser
+    this.processor = options.processor
+
+    this.processor.addEventListener('process', this.#onProcess as any)
   }
 
   beforeRoot(): null | Promise<void> {
@@ -136,6 +125,6 @@ export class GLTFFaceLandmarkDetectionExtension implements GLTFLoaderPlugin {
   }
 
   dispose(): void {
-    this.processor.dispose()
+    this.processor.removeEventListener('process', this.#onProcess as any)
   }
 }

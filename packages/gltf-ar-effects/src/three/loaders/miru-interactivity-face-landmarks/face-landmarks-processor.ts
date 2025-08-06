@@ -35,11 +35,11 @@ export interface FaceTransform {
   scale: number[]
 }
 
-export type OnDetect = (result: {
+export interface ProcessResult {
   faceTransforms: FaceTransform[]
   image: VideoFrame
   state: unknown
-}) => void
+}
 
 const WASM_FILESET = {
   wasmLoaderPath,
@@ -59,13 +59,13 @@ const reverseQuaternion = (quat: THREE.Quaternion): void => {
   quat.w = -quat.w
 }
 
-export class FaceLandmarksProcessor {
-  onProcess: OnDetect
+export class FaceLandmarksProcessor extends EventTarget {
   onError: (error: unknown) => void
   getState: () => unknown
   isDetecting = false
+  discardNext = false
   result: FaceLandmarkerResult | undefined
-  static isSync = false
+
   worker = new Worker(new URL('./detector-worker.ts', import.meta.url), {
     name: 'face-landmark-detector',
     type: 'module',
@@ -100,12 +100,11 @@ export class FaceLandmarksProcessor {
   workerInit?: ReturnType<typeof promiseWithResolvers<void>>
 
   constructor(options: {
-    onProcess: OnDetect
     onInitProgress: (progress: number) => void
     onError: (error: unknown) => void
     getState: () => unknown
   }) {
-    this.onProcess = options.onProcess
+    super()
     this.onError = options.onError
     this.getState = options.getState
     const { onInitProgress } = options
@@ -135,10 +134,17 @@ export class FaceLandmarksProcessor {
 
           case 'result': {
             const { result, image, state } = data
-            this.result = result
+
+            if (this.discardNext) {
+              this.discardNext = false
+              this.result = undefined
+              image.close()
+              return
+            }
+
             const faceTransforms = this._processResult(result)
 
-            this.onProcess({ faceTransforms, image, state })
+            this.dispatchEvent(new ProcessEvent({ faceTransforms, image, state }))
             this.videoTexture.setFrame(image)
 
             this.isDetecting = false
@@ -351,8 +357,34 @@ export class FaceLandmarksProcessor {
     })
   }
 
-  dispose(): void {
-    this.worker.terminate()
+  reset(): void {
+    if (this.isDetecting) {
+      this.isDetecting = false
+      this.discardNext = true
+    }
+
     this.video?.cancelVideoFrameCallback(this.rvfcHandle)
+    this.faceMeshGeometries = {}
+  }
+
+  dispose(): void {
+    this.reset()
+    this.worker.terminate()
+    this.videoTexture.dispose()
   }
 }
+
+class ProcessEvent extends Event implements ProcessResult {
+  faceTransforms: FaceTransform[]
+  image: VideoFrame
+  state: unknown
+
+  constructor(result: ProcessResult) {
+    super('process')
+    this.faceTransforms = result.faceTransforms
+    this.image = result.image
+    this.state = result.state
+  }
+}
+
+export type { ProcessEvent }
