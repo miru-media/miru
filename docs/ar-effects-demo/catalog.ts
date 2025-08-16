@@ -1,11 +1,10 @@
-import Beard from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Beard.glb'
-import Cat from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Cat.glb'
-import Clown from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Clown.glb'
-import Eyes from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Eyes.glb'
-import Makeup from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Makeup.glb'
-import Rain from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Rain2.glb'
-import Teddy1 from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Teddy_Fabric.glb'
-import Teddy2 from 'https://github.com/miru-media/static-assets/raw/refs/heads/main/dist/gltf/effects/Teddy_Fur.glb'
+import Beard from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Beard.glb'
+import Cat from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Cat.glb'
+import Clown from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Clown.glb'
+import Eyes from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Eyes.glb'
+import Makeup from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Makeup.glb'
+import Rain from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Rain.glb'
+import Teddy from 'https://github.com/miru-media/static-assets/raw/0e9bf5c/dist/gltf/effects/Teddy.glb'
 
 export const catalog = [
   { name: 'Cat', url: Cat },
@@ -14,6 +13,5 @@ export const catalog = [
   { name: 'Eyes', url: Eyes },
   { name: 'Make-up', url: Makeup },
   { name: 'Rain', url: Rain },
-  { name: 'Teddy 1', url: Teddy1 },
-  { name: 'Teddy 2', url: Teddy2 },
+  { name: 'Teddy', url: Teddy },
 ]
