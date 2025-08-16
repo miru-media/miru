@@ -40,11 +40,11 @@ export class MovieExporter {
   constructor(movie: Movie) {
     const exportMovie = (this.movie = new ExportMovie(movie))
 
-    exportMovie.children.forEach((track) => {
+    exportMovie.timeline.children.forEach((track) => {
       for (let clip = track.head; clip; clip = clip.next) {
-        this.clips.push(clip)
+        this.clips.push(clip as ExtractorClip)
 
-        const { source } = clip
+        const { sourceAsset: source } = clip
         const { source: sourceStart, duration } = clip.time
         const sourceEnd = sourceStart + duration
         let sourceEntry = this.sources.get(source.objectUrl)
@@ -52,7 +52,7 @@ export class MovieExporter {
         if (!sourceEntry) {
           const demuxer = new Demuxer()
           sourceEntry = {
-            asset: clip.source,
+            asset: clip.sourceAsset,
             start: sourceStart,
             end: sourceEnd,
             demuxer,
@@ -76,8 +76,7 @@ export class MovieExporter {
 
   async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
     const { movie } = this
-    const { duration, resolution } = movie
-    const framerate = movie.frameRate.value
+    const { duration, resolution, frameRate } = movie
     const { canvas } = movie.gl
 
     let hasAudio = false as boolean
@@ -167,7 +166,7 @@ export class MovieExporter {
     )
 
     this.clips.forEach((clip) => {
-      const { audio, video } = this.sources.get(clip.source.objectUrl)!
+      const { audio, video } = this.sources.get(clip.sourceAsset.objectUrl)!
 
       clip.node.init({ audio, video })
     })
@@ -177,7 +176,7 @@ export class MovieExporter {
     const videoEncoderConfig: VideoEncoderConfig = {
       codec: '',
       ...resolution,
-      framerate,
+      framerate: frameRate,
       // bitrate: 1e7,
     }
 
@@ -201,8 +200,8 @@ export class MovieExporter {
         const writer = avEncoder.video?.getWriter()
         if (!writer) return
 
-        const totalFrames = duration * framerate
-        const frameDurationUs = 1e6 / framerate
+        const totalFrames = duration * frameRate
+        const frameDurationUs = 1e6 / frameRate
 
         setObjectSize(movie.gl.canvas, movie.resolution)
 

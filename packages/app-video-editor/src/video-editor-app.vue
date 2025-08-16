@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import 'webgl-video-editor/elements'
+import { useEventListener } from '@vueuse/core'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n-lite'
 
+import 'webgl-video-editor/elements'
 import { demoMovie } from './demo-movie'
-import { type VideoEditor } from 'webgl-video-editor'
+import type { VideoEditor, VideoEditorStore } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'
-import { ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n-lite'
 import Toolbar from './video-editor-toolbar.vue'
-import VideoEditorUI from 'webgl-video-editor/vue'
+import VideoEditorUI, { VideoEditorLocalStore } from 'webgl-video-editor/vue'
 import Settings from './video-editor-settings.vue'
-import { useEventListener } from '@vueuse/core'
 import { isElement } from 'shared/utils'
 
-const editorRef = ref<VideoEditor>()
+const { store = new VideoEditorLocalStore() } = defineProps<{ store?: VideoEditorStore }>()
 
-const LOCAL_STORAGE_PREFIX = 'video-editor:'
-const MOVIE_CONTENT_KEY = `${LOCAL_STORAGE_PREFIX}content`
+const editorRef = ref<VideoEditor>()
 
 const { t } = useI18n()
 
@@ -26,7 +25,7 @@ const onClickLoadDemo = async () => {
 
   try {
     await editor.clearAllContentAndHistory()
-    await editor.replaceContent(demoMovie)
+    editor.replaceContent(demoMovie)
   } catch (error) {
     console.error(error)
     alert(t('error_cannot_set_content'))
@@ -34,40 +33,6 @@ const onClickLoadDemo = async () => {
 }
 
 if (!import.meta.env.SSR) {
-  watch(
-    editorRef,
-    (editor) => {
-      if (!editor) return
-
-      // restore movie from localStorage
-      const savedJson = localStorage.getItem(MOVIE_CONTENT_KEY)
-
-      if (savedJson) {
-        ;(async () => {
-          const parsed = JSON.parse(savedJson)
-          return editor.replaceContent(parsed)
-        })().catch((error: unknown) => {
-          const message = t('restore_failed')
-
-          /* eslint-disable no-console */
-          console.error(error)
-          console.warn(message, savedJson)
-          /* eslint-enable no-console */
-          alert(message)
-
-          localStorage.setItem(`${LOCAL_STORAGE_PREFIX}backup`, savedJson)
-        })
-      }
-    },
-    { immediate: true },
-  )
-
-  // Persist to localStorage
-  watch(
-    () => editorRef.value?.state,
-    (state) => state && localStorage.setItem(MOVIE_CONTENT_KEY, JSON.stringify(state)),
-  )
-
   // Keyboard shortcuts
   useEventListener(window, 'keydown', (event: KeyboardEvent) => {
     const target = event.composedPath()[0]
@@ -76,16 +41,18 @@ if (!import.meta.env.SSR) {
     if (!editor || (isElement(target) && target.closest('select,input,textarea,[contenteditable=true]')))
       return
 
+    const { store: sync } = editor
+
     if (event.ctrlKey) {
       switch (event.code) {
         case 'KeyZ': {
-          if (event.shiftKey) editor.redo()
-          else editor.undo()
+          if (event.shiftKey) sync?.redo()
+          else sync?.undo()
           event.preventDefault()
           break
         }
         case 'KeyY': {
-          editor.redo()
+          sync?.redo()
           event.preventDefault()
           break
         }
@@ -131,8 +98,8 @@ if (!import.meta.env.SSR) {
 </script>
 
 <template>
-  <div class="demo-container">
-    <VideoEditorUI ref="editorRef" :messages="{ en, de }" class="video-editor">
+  <div class="video-editor-app">
+    <VideoEditorUI ref="editorRef" :store="store" :messages="{ en, de }" class="video-editor">
       <button
         v-if="!editorRef?.isLoading"
         slot="empty"
@@ -149,7 +116,7 @@ if (!import.meta.env.SSR) {
 </template>
 
 <style scoped>
-.demo-container {
+.video-editor-app {
   --black: #000;
   --white: #fff;
   --gray: #252525;
@@ -178,6 +145,33 @@ if (!import.meta.env.SSR) {
   --primary-bg-05: #17171788;
 
   color-scheme: dark;
+}
+
+.video-editor {
+  height: 100%;
+}
+
+.demo-video-button {
+  position: absolute;
+  left: 1rem;
+  display: flex;
+  gap: 0.675rem;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--clip-height);
+  height: var(--clip-height);
+  padding: 0.675rem 0.875rem;
+  color: var(--white-3);
+  cursor: pointer;
+  background-color: rgb(255 255 255 / 3%);
+  border: dashed;
+  border-color: rgb(255 255 255 / 12%);
+  border-radius: 0.625rem;
+  translate: var(--track-width);
+
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 17px;
 }
 
 .video-editor {

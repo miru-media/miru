@@ -1,6 +1,7 @@
-import { type Ref, ref, toRef } from 'fine-jsx'
+import { ref, toRef } from 'fine-jsx'
 import VideoContext, { type TransitionNode } from 'videocontext'
 
+import { TRANSITION_DURATION_S } from '../constants.ts'
 import type { MediaAsset, VideoEffectAsset } from '../nodes/assets.ts'
 import { BaseClip } from '../nodes/base-clip.ts'
 import type { Schema, Track } from '../nodes/index.ts'
@@ -10,15 +11,21 @@ import { type ExtractorNodeOptions, MediaExtractorNode } from './media-extractor
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export class ExtractorClip extends BaseClip {
-  filter: Ref<VideoEffectAsset | undefined>
-
-  track: Track<ExtractorClip>
+  readonly #filter = ref<VideoEffectAsset | undefined>()
+  readonly #filterIntensity = ref(1)
+  track: Track
   node: MediaExtractorNode
   nodeState = ref<'waiting' | 'sequenced' | 'playing' | 'paused' | 'ended' | 'error'>('waiting')
-  source: MediaAsset
+  sourceAsset: MediaAsset
+  source: Schema.Clip['source']
 
   readonly #transitionNode = ref<TransitionNode<{ mix: number }>>()
   context: VideoContext
+
+  get filter(): BaseClip['filter'] {
+    const filter = this.#filter.value
+    return filter && { assetId: filter.id, intensity: this.#filterIntensity.value }
+  }
 
   get outTransitionNode() {
     return this.#transitionNode.value
@@ -27,33 +34,38 @@ export class ExtractorClip extends BaseClip {
     return this.prev && this.prev.#transitionNode.value
   }
 
-  get isReady() {
+  get isReady(): boolean {
     return this.node._isReady()
   }
+  get everHadEnoughData(): boolean {
+    return this.isReady
+  }
 
-  constructor(init: Schema.Clip, track: Track<ExtractorClip>) {
-    super(init, track)
+  constructor(init: Schema.Clip, track: Track) {
+    super(init, track.root)
 
     const { _renderer: renderer, root } = track
 
-    this.source = root.nodes.get(init.source.assetId)
+    this.source = init.source
+    this.sourceAsset = root.nodes.get(init.source.assetId)
     this.track = track
     this.context = track._context
-    this.filter = ref(init.filter && root.nodes.get<VideoEffectAsset>(init.filter.assetId))
+    this.#filter.value = init.filter && root.nodes.get<VideoEffectAsset>(init.filter.assetId)
+    this.#filterIntensity.value = init.filter?.intensity ?? 1
     this.transition = init.transition
 
     const nodeOptions: ExtractorNodeOptions = {
-      videoEffect: this.filter,
-      videoEffectIntensity: ref(init.filter?.intensity ?? 1),
-      source: this.source,
+      videoEffect: this.#filter,
+      videoEffectIntensity: this.#filterIntensity,
+      source: this.sourceAsset,
       renderer,
       movieIsPaused: ref(false),
       movieIsStalled: ref(false),
-      movieResolution: toRef(() => track.parent.resolution),
+      movieResolution: toRef(() => root.resolution),
       getClipTime: () => this.time,
       getPresentationTime: () => this.presentationTime,
       getPlayableTime: () => this.playableTime,
-      targetFrameRate: track.parent.frameRate.value,
+      targetFrameRate: root.frameRate,
     }
     this.node = track._context.customSourceNode(MediaExtractorNode, undefined, nodeOptions)
   }
@@ -71,7 +83,7 @@ export class ExtractorClip extends BaseClip {
       const { transition, time } = this
       if (transition) {
         transitionNode.clearTransitions()
-        transitionNode.transitionAt(time.end - transition.duration, time.end, 0, 1, 'mix')
+        transitionNode.transitionAt(time.end - TRANSITION_DURATION_S, time.end, 0, 1, 'mix')
       }
     }
 
@@ -103,7 +115,7 @@ export class ExtractorClip extends BaseClip {
   }
 
   getSource() {
-    return this.source
+    return this.sourceAsset
   }
 
   dispose() {

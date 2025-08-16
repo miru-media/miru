@@ -7,7 +7,8 @@ import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
 import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants.ts'
-import type { VideoEditor as VideoEditor_ } from '../video-eidtor.ts'
+import type { Clip } from '../nodes/clip.ts'
+import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
 
 import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
@@ -65,8 +66,8 @@ export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions 
       >
         <p style="display:flex;gap:0.25rem">
           {() =>
-            movie.children.map((track) =>
-              track._mapClips((clip) => {
+            movie.timeline.children.map((track) =>
+              (track.children as Clip[]).map((clip) => {
                 const node = clip.node.value
                 const { mediaState } = node
 

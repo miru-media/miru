@@ -8,6 +8,8 @@ import sampleImage from 'shared/assets/320px-bianchi.jpg'
 import { fit, useEventListener } from 'shared/utils'
 
 import type { VideoEditor } from 'webgl-video-editor'
+import type { Clip } from '../../webgl-video-editor/src/nodes'
+import { NodeUpdateEvent } from '../../webgl-video-editor/src/events'
 
 const { editor } = defineProps<{ editor: Reactive<VideoEditor> }>()
 
@@ -16,7 +18,14 @@ const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: nu
   if (!clip) return
 
   const { effect, intensity } = event.detail
-  editor.setClipFilter(clip, effect, intensity)
+  const prevFilter = clip.filter
+  const newFilter = effect ? { assetId: effect, intensity } : undefined
+
+  if (prevFilter && prevFilter.assetId === effect) {
+    editor._editor._untracked(() => (clip.filter = newFilter))
+    const node = editor._editor._movie.nodes.get<Clip>(clip.id)
+    node.root._emit(new NodeUpdateEvent(node.id, { filter: prevFilter }, 'filter'))
+  } else clip.filter = newFilter
 
   const { start, end } = clip._presentationTime
   const { currentTime } = editor
@@ -37,11 +46,9 @@ onScopeDispose(() => img.removeAttribute('src'))
 
 const menu = ref<WebglEffectsMenuElement>()
 
-console.log(editor)
-
 watch(
   () => editor.selection,
-  () => menu.value?.scrollToEffect(editor.selection?.filter?.id, 'instant'),
+  () => menu.value?.scrollToEffect(editor.selection?.filter?.assetId, 'instant'),
 )
 </script>
 
@@ -53,7 +60,7 @@ watch(
     :thumbnailSize="fit(img, { width: 200, height: 200 })"
     :renderer="editor.renderer"
     :effects="editor.effects"
-    :effect="editor.selection?.filter?.id"
+    :effect="editor.selection?.filter?.assetId"
     :intensity="editor.selection?.filter?.intensity ?? 1"
     :loading="isLoadingTexture"
     @change="onChange"
