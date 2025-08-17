@@ -2,6 +2,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/client" />
 /// <reference types="vitest/config" />
+/// <reference types="webxdc-types/global" />
 /// <reference types="./auto-imports" />
 
 // remote assets
