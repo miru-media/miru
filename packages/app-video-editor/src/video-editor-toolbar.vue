@@ -6,9 +6,9 @@ import { debounce } from 'throttle-debounce'
 import { type InputEvent } from 'shared/types'
 import { useEventListener } from 'shared/utils'
 
-import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES } from 'webgl-video-editor'
+import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES } from 'webgl-video-editor/vue'
 
-import { type VideoEditor } from 'webgl-video-editor'
+import type { VideoEditor } from 'webgl-video-editor'
 import FilterMenu from './video-editor-filter-menu.vue'
 
 const { editor } = defineProps<{ editor: VideoEditor }>()
@@ -22,12 +22,12 @@ const onInputVideoFile = async (event: Event) => {
   await editor.replaceClipSource(file)
 }
 
-const getSelectedType = () => editor.selection?.parent.trackType
+const getSelectedType = () => editor.selection?.parent?.trackType
 
 const showFilterMenu = ref(false)
 
 watchEffect(() => {
-  if (editor.selection?.parent.trackType !== 'video') showFilterMenu.value = false
+  if (editor.selection?.parent?.trackType !== 'video') showFilterMenu.value = false
 })
 
 const showDebugButtons = ref(import.meta.env.DEV)
@@ -62,11 +62,9 @@ useEventListener(
         <button
           v-if="getSelectedType() === 'video'"
           :class="['toolbar-button', editor.selection?.filter && 'active']"
+          @click="() => (showFilterMenu = !showFilterMenu)"
         >
-          <div
-            :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'"
-            @click="() => (showFilterMenu = !showFilterMenu)"
-          />
+          <div :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'" />
           {{ $t('filter') }}
         </button>
 
@@ -131,6 +129,7 @@ useEventListener(
   font-size: 0.75rem;
   line-height: initial;
   text-align: center;
+  border-width: 0;
 
   &.active {
     color: var(--yellow);
@@ -150,9 +149,10 @@ useEventListener(
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  padding: 0;
   cursor: pointer;
   border-radius: 0.5rem;
+
+  background-color: transparent;
 
   &:hover {
     background-color: var(--white-1);

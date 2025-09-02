@@ -2,6 +2,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/client" />
 /// <reference types="vitest/config" />
+/// <reference types="webxdc-types/global" />
 /// <reference types="./auto-imports" />
 
 // remote assets
@@ -95,6 +96,15 @@ declare module 'ebml-block' {
     frames: Buffer[]
   }
   export default ebmlBlock
+}
+
+declare module 'libavjs-webcodecs-polyfill' {
+  const { AudioData, AudioEncoder } = window
+  class EncodedAudioChunk_ extends EncodedAudioChunk_ {
+    _libavGetData: () => Uint8Array
+  }
+  const load: (..._args: unknown[]) => Promise<void>
+  export { AudioData, AudioEncoder, EncodedAudioChunk_ as EncodedAudioChunk, load }
 }
 
 declare module 'videocontext' {

@@ -13,7 +13,7 @@ export const createSampleGltf = async (url: string, createMask = false) => {
     ? await createMaskEffectWithAsset(io, url)
     : convertExtrasToExtensions(await io.read(url))
 
-  return (await io.writeBinary(doc)).buffer
+  return (await io.writeBinary(doc)).buffer as ArrayBuffer
 }
 
 const createMaskEffectWithAsset = async (io: gltf.WebIO, url: string) => {

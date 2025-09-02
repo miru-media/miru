@@ -1,20 +1,23 @@
 import { ref } from 'fine-jsx'
+import { Effect } from 'webgl-effects'
 
-import { Effect } from 'reactive-effects/effect'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
+import type { RootNode } from '../../types/internal'
+import { NodeCreateEvent } from '../events.ts'
 import { storage } from '../storage/index.ts'
 
 import { BaseNode } from './base-node.ts'
 import type { Schema } from './index.ts'
 import type { Movie } from './movie.ts'
 
-abstract class Asset<T extends Schema.Asset> extends BaseNode {
+export abstract class BaseAsset<T extends Schema.Asset> extends BaseNode<T> {
   id: string
   type: T['type']
   raw: T
+  abstract isLoading: boolean
 
-  constructor(init: T, root: Movie) {
+  constructor(init: T, root: RootNode) {
     super(init.id, root)
     this.id = init.id
     this.type = init.type
@@ -26,7 +29,10 @@ abstract class Asset<T extends Schema.Asset> extends BaseNode {
   }
 }
 
-export class MediaAsset extends Asset<Schema.AvMediaAsset> {
+export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
+  declare children?: never
+  declare parent?: never
+
   duration: number
   mimeType: string
   audio?: { duration: number }
@@ -35,6 +41,8 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   blob: Blob
   readonly #objectUrl = ref('')
   #isRefreshing = false
+  readonly #isLoading = ref(true)
+  readonly #error = ref<unknown>()
 
   get objectUrl() {
     return this.#objectUrl.value
@@ -42,6 +50,14 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
 
   get name() {
     return this.raw.name ?? ''
+  }
+
+  get isLoading() {
+    return this.#isLoading.value
+  }
+
+  get error() {
+    return this.#error.value
   }
 
   protected constructor(init: Schema.AvMediaAsset, options: { blob: Blob; root: Movie }) {
@@ -57,18 +73,23 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
     this.audio = audio
     this.video = video
 
-    root.nodes.set(this)
-    root.assets.add(this)
+    root._emit(new NodeCreateEvent(this.id))
+
+    this.onDispose(() => {
+      URL.revokeObjectURL(this.objectUrl)
+      storage.delete(this.id).catch(() => undefined)
+    })
   }
 
   #setBlob(blob: Blob) {
     URL.revokeObjectURL(this.objectUrl)
+    this.blob = blob
     this.#objectUrl.value = URL.createObjectURL(blob)
   }
 
   async _refreshObjectUrl() {
     if (this.#isRefreshing) return
-    this.#isRefreshing = true
+    this.#isRefreshing = this.#isLoading.value = true
 
     try {
       const res = await fetch(this.objectUrl)
@@ -79,78 +100,45 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
       if (import.meta.env.DEV) console.error(error)
 
       if (!(await storage.hasCompleteFile(this.id)))
-        throw new Error(`[video-editor] couldn't get asset data from storage (${this.id})`)
+        throw new Error(`[webgl-video-editor] couldn't get asset data from storage (${this.id})`)
 
       const blob = await storage.getFile(this.id)
       this.#setBlob(blob)
     } finally {
-      this.#isRefreshing = false
+      this.#isRefreshing = this.#isLoading.value = false
     }
   }
 
-  dispose() {
-    URL.revokeObjectURL(this.objectUrl)
-    storage.delete(this.id).catch(() => undefined)
-  }
-
-  static async fromInit(init: Schema.AvMediaAsset, root: Movie) {
-    const { id } = init
-    const storageHasFile = await storage.hasCompleteFile(id)
-
-    if (!storageHasFile) {
-      if (init.url) return await this.fromSource(id, root, init.url, init)
-
-      throw new Error('[video-editor] Asset data was never fetched and cached')
-    }
-
-    const blob = await storage.getFile(id)
-
-    return new MediaAsset(init, { blob, root })
-  }
-
-  // eslint-disable-next-line @typescript-eslint/max-params -- internal
-  static async fromSource(
+  static async getAvMediaAssetInfo(
     id: string,
-    root: Movie,
-    urlOrBlob: string | (Blob & { name?: string }),
-    init?: Schema.AvMediaAsset,
-    signal?: AbortSignal,
-  ): Promise<MediaAsset> {
-    const isBlobSource = typeof urlOrBlob !== 'string'
-    let mimeType = init?.mimeType ?? ''
-    const name = isBlobSource
-      ? 'name' in urlOrBlob
-        ? urlOrBlob.name
-        : undefined
-      : urlOrBlob.replace(/.*\//, '')
+    source: string | Blob | File,
+    requestInit?: RequestInit,
+  ): Promise<Schema.AvMediaAsset> {
+    const isBlobSource = typeof source !== 'string'
+    let mimeType = isBlobSource ? source.type : ''
+    const name = isBlobSource ? ('name' in source ? source.name : undefined) : source.replace(/.*\//, '')
 
-    let size: number | undefined
     let stream: ReadableStream<Uint8Array>
 
     if (isBlobSource) {
-      stream = urlOrBlob.stream()
-      ;({ size } = urlOrBlob)
-      mimeType ||= urlOrBlob.type
+      stream = source.stream()
+      mimeType ||= source.type
     } else {
       try {
-        const res = await fetch(urlOrBlob, { signal })
+        const res = await fetch(source, requestInit)
         const { body } = res
         if (!res.ok || !body) throw new Error('Fetch failed')
 
         stream = body
         mimeType ||= res.headers.get('content-type') ?? ''
       } catch (error) {
-        throw new Error(`[video-editor] Failed to fetch asset from "${urlOrBlob}".`, { cause: error })
+        throw new Error(`[webgl-video-editor] Failed to fetch asset from "${source}".`, { cause: error })
       }
     }
 
-    await storage.fromStream(id, stream, { size, signal })
-
-    const blob = isBlobSource ? urlOrBlob : await storage.getFile(id, init?.name, { type: mimeType })
-
-    if (init) return new MediaAsset({ ...init, id }, { blob, root })
-
-    const containerOrElementInfo = await getContainerMetadata(blob).catch(() => getMediaElementInfo(blob))
+    const containerOrElementInfo = await getContainerMetadata(stream, requestInit).catch(() =>
+      getMediaElementInfo(source, requestInit),
+    )
     let { duration } = containerOrElementInfo
 
     let hasAudio = false
@@ -176,18 +164,63 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
       duration = Math.min(duration, audio?.duration ?? Infinity, video?.duration ?? Infinity)
     }
 
-    return new MediaAsset(
-      {
-        id,
-        type: 'av_media_asset',
-        mimeType,
-        name,
-        duration,
-        audio,
-        video,
-      },
-      { blob, root },
-    )
+    return {
+      id,
+      type: 'asset:media:av',
+      mimeType,
+      name,
+      duration,
+      audio,
+      video,
+    }
+  }
+
+  static fromInit(
+    init: Schema.AvMediaAsset,
+    root: Movie,
+    source: string | (Blob & { name?: string }) | undefined = init.url,
+    requestInit?: RequestInit,
+  ) {
+    const { id } = init
+
+    const asset = new MediaAsset(init, { blob: new Blob(), root })
+
+    ;(async () => {
+      const storageHasFile = await storage.hasCompleteFile(id)
+
+      // WIP: add abort signal to all fetches and pipes, etc
+      if (!storageHasFile) {
+        if (source == null) throw new Error('[webgl-video-editor] Missing media source')
+
+        let stream
+        let size: number | undefined
+
+        if (typeof source === 'string') {
+          const res = await fetch(source, requestInit)
+          const { body } = res
+          if (!res.ok || !body) throw new Error('Fetch failed')
+          const contentLength = res.headers.get('content-length')
+
+          if (contentLength) {
+            const parsed = parseInt(contentLength, 10)
+            size = isNaN(parsed) ? undefined : parsed
+          }
+
+          stream = body
+        } else {
+          stream = source.stream()
+          ;({ size } = source)
+        }
+
+        await storage.fromStream(id, stream, { size, signal: requestInit?.signal })
+      }
+
+      asset.#setBlob(await storage.getFile(id))
+    })().catch((error: unknown) => {
+      asset.#error.value = error
+    })
+
+    return asset
   }
 
   static async clearCache(): Promise<void> {
@@ -195,15 +228,46 @@ export class MediaAsset extends Asset<Schema.AvMediaAsset> {
   }
 }
 
-export class VideoEffectAsset extends Effect {
-  type = 'video_effect_asset' as const
+export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> {
+  type = 'asset:effect:video' as const
+  declare children?: never
+  declare parent?: never
+
+  readonly #effect: Effect
+  readonly #isLoading = ref(false)
+  shaders: string[] = []
+
+  get name() {
+    return this.#effect.name
+  }
+  get ops() {
+    return this.#effect.ops
+  }
+  get promise(): Promise<undefined[]> | undefined {
+    return this.#effect.promise
+  }
+  get isLoading() {
+    return this.#isLoading.value
+  }
+
+  constructor(init: Schema.VideoEffectAsset, root: RootNode) {
+    super(init, root)
+    const effect = (this.#effect = new Effect(
+      init,
+      root.renderer,
+      (e) => (this.#isLoading.value = e.isLoading),
+    ))
+
+    this.onDispose(effect.dispose.bind(effect))
+    root._emit(new NodeCreateEvent(this.id))
+  }
 
   toObject(): Schema.VideoEffectAsset {
     return {
-      ...super.toObject(),
+      ...this.#effect.toObject(),
       name: this.name,
       id: this.id,
-      type: 'video_effect_asset',
+      type: 'asset:effect:video',
     }
   }
 }

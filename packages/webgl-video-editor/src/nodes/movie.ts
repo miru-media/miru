@@ -1,20 +1,25 @@
-import { computed, createEffectScope, effect, type Ref, ref, watch } from 'fine-jsx'
+import { computed, createEffectScope, effect, ref, watch } from 'fine-jsx'
 import Stats from 'stats.js'
-import { uid } from 'uid'
 import VideoContext from 'videocontext'
-import { getDefaultFilterDefinitions, Renderer } from 'webgl-effects'
+import { Renderer } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize, useDocumentVisibility } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 import { useRafLoop } from 'shared/video/utils'
 
-import type { AnyNode, NodeMap as NodeMapType } from '../../types/internal.ts'
-import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants.ts'
+import type { AnyNode, NodeMap as INodeMap } from '../../types/internal'
+import {
+  ASSET_URL_REFRESH_TIMEOUT_MS,
+  DEFAULT_FRAMERATE,
+  DEFAULT_RESOLUTION,
+  ROOT_NDOE_ID,
+} from '../constants.ts'
+import { NodeCreateEvent, type VideoEditorEvents } from '../events.ts'
 
 import { MediaAsset, VideoEffectAsset } from './assets.ts'
-import { Clip } from './clip.ts'
-import type { Schema } from './index.ts'
+import { Collection } from './collection.ts'
+import { type BaseNode, Clip, type Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 import { Track } from './track.ts'
 
@@ -34,27 +39,31 @@ export namespace Movie {
   }
 }
 
-class NodeMap implements NodeMapType {
-  map = new Map<string, Movie | Track<Clip> | Clip | MediaAsset | VideoEffectAsset>()
+class NodeMap implements INodeMap {
+  map = new Map<string, AnyNode | BaseNode>()
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get<T extends AnyNode>(id: string): T {
     return this.map.get(id) as T
   }
-  set(node: AnyNode) {
+  set(node: AnyNode | BaseNode): void {
     this.map.set(node.id, node)
   }
-  delete(id: string) {
+  has(id: string): boolean {
+    return this.map.has(id)
+  }
+  delete(id: string): boolean {
     return this.map.delete(id)
   }
 }
 
-export class Movie extends ParentNode {
+export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> | Collection<'timeline'>> {
+  declare parent?: never
+
   type = 'movie' as const
-  readonly #children = ref<Track<Clip>[]>([])
-  frameRate: Ref<number>
   canvas = document.createElement('canvas')
   gl = getWebgl2Context(this.canvas)
   renderer = new Renderer({ gl: this.gl })
+  declare readonly root: this
 
   videoContext: VideoContext
 
@@ -64,55 +73,65 @@ export class Movie extends ParentNode {
   readonly #scope = createEffectScope()
 
   readonly #currentTime = ref(0)
-  readonly #duration = computed(() => this.children.reduce((end, track) => Math.max(track.duration, end), 0))
-  readonly #resolution = ref({ width: 450, height: 800 })
+  readonly #duration = computed(
+    () => this.#timeline.value?.children.reduce((end, track) => Math.max(track.duration, end), 0) ?? 0,
+  )
   readonly #noRender = ref(0)
   nodes = new NodeMap()
-
-  assets = new Set<MediaAsset | VideoEffectAsset>()
-  effects = ref<VideoEffectAsset[]>()
 
   stats = new Stats()
 
   readonly #state = ref<VideoContextState>(VideoContextState.STALLED)
 
-  get children() {
-    return this.#children.value
-  }
-  set children(children: Track<Clip>[]) {
-    this.#children.value = children
-  }
+  readonly #eventTarget = new EventTarget()
 
-  get resolution() {
-    return this.#resolution.value
-  }
+  declare resolution: Schema.Movie['resolution']
+  declare frameRate: Schema.Movie['frameRate']
 
-  set resolution(size) {
-    this.#resolution.value = size
-    setObjectSize(this.canvas, size)
-  }
-
-  get isReady() {
+  get isReady(): boolean {
     const state = this.#state.value
     if (state === VideoContextState.STALLED || state === VideoContextState.BROKEN) return false
-    return this.children.every((track) => track.children.every((clip) => clip.isReady))
+    return (
+      this.#timeline.value?.children.every((track) => track.children.every((clip) => clip.isReady)) ?? true
+    )
   }
 
-  get duration() {
+  get duration(): number {
     return this.#duration.value
   }
 
-  get currentTime() {
+  get currentTime(): number {
     return this.#currentTime.value
   }
 
-  constructor({ id, children: tracks = [], resolution, frameRate }: Schema.Movie) {
-    super(id, undefined)
-    this.root = this
-    const { canvas } = this
+  readonly #assetsLibrary = computed(() =>
+    this.children.find((child) => child.isKind(Collection.ASSET_LIBRARY)),
+  )
+  get assetLibrary(): Collection<'asset-library'> {
+    return this.#assetsLibrary.value!
+  }
 
-    this.resolution = resolution
-    this.frameRate = ref(frameRate)
+  readonly #timeline = computed(() => this.children.find((child) => child.isKind(Collection.TIMELINE)))
+
+  get timeline(): Collection<'timeline'> {
+    const timeline = this.#timeline.value
+    if (!timeline) throw new Error(`[webgl-video-editor] Missing timeline collection node.`)
+    return timeline
+  }
+
+  constructor() {
+    super(ROOT_NDOE_ID)
+    this.root = this
+    this.nodes.set(this)
+
+    this._defineReactive('resolution', DEFAULT_RESOLUTION, {
+      onChange: setObjectSize.bind(null, this.canvas),
+    })
+    this._defineReactive('frameRate', DEFAULT_FRAMERATE)
+
+    this._emit(new NodeCreateEvent(this.id))
+
+    const { canvas } = this
 
     // force webgl2 context
     canvas.getContext = ((_id, _options) => this.gl) as typeof canvas.getContext
@@ -123,25 +142,24 @@ export class Movie extends ParentNode {
 
     videoContext.pause()
 
-    this.clearAllContent()
-
     this.#scope.run(() => {
-      // create tracks
-      this.#children.value = tracks.map((t) => new Track(t, this, Clip))
-
-      // keep VideoContext nodes connected
-      watch([() => this.children.map((t) => t._node.value)], ([trackNodes], _prev, onCleanup) => {
-        trackNodes.forEach((node) => node.connect(videoContext.destination))
-        onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
-      })
+      // keep VideoContext nodes connected in the right order
+      watch(
+        [() => this.#timeline.value?.children.map((t) => t._node.value)],
+        ([trackNodes], _prev, onCleanup) => {
+          if (!trackNodes) return
+          trackNodes.forEach((node) => node.connect(videoContext.destination))
+          onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
+        },
+      )
 
       watch([this.isStalled], ([stalled], _prev, onCleanup) => {
         if (!stalled) return
 
         const timeoutId = setTimeout(
           () =>
-            this.assets.forEach((asset) => {
-              if (asset.type === 'av_media_asset') void asset._refreshObjectUrl()
+            this.assetLibrary.children.forEach((asset) => {
+              if (asset.type === 'asset:media:av') void asset._refreshObjectUrl()
             }),
           ASSET_URL_REFRESH_TIMEOUT_MS,
         )
@@ -206,6 +224,40 @@ export class Movie extends ParentNode {
     })
   }
 
+  createNode<T extends Schema.AnyNodeSchema>(init: T) {
+    let node: AnyNode
+
+    switch (init.type) {
+      case 'collection':
+        node = new Collection(init, this)
+        break
+      case 'track':
+        node = new Track(init, this)
+        break
+      case 'clip':
+        node = new Clip(init, this)
+        break
+      case 'asset:media:av':
+        node = MediaAsset.fromInit(init, this)
+        break
+      case 'asset:effect:video':
+        node = new VideoEffectAsset(init, this)
+        break
+      default:
+        throw new Error(`[webgl-video-editor] Unexpected ${init.type} init.`)
+    }
+
+    type TCollectionKind = Extract<T, Schema.Collection>['kind']
+    return node as {
+      movie: Movie
+      collection: Collection<TCollectionKind>
+      track: Track
+      clip: Clip
+      'asset:media:av': MediaAsset
+      'asset:effect:video': VideoEffectAsset
+    }[T['type']]
+  }
+
   play() {
     if (this.#noRender.value) return
 
@@ -242,50 +294,49 @@ export class Movie extends ParentNode {
     })
   }
 
-  get isEmpty() {
-    return this.children.every((track) => track._count === 0)
+  get isEmpty(): boolean {
+    return this.#timeline.value?.children.every((track) => track.count === 0) ?? true
   }
 
-  refresh() {
+  refresh(): void {
     this.videoContext.update(0)
   }
 
-  async withoutRendering(fn: () => Promise<void>) {
+  async withoutRendering(fn: () => Promise<void>): Promise<void> {
     this.#noRender.value++
     await fn().finally(() => this.#noRender.value--)
   }
 
   toObject(): Schema.Movie {
-    const assets = Array.from(this.assets).map((asset) => asset.toObject())
-
     return {
       id: this.id,
       type: this.type,
-      assets,
-      children: this.children.map((t) => t.toObject()),
       resolution: this.resolution,
-      frameRate: this.frameRate.value,
+      frameRate: this.frameRate,
     }
   }
 
   clearAllContent(clearCache: true): Promise<void>
   clearAllContent(clearCache?: false): void
   clearAllContent(clearCache = false): Promise<void> | void {
-    this.assets.forEach((asset) => asset.dispose())
-    this.assets.clear()
-    this.children.forEach((child) => child.dispose())
-    this.#children.value = (['video', 'audio'] as const).map(
-      (trackType) => new Track({ id: uid(), type: 'track', trackType, children: [] }, this, Clip),
-    )
-    this.children.forEach((track) => this.nodes.set(track))
-
-    this.effects.value = getDefaultFilterDefinitions().map((def, i) => {
-      const { id = i.toString() } = def
-      const effect = new VideoEffectAsset({ ...def, id }, this.renderer)
-      this.nodes.set(effect)
-      return effect
+    this.children.forEach((collection) => {
+      while (collection.tail) collection.tail.dispose()
     })
 
     if (clearCache) return MediaAsset.clearCache().then(() => undefined)
+  }
+
+  on<T extends keyof VideoEditorEvents>(
+    type: T,
+    listener: (event: VideoEditorEvents[T]) => void,
+    options?: AddEventListenerOptions,
+  ): () => void {
+    this.#eventTarget.addEventListener(type, listener as any, options)
+    return () => this.#eventTarget.removeEventListener(type, listener as any, options)
+  }
+
+  /** @internal @hidden */
+  _emit(event: VideoEditorEvents[keyof VideoEditorEvents]): void {
+    this.#eventTarget.dispatchEvent(event)
   }
 }

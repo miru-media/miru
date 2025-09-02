@@ -32,3 +32,9 @@ export const MEDIA_SYNC_TOLERANCE_S = 0.3
 export const ASSET_URL_REFRESH_TIMEOUT_MS = 3000
 
 export const VIDEO_DECODER_HW_ACCEL_PREF = IS_FIREFOX ? 'prefer-software' : 'no-preference'
+
+export const DEFAULT_FRAMERATE = 24
+export const DEFAULT_RESOLUTION = { width: 1920, height: 1080 }
+export const ASSET_TYPE_PREFIX = 'asset:'
+
+export const ROOT_NDOE_ID = '__ROOT_NODE__'

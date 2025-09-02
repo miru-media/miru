@@ -95,7 +95,7 @@ export class AVEncoder {
       if (useAudioEncoderPolyfil) {
         const polyfill = await import('./polyfill.ts')
         await polyfill.init()
-        AudioEncoder = polyfill.AudioEncoder as typeof AudioEncoder
+        ;({ AudioEncoder } = polyfill)
         this.AudioData = polyfill.AudioData
       }
 
@@ -121,7 +121,7 @@ export class AVEncoder {
 
             const timestamp = chunk.timestamp - firstTimetsamp
             if (useAudioEncoderPolyfil) {
-              const data = (chunk as EncodedAudioChunkPolyfill)._libavGetData()
+              const data = (chunk as unknown as EncodedAudioChunkPolyfill)._libavGetData()
               this.muxer.addAudioChunkRaw(data, chunk.type, timestamp, chunk.duration!, meta)
             } else this.muxer.addAudioChunk(chunk, meta, timestamp)
             this.onOutput?.('audio', chunk.timestamp)

@@ -75,7 +75,7 @@ export class EncodedChunkExtractor extends TransformStream<
                 duration: durationUs,
                 codedWidth,
                 codedHeight,
-                data: frame,
+                data: frame.buffer as ArrayBuffer,
                 type: block.keyframe ? 'key' : 'delta',
                 timestamp: timestampUs,
                 mediaType: track.type,

@@ -17,45 +17,40 @@ npm install webgl-video-editor
 <button id="export" type="buton">Get trimmed video</button>
 
 <script>
-import 'webgl-video-editor'
+  import 'webgl-video-editor'
 
-const editor = document.getElementById('editor')
+  const editor = document.getElementById('editor')
 
-async function restoreFromLocalStorage() {
-  try {
-    const savedJson = localStorage.getItem(movieContentKey)
+  async function restoreFromLocalStorage() {
+    try {
+      const savedJson = localStorage.getItem(movieContentKey)
 
-    if (savedJson) {
-      const parsed = JSON.parse(savedJson)
-      return editor.replaceContent(parsed)
+      if (savedJson) {
+        const parsed = JSON.parse(savedJson)
+        return editor.replaceContent(parsed)
+      }
+    } catch (error) {
+      console.error(error)
     }
   }
-  catch (error) {
-    console.error(error)
-  }
-}
 
-restoreFromLocalStorage()
+  restoreFromLocalStorage()
 
-// save to localStorage when the content changes
-editor.addEventListener('change', function (event) {
-  localStorage.setItem(movieContentKey, JSON.stringify(event.detail))
-})
-<script>
+  // save to localStorage when the content changes
+  editor.addEventListener('change', function (event) {
+    localStorage.setItem(movieContentKey, JSON.stringify(event.detail))
+  })
+</script>
 ```
 
 Powered by:
 
 - [mp4Box.js](https://gpac.github.io/mp4box.js/)
-- [mp4-muxer](https://gpac.github.io/mp4box.js/)
+- [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) and [webm-muxer](https://github.com/Vanilagy/webm-muxer)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
 - [LibAVJS-WebCodecs-Polyfill](https://github.com/ennuicastr/libavjs-webcodecs-polyfill)
 
-## Roadmap
-
-- [ ] Bitrate/filesize controls
-- [ ] Webm support
-- [ ] Color profile settings
+Design adapted from [Vladimir Palyanov's work](https://www.figma.com/community/file/991274033166018675/occamus-video-editor)
 
 <!-- #endregion main -->
 

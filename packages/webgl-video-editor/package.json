@@ -19,6 +19,9 @@
     },
     "./locales/": {
       "import": "./src/locales/"
+    },
+    "./store/*": {
+      "import": "./src/store/*"
     }
   },
   "publishConfig": {
@@ -34,8 +37,11 @@
       "./vue": {
         "import": "./dist/vue.js"
       },
-      "./locales/": {
+      "./locales/*": {
         "import": "./dist/locales/"
+      },
+      "./store/*": {
+        "import": "./dist/store/*"
       }
     }
   },

@@ -3,9 +3,20 @@ import type { Renderer } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 
-import type { Clip, MediaAsset, Movie, Track, VideoEffectAsset } from '../src/nodes/index.ts'
+import type { ExportMovie } from '../src/export/export-movie.ts'
+import type {
+  BaseNode,
+  Clip,
+  Collection,
+  MediaAsset,
+  Movie,
+  Track,
+  VideoEffectAsset,
+} from '../src/nodes/index.ts'
+import type { VideoEditor as VideoEditor_ } from '../src/video-editor.ts'
 
-import type { Schema } from './core.ts'
+import type { ChildNodePosition, Schema } from './core.ts'
+import type { CollectionKind } from './schema'
 
 export interface CustomSourceNodeOptions {
   videoEffect?: Ref<VideoEffectAsset | undefined>
@@ -25,20 +36,18 @@ export type TrackMovie = Pick<
   'id' | 'nodes' | 'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
 >
 
-export interface ClipSnapshot {
+export interface SchemaTypes {
+  track: Schema.Track
   clip: Schema.Clip
-  id: string
-  trackId: string
-  index: number
+  'asset:media:av': Schema.MediaAsset
+  'asset:effect:video': Schema.VideoEffectAsset
 }
 
-export type HistoryOp =
-  // upsert
-  | { type: 'clip:update'; group?: string; from: undefined; to: ClipSnapshot }
-  // upate
-  | { type: 'clip:update'; group?: string; from: ClipSnapshot; to: ClipSnapshot }
-  // delete
-  | { type: 'clip:update'; group?: string; from: ClipSnapshot; to: undefined }
+export interface NodeSnapshot<T extends Schema.AnyNodeSchema = Schema.AnyNodeSchema> {
+  node: T
+  id: string
+  position?: ChildNodePosition
+}
 
 export interface MediaElementInfo {
   duration: number
@@ -47,13 +56,15 @@ export interface MediaElementInfo {
   height: number
 }
 
-export type AnyNode = Movie | Track<Clip> | Clip | MediaAsset | VideoEffectAsset
+export type AnyNode = Movie | Collection<CollectionKind> | Track | Clip | MediaAsset | VideoEffectAsset
 
 export interface NodeMap {
-  map: Map<string, AnyNode>
+  map: Map<string, AnyNode | BaseNode>
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get: <T extends AnyNode>(id: string) => T
-  set: (node: AnyNode) => void
+  set: (node: AnyNode | BaseNode) => void
+  has: (id: string) => boolean
+  delete: (id: string) => void
 }
 
 declare module './core' {
@@ -63,7 +74,13 @@ declare module './core' {
   }
 
   export interface VideoEditor {
-    /** @internal */
+    /** @internal @hidden */
+    _editor: VideoEditor_
+    /** @internal @hidden */
     _showStats?: boolean
   }
 }
+
+export type RootNode = Movie | ExportMovie
+
+export type NonReadonly<T> = { -readonly [P in keyof T]: T[P] }

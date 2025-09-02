@@ -186,8 +186,13 @@ export const formatDuration = (durationS: number, languages = navigator.language
   return `${minutes ? `${minutesFormat.format(minutes)} ` : ''}${secondsFormat.format(seconds)}`
 }
 
-export const getMediaElementInfo = async (source: Blob | string) => {
+export const getMediaElementInfo = async (
+  source: Blob | string,
+  options?: { signal?: AbortSignal | null },
+) => {
   const { promise, close } = loadAsyncImageSource(source, undefined, true)
+
+  options?.signal?.addEventListener('abort', close)
 
   const media = await promise
   const { duration } = media
@@ -212,11 +217,14 @@ export const getMediaElementInfo = async (source: Blob | string) => {
   }
 }
 
-export const getContainerMetadata = async (source: Blob | string | ReadableStream<Uint8Array>) => {
+export const getContainerMetadata = async (
+  source: Blob | string | ReadableStream<Uint8Array>,
+  options?: RequestInit,
+) => {
   const demuxer = new Demuxer()
 
   try {
-    return await demuxer.init(source)
+    return await demuxer.init(source, options)
   } finally {
     demuxer.stop()
   }

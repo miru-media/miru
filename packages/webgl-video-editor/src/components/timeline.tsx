@@ -7,7 +7,7 @@ import { splitTime } from 'shared/video/utils'
 
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
 import type { Clip as ClipType, Track } from '../nodes/index.ts'
-import type { VideoEditor } from '../video-eidtor.ts'
+import type { VideoEditor } from '../video-editor.ts'
 
 import { Clip } from './clip.jsx'
 import { Ruler } from './ruler.jsx'
@@ -80,13 +80,17 @@ export const Timeline = ({
     editor.seekTo(editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
   }
 
-  const totalClips = computed(() => movie.children.reduce((acc, track) => acc + track._count, 0))
+  const totalClips = computed(() => movie.timeline.children.reduce((acc, track) => acc + track.count, 0))
 
-  const onInputClipFile = async (event: InputEvent, track: Track<ClipType>) => {
+  const onInputClipFile = async (event: InputEvent, track: Track | undefined) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     try {
+      if (!track) {
+        track = movie.createNode({ id: editor.generateId(), trackType: 'video', type: 'track' })
+        track.position({ parentId: movie.timeline.id, index: movie.count })
+      }
       await editor.addClip(track, file)
     } catch {
       // eslint-disable-next-line no-alert -- TODO
@@ -119,52 +123,59 @@ export const Timeline = ({
 
         <div class="track-list">
           {() =>
-            movie.children.map(
-              (track, trackIndex) =>
-                (trackIndex === 0 || !movie.isEmpty) && (
-                  <div
-                    class="track"
-                    style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
-                  >
-                    {track.children.map((clip) => (
-                      <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
-                    ))}
-                    <label class="track-button" hidden={totalClips.value === 0 && trackIndex !== 0}>
-                      {() =>
-                        track._count ? (
-                          <>
-                            <IconTablerPlus />
-                            <span class="sr-only">
-                              {track.trackType === 'audio' ? t('add_audio') : t('add_clip')}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <IconTablerVideo />
-                            <span class="text-body">
-                              {() =>
-                                track.trackType === 'audio' ? t('click_add_audio') : t('click_add_clip')
-                              }
-                            </span>
-                          </>
-                        )
-                      }
-                      <input
-                        type="file"
-                        hidden
-                        accept={ACCEPT_VIDEO_FILE_TYPES}
-                        onInput={(event: InputEvent) => onInputClipFile(event, track)}
-                      />
-                    </label>
-                  </div>
-                ),
-            )
-          }
-          {() =>
-            movie.isEmpty && (
-              <div class="track">
-                <slot name="empty">{toValue(children?.empty)}</slot>
-              </div>
+            movie.isEmpty ? (
+              <>
+                <div class="track">
+                  <label class="track-button">
+                    <input
+                      type="file"
+                      hidden
+                      accept={ACCEPT_VIDEO_FILE_TYPES}
+                      onInput={(event: InputEvent) => onInputClipFile(event, movie.timeline.head)}
+                    />
+                    <span class="text-body">{t('click_add_clip')}</span>
+                  </label>
+                </div>
+                <div class="track">
+                  <slot name="empty">{toValue(children?.empty)}</slot>
+                </div>
+              </>
+            ) : (
+              movie.timeline.children.map((track, trackIndex) => (
+                <div
+                  class="track"
+                  style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
+                >
+                  {(track.children as ClipType[]).map((clip) => (
+                    <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
+                  ))}
+                  <label class="track-button" hidden={totalClips.value === 0 && trackIndex !== 0}>
+                    {() =>
+                      track.count ? (
+                        <>
+                          <IconTablerPlus />
+                          <span class="sr-only">
+                            {track.trackType === 'audio' ? t('add_audio') : t('add_clip')}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <IconTablerVideo />
+                          <span class="text-body">
+                            {() => (track.trackType === 'audio' ? t('click_add_audio') : t('click_add_clip'))}
+                          </span>
+                        </>
+                      )
+                    }
+                    <input
+                      type="file"
+                      hidden
+                      accept={ACCEPT_VIDEO_FILE_TYPES}
+                      onInput={(event: InputEvent) => onInputClipFile(event, track)}
+                    />
+                  </label>
+                </div>
+              ))
             )
           }
         </div>

@@ -1,0 +1,26 @@
+{
+  "name": "app-video-editor",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+    "@vueuse/core": "catalog:",
+    "shared": "workspace:^",
+    "uid": "catalog:",
+    "vue": "catalog:",
+    "vue-i18n-lite": "catalog:",
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^",
+    "webgl-video-editor": "workspace:^"
+  }
+}

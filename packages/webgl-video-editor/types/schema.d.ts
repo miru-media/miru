@@ -1,10 +1,5 @@
 import type { EffectDefinition } from 'webgl-effects'
 
-interface Size {
-  width: number
-  height: number
-}
-
 interface Base {
   id: string
   type: string
@@ -13,14 +8,25 @@ interface Base {
 
 export interface Movie extends Base {
   type: 'movie'
-  resolution: Size
+  resolution: {
+    width: number
+    height: number
+  }
   frameRate: number
-  assets: Asset[]
-  children: Track[]
 }
 
-export interface AvMediaAsset extends Base {
-  type: 'av_media_asset'
+export type CollectionKind = 'asset-library' | 'timeline'
+
+export interface Collection<T extends CollectionKind = CollectionKind> extends Base {
+  type: 'collection'
+  kind: T
+}
+
+export interface AssetBase<T extends string> extends Base {
+  type: `asset:${T}`
+}
+
+export interface AvMediaAsset extends AssetBase<'media:av'> {
   mimeType: string
   url?: string
   duration: number
@@ -33,8 +39,7 @@ export interface AvMediaAsset extends Base {
   }
 }
 
-export interface VideoEffectAsset extends Base, Omit<EffectDefinition, 'id' | 'name'> {
-  type: 'video_effect_asset'
+export interface VideoEffectAsset extends AssetBase<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {
   name: string
 }
 
@@ -43,7 +48,6 @@ export type Asset = AvMediaAsset | VideoEffectAsset
 export interface Track extends Base {
   type: 'track'
   trackType: 'audio' | 'video'
-  children: Clip[]
 }
 
 export interface Clip extends Base {
@@ -54,3 +58,28 @@ export interface Clip extends Base {
   filter?: { assetId: string; intensity: number }
   transition?: { type: string }
 }
+
+export interface SerializedTrack extends Track {
+  children: Clip[]
+}
+
+export interface SerializedCollection<T extends CollectionKind = CollectionKind> extends Collection<T> {
+  children: (T extends 'asset-library'
+    ? AvMediaAsset | VideoEffectAsset
+    : T extends 'timeline'
+      ? SerializedTrack
+      : unknown)[]
+}
+
+export interface SerializedMovie extends Movie {
+  children: (SerializedCollection<'asset-library'> | SerializedCollection<'timeline'>)[]
+}
+
+export type AnyNodeSchema = Movie | Collection | Track | Clip | AvMediaAsset | VideoEffectAsset
+export type AnyNodeSerializedSchema =
+  | SerializedMovie
+  | SerializedCollection
+  | SerializedTrack
+  | Clip
+  | AvMediaAsset
+  | VideoEffectAsset

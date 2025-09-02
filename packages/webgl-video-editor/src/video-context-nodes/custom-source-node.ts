@@ -3,7 +3,6 @@ import { mat4 } from 'gl-matrix'
 import VideoContext, { type RenderGraph } from 'videocontext'
 import { FRAMEBUFFER_TEX_OPTIONS, type Renderer } from 'webgl-effects'
 
-import type { Effect } from 'reactive-effects/effect'
 import type { AdjustmentsState, Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent'
 import { fit, setObjectSize } from 'shared/utils'
@@ -12,7 +11,7 @@ import { clamp } from 'shared/utils/math'
 import type { ClipTime } from '../../types/core.ts'
 import type { CustomSourceNodeOptions } from '../../types/internal.ts'
 import { SourceNodeState, VIDEO_PRESEEK_TIME_S } from '../constants.ts'
-import type { Schema } from '../nodes/index.ts'
+import type { Schema, VideoEffectAsset } from '../nodes/index.ts'
 
 const rangeContainsTime = (range: { start: number; end: number }, time: number) =>
   range.start <= time && time < range.end
@@ -27,7 +26,7 @@ export abstract class CustomSourceNode extends VideoContext.NODES.GraphNode {
   framebufferSize: Size = { width: 1, height: 1 }
   source: Schema.AvMediaAsset
 
-  videoEffect?: Ref<Effect | undefined>
+  videoEffect?: Ref<VideoEffectAsset | undefined>
   videoEffectIntensity?: Ref<number>
   adjustments: AdjustmentsState = { brightness: 0, contrast: 0, saturation: 0 }
 

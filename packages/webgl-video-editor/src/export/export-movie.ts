@@ -5,7 +5,7 @@ import type { Renderer } from 'webgl-effects'
 import { setObjectSize } from 'shared/utils'
 
 import type { NodeMap } from '../../types/internal.ts'
-import type { Movie } from '../nodes/index.ts'
+import { Collection, type Movie, type Schema } from '../nodes/index.ts'
 import { ParentNode } from '../nodes/parent-node.ts'
 import { Track } from '../nodes/track.ts'
 
@@ -16,23 +16,23 @@ export type TrackMovie = Pick<
   'id' | 'nodes' | 'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
 >
 
-export class ExportMovie extends ParentNode {
+export class ExportMovie extends ParentNode<Schema.Movie, Collection<'timeline'>> {
   type = 'movie' as const
-  children: Track<ExtractorClip>[]
-  declare parent: undefined
+  declare parent: never
   declare root: this
+  timeline: Collection<'timeline'>
   nodes: NodeMap
   videoContext: VideoContext
   renderer: Renderer
   resolution: { width: number; height: number }
-  frameRate: Ref<number>
+  frameRate: number
   isPaused: Ref<boolean>
   isStalled: Ref<boolean>
   duration: number
   gl: WebGL2RenderingContext
 
   constructor(movie: Movie) {
-    super(movie.id, undefined)
+    super(movie.id)
     this.root = this
 
     const { gl } = movie
@@ -52,12 +52,29 @@ export class ExportMovie extends ParentNode {
     this.isPaused = ref(false)
     this.isStalled = ref(false)
 
-    this.children = movie.children.map((track_) => new Track(track_.toObject(), this, ExtractorClip))
+    this.timeline = new Collection(movie.timeline.toObject(), this)
+    this.pushChild(this.timeline)
+
+    movie.timeline.children.forEach((track_) => {
+      const track = new Track(track_.toObject(), this)
+      this.timeline.pushChild(track)
+      track_.children.forEach((clip_) => {
+        const clip = new ExtractorClip(clip_.toObject(), track)
+        track.pushChild(clip)
+      })
+    })
 
     this.onDispose(() => {
       this.children.forEach((track) => track.dispose())
       this.videoContext.reset()
       this.videoContext.destination.destroy()
     })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/class-methods-use-this -- stub
+  _emit(): void {}
+
+  toObject(): Schema.Movie {
+    return this.root.toObject()
   }
 }

@@ -1,21 +1,42 @@
-diff --git a/dist/libavjs-webcodecs-polyfill.mjs b/dist/libavjs-webcodecs-polyfill.mjs
-index d1c8beb8dec1165f780314ba91384cccd69d96cf..c18aec68d2e6f3f1a2bd1a88d158db1bc0f83fa3 100644
---- a/dist/libavjs-webcodecs-polyfill.mjs
-+++ b/dist/libavjs-webcodecs-polyfill.mjs
-@@ -1767,8 +1767,15 @@ let AudioEncoder$1 = class AudioEncoder extends DequeueEventTarget {
-             // 2. timestamp
-             let timestamp = libav.i64tof64(packet.pts, packet.ptshi);
-             timestamp = Math.floor(timestamp / sampleRate * 1000000);
-+
-+            let duration
-+            if (packet.duration !== undefined && packet.durationhi !== undefined) {
-+                duration = libav.i64tof64(packet.duration, packet.durationhi);
-+                duration = Math.floor(duration / sampleRate * 1000000);
-+            }
-+
-             const chunk = new EncodedAudioChunk$1({
--                type, timestamp,
-+                type, timestamp, duration,
-                 data: packet.data
-             });
-             if (this._outputMetadataFilled)
+diff --git a/src/audio-data.ts b/src/audio-data.ts
+deleted file mode 100644
+index ac1d2abe1205a470be2c5c048c080c7a06369387..0000000000000000000000000000000000000000
+diff --git a/src/audio-decoder.ts b/src/audio-decoder.ts
+deleted file mode 100644
+index 50acaf7c6dde0273f252ecb5b4b64c055312de37..0000000000000000000000000000000000000000
+diff --git a/src/audio-encoder.ts b/src/audio-encoder.ts
+deleted file mode 100644
+index 00dc3d241a33970174009b65813de393e4d8aebc..0000000000000000000000000000000000000000
+diff --git a/src/avloader.ts b/src/avloader.ts
+deleted file mode 100644
+index fde45499a3cedb35dbf4fd3b8465b0afc3423fe5..0000000000000000000000000000000000000000
+diff --git a/src/config.ts b/src/config.ts
+deleted file mode 100644
+index 118e556ce4b5d16b1bc006f13947ecd441bdea2a..0000000000000000000000000000000000000000
+diff --git a/src/encoded-audio-chunk.ts b/src/encoded-audio-chunk.ts
+deleted file mode 100644
+index a91e31bfb411554925570b5a81812a88923f8488..0000000000000000000000000000000000000000
+diff --git a/src/encoded-video-chunk.ts b/src/encoded-video-chunk.ts
+deleted file mode 100644
+index a35e53c19f3b82edebd3ffaf59b6d14fc7b8969f..0000000000000000000000000000000000000000
+diff --git a/src/event-target.ts b/src/event-target.ts
+deleted file mode 100644
+index d9bb2020d7be56294ae41693232b1a922b7f3355..0000000000000000000000000000000000000000
+diff --git a/src/main.ts b/src/main.ts
+deleted file mode 100644
+index d77eb900007fa350c2e4cd53d25e070f38503917..0000000000000000000000000000000000000000
+diff --git a/src/misc.ts b/src/misc.ts
+deleted file mode 100644
+index fce1a6acdb3c5c5c6416911710b0ffbcd2e3a659..0000000000000000000000000000000000000000
+diff --git a/src/rendering.ts b/src/rendering.ts
+deleted file mode 100644
+index 865cd333a02de1adf74456fc9561be4f34479d0c..0000000000000000000000000000000000000000
+diff --git a/src/video-decoder.ts b/src/video-decoder.ts
+deleted file mode 100644
+index 40d1d48c4fa68962fd316cb22a8c2195be362208..0000000000000000000000000000000000000000
+diff --git a/src/video-encoder.ts b/src/video-encoder.ts
+deleted file mode 100644
+index 03de03190d8090899ee2ccf36480585e1a1ecb6c..0000000000000000000000000000000000000000
+diff --git a/src/video-frame.ts b/src/video-frame.ts
+deleted file mode 100644
+index f973fb8a5f90e3a6f6670e89b4768698bdc59c15..0000000000000000000000000000000000000000

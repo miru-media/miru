@@ -12,6 +12,7 @@
   "export": "Export",
   "clip": "Clip",
   "transition": "Transition",
+  "create_project": "Create a new project",
   "add_clip": "Add a clip",
   "audio": "Audio",
   "add_audio": "Add audio",

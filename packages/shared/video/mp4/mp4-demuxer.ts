@@ -284,7 +284,7 @@ export class MP4Demuxer {
     this.#file.stop()
     this.#samplesStream?.cancel().catch(() => undefined)
     this.#abort.abort('stopped')
-    this.#file.onError = this.#file.onReady = this.#file.onSamples = null
+    this.#file.onError = this.#file.onReady = this.#file.onSamples = undefined
   }
 }
 
@@ -349,7 +349,7 @@ const sampleToEncodedChunk = (state: TrackState, sample: MP4Box.Sample) => {
   }
 
   const chunk: EncodedMediaChunk = {
-    data: data!,
+    data: data!.buffer,
     type: isSync ? ('key' as const) : ('delta' as const),
     timestamp: timeS * 1e6,
     duration: (duration * 1e6) / timescale,

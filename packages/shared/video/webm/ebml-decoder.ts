@@ -15,7 +15,7 @@ const fixTagName = (data: EbmlChunk[1]) => {
   data.name = TAG_RENAMES[data.name] ?? data.name
 }
 
-export class EbmlDecoder extends TransformStream<ArrayBufferLike, EbmlChunk> {
+export class EbmlDecoder extends TransformStream<Uint8Array, EbmlChunk> {
   constructor() {
     const decoder = new ebml.Decoder()
     super({

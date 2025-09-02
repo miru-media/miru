@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import { type Size } from 'shared/types'
 import { useEventListener } from 'shared/utils'
 
-import { type VideoEditor } from 'webgl-video-editor'
+import type { VideoEditor } from 'webgl-video-editor'
 
 const { editor } = defineProps<{ editor: VideoEditor }>()
 

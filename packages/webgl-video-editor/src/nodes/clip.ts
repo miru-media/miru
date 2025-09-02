@@ -4,33 +4,37 @@ import VideoContext, { type TransitionNode } from 'videocontext'
 import { createHiddenMediaElement } from 'shared/utils'
 import { useMediaError } from 'shared/video/utils'
 
-import type { ClipSnapshot, CustomSourceNodeOptions } from '../../types/internal.ts'
+import type { CustomSourceNodeOptions, RootNode } from '../../types/internal.ts'
+import { TRANSITION_DURATION_S } from '../constants.ts'
+import { NodeCreateEvent } from '../events.ts'
 import { AudioElementNode, VideoElementNode } from '../video-context-nodes/index.ts'
 
 import type { MediaAsset, VideoEffectAsset } from './assets.ts'
 import { BaseClip } from './base-clip.ts'
 import type { Schema } from './index.ts'
-import type { Track } from './track.ts'
 
 type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export class Clip extends BaseClip {
-  declare parent: Track<Clip>
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   readonly #source = ref<MediaAsset>(undefined as never)
+  declare source: Schema.Clip['source']
   error: Ref<MediaError | undefined>
   node = ref<VideoElementNode | AudioElementNode>(undefined as never)
   readonly #transitionNode = ref<TransitionNode<{ mix: number }>>()
 
-  readonly #filter: Ref<VideoEffectAsset | undefined>
-  readonly #filterIntensity: Ref<number>
+  readonly #filter = ref<VideoEffectAsset>()
+  readonly #filterIntensity = ref(1)
 
-  get start() {
+  get start(): number {
     return this.sourceStart
   }
 
-  get source() {
+  get sourceAsset(): MediaAsset {
     return this.#source.value
+  }
+  set sourceAsset(asset: MediaAsset) {
+    this.#setMedia(asset)
   }
 
   get outTransitionNode() {
@@ -40,36 +44,45 @@ export class Clip extends BaseClip {
     return this.prev && this.prev.#transitionNode.value
   }
 
-  get isReady() {
+  get isReady(): boolean {
     return this.node.value._isReady()
   }
 
-  get everHadEnoughData() {
+  get everHadEnoughData(): boolean {
     return this.node.value.mediaState.wasEverPlayable.value
   }
 
-  get filter() {
-    const { value } = this.#filter
-    return value && { id: value.id, name: value.name, intensity: this.#filterIntensity.value }
-  }
+  declare filter: Schema.Clip['filter']
 
-  constructor(init: Schema.Clip, track: Track<Clip>) {
-    super(init, track)
+  constructor(init: Schema.Clip, root: RootNode) {
+    super(init, root)
 
-    this.#filter = ref(init.filter ? this.root.nodes.get<VideoEffectAsset>(init.filter.assetId) : undefined)
-    this.#filterIntensity = ref(init.filter?.intensity ?? 1)
+    this._defineReactive('source', init.source, {
+      onChange: (value) => (this.sourceAsset = this.root.nodes.get(value.assetId)),
+      equal: (a, b) => a.assetId === b.assetId,
+    })
+    this._defineReactive('filter', init.filter, {
+      onChange: (value) => {
+        this.#filter.value = value && this.root.nodes.get<VideoEffectAsset>(value.assetId)
+        this.#filterIntensity.value = value?.intensity ?? 1
+      },
+      equal: (a, b) => (!a && !b) || (!!a && !!b && a.assetId === b.assetId && a.intensity === b.intensity),
+    })
+
     this.transition = init.transition
 
     this.error = useMediaError(this.media)
-
-    this.setMedia(this.root.nodes.get(init.source.assetId))
+    this.sourceAsset = this.root.nodes.get(init.source.assetId)
 
     this.scope.run(() => {
       // keep media URL updated
-      watch([() => this.source.objectUrl], ([url]) => {
+      watch([() => this.sourceAsset.objectUrl], ([url]) => {
         const media = this.media.value
         if (media.src && media.src !== url) media.src = url
       })
+
+      // make sure media type matches parent track type
+      watch([() => this.parent], () => this.#setMedia(this.sourceAsset))
 
       watch(
         [
@@ -77,12 +90,12 @@ export class Clip extends BaseClip {
           // Workaround to recreate processing nodes when the movie resolution changes
           // beacause VideoContext assumes the canvas size is constant
           // TODO
-          () => track.parent.resolution,
+          () => this.root.resolution,
         ],
         ([type], _prev, onCleanup) => {
           if (!type || !(type in VideoContext.DEFINITIONS)) return (this.#transitionNode.value = undefined)
 
-          const transitionNode = (this.#transitionNode.value = this.parent._context.transition<{
+          const transitionNode = (this.#transitionNode.value = this.root.videoContext.transition<{
             mix: number
           }>(VideoContext.DEFINITIONS[type as TransitionType]))
 
@@ -97,14 +110,17 @@ export class Clip extends BaseClip {
         if (!transitionNode || !transition) return
 
         transitionNode.clearTransitions()
-        transitionNode.transitionAt(time.end - transition.duration, time.end, 0, 1, 'mix')
+        transitionNode.transitionAt(time.end - TRANSITION_DURATION_S, time.end, 0, 1, 'mix')
       })
     })
 
     this.onDispose(this.#unloadCurrentMedia.bind(this))
+    root._emit(new NodeCreateEvent(this.id))
   }
 
   connect() {
+    const { parent } = this
+
     const node = this.node.value
     const outTransition = this.#transitionNode.value
     const inTransition = this.prev && this.prev.#transitionNode.value
@@ -112,14 +128,14 @@ export class Clip extends BaseClip {
     if (outTransition) {
       outTransition.inputs[0]?.disconnect()
       ;(inTransition ?? node).connect(outTransition, 0)
-      outTransition.connect(this.parent._node.value)
+      if (parent) outTransition.connect(parent._node.value)
     }
     if (inTransition) {
       inTransition.inputs[1]?.disconnect()
       node.connect(inTransition, 1)
     }
 
-    if (!outTransition && !inTransition) node.connect(this.parent._node.value)
+    if (!outTransition && !inTransition && parent) node.connect(parent._node.value)
   }
 
   disconnect() {
@@ -133,19 +149,27 @@ export class Clip extends BaseClip {
     }
   }
 
-  setMedia(asset: MediaAsset) {
-    if (typeof this.source !== 'undefined' && this.source.id === asset.id) return
+  #setMedia(asset: MediaAsset) {
+    const { parent, root: movie } = this
+    const mediaType = parent?.trackType ?? 'video'
+
+    if (
+      typeof this.sourceAsset !== 'undefined' &&
+      this.sourceAsset.id === asset.id &&
+      this.media.value.nodeName === mediaType
+    )
+      return
 
     this.#unloadCurrentMedia()
 
     this.#source.value = asset
-    this.media.value = createHiddenMediaElement(this.parent.trackType, asset.objectUrl)
 
-    const { parent: movie } = this.parent
+    this.media.value = createHiddenMediaElement(mediaType, asset.objectUrl)
+
     const customNodeOptions: CustomSourceNodeOptions = {
       videoEffect: this.#filter,
       videoEffectIntensity: this.#filterIntensity,
-      source: this.source,
+      source: this.sourceAsset,
       renderer: movie.renderer,
       movieIsPaused: movie.isPaused,
       movieIsStalled: movie.isStalled,
@@ -156,7 +180,7 @@ export class Clip extends BaseClip {
     }
 
     this.node.value = movie.videoContext.customSourceNode<VideoElementNode | AudioElementNode>(
-      this.parent.trackType === 'video' ? VideoElementNode : AudioElementNode,
+      mediaType === 'video' ? VideoElementNode : AudioElementNode,
       this.media.value,
       customNodeOptions,
     )
@@ -172,42 +196,6 @@ export class Clip extends BaseClip {
   }
 
   _ensureDurationIsPlayable() {
-    const mediaDuration = this.media.value.duration
-    if (!mediaDuration) return
-
-    super._ensureDurationIsPlayable(mediaDuration)
-  }
-
-  _setFiler(filter: VideoEffectAsset | undefined, intensity: number) {
-    this.#filter.value = filter
-    this.#filterIntensity.value = intensity
-  }
-
-  toObject(): Schema.Clip {
-    const { filter } = this
-
-    return {
-      ...super.toObject(),
-      filter: filter && { assetId: filter.id, intensity: filter.intensity },
-    }
-  }
-
-  restoreFromSnapshot({ clip: init, index }: ClipSnapshot) {
-    const { nodes } = this.root
-    this.setMedia(this.root.nodes.get(init.source.assetId))
-    this.sourceStart = init.sourceStart
-    this.duration = init.duration
-    this.#filter.value = nodes.get<VideoEffectAsset>(init.filter?.assetId ?? '')
-    this.#filterIntensity.value = init.filter?.intensity ?? 1
-    this.parent.positionClipAt(this, index)
-  }
-
-  getSnapshot(): ClipSnapshot {
-    return {
-      clip: this.toObject(),
-      id: this.id,
-      trackId: this.parent.id,
-      index: this.index,
-    }
+    super._ensureDurationIsPlayable(this.sourceAsset.duration)
   }
 }

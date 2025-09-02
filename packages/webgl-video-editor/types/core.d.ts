@@ -1,8 +1,13 @@
-import type { Renderer } from 'webgl-effects'
+import type { Effect, Renderer } from 'webgl-effects'
 
-import type { Effect } from 'reactive-effects/effect'
+import type * as Schema from './schema.ts'
 
-export type * as Schema from './schema.ts'
+export { Schema }
+
+export interface ChildNodePosition {
+  parentId: string
+  index: number
+}
 
 type TrackType = 'video' | 'audio'
 
@@ -18,16 +23,18 @@ export interface Clip {
   readonly start: number
   duration: number
   sourceStart: number
-  filter?: { id: string; name: string; intensity: number }
-  parent: Track
-  prev: Clip | undefined
-  next: Clip | undefined
+  filter?: { assetId: string; intensity: number }
+  parent?: Track
+  prev?: Clip | undefined
+  next?: Clip | undefined
+  dispose: () => void
 }
 
 export interface Track {
   id: string
   trackType: TrackType
   children: Clip[]
+  dispose: () => void
 }
 
 export interface MediaAsset {
@@ -38,7 +45,15 @@ export interface MediaAsset {
   dispose: () => void
 }
 
+export interface VideoEffectAsset {
+  id: string
+  name: string
+  dispose: () => void
+}
+
 export interface VideoEditor {
+  store?: VideoEditorStore
+
   /** The canvas that the video is rendered to */
   canvas: HTMLCanvasElement
 
@@ -91,13 +106,14 @@ export interface VideoEditor {
    * @param track The track the clip will be added to.
    * @param source A Blog or url string of the clip media.
    */
-  addClip: (track: Track, source: string | Blob) => Promise<Clip | undefined>
+  addClip: (
+    track: Track,
+    source: string | Blob | Schema.Clip,
+    options?: AddNodeOptions,
+  ) => Promise<Clip> | Clip
 
   /** Change the media of the selected clip */
   replaceClipSource: (source: string | Blob) => Promise<void>
-
-  /** Set or remove the filter effect of a clip */
-  setClipFilter: (clip: Clip, filterId: string | undefined, intensity: number) => void
 
   /**
    * Add a new clip at the end of the specified track.
@@ -124,21 +140,11 @@ export interface VideoEditor {
   isLoading: boolean
   /** Playback is paused */
   isPaused: boolean
-  /** The editor has a change that can be undone */
-  canUndo: boolean
-  /** A change was undone and can be reapplied */
-  canRedo: boolean
-
-  /** Undo the last editor action. */
-  undo: () => void
-  /** Redo the last editor action. */
-  redo: () => void
-
   /** Remove all clips, tracks, effects and media assets and clear the undo history */
   clearAllContentAndHistory: () => Promise<void>
 
   /** Clear all content and set new content */
-  replaceContent: (newContent: Schema.Movie) => Promise<void>
+  replaceContent: (newContent: Schema.SerializedMovie) => void
 
   /**
    * Render and encode the video composition.
@@ -156,3 +162,30 @@ export interface VideoEditor {
 
 export type VideoEditorChangeEvent = CustomEvent<Schema.Movie>
 export type VideoEditorChangeLoadingEvent = CustomEvent<boolean>
+
+export interface VideoEditorStore {
+  init: (editor: pub.VideoEditor) => void
+
+  /** The editor has a change that can be undone */
+  canUndo: boolean
+  /** A change was undone and can be reapplied */
+  canRedo: boolean
+
+  /** Generate A unique ID */
+  generateId: () => string
+
+  /** Undo the last editor action. */
+  undo: () => void
+  /** Redo the last editor action. */
+  redo: () => void
+
+  transact: <T>(fn: () => T) => T
+  /** @internal @hidden */
+  untracked: <T>(fn: () => T) => T
+
+  /** Clear undo hsitory */
+  reset: () => void
+
+  /** Dispose this history object */
+  dispose: () => void
+}

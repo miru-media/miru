@@ -3,7 +3,7 @@ import { computed, watch } from 'fine-jsx'
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
 
-import type { VideoEditor } from '../video-eidtor.ts'
+import type { VideoEditor } from '../video-editor.ts'
 
 const RULER_INTERVAL_MULTIPLIER = 32
 

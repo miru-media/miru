@@ -44,7 +44,7 @@ const requestPersistence = async () => {
 
 interface StorageFileWriteOptions extends StorageWorkerFileInfo {
   onProgress?: (progress: number) => void
-  signal?: AbortSignal
+  signal?: AbortSignal | null
 }
 
 const setProgressInterval = (key: string, options: StorageFileWriteOptions): (() => void) | undefined => {
@@ -109,7 +109,7 @@ export const storage = {
         signal?.removeEventListener('abort', abort)
       } else {
         const writable = new WritableStream(await getSink(key, options), WRITE_QUEUING_STRATEGY)
-        await stream.pipeTo(writable, { signal })
+        await stream.pipeTo(writable, signal ? { signal } : undefined)
       }
 
       if (!signal?.aborted) options.onProgress?.(1)

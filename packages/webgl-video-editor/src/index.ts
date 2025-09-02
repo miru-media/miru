@@ -1,6 +1,7 @@
 import { VideoEditorElement } from './elements/video-editor-element.ts'
 
 export type * from '../types/core.ts'
+export type * from './events.ts'
 
 export * from './elements/index.ts'
 

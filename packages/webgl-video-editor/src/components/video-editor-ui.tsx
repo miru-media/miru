@@ -7,7 +7,8 @@ import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
 import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants.ts'
-import type { VideoEditor as VideoEditor_ } from '../video-eidtor.ts'
+import type { Clip } from '../nodes/clip.ts'
+import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
 
 import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
@@ -54,57 +55,62 @@ export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions 
         value={() => editor.exportProgress}
       ></progress>
 
-      <div
-        class="text-body-small"
-        style={() =>
-          `width:100%;
+      {() =>
+        editor._showStats.value && (
+          <div
+            class="text-body-small"
+            style={() =>
+              `width:100%;
           padding:0.25rem;
-          overflow:auto;
-          display:${editor._showStats.value ? 'block' : 'none'}`
-        }
-      >
-        <p style="display:flex;gap:0.25rem">
-          {() =>
-            movie.children.map((track) =>
-              track._mapClips((clip) => {
-                const node = clip.node.value
-                const { mediaState } = node
+          overflow:auto;`
+            }
+          >
+            <p style="display:flex;gap:0.25rem">
+              {() =>
+                movie.timeline.children.map((track) =>
+                  (track.children as Clip[]).map((clip) => {
+                    const node = clip.node.value
+                    const { mediaState } = node
 
-                return (
-                  <div style="font-family:monospace">
-                    <div>
-                      {() => [mediaState.time.value.toFixed(2), mediaState.latestEvent.value?.type].join(' ')}
-                    </div>
-                    <div>
-                      {() => (
-                        <>
-                          {ReadyState[mediaState.readyState.value]} | {SourceNodeState[node.state]} |{' '}
-                          {clip.error.value?.code}
-                        </>
-                      )}
-                    </div>
+                    return (
+                      <div style="font-family:monospace">
+                        <div>
+                          {() =>
+                            [mediaState.time.value.toFixed(2), mediaState.latestEvent.value?.type].join(' ')
+                          }
+                        </div>
+                        <div>
+                          {() => (
+                            <>
+                              {ReadyState[mediaState.readyState.value]} | {SourceNodeState[node.state]} |{' '}
+                              {clip.error.value?.code}
+                            </>
+                          )}
+                        </div>
 
-                    <div>
-                      <label>
-                        source time
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          step="0.25"
-                          value={clip.sourceStart}
-                          onInput={(event: InputEvent) => (clip.sourceStart = event.target.valueAsNumber)}
-                        />
-                      </label>
-                      [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
-                    </div>
-                  </div>
+                        <div>
+                          <label>
+                            source time
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              step="0.25"
+                              value={clip.sourceStart}
+                              onInput={(event: InputEvent) => (clip.sourceStart = event.target.valueAsNumber)}
+                            />
+                          </label>
+                          [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
+                        </div>
+                      </div>
+                    )
+                  }),
                 )
-              }),
-            )
-          }
-        </p>
-      </div>
+              }
+            </p>
+          </div>
+        )
+      }
     </div>
   )
 }

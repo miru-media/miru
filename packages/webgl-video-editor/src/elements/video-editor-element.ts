@@ -1,4 +1,5 @@
 import { createEffectScope, effect, ref } from 'fine-jsx'
+import type { Effect } from 'webgl-effects'
 
 import { HTMLElementOrStub } from 'shared/utils/window'
 import { renderComponentTo } from 'shared/video/render-to'
@@ -7,14 +8,17 @@ import type * as schema from '../../types/schema.ts'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import type * as nodes from '../nodes/index.ts'
-import { VideoEditor } from '../video-eidtor.ts'
+import { VideoEditorLocalStore } from '../store/local.ts'
+import { VideoEditor } from '../video-editor.ts'
 
 const UNMOUNT_TIMEOUT_MS = 500
 
 export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEditor {
   static observedAttributes = ['messages', 'languages']
 
-  editor!: VideoEditor
+  /** @internal @hidden */
+  _editor!: VideoEditor
+
   readonly #scope = createEffectScope()
   #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
@@ -35,53 +39,47 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   }
 
   get renderer() {
-    return this.editor.renderer
+    return this._editor.renderer
   }
   get canvas() {
-    return this.editor.canvas
+    return this._editor.canvas
   }
   get resolution() {
-    return this.editor._movie.resolution
+    return this._editor._movie.resolution
   }
   set resolution(value) {
-    this.editor._movie.resolution = value
+    this._editor._movie.resolution = value
   }
   get frameRate() {
-    return this.editor._movie.frameRate.value
+    return this._editor._movie.frameRate
   }
   set frameRate(value) {
-    this.editor._movie.frameRate.value = value
+    this._editor._movie.frameRate = value
   }
   get isEmpty() {
-    return this.editor._movie.isEmpty
+    return this._editor._movie.isEmpty
   }
   get isPaused() {
-    return this.editor._movie.isEmpty
+    return this._editor._movie.isEmpty
   }
   get currentTime() {
-    return this.editor.currentTime
+    return this._editor.currentTime
   }
-  get effects() {
-    return this.editor.effects
+  get effects(): Map<string, Effect> {
+    return this._editor.effects as any
   }
 
   get tracks(): pub.Track[] {
-    return this.editor.tracks
+    return this._editor.tracks
   }
   get selection(): pub.Clip | undefined {
-    return this.editor.selection
+    return this._editor.selection
   }
   get isLoading() {
-    return this.editor.isLoading
-  }
-  get canUndo() {
-    return this.editor.canUndo
-  }
-  get canRedo() {
-    return this.editor.canRedo
+    return this._editor.isLoading
   }
   get exportResult() {
-    return this.editor.exportResult
+    return this._editor.exportResult
   }
 
   get state() {
@@ -92,10 +90,10 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     super()
 
     this.#scope.run(() => {
-      this.editor = new VideoEditor()
+      this._editor = new VideoEditor({ store: new VideoEditorLocalStore() })
 
       effect(() => {
-        const state = this.editor.toObject()
+        const state = this._editor.toObject()
         this.#dispatch('change', state)
       })
 
@@ -111,7 +109,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
       renderComponentTo(
         VideoEditorUI,
         {
-          editor: this.editor,
+          editor: this._editor,
           i18n: { messages: this.#messages, languages: this.#languages },
           onError: (error: unknown) => this.#dispatch('error', error),
         },
@@ -132,52 +130,43 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   }
 
   play() {
-    this.editor.play()
+    this._editor.play()
   }
   pause() {
-    this.editor.pause()
+    this._editor.pause()
   }
   seekTo(time: number) {
-    this.editor.seekTo(time)
+    this._editor.seekTo(time)
   }
-  async addClip(track: pub.Track, source: string | Blob) {
-    return await this.editor.addClip(track as nodes.Track<nodes.Clip>, source)
+  async addClip(track: pub.Track, source: string | Blob | pub.Schema.Clip): Promise<pub.Clip> {
+    return await this._editor.addClip(track as nodes.Track, source)
   }
   selectClip(clip: pub.Clip | undefined) {
-    this.editor.selectClip(clip?.id)
+    this._editor.selectClip(clip?.id)
   }
   async createMediaAsset(source: string | Blob) {
-    return await this.editor.createMediaAsset(source)
+    return await this._editor.createMediaAsset(source)
   }
   splitClipAtCurrentTime(): pub.Clip | undefined {
-    return this.editor.splitClipAtCurrentTime()
-  }
-  undo() {
-    this.editor.undo()
-  }
-  redo() {
-    this.editor.redo()
+    return this._editor.splitClipAtCurrentTime()
   }
   async replaceClipSource(source: Blob | string) {
-    await this.editor.replaceClipSource(source)
-  }
-  setClipFilter(clip: pub.Clip, filterId: string | undefined, intensity: number): void {
-    this.editor.setClipFilter(this.editor._movie.nodes.get(clip.id), filterId, intensity)
+    await this._editor.replaceClipSource(source)
   }
   deleteSelection() {
-    this.editor.deleteSelection()
+    this._editor.deleteSelection()
   }
   async clearAllContentAndHistory() {
-    await this.editor.clearAllContentAndHistory()
+    await this._editor.clearAllContentAndHistory()
   }
-  async replaceContent(newContent: schema.Movie) {
-    await this.editor.replaceContent(newContent)
+  replaceContent(newContent: schema.SerializedMovie): void {
+    this._editor.replaceContent(newContent)
   }
   toObject() {
-    return this.editor.toObject()
+    return this._editor.toObject()
   }
   async export() {
-    return await this.editor.export()
+    return await this._editor.export()
   }
 
   #dispatch(type: string, detail: unknown) {
@@ -185,7 +174,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   }
 
   dispose() {
-    this.editor.dispose()
+    this._editor.dispose()
     this.#scope.stop()
   }
 }
