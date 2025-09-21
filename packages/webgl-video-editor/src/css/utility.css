@@ -60,10 +60,16 @@
   overflow: hidden;
   white-space: nowrap;
   border-width: 0;
+  /* stylelint-disable-next-line property-no-deprecated */
   clip: rect(0, 0, 0, 0);
 }
 
 .safe-padding-x {
   padding-right: max(env(safe-area-inset-right, 1.25rem), 1.25rem);
   padding-left: max(env(safe-area-inset-left, 1.25rem), 1.25rem);
+}
+
+.safe-padding-y {
+  padding-top: max(env(safe-area-inset-top, 1.25rem), 1.25rem);
+  padding-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
 }

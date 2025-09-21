@@ -5,9 +5,9 @@ import '@interactjs/auto-start'
 import type { DragEvent } from '@interactjs/actions/drag/plugin.js'
 import type { ResizeEvent } from '@interactjs/actions/resize/plugin.js'
 import interact from '@interactjs/interact'
-import { computed, effect, ref, toRef } from 'fine-jsx'
+import { computed, effect, ref } from 'fine-jsx'
 
-import { IconButton } from 'shared/components/icon-button'
+import { Button } from 'shared/components/button.tsx'
 import { stringHashCode, useI18n } from 'shared/utils'
 
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants.ts'
@@ -219,17 +219,16 @@ export const Clip = ({
         </div>
       </div>
       {import.meta.env.DEV && (
-        <IconButton
-          icon={toRef(() => (clip.transition ? IconTablerChevronsRight : IconTablerChevronRight))}
+        <Button
           class="clip-transition"
-          title={tr('transition')}
+          label={tr('transition')}
           onClick={() => {
             // eslint-disable-next-line no-alert -- TODO
             alert(t('Not implemented.'))
           }}
         >
-          <span class="sr-only">Transition</span>
-        </IconButton>
+          {() => (clip.transition ? <IconTablerChevronsRight /> : <IconTablerChevronRight />)}
+        </Button>
       )}
     </div>
   )

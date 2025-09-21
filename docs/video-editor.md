@@ -1,16 +1,18 @@
 ---
-layout: page
+layout: false
 title: Video editor
 navbar: false
-pageClass: demo-page video-editor-demo-page
 ---
 
 <script setup lang="ts">
+import { useRouter } from 'vitepress'
 import { VideoEditorApp } from 'app-video-editor'
+
+const router = useRouter()
 </script>
 
-<div class="demo-container">
+<div >
   <ClientOnly>
-    <VideoEditorApp class="demo-container" />
+    <VideoEditorApp :onCloseProject="() => router.go('/')" />
   </ClientOnly>
 </div>

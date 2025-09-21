@@ -1,5 +1,11 @@
-@import url('shared/css/reset.css');
-@import url('./untility.css');
+/* eslint-disable import/no-extraneous-dependencies -- -- */
+@import url('@unocss/reset/sanitize/sanitize.css');
+@import url('@unocss/reset/sanitize/forms.css');
+@import url('@unocss/reset/sanitize/assets.css');
+
+/* eslint-enable import/no-extraneous-dependencies -- -- */
+
+@import url('./utility.css');
 
 .viewport {
   position: relative;
@@ -11,6 +17,7 @@
 }
 
 .viewport-canvas {
+  max-width: 100%;
   height: 100%;
   overflow: hidden;
   background-color: black;
@@ -19,17 +26,18 @@
 
 .icon {
   flex-shrink: 0;
-  width: 1em;
-  height: 1em;
+  width: 1.5em;
+  height: 1.5em;
 }
 
-.icon-button {
+.button {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 0.25rem 0.875rem;
   cursor: pointer;
+  border-style: none;
   border-radius: 0.5rem;
 
   &:hover {
@@ -52,9 +60,24 @@
     }
   }
 
-  &[disabled] {
+  &[disabled],
+  &[aria-disabled] {
     cursor: default;
     background-color: transparent;
     opacity: 0.625;
   }
+}
+
+.square,
+.round {
+  aspect-ratio: 1;
+  padding: 0.25rem;
+
+  &.overlay {
+    padding: 0.5rem;
+  }
+}
+
+.round {
+  border-radius: 9999px;
 }

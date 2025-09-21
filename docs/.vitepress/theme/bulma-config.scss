@@ -1,0 +1,58 @@
+/* stylelint-disable scss/at-extend-no-missing-placeholder */
+@use 'bulma/sass/utilities' with (
+  $class-prefix: 'bulma-'
+);
+@use 'bulma/sass/utilities/initial-variables' as iv;
+@use 'bulma/sass/base';
+@use 'bulma/sass/elements/button';
+@use 'bulma/sass/elements/block';
+@use 'bulma/sass/elements/content';
+@use 'bulma/sass/elements/progress';
+@use 'bulma/sass/components/dropdown';
+@use 'bulma/sass/components/card';
+@use 'bulma/sass/components/modal';
+@use 'bulma/sass/form/shared';
+@use 'bulma/sass/form/tools';
+@use 'bulma/sass/form/select';
+@use 'bulma/sass/grid/columns';
+@use 'bulma/sass/layout/level';
+@use 'bulma/sass/themes';
+@use 'bulma/sass/helpers/flexbox';
+
+:root {
+  --bulma-body-overflow-y: auto;
+}
+
+.#{iv.$class-prefix}button.overlay {
+  @extend .#{iv.$class-prefix}is-text;
+
+  color: var(--white);
+  background-color: var(--primary-bg-05);
+
+  &:hover {
+    background-color: var(--black-3);
+  }
+
+  &:active {
+    background-color: var(--black-3);
+  }
+}
+
+// https://github.com/jgthms/bulma/issues/4003
+.#{iv.$class-prefix}level.#{iv.$class-prefix}is-mobile > .#{iv.$class-prefix}level-right {
+  flex-direction: row;
+}
+
+dialog {
+  padding: 0;
+  background: transparent;
+  border-style: none;
+}
+
+.#{iv.$class-prefix}modal:open {
+  @extend .#{iv.$class-prefix}is-active;
+}
+
+.#{iv.$class-prefix}modal::backdrop {
+  @extend .#{iv.$class-prefix}modal-background;
+}

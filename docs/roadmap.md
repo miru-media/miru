@@ -17,7 +17,7 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
   Multi-track editing of video and audio clips with WebGL filters in a simple, mobile-friendly UI.
 
-- ## <span class="task-date">2025-Q3</span> <span class="task-wip" /> Real-time AR effects
+- ## <span class="task-date">2025-Q3</span> <span class="task-done" /> Real-time AR effects
 
   Using MediaPipe and Three.js, create a proof of concept with glTF interactivity and face landmark detection extension implementations and create a collection of sample AR effects.
 
@@ -41,23 +41,23 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Preserve color profile
   - Increase browser and codec support with LibAVJS-WebCodecs-Polyfill
 
-- ## <span class="task-date">2025-H2</span> <span class="task-todo" /> Explore using Miru in social media apps
+- ## <span class="task-date">2025-H2</span> <span class="task-wip" /> Explore using Miru in social media apps
 
   Our image filters are currently used in Pixelfed. What other apps might benefit from integration with Miru?
   - Are the editors and AR effects also a good fit for chat apps like Delta Chat?
   - Do users of Loops want a built-in video editor in the web client?
   - Is a React Native or NativeScript implementation feasible and worth implementing?
 
-- ## <span class="task-date">2026-H1</span> <span class="task-todo" /> Video editor improvements
+- ## <span class="task-date">2026-Q1</span> <span class="task-todo" /> Video editor improvements
 
-  Improve the desktop UX, widen input file format suport, add asset management, and add new clip types:
+  Improve the desktop UX, widen input file format suport, add asset management, and add new content types:
   - Text
   - Images and stickers
   - Subtitles
 
-- ## <span class="task-date">2026-H2</span> <span class="task-todo" /> Collaborative video editing
+- ## <span class="task-date">2026-Q1</span> <span class="task-todo" /> Collaborative video editing
 
-  Add local-first, real-time collaborative editing to Miru's video editor using CRDTs. Implement project management, invitations, and sharing.
+  Add local-first collaborative editing to Miru's video editor using CRDTs. Implement project management, invitations, to run on an existing a self-hostable platform like Nextcloud or NextGraph.
 
 - ## <span class="task-date">2026-H2</span> <span class="task-todo" /> AI-powered video editing tools
 

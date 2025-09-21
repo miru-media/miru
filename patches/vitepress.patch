@@ -1,0 +1,14 @@
+diff --git a/dist/client/theme-default/styles/base.css b/dist/client/theme-default/styles/base.css
+index 8041b6bc37a2022dcd22c015611ac7fbb9405b13..2044346a7ca3044a69e0291fc63a3aecfedcac15 100644
+--- a/dist/client/theme-default/styles/base.css
++++ b/dist/client/theme-default/styles/base.css
+@@ -1,3 +1,4 @@
++@layer base {
+ @media (prefers-reduced-motion: reduce) {
+   *,
+   ::before,
+@@ -249,3 +250,4 @@ mjx-container > svg {
+   display: inline-block;
+   margin: auto;
+ }
++}

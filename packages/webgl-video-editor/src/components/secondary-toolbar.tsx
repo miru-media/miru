@@ -1,4 +1,4 @@
-import { IconButton } from 'shared/components/icon-button'
+import { Button } from 'shared/components/button.tsx'
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 import { remap } from 'shared/utils/math'
@@ -17,48 +17,44 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
     <div class="secondary-toolbar safe-padding-x">
       {!!store && (
         <div class="secondary-toolbar-group">
-          <IconButton
-            icon={IconTablerArrowBackUp}
-            class="secondary-toolbar-button"
-            title={tr('undo')}
+          <Button
+            class="square secondary-toolbar-button"
+            label={tr('undo')}
             disabled={() => !store.canUndo}
-            onClick={() => store.undo()}
+            onClick={store.undo.bind(store)}
           >
-            <span class="sr-only">{tr('undo')}</span>
-          </IconButton>
+            <IconTablerArrowBackUp />
+          </Button>
 
-          <IconButton
-            icon={IconTablerArrowForwardUp}
-            class="secondary-toolbar-button"
-            title={tr('redo')}
+          <Button
+            class="square secondary-toolbar-button"
+            label={tr('redo')}
             disabled={() => !store.canRedo}
-            onClick={() => store.redo()}
+            onClick={store.redo.bind(store)}
           >
-            <span class="sr-only">{tr('redo')}</span>
-          </IconButton>
+            <IconTablerArrowForwardUp />
+          </Button>
         </div>
       )}
 
-      <label>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="any"
-          title={tr('timeline_zoom')}
-          value={() => remap(editor._secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
-          onInput={(event: InputEvent) => {
-            editor._secondsPerPixel.value = remap(
-              Math.sqrt(event.target.valueAsNumber),
-              1,
-              0,
-              MIN_PPS,
-              maxPps(),
-            )
-          }}
-        />
-        <span class="sr-only">{tr('timeline_zoom')}</span>
-      </label>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="any"
+        title={tr('timeline_zoom')}
+        aria-label={tr('timeline_zoom')}
+        value={() => remap(editor._secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
+        onInput={(event: InputEvent) => {
+          editor._secondsPerPixel.value = remap(
+            Math.sqrt(event.target.valueAsNumber),
+            1,
+            0,
+            MIN_PPS,
+            maxPps(),
+          )
+        }}
+      />
     </div>
   )
 }

@@ -28,7 +28,7 @@ export const setShadowStyles = (shadow: ShadowRoot) => {
 }
 
 if (import.meta.hot && 'CSSStyleSheet' in window) {
-  import.meta.hot.accept('../../webgl-video-editor/src/index.css?inline', (mod) => {
+  import.meta.hot.accept('../../webgl-video-editor/src/css/index.css?inline', (mod) => {
     if (mod == null) import.meta.hot?.invalidate()
     if (styleSheet_ == null) return undefined
     else if (styleSheet_ instanceof HTMLStyleElement) return undefined

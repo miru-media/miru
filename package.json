@@ -12,8 +12,8 @@
     "check": "vue-tsc -b tsconfig.check.json --incremental",
     "lint:markdown": "markdownlint --ignore-path .gitignore --ignore '**/CHANGELOG.md' '**/*.md'",
     "lint:prettier": "prettier --check '**/*.{ts,js,tsx,jsx,cjs,vue,md,html,yaml,yml,json}'",
-    "lint": "stylelint '**/*.css' && pnpm run lint:markdown && pnpm eslint --quiet && pnpm run lint:prettier",
-    "lint:fix": "stylelint --fix '**/*.css' && pnpm run lint:markdown --fix && pnpm eslint --quiet --fix && pnpm lint:prettier --write",
+    "lint": "stylelint '**/*.{css,scss}' && pnpm run lint:markdown && pnpm eslint --quiet && pnpm run lint:prettier",
+    "lint:fix": "stylelint --fix '**/*.{css,scss}' && pnpm run lint:markdown --fix && pnpm eslint --quiet --fix && pnpm lint:prettier --write",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prepare": "husky",
     "docs:dev": "vitepress dev docs",
@@ -107,6 +107,7 @@
     "rollup-plugin-glob-import": "^0.5.0",
     "rollup-plugin-glsl-optimize": "^1.0.4",
     "rollup-plugin-postcss": "^4.0.2",
+    "sass-embedded": "^1.92.0",
     "semver": "^7.7.2",
     "sharp": "^0.34.3",
     "stats.js": "catalog:",
@@ -114,7 +115,7 @@
     "stylelint-config-css-modules": "^4.5.1",
     "stylelint-config-html": "^1.1.0",
     "stylelint-config-recess-order": "^7.2.0",
-    "stylelint-config-standard": "^38.0.0",
+    "stylelint-config-standard-scss": "^16.0.0",
     "stylelint-order": "^7.0.0",
     "stylelint-prettier": "^5.0.3",
     "taze": "^19.4.0",
@@ -129,7 +130,7 @@
     "vite": "6.1.0",
     "vite-bundle-analyzer": "^0.23.0",
     "vite-plugin-remote-assets": "^2.1.0",
-    "vitepress": "2.0.0-alpha.2",
+    "vitepress": "2.0.0-alpha.12",
     "vue-tsc": "^3.0.6"
   },
   "lint-staged": {
@@ -142,7 +143,7 @@
       "markdownlint --fix",
       "prettier --check --write"
     ],
-    "**/*.css": "stylelint --fix",
+    "**/*.{css,scss}": "stylelint --fix",
     "**/*.(yaml|yml|json)": "prettier --check --write"
   },
   "browserslist": [
@@ -154,7 +155,8 @@
       "glsl-tokenizer": "patches/glsl-tokenizer.patch",
       "libavjs-webcodecs-polyfill": "patches/libavjs-webcodecs-polyfill.patch",
       "videocontext": "patches/videocontext.patch",
-      "@mediapipe/tasks-vision": "patches/@mediapipe__tasks-vision.patch"
+      "@mediapipe/tasks-vision": "patches/@mediapipe__tasks-vision.patch",
+      "vitepress": "patches/vitepress.patch"
     },
     "onlyBuiltDependencies": [
       "esbuild",

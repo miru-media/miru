@@ -3,7 +3,7 @@ export default {
     'stylelint-config-css-modules',
     'stylelint-config-html/html',
     'stylelint-config-recess-order',
-    'stylelint-config-standard',
+    'stylelint-config-standard-scss',
   ],
   plugins: ['stylelint-prettier'],
   rules: {
@@ -11,7 +11,8 @@ export default {
     'no-descending-specificity': null,
     'declaration-empty-line-before': null,
     'selector-class-pattern': null,
-    'at-rule-no-unknown': [true, { ignoreAtRules: ['unocss'] }],
+    'import-notation': 'url',
+    'scss/load-partial-extension': null,
   },
   ignorePath: ['.gitignore'],
 }

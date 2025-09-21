@@ -8,6 +8,7 @@
     "@gltf-transform/functions": "catalog:",
     "@vueuse/core": "catalog:",
     "app-video-editor": "workspace:^",
+    "bulma": "^1.0.4",
     "gltf-ar-effects": "workspace:^",
     "media-trimmer": "workspace:^",
     "webgl-effects": "workspace:^",

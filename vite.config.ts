@@ -60,7 +60,7 @@ export default defineConfig({
       ),
       'virtual:video-shadow.css': resolve(
         import.meta.dirname,
-        'packages/webgl-video-editor/src/index.css?inline',
+        'packages/webgl-video-editor/src/css/index.css?inline',
       ),
     },
   },

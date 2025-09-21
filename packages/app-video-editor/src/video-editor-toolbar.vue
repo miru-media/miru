@@ -93,12 +93,7 @@ useEventListener(
         {{ $t('export') }}
       </button>
 
-      <a
-        v-if="editor.exportResult"
-        :href="editor.exportResult.url"
-        target="_blank"
-        style="border-radius: 0.5rem; background: var(--gray); padding: 0 1rem; cursor: pointer"
-      >
+      <a v-if="editor.exportResult" :href="editor.exportResult.url" target="_blank" class="button">
         {{ editor.exportResult.blob.type }} {{ filesize(editor.exportResult.blob.size) }}
       </a>
     </div>

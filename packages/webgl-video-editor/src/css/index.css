@@ -1,6 +1,6 @@
-@import url('./css/common.css');
-@import url('./css/clip.css');
-@import url('./css/media-trimmer.css');
+@import url('./common.css');
+@import url('./clip.css');
+@import url('./media-trimmer.css');
 
 :host {
   --black: #000;
@@ -69,11 +69,6 @@
 .secondary-toolbar-group {
   display: flex;
   gap: 0.5rem;
-}
-
-.secondary-toolbar-button {
-  padding: 0.25rem;
-  font-size: 1.5rem;
 }
 
 .actions {
@@ -231,13 +226,10 @@
   justify-content: center;
   min-width: var(--clip-height);
   height: var(--clip-height);
-  padding: 0.675rem 0.875rem;
   color: var(--white-3);
-  cursor: pointer;
   background-color: rgb(255 255 255 / 3%);
   border: dashed;
   border-color: rgb(255 255 255 / 12%);
-  border-radius: 0.625rem;
   translate: var(--track-width);
 }
 

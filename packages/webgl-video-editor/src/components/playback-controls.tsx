@@ -1,4 +1,4 @@
-import { ToggleButton } from 'shared/components/toggle-button'
+import { Button } from 'shared/components/button.tsx'
 import { useI18n } from 'shared/utils'
 
 import type { VideoEditor } from '../video-editor.ts'
@@ -10,19 +10,16 @@ export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
 
   return (
     <div class="playback-controls safe-padding-x">
-      <ToggleButton
-        activeIcon={IconTablerPlayerPlay}
-        inactiveIcon={IconTablerPlayerPause}
-        class="playback-play dark"
-        title={playOrPause}
-        isActive={movie.isPaused}
-        onToggle={(shouldPause) => {
-          if (shouldPause) movie.pause()
-          else movie.play()
+      <Button
+        class="square overlay"
+        label={playOrPause}
+        onClick={() => {
+          if (movie.isPaused.value) movie.play()
+          else movie.pause()
         }}
       >
-        <span class="sr-only">{playOrPause}</span>
-      </ToggleButton>
+        {() => (movie.isPaused.value ? <IconTablerPlayerPlay /> : <IconTablerPlayerPause />)}
+      </Button>
     </div>
   )
 }

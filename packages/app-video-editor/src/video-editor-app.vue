@@ -3,7 +3,6 @@ import { useEventListener } from '@vueuse/core'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n-lite'
 
-import 'webgl-video-editor/elements'
 import { demoMovie } from './demo-movie'
 import type { VideoEditor, VideoEditorStore } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
@@ -12,8 +11,12 @@ import Toolbar from './video-editor-toolbar.vue'
 import VideoEditorUI, { VideoEditorLocalStore } from 'webgl-video-editor/vue'
 import Settings from './video-editor-settings.vue'
 import { isElement } from 'shared/utils'
+import IntroModal from './intro-modal.vue'
 
-const { store = new VideoEditorLocalStore() } = defineProps<{ store?: VideoEditorStore }>()
+const { store = new VideoEditorLocalStore(), onCloseProject } = defineProps<{
+  store?: VideoEditorStore
+  onCloseProject?: () => unknown
+}>()
 
 const editorRef = ref<VideoEditor>()
 
@@ -38,7 +41,10 @@ if (!import.meta.env.SSR) {
     const target = event.composedPath()[0]
     const editor = editorRef.value
 
-    if (!editor || (isElement(target) && target.closest('select,input,textarea,[contenteditable=true]')))
+    if (
+      !editor ||
+      (isElement(target) && target.closest('select,input,textarea,[contenteditable=true],dialog'))
+    )
       return
 
     const { store: sync } = editor
@@ -98,8 +104,14 @@ if (!import.meta.env.SSR) {
 </script>
 
 <template>
-  <div class="video-editor-app">
-    <VideoEditorUI ref="editorRef" :store="store" :messages="{ en, de }" class="video-editor">
+  <div class="video-editor-app" data-theme="dark">
+    <VideoEditorUI
+      ref="editorRef"
+      :store="store"
+      :messages="{ en, de }"
+      class="video-editor"
+      data-theme="dark"
+    >
       <button
         v-if="!editorRef?.isLoading"
         slot="empty"
@@ -111,7 +123,8 @@ if (!import.meta.env.SSR) {
       </button>
       <Toolbar v-if="editorRef" :editor="editorRef" />
     </VideoEditorUI>
-    <Settings v-if="editorRef" :editor="editorRef" />
+    <Settings v-if="editorRef" :editor="editorRef" :onCloseProject />
+    <IntroModal />
   </div>
 </template>
 
@@ -145,37 +158,18 @@ if (!import.meta.env.SSR) {
   --primary-bg-05: #17171788;
 
   color-scheme: dark;
+
+  &:has(.bulma-modal:open) {
+    color: red;
+    :global(& .bulma-button.overlay, & .video-editor::part(button overlay)) {
+      visibility: hidden;
+      display: none;
+    }
+  }
 }
 
 .video-editor {
-  height: 100%;
-}
-
-.demo-video-button {
-  position: absolute;
-  left: 1rem;
-  display: flex;
-  gap: 0.675rem;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--clip-height);
-  height: var(--clip-height);
-  padding: 0.675rem 0.875rem;
-  color: var(--white-3);
-  cursor: pointer;
-  background-color: rgb(255 255 255 / 3%);
-  border: dashed;
-  border-color: rgb(255 255 255 / 12%);
-  border-radius: 0.625rem;
-  translate: var(--track-width);
-
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 17px;
-}
-
-.video-editor {
-  height: 100%;
+  height: 100dvh;
 }
 
 .demo-video-button {

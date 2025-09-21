@@ -11,8 +11,6 @@ import { ref, watchEffect } from 'vue'
 import { trim } from 'media-trimmer'
 import { type LoadInfo, type TrimState } from 'media-trimmer'
 
-const videoEditorContainer = ref<HTMLElement>()
-
 const source = ref('')
 const state = ref<TrimState>()
 
@@ -64,7 +62,7 @@ const onInputFile = (event: Event) => {
 }
 </script>
 
-<div class="demo-container">
+<div class="demo-container video-trimmer-demo">
   <media-trimmer
     class="block w-full p-0.5rem box-border"
     :source="source"
@@ -73,30 +71,35 @@ const onInputFile = (event: Event) => {
     :onLoad="onLoad"
     :onError="onError"
   ></media-trimmer>
-  <progress class="block w-full border-0" :value="progress" max="1" />
-  <div class="flex items-center">
-    <input
-      type="file"
-      accept="video/*"
-      :onInput="onInputFile"
-    />
-    <button
-      type="button"
-      :onClick="exportVideo"
-      :disabled="!state"
-      style="padding: 1rem; border: solid white"
-    >
-      Export
-    </button>
-        <a
-          v-if="resultUrl"
-          :href="resultUrl"
-          target="_blank"
-          :download="`trimmed${inputFile ? '-' + inputFile.name : ''}.mp4`"
-        >
-          Download
-        </a>
 
+  <progress class="bulma-progress w-full border-0" :value="progress" max="1" />
+    <div class="bulma-field bulma-is-grouped">
+      <label :class="['bulma-button', !source && 'bulma-is-primary']">
+      <div class="bulma-icon i-tabler:upload"></div>
+      <span > Choose a file </span>
+      <input type="file" name="video source" accept="video/*" :onInput="onInputFile" hidden />
+      </label>
+      <div class="control">
+      <button
+        v-if="source"
+        :class="['bulma-button', !resultUrl && 'bulma-is-primary']"
+        :onClick="exportVideo"
+      >
+        Export
+      </button>
+      </div>
+    <div class="control">
+      <a
+        class="bulma-button bulma-is-success"
+        v-if="resultUrl"
+        :href="resultUrl"
+        target="_blank"
+        :download="`trimmed${inputFile ? '-' + inputFile.name : ''}.mp4`"
+      >
+          <div class="icon i-tabler:download"></div>
+        Download
+      </a>
+    </div>
   </div>
   <video
     :src="resultUrl"

@@ -35,7 +35,7 @@ const opusWasmFile = resolve(
 const aliases = {
   entries: {
     'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/src/index.css'),
-    'virtual:video-shadow.css': resolve(ROOT, 'packages/webgl-video-editor/src/index.css'),
+    'virtual:video-shadow.css': resolve(ROOT, 'packages/webgl-video-editor/src/css/index.css'),
     [`${opusWasmFile}?url`]: opusWasmFile,
   },
 }

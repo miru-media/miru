@@ -1,8 +1,7 @@
 import { h } from 'fine-jsx'
 import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 'fine-jsx'
 
-import { IconButton } from 'shared/components/icon-button'
-import { ToggleButton } from 'shared/components/toggle-button'
+import { Button } from 'shared/components/button.tsx'
 import { useElementSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
 import {
@@ -270,12 +269,11 @@ export const VideoTrimmerUI = (props: {
     props.onChange?.(value)
   })
 
-  const onTogglePlayback = (shouldPause: boolean) => {
-    if (shouldPause) media.pause()
-    else {
+  const onTogglePlayback = () => {
+    if (isPaused.value) {
       if (currentTime.value >= endTime.value || media.ended) seekTo(startTime.value)
       media.play().catch(() => undefined)
-    }
+    } else media.pause()
   }
 
   const onResize = (start: number, end: number, edge: 'left' | 'right') => {
@@ -302,16 +300,15 @@ export const VideoTrimmerUI = (props: {
       </div>
       <div>
         <div class="video-trimmer-controls numeric">
-          <ToggleButton
-            class="video-trimmer-controls-left video-trimmer-play-pause"
-            activeIcon={IconTablerPlayerPlay}
-            inactiveIcon={IconTablerPlayerPause}
-            isActive={isPaused}
-            disabled={() => mediaDuration.value === 0}
-            onToggle={onTogglePlayback}
-          >
-            <div class="sr-only">{() => (isPaused.value ? 'Play' : 'Pause')}</div>
-          </ToggleButton>
+          <div class="video-trimmer-controls-left video-trimmer-play-pause">
+            <Button
+              disabled={() => mediaDuration.value === 0}
+              onClick={onTogglePlayback}
+              label={() => (isPaused.value ? 'Play' : 'Pause')}
+            >
+              {() => (isPaused.value ? <IconTablerPlayerPlay /> : <IconTablerPlayerPause />)}
+            </Button>
+          </div>
           <div class="video-trimmer-controls-center">{() => formatTime(currentTime.value, false)}</div>
           <div class="video-trimmer-controls-right">
             <div>{() => formatDuration(Math.round(endTime.value - startTime.value))}</div>
@@ -319,14 +316,16 @@ export const VideoTrimmerUI = (props: {
               unableToDecode.value ? (
                 <div></div>
               ) : hasAudio.value ? (
-                <ToggleButton
-                  activeIcon={IconTablerVolumeOff}
-                  inactiveIcon={IconTablerVolume}
-                  isActive={muteOutput}
-                  onToggle={(shouldMute: boolean) => (muteOutput.value = shouldMute)}
-                ></ToggleButton>
+                <Button
+                  label={muteOutput.value ? 'Include audio' : 'Remove audio'}
+                  onClick={() => (muteOutput.value = !muteOutput.value)}
+                >
+                  {muteOutput.value ? <IconTablerVolumeOff /> : <IconTablerVolume />}
+                </Button>
               ) : (
-                <IconButton disabled icon={IconTablerVolume_3} onClick={() => undefined} />
+                <Button disabled onClick={() => undefined}>
+                  <IconTablerVolume_3 />
+                </Button>
               )
             }
           </div>

@@ -126,7 +126,7 @@ export const Timeline = ({
             movie.isEmpty ? (
               <>
                 <div class="track">
-                  <label class="track-button">
+                  <label class="button track-button">
                     <input
                       type="file"
                       hidden
@@ -149,7 +149,10 @@ export const Timeline = ({
                   {(track.children as ClipType[]).map((clip) => (
                     <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
                   ))}
-                  <label class="track-button" hidden={totalClips.value === 0 && trackIndex !== 0}>
+                  <label
+                    class={() => ['button track-button', track.count > 0 && 'square']}
+                    hidden={totalClips.value === 0 && trackIndex !== 0}
+                  >
                     {() =>
                       track.count ? (
                         <>

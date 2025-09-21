@@ -1,3 +1,5 @@
+@import './bulma-config.scss';
+
 :root {
   --vp-c-brand-1: #1d6be4;
   --vp-c-text-1: #212121;
