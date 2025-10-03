@@ -4,7 +4,7 @@ import { Effect } from 'webgl-effects'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
 import type { RootNode } from '../../types/internal'
-import { NodeCreateEvent } from '../events.ts'
+import { NodeCreateEvent, NodeMoveEvent } from '../events.ts'
 import { storage } from '../storage/index.ts'
 
 import { BaseNode } from './base-node.ts'
@@ -188,7 +188,6 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
     ;(async () => {
       const storageHasFile = await storage.hasCompleteFile(id)
 
-      // WIP: add abort signal to all fetches and pipes, etc
       if (!storageHasFile) {
         if (source == null) throw new Error('[webgl-video-editor] Missing media source')
 
@@ -219,6 +218,10 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
     })().catch((error: unknown) => {
       asset.#error.value = error
     })
+
+    const { assetLibrary } = root
+    asset.position({ parentId: assetLibrary.id, index: assetLibrary.count })
+    root._emit(new NodeMoveEvent(asset.id, undefined))
 
     return asset
   }

@@ -323,6 +323,8 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
       while (collection.tail) collection.tail.dispose()
     })
 
+    this.renderer.clear()
+
     if (clearCache) return MediaAsset.clearCache().then(() => undefined)
   }
 
