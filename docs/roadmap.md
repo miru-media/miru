@@ -21,18 +21,18 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
   Using MediaPipe and Three.js, create a proof of concept with glTF interactivity and face landmark detection extension implementations and create a collection of sample AR effects.
 
-- ## <span class="task-date">2025-Q3</span> <span class="task-wip" /> Documentation
+- ## <span class="task-date">2025-Q4</span> <span class="task-wip" /> Documentation
 
   Make it clear how to get started using Miru's various tools on a web site or app, how to create custom effects, and how to contribute to Miru's development. API reference pages should be generated with TypeDoc or something similar. Write guidelines for contributing translations for Miru's UIs.
 
-- ## <span class="task-date">2025-H2</span><span class="task-todo" /> Image editing improvements
+- ## <span class="task-date">2026-Q1</span><span class="task-todo" /> Image editing improvements
 
   Expand what's possible with Miru's effects by supporting more complex DAGs for effects and create built-in filters using these features. Also add image editing features including:
   - Stripping metadata
   - Quality settings
   - Text and image overlays
 
-- ## <span class="task-date">2025-Q3</span> <span class="task-todo" /> Media trimmer improvements
+- ## <span class="task-date">2025-Q4</span> <span class="task-todo" /> Media trimmer improvements
 
   <!---->
   - Mediabunny is a robust WebCodecs-focused library that will give us support for more formats and enable a smoother editing experience
@@ -48,18 +48,19 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Do users of Loops want a built-in video editor in the web client?
   - Is a React Native or NativeScript implementation feasible and worth implementing?
 
-- ## <span class="task-date">2026-Q1</span> <span class="task-todo" /> Video editor improvements
+- ## <span class="task-date">2026-H1</span> <span class="task-todo" /> Video editor improvements
 
-  Improve the desktop UX, widen input file format suport, add asset management, and add new content types:
-  - Text
-  - Images and stickers
-  - Subtitles
+  <!---->
+  - Improve the desktop UX
+  - Widen input file format suport
+  - Add asset management, Text, Subtitles, Images, and stickers
+  - Add keyframe animation
 
-- ## <span class="task-date">2026-Q1</span> <span class="task-todo" /> Collaborative video editing
+- ## <span class="task-date">2026-H1</span> <span class="task-todo" /> Collaborative video editing
 
   Add local-first collaborative editing to Miru's video editor using CRDTs. Implement project management, invitations, to run on an existing a self-hostable platform like Nextcloud or NextGraph.
 
-- ## <span class="task-date">2026-H2</span> <span class="task-todo" /> AI-powered video editing tools
+- ## <span class="task-date">2026-H2</span> <span class="task-todo" /> Automated video editing tools
 
   Increase productivity with state-of-the-art tools to perform:
   - Audio transcription

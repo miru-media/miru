@@ -26,6 +26,7 @@
   "filter": "Filter",
   "change_audio": "Audio ändern",
   "change_video": "Video ändern",
+  "info": "Info",
   "error_cannot_set_content": "Der Filminhalt konnte nicht gespeichert werden",
   "error_no_webcodecs": "Deinem Browser fehlen die nötigen APIs, um Videos zu exportieren!",
   "error_cannot_export": "Dein Browser kann keine Videos exportieren, in den Codecs die wir benuzten!",

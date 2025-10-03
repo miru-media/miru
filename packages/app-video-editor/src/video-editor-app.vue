@@ -11,7 +11,7 @@ import Toolbar from './video-editor-toolbar.vue'
 import VideoEditorUI, { VideoEditorLocalStore } from 'webgl-video-editor/vue'
 import Settings from './video-editor-settings.vue'
 import { isElement } from 'shared/utils'
-import IntroModal from './intro-modal.vue'
+import IntroModal from './info-modal.vue'
 
 const { store = new VideoEditorLocalStore(), onCloseProject } = defineProps<{
   store?: VideoEditorStore

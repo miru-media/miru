@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { useLocalStorage, useAsyncState } from '@vueuse/core'
-import { ref, onMounted, watch } from 'vue'
+import { useAsyncState } from '@vueuse/core'
+import { ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n-lite'
+import { state } from './state'
 
 const INFO_VERSION = 1
 
 const { current: currentLocale } = useI18n()
 const { state: ContentComponent, executeImmediate: updateContent } = useAsyncState(
   async () => {
-    if (currentLocale.value === 'de') return import('./intro-modal-content.de.md').then((m) => m.default)
-    return import('./intro-modal-content.en.md').then((m) => m.default)
+    if (currentLocale.value === 'de') return import('./info-modal-content.de.md').then((m) => m.default)
+    return import('./info-modal-content.en.md').then((m) => m.default)
   },
   undefined,
   { immediate: true },
 )
-const hasShownIntro = useLocalStorage('video-editor:has-shown-intro-modal', 0)
-
 const dialog = ref<HTMLDialogElement>()
 
-if (hasShownIntro.value < INFO_VERSION) {
-  onMounted(() => {
-    dialog.value?.showModal()
-  })
-}
+state.showInfo = state.hasSeenIntro < INFO_VERSION
+
+watchEffect(() => {
+  if (state.showInfo) dialog.value?.showModal()
+})
 
 const onCloseDialog = () => {
-  hasShownIntro.value = INFO_VERSION
+  state.hasSeenIntro = INFO_VERSION
+  state.showInfo = false
 }
 
 watch(currentLocale, updateContent)
@@ -34,8 +34,7 @@ watch(currentLocale, updateContent)
 <template>
   <dialog
     ref="dialog"
-    closedby="none"
-    class="video-editor-intro-modal bulma-modal"
+    class="video-editor-info-modal bulma-modal"
     @close="onCloseDialog"
     @cancel="onCloseDialog"
     style="color: var(--bulma-body-color)"
@@ -43,17 +42,17 @@ watch(currentLocale, updateContent)
     <content-component v-if="ContentComponent" class="bulma-modal-card">
       <template #header="{ title }">
         <div class="bulma-columns bulma-is-vcentered">
-          <div class="bulma-column">
-            <h2 class="bulma-modal-card-title">
+          <div class="bulma-column bulma-content">
+            <h1 class="title" :aria-label="'Miru | ' + title">
               <picture>
                 <source
                   srcset="../../../docs/branding/logo/white-logo.svg"
                   media="(prefers-color-scheme: dark)"
                 />
-                <img alt="Miru" src="../../../docs/branding/logo/dark-logo.svg" class="logo" />
+                <img alt="logo" src="../../../docs/branding/logo/dark-logo.svg" class="logo" />
               </picture>
               {{ title }}
-            </h2>
+            </h1>
           </div>
           <div class="bulma-column">
             <img src="../../../docs/branding/illustrations/2.svg" class="illustration" alt="" />
@@ -72,13 +71,13 @@ watch(currentLocale, updateContent)
 </template>
 
 <style>
-.video-editor-intro-modal {
+.video-editor-info-modal {
   color-scheme: dark light;
   &:focus {
     outline: none;
   }
 
-  .bulma-modal-card-title {
+  .title {
     text-align: center;
     align-items: center;
   }
@@ -103,6 +102,11 @@ watch(currentLocale, updateContent)
 
   .bulma-content {
     margin: 0;
+  }
+
+  .task-list {
+    list-style: none;
+    margin-inline-start: 1em;
   }
 }
 </style>

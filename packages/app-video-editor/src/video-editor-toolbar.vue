@@ -10,6 +10,7 @@ import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES } from 'webgl-video-ed
 
 import type { VideoEditor } from 'webgl-video-editor'
 import FilterMenu from './video-editor-filter-menu.vue'
+import { state } from './state'
 
 const { editor } = defineProps<{ editor: VideoEditor }>()
 
@@ -88,14 +89,19 @@ useEventListener(
         </button>
       </template>
 
-      <button class="toolbar-button" icon="IconTablerDownload" @click="() => editor.export()">
+      <button class="toolbar-button" @click="() => editor.export()">
         <div class="icon i-tabler-download" />
         {{ $t('export') }}
       </button>
 
-      <a v-if="editor.exportResult" :href="editor.exportResult.url" target="_blank" class="button">
+      <a v-if="editor.exportResult" :href="editor.exportResult.url" target="_blank" class="bulma-button">
         {{ editor.exportResult.blob.type }} {{ filesize(editor.exportResult.blob.size) }}
       </a>
+
+      <button class="toolbar-button info" @click="() => (state.showInfo = true)">
+        <div class="icon i-tabler-help" />
+        {{ $t('info') }}
+      </button>
     </div>
   </div>
 </template>
@@ -174,5 +180,9 @@ useEventListener(
     background-color: transparent;
     opacity: 0.625;
   }
+}
+
+.info {
+  margin-left: auto;
 }
 </style>
