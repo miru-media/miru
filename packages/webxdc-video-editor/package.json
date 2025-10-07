@@ -1,0 +1,36 @@
+{
+  "name": "webxdc-video-editor",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build --mode=production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "@types/base64-js": "^1.5.0",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vueuse/core": "catalog:",
+    "app-video-editor": "workspace:^",
+    "base64-js": "^1.5.1",
+    "fine-jsx": "catalog:",
+    "shared": "workspace:^",
+    "uid": "catalog:",
+    "vue": "catalog:",
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^",
+    "webgl-video-editor": "workspace:^",
+    "y-indexeddb": "catalog:",
+    "y-webxdc": "^1.1.1",
+    "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@webxdc/vite-plugins": "^1.5.1",
+    "webxdc-types": "^1.0.1"
+  }
+}
