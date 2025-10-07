@@ -81,9 +81,17 @@
     "webm-muxer": "catalog:"
   },
   "peerDependencies": {
-    "vue": "3"
+    "vue": "3",
+    "yjs": "catalog:",
+    "yjs-orderedtree": "catalog:"
   },
   "peerDependenciesMeta": {
+    "yjs": {
+      "optional": true
+    },
+    "yjs-orderedtree": {
+      "optional": true
+    },
     "vue": {
       "optional": true
     }

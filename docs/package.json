@@ -13,6 +13,9 @@
     "media-trimmer": "workspace:^",
     "webgl-effects": "workspace:^",
     "webgl-media-editor": "workspace:^",
-    "webgl-video-editor": "workspace:^"
+    "webgl-video-editor": "workspace:^",
+    "y-indexeddb": "catalog:",
+    "y-webrtc": "catalog:",
+    "yjs": "catalog:"
   }
 }
