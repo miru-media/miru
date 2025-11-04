@@ -234,9 +234,10 @@ export class ImageSourceInternal {
   getState() {
     return this.#state.value
   }
-  setState({ effect, intensity, crop }: ImageEditState) {
+  setState({ effect, intensity, adjustments, crop }: ImageEditState) {
     this.effect.value = effect
     this.intensity.value = intensity
+    this.adjustments.value = adjustments
     this.crop.value = crop
   }
 
