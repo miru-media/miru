@@ -27,7 +27,7 @@ export default defineConfig({
       rules: [
         {
           match:
-            /\b(https:\/\/(github.com\/miru-media|upload.wikimedia.org|storage.googleapis.com\/mediapipe-models|commondatastorage.googleapis.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/gi,
+            /\b(https:\/\/(github\.com\/miru-media|upload\.wikimedia\.org|storage\.googleapis\.com\/mediapipe-models|commondatastorage\.googleapis\.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/gi,
         },
       ],
     }),
@@ -82,6 +82,8 @@ export default defineConfig({
     },
   },
   build: {
+    // fully supports es6-module and fully supports webgl2
+    target: ['chrome61', 'firefox60', 'safari11'],
     minify: false,
     sourcemap: true,
   },

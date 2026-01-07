@@ -286,7 +286,10 @@ export class ImageSourceInternal {
 
     const ops = effect?.ops.slice() ?? []
     if (adjustments) {
-      Object.assign(this.#adjustColorOp.uniforms, adjustments)
+      const { uniforms } = this.#adjustColorOp
+      uniforms.brightness = adjustments.brightness
+      uniforms.contrast = adjustments.contrast
+      uniforms.saturation = adjustments.saturation
       ops.unshift(this.#adjustColorOp)
     }
 

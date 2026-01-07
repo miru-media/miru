@@ -36,11 +36,14 @@ export const FilterView = ({
 
   const EMPTY_SIZE = { width: 1, height: 1 }
   const getAdjustmentOps = () => {
-    const adjustments = source.value?.adjustments
+    const adjustments = source.value?.adjustments.value
     if (!adjustments) return []
 
     const op = adjustmentEffect.ops[0]
-    Object.assign(op.uniforms, adjustments)
+    const { uniforms } = op
+    uniforms.brightness = adjustments.brightness
+    uniforms.contrast = adjustments.contrast
+    uniforms.saturation = adjustments.saturation
 
     return [op]
   }

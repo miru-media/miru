@@ -145,7 +145,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
         group &&
         group === prevOp.group
       ) {
-        Object.assign(prevOp.to, op.to)
+        Object.keys(op.to).forEach((key) => ((prevOp.to as any)[key] = op.to[key as keyof typeof op.to]))
         return
       }
     }
