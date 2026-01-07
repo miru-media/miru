@@ -11,6 +11,7 @@ import { Button } from 'shared/components/button.tsx'
 import { stringHashCode, useI18n } from 'shared/utils'
 
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants.ts'
+import styles from '../css/index.module.css'
 import type { Clip as ClipType } from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
@@ -66,7 +67,7 @@ export const Clip = ({
         return { left, right, top, bottom }
       },
       resize: {
-        edges: { left: '.clip-resize-left', right: '.clip-resize-right' },
+        edges: { left: `.${styles.clipResizeLeft}`, right: `.${styles.clipResizeRight}` },
         modifiers: [
           interact.modifiers.restrictEdges({
             outer: () => {
@@ -195,10 +196,10 @@ export const Clip = ({
   return (
     <div
       class={() => [
-        'clip',
-        isSelected() && ['is-selected', editor._drag.isDragging.value && 'is-dragging'],
-        clip.prev && 'can-resize-left',
-        clip.next && editor.selection === clip.next && 'next-is-selected',
+        styles.clip,
+        isSelected() && [styles.isSelected, editor._drag.isDragging.value && styles.isDragging],
+        clip.prev && styles.canResizeLeft,
+        clip.next && editor.selection === clip.next && styles.nextIsSelected,
       ]}
       style={() => `
         --clip-box-left: ${boxEdges.value.left}px;
@@ -207,20 +208,20 @@ export const Clip = ({
         --clip-color: ${clipColor.value};
       `}
     >
-      <div ref={mainContainer} class="clip-box" onClick={() => editor.selectClip(clip.id, false)}>
-        <span class="clip-name">{clip.displayName}</span>
-        <div class="clip-controls">
-          <div class="clip-resize-left">
+      <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.selectClip(clip.id, false)}>
+        <span class={styles.clipName}>{clip.displayName}</span>
+        <div class={styles.clipControls}>
+          <div class={styles.clipResizeLeft}>
             <IconTablerChevronLeft />
           </div>
-          <div class="clip-resize-right">
+          <div class={styles.clipResizeRight}>
             <IconTablerChevronRight />
           </div>
         </div>
       </div>
       {import.meta.env.DEV && (
         <Button
-          class="clip-transition"
+          class={styles.clipTransition}
           label={tr('transition')}
           onClick={() => {
             // eslint-disable-next-line no-alert -- TODO

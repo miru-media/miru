@@ -112,15 +112,11 @@ if (!import.meta.env.SSR) {
       class="video-editor"
       data-theme="dark"
     >
-      <button
-        v-if="!editorRef?.isLoading"
-        slot="empty"
-        type="button"
-        class="demo-video-button"
-        @click="onClickLoadDemo"
-      >
-        {{ t('load_demo_video') }}
-      </button>
+      <template #timelineEmpty>
+        <button v-if="!editorRef?.isLoading" type="button" class="demo-video-button" @click="onClickLoadDemo">
+          {{ t('load_demo_video') }}
+        </button>
+      </template>
       <Toolbar v-if="editorRef" :editor="editorRef" />
     </VideoEditorUI>
     <Settings v-if="editorRef" :editor="editorRef" :onCloseProject />

@@ -17,7 +17,7 @@ import autoImport from 'unplugin-auto-import/rollup'
 import icons from 'unplugin-icons/rollup'
 
 import rootPkg from './package.json' with { type: 'json' }
-import { autoImportOptions } from './scripts/auto-import-ptions.js'
+import { autoImportOptions } from './scripts/auto-import-options.js'
 import { globImportFrag } from './scripts/glob-import-frag.js'
 import { packageOptions } from './scripts/package-build-options.cjs'
 import { getPublickPackageDirs, ROOT } from './scripts/utils.js'
@@ -35,7 +35,6 @@ const opusWasmFile = resolve(
 const aliases = {
   entries: {
     'virtual:image-shadow.css': resolve(ROOT, 'packages/webgl-media-editor/src/index.css'),
-    'virtual:video-shadow.css': resolve(ROOT, 'packages/webgl-video-editor/src/css/index.css'),
     [`${opusWasmFile}?url`]: opusWasmFile,
   },
 }
@@ -100,7 +99,7 @@ export default (await packageOptions).map((options) => {
       alias(aliases),
       esbuild(esbuildOptions),
       replace(replacements),
-      postcss({ inject: false }),
+      postcss({ inject: true }),
       autoImport(autoImportOptions),
       icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
       glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),

@@ -3,6 +3,7 @@ import { computed, watch } from 'fine-jsx'
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
 
+import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
 const RULER_INTERVAL_MULTIPLIER = 32
@@ -23,7 +24,7 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
     const offset = computed(() => (editor._timelineSize.value.width / 2) % size.value)
 
     return (
-      <svg class="ruler-markings" style={() => `--ruler-markings-offset: ${offset.value}px`}>
+      <svg class={styles.rulerMarkings} style={() => `--ruler-markings-offset: ${offset.value}px`}>
         <defs>
           <pattern id="Pattern" x="0" y="0" width={size} height="100%" patternUnits="userSpaceOnUse">
             <circle cx="0.125rem" cy="50%" r="0.125rem" fill="currentColor" />
@@ -67,7 +68,7 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
         }
 
         children.push(
-          <div class="ruler-label text-small" style={`translate:calc(${left}px - 50%)`}>
+          <div class={[styles.rulerLabel, styles.textSmall]} style={`translate:calc(${left}px - 50%)`}>
             {durationText}
           </div>,
         )
@@ -87,7 +88,7 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
   }
 
   return (
-    <div class="ruler" onClick={onClick}>
+    <div class={styles.ruler} onClick={onClick}>
       <Markings />
       <Labels />
     </div>

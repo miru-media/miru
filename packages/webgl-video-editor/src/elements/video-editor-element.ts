@@ -7,6 +7,7 @@ import { renderComponentTo } from 'shared/video/render-to'
 import type * as schema from '../../types/schema.ts'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
+import styles from '../css/index.module.css'
 import type * as nodes from '../nodes/index.ts'
 import { VideoEditorLocalStore } from '../store/local.ts'
 import { VideoEditor } from '../video-editor.ts'
@@ -24,6 +25,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   readonly #messages = ref<Record<string, Record<string, string>>>({})
   readonly #languages = ref(navigator.languages.slice(0))
+  readonly #slots = { default: ref<Node[]>(), timelineEmpty: ref<Node[]>() }
 
   get messages() {
     return this.#messages.value
@@ -89,6 +91,8 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   constructor() {
     super()
 
+    this.classList.add(styles.host)
+
     this.#scope.run(() => {
       this._editor = new VideoEditor({ store: new VideoEditorLocalStore() })
 
@@ -110,6 +114,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
         VideoEditorUI,
         {
           editor: this._editor,
+          children: this.#slots,
           i18n: { messages: this.#messages, languages: this.#languages },
           onError: (error: unknown) => this.#dispatch('error', error),
         },
@@ -167,6 +172,10 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   }
   async export() {
     return await this._editor.export()
+  }
+
+  slotContent(name: 'default' | 'timelineEmpty', nodes: Node[] | undefined) {
+    this.#slots[name].value = nodes
   }
 
   #dispatch(type: string, detail: unknown) {

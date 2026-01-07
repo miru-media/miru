@@ -12,7 +12,7 @@ import { defineConfig } from 'vite'
 import analyzer from 'vite-bundle-analyzer'
 import remoteAssets from 'vite-plugin-remote-assets'
 
-import { autoImportOptions } from './scripts/auto-import-ptions.js'
+import { autoImportOptions } from './scripts/auto-import-options.js'
 import { globImportFrag } from './scripts/glob-import-frag.js'
 
 const isProd = process.env.NODE_ENV === 'production'
@@ -31,7 +31,7 @@ export default defineConfig({
         },
       ],
     }),
-    icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
+    icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'miru-icon' }),
     unocss({
       presets: [presetWind3(), presetIcons()],
       content: {
@@ -57,10 +57,6 @@ export default defineConfig({
       'virtual:image-shadow.css': resolve(
         import.meta.dirname,
         'packages/webgl-media-editor/src/index.css?inline',
-      ),
-      'virtual:video-shadow.css': resolve(
-        import.meta.dirname,
-        'packages/webgl-video-editor/src/css/index.css?inline',
       ),
     },
   },

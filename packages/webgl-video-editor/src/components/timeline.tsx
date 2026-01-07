@@ -6,6 +6,7 @@ import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
+import styles from '../css/index.module.css'
 import type { Clip as ClipType, Track } from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
@@ -20,16 +21,20 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
 
   return (
     <>
-      <div ref={root} class="timeline-playhead" style={() => `--time-pill-width: ${size.value.width}px`}>
-        <span class="time-pill text-body-small numeric">
+      <div
+        ref={root}
+        class={styles.timelinePlayhead}
+        style={() => `--time-pill-width: ${size.value.width}px`}
+      >
+        <span class={[styles.timePill, styles.textBodySmall, styles.numeric]}>
           <span>
             {() => timeParts.value.hours}:{() => timeParts.value.minutes}
           </span>
-          <span class="time-pill-right">
+          <span class={styles.timePillRight}>
             {() => timeParts.value.seconds}.{() => timeParts.value.subSeconds}
           </span>
 
-          <svg class="time-pill-drop" viewBox="0 0 16 8" fill="none">
+          <svg class={styles.timePillDrop} viewBox="0 0 16 8" fill="none">
             <path
               d="M7.99282 8C7.99282 8 10.3614 0 15.3381 0C20.3147 0 -4.57808 0 0.753127 0C6.08433 0 7.99282 8 7.99282 8Z"
               fill="currentColor"
@@ -37,7 +42,7 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
           </svg>
         </span>
       </div>
-      <div class="timeline-cursor" />
+      <div class={styles.timelineCursor} />
     </>
   )
 }
@@ -99,13 +104,13 @@ export const Timeline = ({
   }
 
   const onPointerdownScroller = (event: Event) => {
-    if (!(event.target as HTMLElement).closest('.clip')) editor.selectClip(undefined)
+    if (!(event.target as HTMLElement).closest(`.${styles.clip}`)) editor.selectClip(undefined)
   }
 
   return (
     <div
       ref={root}
-      class="timeline"
+      class={styles.timeline}
       style={() => `
           --timeline-width: ${rootSize.value.width}px;
           --timeline-height: ${rootSize.value.height}px;
@@ -115,56 +120,56 @@ export const Timeline = ({
 
       <div
         ref={scrollContainer}
-        class="timeline-scroller"
+        class={styles.timelineScroller}
         onScroll={onScroll}
         onPointerdown={onPointerdownScroller}
       >
         <Ruler editor={editor} />
 
-        <div class="track-list">
+        <div class={styles.trackList}>
           {() =>
             movie.isEmpty ? (
               <>
-                <div class="track">
-                  <label class="button track-button">
+                <div class={styles.track}>
+                  <label class={[styles.button, styles.trackButton]}>
                     <input
                       type="file"
                       hidden
                       accept={ACCEPT_VIDEO_FILE_TYPES}
                       onInput={(event: InputEvent) => onInputClipFile(event, movie.timeline.head)}
                     />
-                    <span class="text-body">{t('click_add_clip')}</span>
+                    <span class={styles.textBody}>{t('click_add_clip')}</span>
                   </label>
                 </div>
-                <div class="track">
-                  <slot name="empty">{toValue(children?.empty)}</slot>
+                <div class={styles.track}>
+                  <div class={styles.slot}>{toValue(children?.empty)}</div>
                 </div>
               </>
             ) : (
               movie.timeline.children.map((track, trackIndex) => (
                 <div
-                  class="track"
+                  class={styles.track}
                   style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
                 >
                   {(track.children as ClipType[]).map((clip) => (
                     <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
                   ))}
                   <label
-                    class={() => ['button track-button', track.count > 0 && 'square']}
+                    class={() => [styles.trackButton, track.count > 0 && styles.square]}
                     hidden={totalClips.value === 0 && trackIndex !== 0}
                   >
                     {() =>
                       track.count ? (
                         <>
                           <IconTablerPlus />
-                          <span class="sr-only">
+                          <span class={styles.srOnly}>
                             {track.trackType === 'audio' ? t('add_audio') : t('add_clip')}
                           </span>
                         </>
                       ) : (
                         <>
                           <IconTablerVideo />
-                          <span class="text-body">
+                          <span class={styles.textBody}>
                             {() => (track.trackType === 'audio' ? t('click_add_audio') : t('click_add_clip'))}
                           </span>
                         </>

@@ -12,6 +12,7 @@ import {
   useMediaReadyState,
 } from 'shared/video/utils'
 
+import styles from './media-trimmer.module.css'
 import type { LoadInfo, TrimState } from './types/ui.ts'
 import { hasRequiredApis } from './utils.ts'
 
@@ -101,17 +102,17 @@ const Clip = ({
 
   return (
     <div
-      class="clip is-selected can-resize-left"
+      class={[styles.clip, styles.isSelected, styles.canResizeLeft]}
       style={() =>
         `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--clip-color:transparent`
       }
     >
-      <div class="clip-box">
-        <div class="clip-controls">
-          <div ref={resizeLeft} class="clip-resize-left">
+      <div class={styles.clipBox}>
+        <div class={styles.clipControls}>
+          <div ref={resizeLeft} class={styles.clipResizeLeft}>
             <IconTablerChevronLeft />
           </div>
-          <div ref={resizeRight} class="clip-resize-right">
+          <div ref={resizeRight} class={styles.clipResizeRight}>
             <IconTablerChevronRight />
           </div>
         </div>
@@ -285,22 +286,22 @@ export const VideoTrimmerUI = (props: {
 
   return (
     <div
-      class="video-trimmer"
+      class={styles.videoTrimmer}
       style={() => `--current-time-offset:${currentTime.value * pixelsPerSecond.value}px`}
     >
-      <div part="viewport" class={() => ['viewport', readyState.value === 0 && 'is-empty']}>
-        {h(media, { class: 'viewport-canvas' })}
+      <div class={() => [styles.viewport, readyState.value === 0 && styles.isEmpty]}>
+        {h(media, { class: styles.viewportCanvas })}
         {() =>
           errorMessage.value && (
-            <div class="video-trimmer-error" onClick={() => (errorMessage.value = '')}>
+            <div class={styles.error} onClick={() => (errorMessage.value = '')}>
               {errorMessage}
             </div>
           )
         }
       </div>
       <div>
-        <div class="video-trimmer-controls numeric">
-          <div class="video-trimmer-controls-left video-trimmer-play-pause">
+        <div class={[styles.controls, styles.numeric]}>
+          <div class={[styles.controlsLeft, styles.playPause]}>
             <Button
               disabled={() => mediaDuration.value === 0}
               onClick={onTogglePlayback}
@@ -309,18 +310,18 @@ export const VideoTrimmerUI = (props: {
               {() => (isPaused.value ? <IconTablerPlayerPlay /> : <IconTablerPlayerPause />)}
             </Button>
           </div>
-          <div class="video-trimmer-controls-center">{() => formatTime(currentTime.value, false)}</div>
-          <div class="video-trimmer-controls-right">
+          <div class={styles.controlsCenter}>{() => formatTime(currentTime.value, false)}</div>
+          <div class={styles.controlsRight}>
             <div>{() => formatDuration(Math.round(endTime.value - startTime.value))}</div>
             {() =>
               unableToDecode.value ? (
                 <div></div>
               ) : hasAudio.value ? (
                 <Button
-                  label={muteOutput.value ? 'Include audio' : 'Remove audio'}
+                  label={() => (muteOutput.value ? 'Include audio' : 'Remove audio')}
                   onClick={() => (muteOutput.value = !muteOutput.value)}
                 >
-                  {muteOutput.value ? <IconTablerVolumeOff /> : <IconTablerVolume />}
+                  {() => (muteOutput.value ? <IconTablerVolumeOff /> : <IconTablerVolume />)}
                 </Button>
               ) : (
                 <Button disabled onClick={() => undefined}>
@@ -332,7 +333,7 @@ export const VideoTrimmerUI = (props: {
         </div>
         <div
           ref={timelineContainer}
-          class="video-trimmer-timeline"
+          class={styles.timeline}
           onPointerDown={onScrubberDown}
           onPointerMove={onScrubberMove}
           onLostPointerCapture={onScrubberUp}
@@ -340,10 +341,10 @@ export const VideoTrimmerUI = (props: {
           {() =>
             unableToDecode.value ? (
               <>
-                <div class="clip">
-                  <div class="video-trimmer-clip-warning">Editing this video format isn't supported</div>
+                <div class={styles.clip}>
+                  <div class={styles.clipWarning}>Editing this video format isn't supported</div>
                 </div>
-                <div class="video-trimmer-cursor" />
+                <div class={styles.cursor} />
               </>
             ) : mediaDuration.value ? (
               <>
@@ -355,10 +356,10 @@ export const VideoTrimmerUI = (props: {
                   seekTo={seekTo}
                   onResize={onResize}
                 />
-                <div class="video-trimmer-cursor" />
+                <div class={styles.cursor} />
               </>
             ) : (
-              <div class="clip" />
+              <div class={styles.clip} />
             )
           }
         </div>

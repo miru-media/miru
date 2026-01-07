@@ -1,5 +1,5 @@
 /* RESET */
-:host {
+.host {
   /* FONT TWEAKS */
   font-synthesis: none;
   text-rendering: optimizelegibility;
