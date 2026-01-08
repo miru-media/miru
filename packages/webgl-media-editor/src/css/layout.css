@@ -1,5 +1,5 @@
 /* MAIN CONTAINERS */
-:host {
+.host {
   /* SIZE */
   max-height: 90vh;
 }
@@ -10,7 +10,7 @@
 }
 
 /* MAIN FLEX CONTAINERS */
-:host,
+.host,
 .miru--main {
   display: flex;
   flex: 1 1 0%;
@@ -97,6 +97,15 @@
       flex-shrink: 0;
       scroll-snap-align: center;
     }
+  }
+}
+
+.miru--filter-preview {
+  z-index: 0;
+
+  canvas {
+    z-index: -1;
+    transform: scaleY(-1);
   }
 }
 

@@ -1,4 +1,5 @@
 /* eslint-disable no-alert -- TODO */
+import type { Ref } from 'fine-jsx'
 import { h } from 'fine-jsx/jsx-runtime'
 
 import { LoadingOverlay } from 'shared/components/loading-overlay'
@@ -7,6 +8,7 @@ import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
 import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants.ts'
+import styles from '../css/index.module.css'
 import type { Clip } from '../nodes/clip.ts'
 import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
 
@@ -14,7 +16,11 @@ import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
 
-export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions }) => {
+export const VideoEditorUI = (props: {
+  editor: VideoEditor_
+  children?: Record<string, Ref>
+  i18n?: I18nOptions
+}) => {
   const { editor } = props
   const i18n = provideI18n(props.i18n ?? { messages: {} })
   const { t } = i18n
@@ -38,18 +44,18 @@ export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions 
   const movie = editor._movie
 
   return (
-    <div class="video-editor">
+    <div class={styles.videoEditor}>
       {() => editor._showStats.value && movie.stats.dom}
-      <div class="viewport">
-        {h(movie.canvas, { class: 'viewport-canvas' })}
+      <div class={styles.viewport}>
+        {h(movie.canvas, { class: styles.viewportCanvas })}
         <LoadingOverlay loading={() => !movie.isReady} />
         <PlaybackControls editor={editor} />
       </div>
 
       <SecondaryToolbar editor={editor} />
 
-      <Timeline editor={editor} />
-      <slot />
+      <Timeline editor={editor}>{{ empty: props.children?.timelineEmpty }}</Timeline>
+      <div class={styles.slot}>{props.children?.default}</div>
       <progress
         style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}
         value={() => editor.exportProgress}
@@ -58,7 +64,7 @@ export const VideoEditorUI = (props: { editor: VideoEditor_; i18n?: I18nOptions 
       {() =>
         editor._showStats.value && (
           <div
-            class="text-body-small"
+            class={styles.textBodySmall}
             style={() =>
               `width:100%;
           padding:0.25rem;

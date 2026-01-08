@@ -1,21 +1,23 @@
-:host {
-  --clip-height: 2.75rem;
-  --clip-resize-handle-width: 1.5rem;
+@scope (.host) {
+  :scope {
+    --clip-height: 2.75rem;
+    --clip-resize-handle-width: 1.5rem;
+  }
 }
 
 .clip {
   height: var(--clip-height);
 }
 
-.clip.is-selected {
+.clip.isSelected {
   touch-action: pan-y;
 }
 
-.clip.is-dragging {
+.clip.isDragging {
   z-index: 20;
 }
 
-.clip-box {
+.clipBox {
   position: absolute;
 
   left: var(--clip-box-left);
@@ -31,7 +33,7 @@
   transition: background-color 0.25s;
 }
 
-.clip-name {
+.clipName {
   display: inline-block;
   padding: 0.25rem 0.5rem;
   margin: 0.125rem;
@@ -41,12 +43,12 @@
   border-radius: 0.5rem;
   transition: transform 0.25s;
 
-  .clip.can-resize-left.is-selected & {
+  .clip.canResizeLeft.isSelected & {
     transform: translate(1.75rem, 0);
   }
 }
 
-.clip-transition {
+.clipTransition {
   position: absolute;
   top: 50%;
   left: var(--clip-box-right);
@@ -63,16 +65,16 @@
   transform: translate(-50%, -50%);
   transition: transform 0.2s;
 
-  .clip.is-selected & {
+  .clip.isSelected & {
     transform: translate(0%, -50%);
   }
 
-  .clip.next-is-selected & {
+  .clip.nextIsSelected & {
     transform: translate(-100%, -50%);
   }
 }
 
-.clip-controls {
+.clipControls {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -84,13 +86,13 @@
   opacity: 0;
 }
 
-.clip.is-selected .clip-controls {
+.clip.isSelected .clipControls {
   pointer-events: auto;
   opacity: 1;
 }
 
-.clip-resize-left,
-.clip-resize-right {
+.clipResizeLeft,
+.clipResizeRight {
   position: absolute;
   display: flex;
   visibility: hidden;
@@ -104,15 +106,15 @@
   background-color: var(--yellow);
 }
 
-.clip-resize-left {
+.clipResizeLeft {
   left: 0;
 }
 
-.clip-resize-right {
+.clipResizeRight {
   right: 0;
 }
 
-.clip.is-selected.can-resize-left .clip-resize-left,
-.clip.is-selected .clip-resize-right {
+.clip.isSelected.canResizeLeft .clipResizeLeft,
+.clip.isSelected .clipResizeRight {
   visibility: visible;
 }

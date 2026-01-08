@@ -3,6 +3,7 @@ import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 import { remap } from 'shared/utils/math'
 
+import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
 const MIN_PPS = 0.005
@@ -14,11 +15,11 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
   const maxPps = () => Math.max(MIN_MAX_PPS, (movie.duration / editor._timelineSize.value.width) * 2)
 
   return (
-    <div class="secondary-toolbar safe-padding-x">
+    <div class={[styles.secondaryToolbar, styles.safePaddingX]}>
       {!!store && (
-        <div class="secondary-toolbar-group">
+        <div class={styles.secondaryToolbarGroup}>
           <Button
-            class="square secondary-toolbar-button"
+            class={[styles.square, styles.secondaryToolbarButton]}
             label={tr('undo')}
             disabled={() => !store.canUndo}
             onClick={store.undo.bind(store)}
@@ -27,7 +28,7 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
           </Button>
 
           <Button
-            class="square secondary-toolbar-button"
+            class={[styles.square, styles.secondaryToolbarButton]}
             label={tr('redo')}
             disabled={() => !store.canRedo}
             onClick={store.redo.bind(store)}

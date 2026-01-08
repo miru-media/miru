@@ -13,6 +13,8 @@ export default {
     'selector-class-pattern': null,
     'import-notation': 'url',
     'scss/load-partial-extension': null,
+    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global'] }],
+    'property-no-unknown': [true, { ignoreProperties: ['composes'] }],
   },
   ignorePath: ['.gitignore'],
 }

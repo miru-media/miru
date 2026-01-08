@@ -2,6 +2,7 @@ import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
 
 import type { AdjustmentsState, InputEvent } from 'shared/types'
 
+import styles from '../css/index.module.css'
 import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
@@ -59,8 +60,8 @@ export const AdjustmentsView = ({
         toValue(showPreviews) === true &&
         sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
-      <div class="miru--menu">
-        <p class="miru--menu__row">
+      <div class={styles['miru--menu']}>
+        <p class={styles['miru--menu__row']}>
           {() =>
             (
               [
@@ -72,14 +73,14 @@ export const AdjustmentsView = ({
               <button
                 type="button"
                 class={[
-                  'miru--button',
-                  () => currentType.value === type && 'miru--acc',
-                  () => ((source.value?.adjustments.value?.[type] ?? 0) ? 'miru--enabled' : ''),
+                  styles['miru--button'],
+                  () => currentType.value === type && styles['miru--acc'],
+                  () => ((source.value?.adjustments.value?.[type] ?? 0) ? styles['miru--enabled'] : ''),
                 ]}
                 onClick={() => (currentType.value = type)}
               >
-                <Icon class="miru--button__icon" />
-                <span class="miru--button__label">{labels[type]}</span>
+                <Icon class={styles['miru--button__icon']} />
+                <span class={styles['miru--button__label']}>{labels[type]}</span>
               </button>
             ))
           }

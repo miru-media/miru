@@ -1,46 +1,46 @@
-.text-small {
+.textSmall {
   font-size: 9px;
   font-weight: 600;
   line-height: 12px;
 }
 
-.text-body-small {
+.textBodySmall {
   font-size: 12px;
   font-weight: 500;
   line-height: 15px;
 }
 
-.text-body {
+.textBody {
   font-size: 14px;
   font-weight: 500;
   line-height: 17px;
 }
 
-.text-body-bold {
+.textBodyBold {
   font-size: 14px;
   font-weight: 700;
   line-height: 17px;
 }
 
-.text-body-big {
+.textBodyBig {
   font-size: 16px;
   font-weight: 500;
   line-height: 20px;
 }
 
-.text-body-big-bold {
+.textBodyBigBold {
   font-size: 16px;
   font-weight: 700;
   line-height: 20px;
 }
 
-.text-great {
+.textGreat {
   font-size: 20px;
   font-weight: 700;
   line-height: 24px;
 }
 
-.text-super-great {
+.textSuperGreat {
   font-size: 30px;
   font-weight: 700;
   line-height: 36px;
@@ -51,7 +51,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.sr-only {
+.srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -64,12 +64,12 @@
   clip: rect(0, 0, 0, 0);
 }
 
-.safe-padding-x {
+.safePaddingX {
   padding-right: max(env(safe-area-inset-right, 1.25rem), 1.25rem);
   padding-left: max(env(safe-area-inset-left, 1.25rem), 1.25rem);
 }
 
-.safe-padding-y {
+.safePaddingY {
   padding-top: max(env(safe-area-inset-top, 1.25rem), 1.25rem);
   padding-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
 }
