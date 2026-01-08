@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment -- missing types */
+import type { Webxdc } from '@webxdc/types'
 import { onScopeDispose } from 'vue'
 import { IndexeddbPersistence } from 'y-indexeddb'
 import WebxdcProvider from 'y-webxdc'
@@ -11,8 +13,9 @@ export const setupProviders = (docName: string, ydoc: Y.Doc): Promise<IndexeddbP
   const idbProvider = new IndexeddbPersistence(docName, ydoc)
   promises.push(idbProvider.whenSynced)
 
-  const { webxdc } = window
-  let webxdcProvider: WebxdcProvider
+  const { webxdc } = window as unknown as Window & { webxdc: Webxdc<any> }
+
+  let webxdcProvider: any
 
   if (typeof webxdc !== 'undefined') {
     const DEFAULT_WEBXDC_INTERVAL = 10_000

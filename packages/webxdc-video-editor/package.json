@@ -30,7 +30,7 @@
     "yjs": "catalog:"
   },
   "devDependencies": {
-    "@webxdc/vite-plugins": "^1.5.1",
-    "webxdc-types": "^1.0.1"
+    "@webxdc/types": "^2.1.2",
+    "@webxdc/vite-plugins": "^1.5.1"
   }
 }

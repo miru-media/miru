@@ -86,6 +86,22 @@ declare module 'markdown-it-task-lists' {
   export = val
 }
 
+declare module 'yjs-orderedtree' {
+  const m = await import(
+    './node_modules/.pnpm/yjs-orderedtree@1.0.1-beta.3_yjs@13.6.27/node_modules/yjs-orderedtree/dist/types/index'
+  )
+
+  export class YTree extends m.YTree {}
+}
+declare module 'y-webxdc' {
+  const val: any
+  export = val
+}
+
+declare module '@webxdc/vite-plugins' {
+  export const buildXDC: () => any
+}
+
 declare module 'ebml-block' {
   const ebmlBlock: (buffer: Buffer) => {
     trackNumber: 1

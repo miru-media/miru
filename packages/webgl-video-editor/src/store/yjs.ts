@@ -176,7 +176,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
 
     if (parentKey === YTREE_ROOT_KEY) {
       childIds.forEach((nodeId) => {
-        const ynode: Y.Map<unknown> = ytree.getNodeValueFromKey(nodeId)
+        const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
         if ((ynode.get('type') as string).startsWith(ASSET_TYPE_PREFIX)) getOrCreateFromYTree(ynode)
       })
     } else {
@@ -186,7 +186,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     }
 
     childIds.forEach((nodeId, index) => {
-      const ynode = ytree.getNodeValueFromKey(nodeId)
+      const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
       const node = getOrCreateFromYTree(ynode)
 
       this.#ensureObserved(ynode)
@@ -208,7 +208,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     let ynode: Y.Map<unknown>
 
     try {
-      ynode = ytree.getNodeValueFromKey(nodeId)
+      ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
     } catch {
       ynode = new Y.Map(Object.entries(node.toObject()))
       ytree.createNode(YTREE_ROOT_KEY, nodeId, ynode)
@@ -250,7 +250,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       }
     }
 
-    updateYnode(this.#ytree.getNodeValueFromKey(nodeId), udpates)
+    updateYnode(this.#ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>, udpates)
   }
 
   #onDelete(event: NodeDeleteEvent): void {
@@ -277,13 +277,13 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     const ytree = this.#ytree
 
     const serialize = (nodeId: string): Schema.AnyNodeSerializedSchema => {
-      const ynode: Y.Map<unknown> = ytree.getNodeValueFromKey(nodeId)
+      const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
       const childIds: string[] = ytree.getNodeChildrenFromKey(nodeId)
 
       return { ...ynode.toJSON(), children: childIds.map(serialize) } as any
     }
 
-    const movie = serialize(ytree.getNodeValueFromKey(ROOT_NDOE_ID)) as Schema.SerializedMovie
+    const movie = serialize(ytree.getNodeValueFromKey(ROOT_NDOE_ID) as string) as Schema.SerializedMovie
 
     return movie
   }
