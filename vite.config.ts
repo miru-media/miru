@@ -54,10 +54,6 @@ export default defineConfig({
   resolve: {
     alias: {
       ebml: require.resolve('ebml/lib/ebml.umd.js'),
-      'virtual:image-shadow.css': resolve(
-        import.meta.dirname,
-        'packages/webgl-media-editor/src/index.css?inline',
-      ),
     },
   },
   esbuild: {

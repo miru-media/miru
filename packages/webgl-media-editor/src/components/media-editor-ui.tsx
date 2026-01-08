@@ -2,6 +2,7 @@ import { computed, getCurrentScope, type MaybeRefOrGetter, ref, type Ref, toRef 
 
 import { EditorView } from 'shared/types'
 
+import styles from '../css/index.module.css'
 import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
@@ -46,12 +47,12 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
   }
 
   return (
-    <div class="miru--main">
+    <div class={styles['miru--main']}>
       {/* VIEWS */}
-      <div class="miru--center">{() => views[currentView.value]?.()}</div>
+      <div class={styles['miru--center']}>{() => views[currentView.value]?.()}</div>
       {/* MAIN BUTTONS */}
-      <p class="miru--menu">
-        <p class="miru--menu__row">
+      <p class={styles['miru--menu']}>
+        <p class={styles['miru--menu__row']}>
           {[
             {
               view: EditorView.Crop,
@@ -76,14 +77,14 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
             <button
               type="button"
               class={() => [
-                'miru--button',
-                currentView.value === view && 'miru--acc',
-                active() && 'miru--enabled',
+                styles['miru--button'],
+                currentView.value === view && styles['miru--acc'],
+                active() && styles['miru--enabled'],
               ]}
               onClick={() => (currentView.value = view)}
             >
-              <Icon class="miru--button__icon" />
-              <span class="miru--button__label">{label}</span>
+              <Icon class={styles['miru--button__icon']} />
+              <span class={styles['miru--button__label']}>{label}</span>
             </button>
           ))}
         </p>

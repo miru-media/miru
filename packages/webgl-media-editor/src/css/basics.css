@@ -1,4 +1,4 @@
-:host {
+.host {
   /* SCALE */
   font-size: 14px;
   font-weight: 400;
@@ -19,7 +19,7 @@
 }
 
 /* LIGHT */
-:host([color-scheme='light']) {
+.host[color-scheme='light'] {
   --theme-hue: 204;
   --theme-hue-acc: 326;
 
@@ -49,7 +49,7 @@
 }
 
 /* DARK */
-:host([color-scheme='dark']) {
+.host[color-scheme='dark'] {
   --theme-hue: 204;
   --theme-hue-acc: 326;
 
@@ -79,7 +79,7 @@
 }
 
 /* PIXELFED */
-:host([color-scheme='pixelfed']) {
+.host[color-scheme='pixelfed'] {
   /* BACKGROUND-COLOR */
   --color-bg-button: var(--light);
   --color-bg-preview: var(--light-gray);
