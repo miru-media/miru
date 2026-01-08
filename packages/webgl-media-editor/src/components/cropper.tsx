@@ -1,8 +1,11 @@
+import 'cropperjs/dist/cropper.css'
+
 import type { Component } from 'fine-jsx'
 import { toValue } from 'fine-jsx'
 
 import type { InputEvent } from 'shared/types'
 
+import styles from '../css/index.module.css'
 import type { MediaEditor } from '../media-editor.ts'
 
 import { RowSlider } from './row-slider.jsx'
@@ -19,18 +22,18 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
 
   return (
     <>
-      <div class="miru--preview">{container}</div>
-      <div class="miru--menu">
-        <p class="miru--menu__row">
+      <div class={styles['miru--preview']}>{container}</div>
+      <div class={styles['miru--menu']}>
+        <p class={styles['miru--menu__row']}>
           <button
-            class={['miru--button', () => (aspectRatio.value === -1 ? 'miru--acc' : '')]}
+            class={[styles['miru--button'], () => (aspectRatio.value === -1 ? styles['miru--acc'] : '')]}
             type="button"
             onClick={async () => {
               await resetCrop()
             }}
           >
-            <IconTablerCircleOff class="miru--button__icon" />
-            <span class="miru--button__label">Original</span>
+            <IconTablerCircleOff class={styles['miru--button__icon']} />
+            <span class={styles['miru--button__label']}>Original</span>
           </button>
 
           {[
@@ -39,18 +42,21 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             { value: 1 / ASPECT_9_16, Icon: IconTablerCropLandscape, label: '16:9' },
           ].map(({ value, Icon, label }) => (
             <button
-              class={() => ['miru--button', aspectRatio.value.toFixed(1) === value.toFixed(1) && 'miru--acc']}
+              class={() => [
+                styles['miru--button'],
+                aspectRatio.value.toFixed(1) === value.toFixed(1) && styles['miru--acc'],
+              ]}
               type="button"
               onClick={() => setAspectRatio(value)}
             >
-              <Icon class="miru--button__icon" />
-              <span class="miru--button__label">{label}</span>
+              <Icon class={styles['miru--button__icon']} />
+              <span class={styles['miru--button__label']}>{label}</span>
             </button>
           ))}
 
-          <button class="miru--button" type="button" onClick={rotate}>
-            <IconTablerRotateClockwise class="miru--button__icon" />
-            <span class="miru--button__label">Rotate</span>
+          <button class={styles['miru--button']} type="button" onClick={rotate}>
+            <IconTablerRotateClockwise class={styles['miru--button__icon']} />
+            <span class={styles['miru--button__label']}>Rotate</span>
           </button>
         </p>
 

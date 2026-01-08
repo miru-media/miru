@@ -17,6 +17,7 @@ import type { InputEvent, Size } from 'shared/types'
 import { getCenter, useElementSize } from 'shared/utils'
 
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants.ts'
+import styles from '../css/index.module.css'
 
 import { RowSlider } from './row-slider.jsx'
 
@@ -51,11 +52,16 @@ const EffectItem = (props: {
     <button
       type="button"
       data-id={id}
-      class={['miru--button', () => isActive() && 'miru--acc', className]}
+      class={[
+        styles['miru--button'],
+        styles['miru--filter-preview'],
+        () => isActive() && styles['miru--acc'],
+        className,
+      ]}
       onClick={onClick}
     >
-      <canvas ref={canvas} style="transform: scaleY(-1)" />
-      <span class="miru--button__label">{props.effect.name}</span>
+      <canvas ref={canvas} />
+      <span class={styles['miru--button__label']}>{props.effect.name}</span>
     </button>
   )
 }
@@ -222,8 +228,12 @@ export const WebglEffectsMenu = (props: {
   })
 
   return (
-    <div class={['miru--menu', props.class]}>
-      <p ref={container} class="miru--menu__row miru--menu__row--scroll" onScroll={onScroll}>
+    <div class={[styles['miru--menu'], props.class]}>
+      <p
+        ref={container}
+        class={[styles['miru--menu__row'], styles['miru--menu__row--scroll']]}
+        onScroll={onScroll}
+      >
         {() =>
           [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => (
             <EffectItem
@@ -235,10 +245,10 @@ export const WebglEffectsMenu = (props: {
               isActive={() => currentEffect.value === id}
               onClick={() => onClickFilter(id)}
               class={[
-                () => scrolledEffectId.value === id && 'miru--hov',
+                () => scrolledEffectId.value === id && styles['miru--hov'],
                 () =>
                   ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                  'miru--loading',
+                  styles['miru--loading'],
               ]}
             ></EffectItem>
           ))

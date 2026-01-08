@@ -43,11 +43,6 @@ declare module '*.glb' {
   export default src
 }
 
-declare module 'virtual:*-shadow.css' {
-  const src: string
-  export default src
-}
-
 declare module '*.vert' {
   const src: string
   export default src

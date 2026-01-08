@@ -1,12 +1,16 @@
 /* BUTTON */
 .miru--button {
-  transition: all 0.25s;
+  transition:
+    color 0.25s,
+    background-color 0.25s;
 }
 
 /* BUTTON HOVER */
 .miru--button:hover,
 .miru--hov:not(.miru--acc) {
-  transition: all 0.015s;
+  transition:
+    color 0.015s,
+    background-color 0.015s;
 }
 
 /* PRELOADER */

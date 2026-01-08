@@ -8,82 +8,84 @@
 
   /* STACKING CONTEXT */
   isolation: isolate;
-}
 
-/* RESETS */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  display: block;
-  margin: 0;
-  user-select: none;
+  /* RESETS */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    display: block;
+    margin: 0;
+    user-select: none;
 
-  -webkit-tap-highlight-color: transparent;
-}
-
-style,
-[hidden] {
-  display: none;
-}
-
-img,
-picture,
-video,
-canvas,
-svg {
-  max-width: 100%;
-}
-
-input,
-button,
-[role='button'],
-textarea,
-select {
-  font: inherit;
-}
-
-button,
-[role='button'] {
-  width: auto;
-  padding: 0;
-  margin: 0;
-  overflow: visible;
-  font: inherit;
-  line-height: normal;
-  color: inherit;
-  background: transparent;
-  border: none;
-}
-
-.miru--slider {
-  overflow: hidden;
-  appearance: none;
-  touch-action: none;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  &::-moz-range-track {
-    height: 100%;
+  style,
+  script,
+  head *,
+  [hidden] {
+    display: none;
   }
 
-  &::-moz-range-thumb {
-    height: 100%;
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  input,
+  button,
+  [role='button'],
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button,
+  [role='button'] {
+    width: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    font: inherit;
+    line-height: normal;
+    color: inherit;
+    background: transparent;
     border: none;
-    border-radius: 0;
   }
 
-  &::-moz-range-progress {
-    height: 100%;
-  }
-}
+  .miru--slider {
+    overflow: hidden;
+    appearance: none;
+    touch-action: none;
+    cursor: pointer;
 
-.miru--slider::-webkit-slider-thumb {
-  width: 0.35rem;
-  height: 200px;
-  margin-top: -80px;
-  appearance: none;
+    &:focus {
+      outline: none;
+    }
+
+    &::-moz-range-track {
+      height: 100%;
+    }
+
+    &::-moz-range-thumb {
+      height: 100%;
+      border: none;
+      border-radius: 0;
+    }
+
+    &::-moz-range-progress {
+      height: 100%;
+    }
+  }
+
+  .miru--slider::-webkit-slider-thumb {
+    width: 0.35rem;
+    height: 200px;
+    margin-top: -80px;
+    appearance: none;
+  }
 }

@@ -1,5 +1,5 @@
 /* MODULE BUTTON */
-:host {
+.host {
   &[show-labels='false'] .miru--button:has(.miru--button__icon) {
     .miru--button__label {
       display: none;
@@ -24,6 +24,10 @@
   &[disabled] {
     pointer-events: none;
     opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline-offset: -4px;
   }
 
   &.miru--mark-disabled {

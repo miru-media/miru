@@ -13,6 +13,7 @@ import {
   setObjectSize,
 } from 'shared/utils'
 
+import styles from '../css/index.module.css'
 import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
@@ -41,7 +42,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
   }
 
   const container = document.createElement('div')
-  container.className = 'miru--cropper-container'
+  container.className = styles['miru--cropper-container']
 
   watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {
     if (source == null || original == null) return
