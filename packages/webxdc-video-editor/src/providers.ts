@@ -5,7 +5,7 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import WebxdcProvider from 'y-webxdc'
 import type * as Y from 'yjs'
 
-import { FIRST_SYNC_AWAIT_TIMEOUT, IDB_DOC_NAME } from './cosntants.ts'
+import { FIRST_SYNC_AWAIT_TIMEOUT, IDB_DOC_NAME } from './constants.ts'
 
 export const setupProviders = (docName: string, ydoc: Y.Doc): Promise<IndexeddbPersistence> => {
   const promises: Promise<unknown>[] = []

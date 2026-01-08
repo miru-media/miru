@@ -9,7 +9,7 @@ import { createApp, markRaw } from 'vue'
 import * as Y from 'yjs'
 
 import App from './app.vue'
-import { IDB_DOC_NAME } from './cosntants.ts'
+import { IDB_DOC_NAME } from './constants.ts'
 import { setupProviders } from './providers.ts'
 
 const ydoc = markRaw(new Y.Doc())
