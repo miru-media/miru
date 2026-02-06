@@ -12,9 +12,11 @@ import type {
   VideoEditorStore,
 } from 'webgl-video-editor'
 
-import { ASSET_TYPE_PREFIX, ROOT_NDOE_ID } from '../constants.ts'
+import type { AnyNode } from '../../types/internal'
+import { ROOT_NODE_ID } from '../constants.ts'
+import type { BaseNode } from '../nodes/base-node.ts'
 
-import { YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
+import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
 import { createInitialMovie } from './utils.ts'
 
 const updateYnode = (ynode: Y.Map<unknown>, updates: Partial<Schema.AnyNodeSchema>): void => {
@@ -28,12 +30,23 @@ const updateYnode = (ynode: Y.Map<unknown>, updates: Partial<Schema.AnyNodeSchem
 
 const OBSERVED = new WeakSet<Y.Map<unknown>>()
 
+const getOrCreateYmap = <T>(ymap: Y.Map<unknown>, key: string): Y.Map<T> => {
+  let newYmap = (ymap as Y.Map<Y.Map<T>>).get(key)
+
+  if (!newYmap) {
+    newYmap = new Y.Map()
+    ymap.set(key, newYmap)
+  }
+
+  return newYmap
+}
+
 export class VideoEditorYjsStore implements VideoEditorStore {
   #movie!: VideoEditor['_editor']['_movie']
 
   readonly ydoc: Y.Doc
-  #ytree!: YTree
-  #yundo!: Y.UndoManager
+  readonly #ytree!: YTree
+  readonly #yundo!: Y.UndoManager
   readonly #ignoreOrigin = Symbol('ignore-undo')
 
   readonly #canUndo = ref(false)
@@ -47,34 +60,35 @@ export class VideoEditorYjsStore implements VideoEditorStore {
 
   readonly #abort = new AbortController()
 
-  #isApplyingDocUpdate = false
+  #isSyncingYdocToMovie = false
   get #shouldSkipNodeEvent(): boolean {
-    return this.#yundo.undoing || this.#yundo.redoing || this.#isApplyingDocUpdate
+    return this.#yundo.undoing || this.#yundo.redoing || this.#isSyncingYdocToMovie
   }
 
-  constructor(ydoc: Y.Doc) {
+  constructor(ymap: Y.Map<unknown>) {
+    const ydoc = ymap.doc!
     this.ydoc = ydoc
     ydoc.on('destroy', this.dispose.bind(this))
+
+    const ytreeMap = getOrCreateYmap<unknown>(ymap, YTREE_YMAP_KEY)
+
+    this.#ytree = new YTree(ytreeMap)
+    this.#yundo = new Y.UndoManager(ymap)
   }
 
   init(editor: VideoEditor): void {
     const { _editor } = editor
 
-    const ymap = this.ydoc.getMap(YTREE_YMAP_KEY)
-
-    this.#ytree = new YTree(ymap)
-    const yundo = (this.#yundo = new Y.UndoManager(ymap))
-
     let isNewMovie = true
     try {
-      this.#ytree.getNodeValueFromKey(ROOT_NDOE_ID)
+      this.#ytree.getNodeValueFromKey(ROOT_NODE_ID)
       isNewMovie = false
     } catch {}
 
     const movie = (this.#movie = _editor._movie)
     movie.nodes.map.forEach((node) => this.#onCreate({ nodeId: node.id }))
 
-    this.#ytree.observe(this.#onYtreeChange.bind(this))
+    this.#ytree.observe(this.#onYtreeChange)
 
     const bindNodeListener = <T extends unknown[]>(
       listener: (...args: T) => unknown,
@@ -107,6 +121,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       this.#canRedo.value = yundo.canRedo()
     }
 
+    const yundo = this.#yundo
     yundo.ignoreRemoteMapChanges = true
     yundo.on('stack-cleared', onStackChange)
     yundo.on('stack-item-added', onStackChange)
@@ -114,7 +129,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     yundo.clear()
   }
 
-  // WIP: shouldn't be needed
+  // TODO: shouldn't be needed
   untracked<T>(fn: () => T): T {
     return this.ydoc.transact(fn, this.#ignoreOrigin)
   }
@@ -130,22 +145,27 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     this.#yundo.redo()
   }
 
+  #getYtreeNode(nodeId: string): Y.Map<unknown> {
+    return this.#ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
+  }
+
   readonly #onYnodeChange = (event: Y.YMapEvent<unknown>): void => {
-    this.#isApplyingDocUpdate = true
+    this.#isSyncingYdocToMovie = true
 
     try {
-      this.ydoc.transact(() => {
-        const ynode = event.target
-        const id = ynode.get('id') as string
-        const node = this.#movie.nodes.get(id) as Record<string, any>
+      const ynode = event.target
+      const id = ynode.get('id') as string
+      const node = this.#movie.nodes.get(id) as AnyNode | undefined
 
-        event.changes.keys.forEach((change, key) => {
-          const newValue = change.action === 'delete' ? undefined : ynode.get(key)
-          node[key] = newValue
-        })
+      if (!node) return
+
+      // apply property changes to node
+      event.changes.keys.forEach((change, key) => {
+        const newValue = change.action === 'delete' ? undefined : ynode.get(key)
+        ;(node as Record<string, any>)[key] = newValue
       })
     } finally {
-      this.#isApplyingDocUpdate = false
+      this.#isSyncingYdocToMovie = false
     }
   }
 
@@ -156,38 +176,44 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     }
   }
 
-  #onYtreeChange(): void {
-    this.#isApplyingDocUpdate = true
+  #getOrCreateFromYnode(ynode: Y.Map<unknown>): BaseNode {
+    return (
+      this.#movie.nodes.map.get(ynode.get('id') as string) ??
+      this.#movie.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
+    )
+  }
+
+  readonly #onYtreeChange = (): void => {
+    this.#isSyncingYdocToMovie = true
     try {
-      this.ydoc.transact(() => this.#onYtreeChange_(YTREE_ROOT_KEY))
+      this.ydoc.transact(() => this.#onYtreeChange_(ROOT_NODE_ID))
     } finally {
-      this.#isApplyingDocUpdate = false
+      this.#isSyncingYdocToMovie = false
     }
   }
 
   #onYtreeChange_(parentKey: string): void {
     const ytree = this.#ytree
-    const childIds: string[] = ytree.sortChildrenByOrder(ytree.getNodeChildrenFromKey(parentKey), parentKey)
-    const childIdSet = new Set<string>(childIds)
 
-    const getOrCreateFromYTree = (ynode: Y.Map<unknown>) =>
-      this.#movie.nodes.map.get(ynode.get('id') as string) ??
-      this.#movie.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
-
-    if (parentKey === YTREE_ROOT_KEY) {
-      childIds.forEach((nodeId) => {
-        const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
-        if ((ynode.get('type') as string).startsWith(ASSET_TYPE_PREFIX)) getOrCreateFromYTree(ynode)
-      })
-    } else {
-      this.#movie.nodes.get(parentKey).children?.forEach((child) => {
-        if (!childIdSet.has(child.id)) child.remove()
-      })
+    // remove unparented nodes
+    if (parentKey === YTREE_NULL_PARENT_KEY) {
+      const unparentedIds: string[] = []
+      ytree.getAllDescendants(YTREE_NULL_PARENT_KEY, unparentedIds)
+      unparentedIds.forEach((nodeId) => this.#movie.nodes.map.get(nodeId)?.remove())
+      return
     }
 
+    const childIds: string[] = ytree.sortChildrenByOrder(ytree.getNodeChildrenFromKey(parentKey), parentKey)
+    const childIdSet = new Set(childIds)
+
+    // remove children that are no longer under the parent in the ytree
+    ;(this.#movie.nodes.get(parentKey) as AnyNode | undefined)?.children?.forEach((child) => {
+      if (!childIdSet.has(child.id)) child.remove()
+    })
+
     childIds.forEach((nodeId, index) => {
-      const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
-      const node = getOrCreateFromYTree(ynode)
+      const ynode = this.#getYtreeNode(nodeId)
+      const node = this.#getOrCreateFromYnode(ynode)
 
       this.#ensureObserved(ynode)
 
@@ -208,10 +234,10 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     let ynode: Y.Map<unknown>
 
     try {
-      ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
+      ynode = this.#getYtreeNode(nodeId)
     } catch {
       ynode = new Y.Map(Object.entries(node.toObject()))
-      ytree.createNode(YTREE_ROOT_KEY, nodeId, ynode)
+      ytree.createNode(YTREE_NULL_PARENT_KEY, nodeId, ynode)
       ytree.recomputeParentsAndChildren()
     }
 
@@ -225,12 +251,15 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     const ytree = this.#ytree
 
     const parentKey = parentNode?.id ?? YTREE_ROOT_KEY
-    if (ytree.getNodeParentFromKey(nodeId) !== parentKey) ytree.moveChildToParent(nodeId, parentKey)
+    if (ytree.getNodeParentFromKey(nodeId) !== parentKey) {
+      ytree.moveChildToParent(nodeId, parentKey)
+      // TODO: should be done by yjs-orderedtree
+      ytree.recomputeParentsAndChildren()
+    }
 
     if (parentNode) {
       const ytreeSiblingIds = new Set<string>(ytree.getNodeChildrenFromKey(parentKey))
 
-      ytree.recomputeParentsAndChildren()
       const nextId = node.next?.id
       const prevId = node.prev?.id
 
@@ -250,15 +279,13 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       }
     }
 
-    updateYnode(this.#ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>, udpates)
+    updateYnode(this.#getYtreeNode(nodeId), udpates)
   }
 
   #onDelete(event: NodeDeleteEvent): void {
-    if (this.#shouldSkipNodeEvent) return
-
     const { nodeId } = event
 
-    this.#ytree.deleteNodeAndDescendants(nodeId)
+    this.#ytree.moveChildToParent(nodeId, YTREE_NULL_PARENT_KEY)
   }
 
   reset(): void {
@@ -273,18 +300,27 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     return this.#ytree.generateNodeKey()
   }
 
-  serializeYdoc(): Schema.SerializedMovie {
+  serializeYdoc() {
     const ytree = this.#ytree
 
-    const serialize = (nodeId: string): Schema.AnyNodeSerializedSchema => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
+    const serialize = <T extends Schema.AnyNodeSerializedSchema = Schema.AnyNodeSerializedSchema>(
+      nodeId: string,
+    ): T => {
       const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
-      const childIds: string[] = ytree.getNodeChildrenFromKey(nodeId)
+      const childIds: string[] = ytree.sortChildrenByOrder(ytree.getNodeChildrenFromKey(nodeId), nodeId)
 
       return { ...ynode.toJSON(), children: childIds.map(serialize) } as any
     }
 
-    const movie = serialize(ytree.getNodeValueFromKey(ROOT_NDOE_ID) as string) as Schema.SerializedMovie
+    const movie = this.#movie
 
-    return movie
+    return {
+      ...this.#movie.toObject(),
+      assets: movie.assetLibrary.children.map((asset) =>
+        serialize<Schema.VideoEffectAsset | Schema.AvMediaAsset>(asset.id),
+      ),
+      tracks: movie.assetLibrary.children.map((track) => serialize<Schema.SerializedTrack>(track.id)),
+    }
   }
 }

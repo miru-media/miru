@@ -33,6 +33,7 @@
     "reactive-effects": "workspace:^",
     "shared": "workspace:^",
     "uid": "catalog:",
+    "unplugin-vue-markdown": "^29.2.0",
     "vitest": "^3.2.4",
     "vue": "catalog:",
     "vue-i18n-lite": "catalog:",

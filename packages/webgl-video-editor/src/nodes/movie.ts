@@ -13,7 +13,7 @@ import {
   ASSET_URL_REFRESH_TIMEOUT_MS,
   DEFAULT_FRAMERATE,
   DEFAULT_RESOLUTION,
-  ROOT_NDOE_ID,
+  ROOT_NODE_ID,
 } from '../constants.ts'
 import { NodeCreateEvent, type VideoEditorEvents } from '../events.ts'
 
@@ -120,7 +120,7 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
   }
 
   constructor() {
-    super(ROOT_NDOE_ID)
+    super(ROOT_NODE_ID)
     this.root = this
     this.nodes.set(this)
 
@@ -319,6 +319,15 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
   clearAllContent(clearCache: true): Promise<void>
   clearAllContent(clearCache?: false): void
   clearAllContent(clearCache = false): Promise<void> | void {
+    ;([Collection.ASSET_LIBRARY, Collection.TIMELINE] as const).forEach((kind, index) => {
+      const collection =
+        this.children.find((c) => c.kind === kind) ??
+        (this.createNode({ id: kind, type: 'collection', kind }) as
+          | Collection<'asset-library'>
+          | Collection<'timeline'>)
+      collection.position({ parentId: this.id, index })
+    })
+
     this.children.forEach((collection) => {
       while (collection.tail) collection.tail.dispose()
     })

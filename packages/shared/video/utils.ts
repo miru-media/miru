@@ -5,7 +5,7 @@ import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener
 
 import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent.ts'
 
-import { EXPORT_VIDEO_CODECS } from './constants.ts'
+import { EXPORT_VIDEO_CODECS, type ReadyState } from './constants.ts'
 import { Demuxer } from './demuxer.ts'
 import type { AudioMetadata, VideoMetadata } from './types.ts'
 
@@ -101,8 +101,8 @@ export const useMappedUniqueArray = <T extends object, U>(
 }
 
 export const useMediaReadyState = (media: MaybeRefOrGetter<HTMLMediaElement | undefined>) => {
-  const readyState = ref(0)
-  const updateValue = () => (readyState.value = toValue(media)?.readyState ?? 0)
+  const readyState = ref<ReadyState>(0)
+  const updateValue = () => (readyState.value = (toValue(media)?.readyState ?? 0) as ReadyState)
   const events = [
     'abort',
     'canplay',

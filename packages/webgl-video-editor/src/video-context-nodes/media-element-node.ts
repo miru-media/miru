@@ -3,6 +3,7 @@ import type { RenderGraph } from 'videocontext'
 
 import { IS_ANDROID, IS_FIREFOX } from 'shared/userAgent'
 import { useEventListener } from 'shared/utils'
+import type { ReadyState } from 'shared/video/constants.ts'
 import { getImageSize, useInterval } from 'shared/video/utils'
 
 import type { CustomSourceNodeOptions } from '../../types/internal.ts'
@@ -86,7 +87,7 @@ export abstract class MediaElementNode extends CustomSourceNode {
   }
 
   _update(movieTime: number) {
-    this.mediaState.readyState.value = this.media.readyState
+    this.mediaState.readyState.value = this.media.readyState as ReadyState
     return super._update(movieTime)
   }
 

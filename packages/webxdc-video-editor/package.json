@@ -1,6 +1,7 @@
 {
   "name": "webxdc-video-editor",
   "version": "0.0.0",
+  "private": true,
   "description": "",
   "type": "module",
   "scripts": {
@@ -13,11 +14,11 @@
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
-    "@types/base64-js": "^1.5.0",
+    "@types/base64-js": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
     "@vueuse/core": "catalog:",
     "app-video-editor": "workspace:^",
-    "base64-js": "^1.5.1",
+    "base64-js": "catalog:",
     "fine-jsx": "catalog:",
     "shared": "workspace:^",
     "uid": "catalog:",

@@ -5,9 +5,10 @@ import { h } from 'fine-jsx/jsx-runtime'
 import { LoadingOverlay } from 'shared/components/loading-overlay'
 import type { I18nOptions, InputEvent } from 'shared/types'
 import { provideI18n } from 'shared/utils'
+import { ReadyState } from 'shared/video/constants.ts'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
-import { EXPORT_VIDEO_CODECS, ReadyState, SourceNodeState } from '../constants.ts'
+import { EXPORT_VIDEO_CODECS, SourceNodeState } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { Clip } from '../nodes/clip.ts'
 import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
@@ -88,8 +89,15 @@ export const VideoEditorUI = (props: {
                         <div>
                           {() => (
                             <>
-                              {ReadyState[mediaState.readyState.value]} | {SourceNodeState[node.state]} |{' '}
-                              {clip.error.value?.code}
+                              {Object.keys(ReadyState).find(
+                                (key) =>
+                                  ReadyState[key as keyof typeof ReadyState] === mediaState.readyState.value,
+                              )}{' '}
+                              |{' '}
+                              {Object.keys(SourceNodeState).find(
+                                (key) => SourceNodeState[key as keyof typeof SourceNodeState] === node.state,
+                              )}{' '}
+                              | {clip.error.value?.code}
                             </>
                           )}
                         </div>

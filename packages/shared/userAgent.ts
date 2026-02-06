@@ -1,4 +1,4 @@
-import { win } from 'shared/utils/window'
+import { win } from 'shared/utils/window.ts'
 
 const { userAgent = '' } = (win.navigator as Navigator | undefined) ?? {}
 const majorVersion = /Version\/(\d+)/.exec(userAgent)?.[1]

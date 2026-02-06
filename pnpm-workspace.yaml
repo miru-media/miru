@@ -9,9 +9,11 @@ catalog:
   '@gltf-transform/functions': ^4.2.1
   '@libav.js/variant-opus': ^6.8.8
   '@lokesh.dhakar/quantize': ^1.4.0
+  '@types/base64-js': '^1.5.0'
   '@types/three': ^0.177.0
   '@vitejs/plugin-vue': ^6.0.1
   '@vueuse/core': 13.4.0
+  'base64-js': '^1.5.1'
   buffer: ^6.0.3
   color-diff: ^1.4.0
   comlink: ^4.4.2

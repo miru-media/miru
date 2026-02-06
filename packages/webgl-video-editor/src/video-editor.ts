@@ -17,7 +17,6 @@ import {
   type BaseClip,
   type BaseNode,
   Clip,
-  Collection,
   MediaAsset,
   Movie,
   type Schema,
@@ -154,6 +153,8 @@ export class VideoEditor {
       this._transact(() => {
         this.selectClip(undefined)
         movie.clearAllContent()
+        this.addTrack('video')
+        this.addTrack('audio')
       })
 
       await MediaAsset.clearCache().then(() => undefined)
@@ -177,25 +178,18 @@ export class VideoEditor {
     movie.resolution = movieInit.resolution
     movie.frameRate = movieInit.frameRate
 
-    movie.children.forEach((collection) => collection.dispose())
-
-    const createChildren = (node: AnyNode, init: Schema.AnyNodeSerializedSchema): void => {
-      if ('children' in init) {
-        init.children.forEach((childInit, index) => {
-          const childNode = movie.createNode(childInit)
-          childNode.position({ parentId: node.id, index })
-          createChildren(childNode, childInit)
-        })
-      }
+    const createChildren = (parent: AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
+      childrenInit.forEach((childInit, index) => {
+        const childNode = movie.createNode(childInit)
+        childNode.position({ parentId: parent.id, index })
+        if ('children' in childInit) createChildren(childNode, childInit.children)
+      })
     }
 
-    createChildren(movie, movieInit)
+    while (movie.timeline.tail) movie.timeline.tail.dispose()
 
-    const missingCollections = new Set([Collection.ASSET_LIBRARY, Collection.TIMELINE] as const)
-    movieInit.children.forEach(({ kind }) => missingCollections.delete(kind))
-    missingCollections.forEach((kind) =>
-      movie.createNode({ id: this.generateId(), type: 'collection', kind }),
-    )
+    createChildren(movie.assetLibrary, movieInit.assets)
+    createChildren(movie.timeline, movieInit.tracks)
 
     this._movie._emit(new MovieReplaceEvent())
   }
@@ -273,7 +267,16 @@ export class VideoEditor {
     if (delta < MIN_CLIP_DURATION_S) return
 
     return this._transact((): Clip => {
-      const newClip = new Clip(
+      const startClip = new Clip(
+        {
+          ...clip.toObject(),
+          id: this.generateId(),
+          transition: undefined,
+          duration: delta,
+        },
+        this._movie,
+      )
+      const endClip = new Clip(
         {
           ...clip.toObject(),
           id: this.generateId(),
@@ -282,14 +285,24 @@ export class VideoEditor {
         },
         this._movie,
       )
-      clip.transition = undefined
-      clip.duration = delta
 
-      newClip.position({ parentId: parent.id, index: clip.index + 1 })
+      startClip.position({ parentId: parent.id, index: clip.index })
+      endClip.position({ parentId: parent.id, index: clip.index + 1 })
 
-      this.#selectClip(clip, false)
+      this.#selectClip(startClip, false)
+      clip.dispose()
 
-      return newClip
+      return endClip
+    })
+  }
+
+  addTrack(type: 'video' | 'audio'): Track {
+    const movie = this._movie
+
+    return this._transact(() => {
+      const track = movie.createNode({ id: this.generateId(), trackType: type, type: 'track' })
+      track.position({ parentId: movie.timeline.id, index: movie.count })
+      return track
     })
   }
 
@@ -404,7 +417,14 @@ export class VideoEditor {
 
       return node.toObject() as any
     }
-    return serialize(this._movie)
+
+    const { assetLibrary, timeline } = this._movie
+
+    return {
+      ...this._movie.toObject(),
+      assets: assetLibrary.children.map(serialize),
+      tracks: timeline.children.map(serialize),
+    }
   }
 
   async export(): Promise<{ blob: Blob; url: string } | undefined> {

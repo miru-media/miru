@@ -92,10 +92,7 @@ export const Timeline = ({
     if (!file) return
 
     try {
-      if (!track) {
-        track = movie.createNode({ id: editor.generateId(), trackType: 'video', type: 'track' })
-        track.position({ parentId: movie.timeline.id, index: movie.count })
-      }
+      track ??= editor.addTrack('video')
       await editor.addClip(track, file)
     } catch {
       // eslint-disable-next-line no-alert -- TODO

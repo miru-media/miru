@@ -9,7 +9,7 @@ import type { ParentNode } from '../nodes/parent-node.ts'
 import { createInitialMovie } from './utils.ts'
 
 type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> =
-  // WIP: remove group???!!!
+  // TODO: remove group???!!!
   | { type: 'node:create'; group?: string; nodeId: string; init: core.Schema.AnyNodeSchema }
   | {
       type: 'node:move'

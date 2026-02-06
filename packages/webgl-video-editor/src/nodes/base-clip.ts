@@ -9,7 +9,6 @@ import { BaseNode } from './base-node.ts'
 import type { Schema, Track } from './index.ts'
 
 export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.Clip {
-  id: string
   abstract sourceAsset: MediaAsset
   abstract isReady: boolean
   abstract everHadEnoughData: boolean
@@ -97,7 +96,6 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
 
   constructor(init: Schema.Clip, root: RootNode) {
     super(init.id, root)
-    this.id = init.id
 
     this._defineReactive('name', init.name)
     this._defineReactive('sourceStart', init.sourceStart)

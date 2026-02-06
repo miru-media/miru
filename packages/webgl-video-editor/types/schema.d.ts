@@ -63,22 +63,14 @@ export interface SerializedTrack extends Track {
   children: Clip[]
 }
 
-export interface SerializedCollection<T extends CollectionKind = CollectionKind> extends Collection<T> {
-  children: (T extends 'asset-library'
-    ? AvMediaAsset | VideoEffectAsset
-    : T extends 'timeline'
-      ? SerializedTrack
-      : unknown)[]
-}
-
 export interface SerializedMovie extends Movie {
-  children: (SerializedCollection<'asset-library'> | SerializedCollection<'timeline'>)[]
+  assets: (AvMediaAsset | VideoEffectAsset)[]
+  tracks: SerializedTrack[]
 }
 
 export type AnyNodeSchema = Movie | Collection | Track | Clip | AvMediaAsset | VideoEffectAsset
 export type AnyNodeSerializedSchema =
   | SerializedMovie
-  | SerializedCollection
   | SerializedTrack
   | Clip
   | AvMediaAsset
