@@ -142,7 +142,6 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       currentTime: toVue(() => editor.currentTime),
       tracks: toVue(() => editor.tracks.map(getVueNode)),
       selection: toVue(() => editor.selection),
-      isLoading: toVue(() => editor.isLoading),
       effects: toVue(() => editor.effects as Map<string, pub.VideoEffectAsset>) as any,
       exportResult: toVue(() => editor.exportResult),
       state: toVue(() => editor.toObject()),
@@ -162,8 +161,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       },
       replaceClipSource: editor.replaceClipSource.bind(editor),
       deleteSelection: editor.deleteSelection.bind(editor),
-      clearAllContentAndHistory: editor.clearAllContentAndHistory.bind(editor),
-      replaceContent: editor.replaceContent.bind(editor),
+      importJson: editor.importJson.bind(editor),
       toObject: editor.toObject.bind(editor),
       export: editor.export.bind(editor),
       dispose(): void {

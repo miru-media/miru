@@ -11,7 +11,7 @@ import type { AnyNodeSerializedSchema } from '../types/schema'
 import type * as pub from '../types/webgl-video-editor'
 
 import { MIN_CLIP_DURATION_S } from './constants.ts'
-import { MovieReplaceEvent, NodeMoveEvent, NodeUpdateEvent } from './events.ts'
+import { NodeMoveEvent, NodeUpdateEvent } from './events.ts'
 import { MovieExporter } from './export/movie-exporter.ts'
 import {
   type BaseClip,
@@ -23,6 +23,7 @@ import {
   type Track,
   type VideoEffectAsset,
 } from './nodes/index.ts'
+import { importFromJson } from './store/utils.ts'
 
 const getClipAtTime = (track: Track, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -98,13 +99,8 @@ export class VideoEditor {
     return this.#exportProgress.value
   }
 
-  readonly #isLoading = ref(0)
-
   get selection(): Clip | undefined {
     return this.#selection.value
-  }
-  get isLoading(): boolean {
-    return this.#isLoading.value > 0
   }
 
   get tracks(): Track[] {
@@ -141,57 +137,13 @@ export class VideoEditor {
       })
   }
 
-  async #withLoading<T>(fn: () => Promise<T>): Promise<T> {
-    this.#isLoading.value++
-    return await fn().finally(() => this.#isLoading.value--)
-  }
-
-  async clearAllContentAndHistory(): Promise<void> {
-    await this.#withLoading(async () => {
-      const { _movie: movie } = this
-
-      this._transact(() => {
-        this.selectClip(undefined)
-        movie.clearAllContent()
-        this.addTrack('video')
-        this.addTrack('audio')
-      })
-
-      await MediaAsset.clearCache().then(() => undefined)
-
-      this._transact(() => {
-        this.createInitialAssets()
-        this._movie._emit(new MovieReplaceEvent())
-      })
-    })
-  }
-
   generateId(): string {
     const { store } = this
     return store ? store.generateId() : uid()
   }
 
-  replaceContent(movieInit: Schema.SerializedMovie): void {
-    const { _movie: movie } = this
-
-    movie.clearAllContent()
-    movie.resolution = movieInit.resolution
-    movie.frameRate = movieInit.frameRate
-
-    const createChildren = (parent: AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
-      childrenInit.forEach((childInit, index) => {
-        const childNode = movie.createNode(childInit)
-        childNode.position({ parentId: parent.id, index })
-        if ('children' in childInit) createChildren(childNode, childInit.children)
-      })
-    }
-
-    while (movie.timeline.tail) movie.timeline.tail.dispose()
-
-    createChildren(movie.assetLibrary, movieInit.assets)
-    createChildren(movie.timeline, movieInit.tracks)
-
-    this._movie._emit(new MovieReplaceEvent())
+  importJson(content: Schema.SerializedMovie): void {
+    importFromJson(this._movie, content)
   }
 
   async createMediaAsset(source: string | Blob): Promise<MediaAsset> {
@@ -404,7 +356,7 @@ export class VideoEditor {
   }
 
   toObject(): Schema.SerializedMovie {
-    const serialize = <T extends Schema.AnyNodeSchema>(
+    const serialize = <T extends Schema.AnyNodeSchema | Schema.VideoEffectAsset>(
       node: Extract<AnyNode, BaseNode<T>>,
     ): Extract<AnyNodeSerializedSchema, { type: T['type'] }> => {
       if ('children' in node && node.children != null) {
@@ -422,7 +374,7 @@ export class VideoEditor {
 
     return {
       ...this._movie.toObject(),
-      assets: assetLibrary.children.map(serialize),
+      assets: assetLibrary.children.map(serialize as any),
       tracks: timeline.children.map(serialize),
     }
   }

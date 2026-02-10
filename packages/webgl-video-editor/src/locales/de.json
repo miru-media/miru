@@ -8,6 +8,7 @@
   "redo": "Wiederherstellen",
   "timeline_zoom": "Zoom der Zeitleiste",
   "settings": "Einstellungen",
+  "name": "Name",
   "resolution": "Auflösung",
   "frame_rate": "Bildrate",
   "click_add_clip": "Einen Clip hinzuzufügen",
@@ -18,6 +19,8 @@
   "clip": "Clip",
   "transition": "Übergang",
   "create_project": "Neues Projekt erstellen",
+  "create_empty_project": "Neues leeres Projekt erstellen",
+  "create_example_project": "Mit Beispielinhalt beginnen",
   "close_project": "Projekt schließen",
   "add_clip": "Clip hinzufügen",
   "audio": "Audio",
@@ -31,6 +34,5 @@
   "error_no_webcodecs": "Deinem Browser fehlen die nötigen APIs, um Videos zu exportieren!",
   "error_cannot_export": "Dein Browser kann keine Videos exportieren, in den Codecs die wir benuzten!",
   "error_cannot_play_type": "Dein Browser kann diesen Dateityp nicht wiedergeben.",
-  "delete_all_content": "Alle Inhalt löschen",
-  "confirm_delete_all_content": "Bist du sicher, dass du deinen Video löschen willst? \n\nDiese Action kann nicht rückgängig gemacht werden."
+  "confirm_delete_project": "Bist du sicher, dass du dieses Project löschen willst?"
 }

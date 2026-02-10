@@ -136,15 +136,11 @@ export interface VideoEditor {
   /** Delete the selected clip */
   deleteSelection: () => void
 
-  /** The editor is busy with an async action */
-  isLoading: boolean
   /** Playback is paused */
   isPaused: boolean
-  /** Remove all clips, tracks, effects and media assets and clear the undo history */
-  clearAllContentAndHistory: () => Promise<void>
 
-  /** Clear all content and set new content */
-  replaceContent: (newContent: Schema.SerializedMovie) => void
+  /** Adds assets and tracks from the provided JSON object */
+  importJson: (newContent: Schema.SerializedMovie) => void
 
   /**
    * Render and encode the video composition.

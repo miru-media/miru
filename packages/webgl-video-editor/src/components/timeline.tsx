@@ -1,6 +1,5 @@
 import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
-import { LoadingOverlay } from 'shared/components/loading-overlay'
 import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
@@ -184,8 +183,6 @@ export const Timeline = ({
             )
           }
         </div>
-
-        <LoadingOverlay loading={() => editor.isLoading} />
       </div>
     </div>
   )

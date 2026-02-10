@@ -73,74 +73,85 @@ const assets = {
   },
 } satisfies Record<string, Schema.AvMediaAsset>
 
-export const demoMovie = createInitialMovie(uid)
+export const demoMovie = createInitialMovie()
 
 demoMovie.resolution = { width: 1080, height: 1920 }
 demoMovie.frameRate = 24
 demoMovie.assets = [...Object.values(assets), ...filters]
-demoMovie.tracks[0].children = [
+demoMovie.tracks.push(
   {
     id: uid(),
-    type: 'clip',
-    sourceStart: 3,
-    duration: 3,
-    source: { assetId: assets.waves.id },
-    filter: { assetId: 'Crispy Cyan', intensity: 1 },
+    type: 'track',
+    trackType: 'video',
+    children: [
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 3,
+        duration: 3,
+        source: { assetId: assets.waves.id },
+        filter: { assetId: 'Crispy Cyan', intensity: 1 },
+      },
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 2,
+        duration: 4,
+        source: { assetId: assets.wavesRocks.id },
+        filter: { assetId: 'Crispy Cyan', intensity: 0.5 },
+      },
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 3,
+        duration: 3,
+        source: { assetId: assets.waveBreaking.id },
+        filter: { assetId: 'Chromatic', intensity: 0.75 },
+      },
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 2.18,
+        duration: 5,
+        source: { assetId: assets.turtle.id },
+        filter: { assetId: 'Vintage', intensity: 0.3 },
+      },
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 1,
+        duration: 2,
+        source: { assetId: assets.waves.id },
+        filter: { assetId: 'Crispy Cyan', intensity: 1 },
+      },
+    ],
   },
   {
     id: uid(),
-    type: 'clip',
-    sourceStart: 2,
-    duration: 4,
-    source: { assetId: assets.wavesRocks.id },
-    filter: { assetId: 'Crispy Cyan', intensity: 0.5 },
+    type: 'track',
+    trackType: 'audio',
+    children: [
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 19,
+        duration: 10,
+        source: { assetId: assets.wavesAudio.id },
+      },
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 0,
+        duration: 5,
+        source: { assetId: assets.underwaterAudio.id },
+      },
+      {
+        id: uid(),
+        type: 'clip',
+        sourceStart: 16,
+        duration: 2,
+        source: { assetId: assets.wavesAudio.id },
+      },
+    ],
   },
-  {
-    id: uid(),
-    type: 'clip',
-    sourceStart: 3,
-    duration: 3,
-    source: { assetId: assets.waveBreaking.id },
-    filter: { assetId: 'Chromatic', intensity: 0.75 },
-  },
-  {
-    id: uid(),
-    type: 'clip',
-    sourceStart: 2.18,
-    duration: 5,
-    source: { assetId: assets.turtle.id },
-    filter: { assetId: 'Vintage', intensity: 0.3 },
-  },
-  {
-    id: uid(),
-    type: 'clip',
-    sourceStart: 1,
-    duration: 2,
-    source: { assetId: assets.waves.id },
-    filter: { assetId: 'Crispy Cyan', intensity: 1 },
-  },
-]
-
-demoMovie.tracks[1].children = [
-  {
-    id: uid(),
-    type: 'clip',
-    sourceStart: 19,
-    duration: 10,
-    source: { assetId: assets.wavesAudio.id },
-  },
-  {
-    id: uid(),
-    type: 'clip',
-    sourceStart: 0,
-    duration: 5,
-    source: { assetId: assets.underwaterAudio.id },
-  },
-  {
-    id: uid(),
-    type: 'clip',
-    sourceStart: 16,
-    duration: 2,
-    source: { assetId: assets.wavesAudio.id },
-  },
-]
+)

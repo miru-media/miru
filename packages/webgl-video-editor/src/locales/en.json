@@ -8,6 +8,7 @@
   "redo": "Redo",
   "timeline_zoom": "Timeline zoom",
   "settings": "Settings",
+  "name": "Name",
   "resolution": "Resolution",
   "frame_rate": "Frame rate",
   "click_add_clip": "Click to add a clip",
@@ -18,6 +19,8 @@
   "clip": "Clip",
   "transition": "Transition",
   "create_project": "Create a new project",
+  "create_empty_project": "Create an empty project",
+  "create_example_project": "Start with example content",
   "close_project": "Close project",
   "add_clip": "Add a clip",
   "audio": "Audio",
@@ -31,6 +34,5 @@
   "error_no_webcodecs": "Your browser doesn't have the WebCodec APIs needed to export videos!",
   "error_cannot_export": "Your browser can't export videos in the formats that we use.",
   "error_cannot_play_type": "Your browser can't play this file type",
-  "delete_all_content": "Delete all content",
-  "confirm_delete_all_content": "Are you sure you want to delete your video? \n\nThis can't be undone."
+  "confirm_delete_project": "Are you sure you want to delete this project?"
 }

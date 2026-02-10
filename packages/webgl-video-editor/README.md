@@ -27,7 +27,7 @@ npm install webgl-video-editor
 
       if (savedJson) {
         const parsed = JSON.parse(savedJson)
-        return editor.replaceContent(parsed)
+        return editor.importJson(parsed)
       }
     } catch (error) {
       console.error(error)

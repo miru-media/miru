@@ -18,22 +18,11 @@ const { store = new VideoEditorLocalStore(), onCloseProject } = defineProps<{
   onCloseProject?: () => unknown
 }>()
 
+const name = defineModel<string>('name')
+
 const editorRef = ref<VideoEditor>()
 
 const { t } = useI18n()
-
-const onClickLoadDemo = async () => {
-  const editor = editorRef.value
-  if (!editor) return
-
-  try {
-    await editor.clearAllContentAndHistory()
-    editor.replaceContent(demoMovie)
-  } catch (error) {
-    console.error(error)
-    alert(t('error_cannot_set_content'))
-  }
-}
 
 if (!import.meta.env.SSR) {
   // Keyboard shortcuts
@@ -112,14 +101,9 @@ if (!import.meta.env.SSR) {
       class="video-editor"
       data-theme="dark"
     >
-      <template #timelineEmpty>
-        <button v-if="!editorRef?.isLoading" type="button" class="demo-video-button" @click="onClickLoadDemo">
-          {{ t('load_demo_video') }}
-        </button>
-      </template>
       <Toolbar v-if="editorRef" :editor="editorRef" />
     </VideoEditorUI>
-    <Settings v-if="editorRef" :editor="editorRef" :onCloseProject />
+    <Settings v-if="editorRef" :editor="editorRef" :onCloseProject v-model:name="name" />
     <IntroModal />
   </div>
 </template>

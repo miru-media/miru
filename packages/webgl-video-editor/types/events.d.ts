@@ -5,7 +5,6 @@ export interface VideoEditorEvents {
   'node:move': NodeMoveEvent
   'node:update': NodeUpdateEvent
   'node:delete': NodeDeleteEvent
-  'root:replace': MovieReplaceEvent
 }
 
 export class NodeCreateEvent extends Event {
@@ -38,12 +37,6 @@ export class NodeMoveEvent extends Event {
   readonly group?: string
 
   constructor(nodeId: string, from: ChildNodePosition | undefined, group?: string)
-}
-
-export class MovieReplaceEvent extends Event {
-  constructor() {
-    super('root:replace')
-  }
 }
 
 export class AssetCreateEvent extends Event {

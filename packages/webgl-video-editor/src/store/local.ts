@@ -6,7 +6,7 @@ import type { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent }
 import type { Movie } from '../nodes/movie.ts'
 import type { ParentNode } from '../nodes/parent-node.ts'
 
-import { createInitialMovie } from './utils.ts'
+import { createInitialMovie, importFromJson } from './utils.ts'
 
 type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> =
   // TODO: remove group???!!!
@@ -51,9 +51,8 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   readonly #abort = new AbortController()
 
   init(editor: core.VideoEditor) {
-    this.#restoreFromLocalStorage(editor)
-
     const movie = (this.#movie = editor._editor._movie)
+    this.#restoreFromLocalStorage()
 
     // Persist to localStorage
     watch([() => editor.state], ([state]) => localStorage.setItem(MOVIE_CONTENT_KEY, JSON.stringify(state)))
@@ -64,12 +63,11 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     movie.on('node:move', this.#onMove.bind(this), options)
     movie.on('node:update', this.#onUpdate.bind(this), options)
     movie.on('node:delete', this.#onDelete.bind(this), options)
-    movie.on('root:replace', this.reset.bind(this), options)
 
     this.#abort.signal.addEventListener('abort', this.reset.bind(this))
   }
 
-  #restoreFromLocalStorage(editor: core.VideoEditor) {
+  #restoreFromLocalStorage(): void {
     if (import.meta.env.SSR) return
     // restore movie from localStorage
     const savedJson = localStorage.getItem(MOVIE_CONTENT_KEY)
@@ -79,7 +77,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
       try {
         const parsed = JSON.parse(savedJson) as core.Schema.SerializedMovie
 
-        editor.replaceContent(parsed)
+        importFromJson(this.#movie, parsed)
         isRestored = true
       } catch (error: unknown) {
         localStorage.setItem(`${LOCAL_STORAGE_PREFIX}backup`, savedJson)
@@ -94,7 +92,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     }
 
     if (!isRestored) {
-      editor.replaceContent(createInitialMovie(() => this.generateId()))
+      importFromJson(this.#movie, createInitialMovie())
     }
   }
 

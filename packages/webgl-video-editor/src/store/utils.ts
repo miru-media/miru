@@ -1,28 +1,42 @@
 import * as Y from 'yjs'
 import { YTree } from 'yjs-orderedtree'
 
+import type { AnyNode } from '../../types/internal'
 import type { SerializedMovie } from '../../types/schema'
 import { ROOT_NODE_ID } from '../constants.ts'
-import type { Schema } from '../nodes/index.ts'
+import type { Movie, Schema } from '../nodes/index.ts'
 
 import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
 
-export const createInitialMovie = (generateId: () => string): SerializedMovie =>
+export const createInitialMovie = (): SerializedMovie =>
   ({
     id: ROOT_NODE_ID,
     type: 'movie',
     assets: [],
-    tracks: [
-      { id: generateId(), type: 'track', trackType: 'video', children: [] },
-      { id: generateId(), type: 'track', trackType: 'audio', children: [] },
-    ],
+    tracks: [],
     resolution: { width: 1920, height: 1080 },
     frameRate: 24,
   }) satisfies SerializedMovie
 
-export const createInitialUpdate = (ymap: Y.Map<unknown>): string => {
+export const importFromJson = (movie: Movie, content: SerializedMovie) => {
+  movie.resolution = content.resolution
+  movie.frameRate = content.frameRate
+
+  const createChildren = (parent: AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
+    childrenInit.forEach((childInit, index) => {
+      const childNode = movie.createNode(childInit)
+      childNode.position({ parentId: parent.id, index })
+      if ('children' in childInit) createChildren(childNode, childInit.children)
+    })
+  }
+
+  createChildren(movie.assetLibrary, content.assets)
+  createChildren(movie.timeline, content.tracks)
+}
+
+export const initYmapFromJson = (ymap: Y.Map<unknown>, content: SerializedMovie) => {
   const ydoc = ymap.doc
-  if (!ydoc) throw new Error('YMap must be added to a doc!')
+  if (!ydoc) throw new Error('YMap must be bound to a doc!')
 
   ydoc.transact(() => {
     const ytreeMap = new Y.Map()
@@ -31,8 +45,6 @@ export const createInitialUpdate = (ymap: Y.Map<unknown>): string => {
     const ytree = new YTree(ytreeMap)
 
     ytree.createNode(YTREE_ROOT_KEY, YTREE_NULL_PARENT_KEY, new Y.Map())
-
-    const initialContent = createInitialMovie(() => ytree.generateNodeKey())
 
     const addNode = (parentKey: string, init: Schema.AnyNodeSerializedSchema) => {
       ytree.createNode(
@@ -43,9 +55,33 @@ export const createInitialUpdate = (ymap: Y.Map<unknown>): string => {
       if ('children' in init) init.children.forEach((child) => addNode(init.id, child))
     }
 
-    ydoc.getMap('meta').set(ROOT_NODE_ID, initialContent.id)
-    addNode(YTREE_ROOT_KEY, initialContent)
+    const movieAsNode = {
+      ...content,
+      id: ROOT_NODE_ID,
+      children: [
+        content.assets.length
+          ? {
+              id: 'asset-library',
+              type: 'collection',
+              kind: 'asset-library',
+              children: content.assets,
+            }
+          : undefined,
+        content.tracks.length
+          ? {
+              id: 'timeline',
+              type: 'collection',
+              kind: 'timeline',
+              children: content.tracks,
+            }
+          : undefined,
+      ].filter(Boolean),
+    }
+    addNode(YTREE_ROOT_KEY, movieAsNode)
   })
+}
+export const createInitialUpdate = (ymap: Y.Map<unknown>): string => {
+  initYmapFromJson(ymap, createInitialMovie())
 
-  return Buffer.from(Y.encodeStateAsUpdateV2(ydoc)).toString('base64')
+  return Buffer.from(Y.encodeStateAsUpdateV2(ymap.doc!)).toString('base64')
 }

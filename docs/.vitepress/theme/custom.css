@@ -1,4 +1,4 @@
-@import './bulma-config.scss';
+@import url('./bulma-config.scss');
 
 :root {
   --vp-c-brand-1: #1d6be4;
@@ -19,6 +19,10 @@
 
 :root:is(.dark) .light-only {
   display: none;
+}
+
+button:is(button):focus-visible {
+  outline: solid currentcolor;
 }
 
 .VPNavBar .logo {

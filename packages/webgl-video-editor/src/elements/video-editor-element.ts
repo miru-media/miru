@@ -4,7 +4,6 @@ import type { Effect } from 'webgl-effects'
 import { HTMLElementOrStub } from 'shared/utils/window'
 import { renderComponentTo } from 'shared/video/render-to'
 
-import type * as schema from '../../types/schema.ts'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
@@ -77,9 +76,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   get selection(): pub.Clip | undefined {
     return this._editor.selection
   }
-  get isLoading() {
-    return this._editor.isLoading
-  }
   get exportResult() {
     return this._editor.exportResult
   }
@@ -100,8 +96,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
         const state = this._editor.toObject()
         this.#dispatch('change', state)
       })
-
-      effect(() => this.#dispatch('changeloading', this.isLoading))
     })
   }
 
@@ -161,11 +155,8 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   deleteSelection() {
     this._editor.deleteSelection()
   }
-  async clearAllContentAndHistory() {
-    await this._editor.clearAllContentAndHistory()
-  }
-  replaceContent(newContent: schema.SerializedMovie): void {
-    this._editor.replaceContent(newContent)
+  importJson(newContent: pub.Schema.SerializedMovie) {
+    this._editor.importJson(newContent)
   }
   toObject() {
     return this._editor.toObject()

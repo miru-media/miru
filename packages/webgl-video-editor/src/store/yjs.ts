@@ -17,13 +17,18 @@ import { ROOT_NODE_ID } from '../constants.ts'
 import type { BaseNode } from '../nodes/base-node.ts'
 
 import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
-import { createInitialMovie } from './utils.ts'
+import { createInitialMovie, importFromJson, initYmapFromJson } from './utils.ts'
+
+const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
+  if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
+  return a === b
+}
 
 const updateYnode = (ynode: Y.Map<unknown>, updates: Partial<Schema.AnyNodeSchema>): void => {
   for (const key in updates) {
     if (Object.hasOwn(updates, key)) {
       const newValue = updates[key as keyof Schema.AnyNodeSchema]
-      if (JSON.stringify(newValue) !== JSON.stringify(ynode.get(key))) ynode.set(key, newValue)
+      if (!jsonValuesAreEqual(newValue, ynode.get(key))) ynode.set(key, newValue)
     }
   }
 }
@@ -74,6 +79,12 @@ export class VideoEditorYjsStore implements VideoEditorStore {
 
     this.#ytree = new YTree(ytreeMap)
     this.#yundo = new Y.UndoManager(ymap)
+
+    try {
+      this.#ytree.getNodeValueFromKey(YTREE_NULL_PARENT_KEY)
+    } catch {
+      this.#ytree.createNode(YTREE_ROOT_KEY, YTREE_NULL_PARENT_KEY, {})
+    }
   }
 
   init(editor: VideoEditor): void {
@@ -108,11 +119,10 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (isNewMovie) {
-      editor.replaceContent(createInitialMovie(this.generateId.bind(this)))
+      importFromJson(movie, createInitialMovie())
       _editor.createInitialAssets()
     }
 
-    movie.on('root:replace', this.reset.bind(this), options)
     this.#onYtreeChange()
 
     const onStackChange = (): void => {
@@ -300,6 +310,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     return this.#ytree.generateNodeKey()
   }
 
+  /** @internal @hidden */
   serializeYdoc() {
     const ytree = this.#ytree
 
@@ -323,4 +334,6 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       tracks: movie.assetLibrary.children.map((track) => serialize<Schema.SerializedTrack>(track.id)),
     }
   }
+
+  static initYmapFromJson = initYmapFromJson
 }

@@ -6,7 +6,11 @@ import { type Size } from 'shared/types'
 import { useI18n } from 'vue-i18n-lite'
 import type { VideoEditor } from 'webgl-video-editor'
 
-const { editor, onCloseProject } = defineProps<{ editor: VideoEditor; onCloseProject?: () => unknown }>()
+const { editor, onCloseProject } = defineProps<{
+  editor: VideoEditor
+  onCloseProject?: () => unknown
+}>()
+const name = defineModel<string>('name')
 
 const { t } = useI18n()
 const isOpen = ref(false)
@@ -19,12 +23,6 @@ const resolutionOptions = [
 const onBlur = (event: FocusEvent) => {
   const { relatedTarget } = event
   isOpen.value = !!(relatedTarget && menuRoot.value?.contains(relatedTarget as Node))
-}
-
-const onClickClearAll = async (prompt: string) => {
-  if (!window.confirm(prompt)) return
-  await editor.clearAllContentAndHistory()
-  isOpen.value = false
 }
 </script>
 
@@ -60,6 +58,10 @@ const onClickClearAll = async (prompt: string) => {
           <div class="bulma-dropdown-menu" id="dropdown-menu6" role="menu">
             <div class="bulma-dropdown-content" tabindex="0">
               <div class="bulma-dropdown-item">
+                <div class="bulma-label">{{ $t('name') }}</div>
+                <input type="input" v-model="name" class="bulma-input" />
+              </div>
+              <div class="bulma-dropdown-item">
                 <div class="bulma-label">{{ $t('resolution') }}</div>
                 <div class="bulma-select">
                   <select
@@ -87,13 +89,6 @@ const onClickClearAll = async (prompt: string) => {
                     <option v-for="value of [24, 25, 30, 48, 50, 60]" :value="value">{{ value }}</option>
                   </select>
                 </div>
-              </div>
-              <hr />
-              <div class="bulma-dropdown-item">
-                <button class="bulma-button" @click="() => onClickClearAll($t('confirm_delete_all_content'))">
-                  <div class="bulma-icon i-tabler-trash" />
-                  &nbsp;<span>{{ $t('delete_all_content') }}</span>
-                </button>
               </div>
             </div>
           </div>
