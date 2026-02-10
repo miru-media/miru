@@ -3,7 +3,6 @@ import { useEventListener } from '@vueuse/core'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n-lite'
 
-import { demoMovie } from './demo-movie'
 import type { VideoEditor, VideoEditorStore } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'

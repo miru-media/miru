@@ -5,6 +5,7 @@ export interface VideoEditorEvents {
   'node:move': NodeMoveEvent
   'node:update': NodeUpdateEvent
   'node:delete': NodeDeleteEvent
+  'asset:create': AssetCreateEvent
 }
 
 export class NodeCreateEvent extends Event {
@@ -58,10 +59,12 @@ export class NodeMoveEvent extends Event {
 }
 
 export class AssetCreateEvent extends Event {
-  readonly nodeId: string
+  readonly assetId: string
+  readonly source?: Blob | string
 
-  constructor(nodeId: string) {
+  constructor(assetId: string, source?: Blob | string) {
     super('asset:create')
-    this.nodeId = nodeId
+    this.assetId = assetId
+    this.source = source
   }
 }

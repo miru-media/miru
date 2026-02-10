@@ -5,7 +5,13 @@ import type { Renderer } from 'webgl-effects'
 import { setObjectSize } from 'shared/utils'
 
 import type { NodeMap } from '../../types/internal.ts'
-import { Collection, type Movie, type Schema } from '../nodes/index.ts'
+import {
+  Collection,
+  type MediaAsset,
+  type Movie,
+  type Schema,
+  type VideoEffectAsset,
+} from '../nodes/index.ts'
 import { ParentNode } from '../nodes/parent-node.ts'
 import { Track } from '../nodes/track.ts'
 
@@ -22,6 +28,7 @@ export class ExportMovie extends ParentNode<Schema.Movie, Collection<'timeline'>
   declare root: this
   timeline: Collection<'timeline'>
   nodes: NodeMap
+  assets: Map<string, MediaAsset | VideoEffectAsset>
   videoContext: VideoContext
   renderer: Renderer
   resolution: { width: number; height: number }
@@ -44,8 +51,9 @@ export class ExportMovie extends ParentNode<Schema.Movie, Collection<'timeline'>
     this.videoContext = new VideoContext(canvas, undefined, { manualUpdate: true })
     delete (canvas as Partial<typeof canvas>).getContext
 
-    this.nodes = movie.nodes
     this.renderer = movie.renderer
+    this.nodes = movie.nodes
+    this.assets = movie.assets
     this.resolution = movie.resolution
     this.frameRate = movie.frameRate
     this.duration = movie.duration

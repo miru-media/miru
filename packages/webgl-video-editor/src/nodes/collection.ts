@@ -2,14 +2,10 @@ import type { RootNode } from '../../types/internal'
 import type { CollectionKind } from '../../types/schema'
 import { NodeCreateEvent } from '../events.ts'
 
-import type { MediaAsset, Schema, Track, VideoEffectAsset } from './index.ts'
+import type { Schema, Track } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 
-export class Collection<const T extends Schema.CollectionKind> extends ParentNode<
-  Schema.Collection,
-  T extends 'asset-library' ? MediaAsset | VideoEffectAsset : T extends 'timeline' ? Track : unknown
-> {
-  static readonly ASSET_LIBRARY = 'asset-library' satisfies Schema.CollectionKind
+export class Collection<const T extends Schema.CollectionKind> extends ParentNode<Schema.Collection, Track> {
   static readonly TIMELINE = 'timeline' satisfies Schema.CollectionKind
 
   readonly type = 'collection' as const

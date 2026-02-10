@@ -2,11 +2,19 @@ import { ref, watch } from 'fine-jsx'
 import { uid } from 'uid'
 
 import type * as core from '../../types/core'
-import type { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
+import type { Schema } from '../../types/core'
+import type {
+  AssetCreateEvent,
+  NodeCreateEvent,
+  NodeDeleteEvent,
+  NodeMoveEvent,
+  NodeUpdateEvent,
+} from '../events.ts'
 import type { Movie } from '../nodes/movie.ts'
 import type { ParentNode } from '../nodes/parent-node.ts'
+import { storage, type StorageFileWriteOptions } from '../storage/storage.ts'
 
-import { createInitialMovie, importFromJson } from './utils.ts'
+import { createInitialMovie } from './utils.ts'
 
 type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> =
   // TODO: remove group???!!!
@@ -28,7 +36,6 @@ type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> 
   | { type: 'node:delete'; group?: string; nodeId: string; from: T }
 
 const LOCAL_STORAGE_PREFIX = 'video-editor:'
-const MOVIE_CONTENT_KEY = `${LOCAL_STORAGE_PREFIX}content`
 
 export class VideoEditorLocalStore implements core.VideoEditorStore {
   #movie!: Movie
@@ -38,6 +45,9 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   #noTrack = 0
   readonly #canUndo = ref(false)
   readonly #canRedo = ref(false)
+
+  readonly #MOVIE_CONTENT_KEY = `${LOCAL_STORAGE_PREFIX}content`
+  readonly #ASSETS_KEY = `${LOCAL_STORAGE_PREFIX}assets`
 
   generateId = uid
 
@@ -49,17 +59,21 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   }
 
   readonly #abort = new AbortController()
+  readonly storage = storage
 
   init(editor: core.VideoEditor) {
     const movie = (this.#movie = editor._editor._movie)
     this.#restoreFromLocalStorage()
 
     // Persist to localStorage
-    watch([() => editor.state], ([state]) => localStorage.setItem(MOVIE_CONTENT_KEY, JSON.stringify(state)))
+    watch([() => editor.state], ([state]) =>
+      localStorage.setItem(this.#MOVIE_CONTENT_KEY, JSON.stringify(state)),
+    )
 
     const options: AddEventListenerOptions = { signal: this.#abort.signal }
 
-    movie.on('node:create', this.#onCreate.bind(this), options)
+    movie.on('asset:create', this.#onAssetCreate.bind(this), options)
+    movie.on('node:create', this.#onNodeCreate.bind(this), options)
     movie.on('node:move', this.#onMove.bind(this), options)
     movie.on('node:update', this.#onUpdate.bind(this), options)
     movie.on('node:delete', this.#onDelete.bind(this), options)
@@ -70,14 +84,14 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   #restoreFromLocalStorage(): void {
     if (import.meta.env.SSR) return
     // restore movie from localStorage
-    const savedJson = localStorage.getItem(MOVIE_CONTENT_KEY)
+    const savedJson = localStorage.getItem(this.#MOVIE_CONTENT_KEY)
     let isRestored = false
 
     if (savedJson) {
       try {
         const parsed = JSON.parse(savedJson) as core.Schema.SerializedMovie
 
-        importFromJson(this.#movie, parsed)
+        this.#movie.importFromJson(parsed)
         isRestored = true
       } catch (error: unknown) {
         localStorage.setItem(`${LOCAL_STORAGE_PREFIX}backup`, savedJson)
@@ -92,7 +106,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     }
 
     if (!isRestored) {
-      importFromJson(this.#movie, createInitialMovie())
+      this.#movie.importFromJson(createInitialMovie())
     }
   }
 
@@ -246,7 +260,21 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     this.#undoRedo(true)
   }
 
-  #onCreate(event: NodeCreateEvent): void {
+  #onAssetCreate({ assetId, source }: AssetCreateEvent) {
+    const map = this.#getAssetMap()
+    const asset = this.#movie.assets.get(assetId)!
+
+    if (source != null && asset.type === 'asset:media:av')
+      this.storage
+        .getOrCreateFile(asset.id, source)
+        .then(asset.setBlob.bind(asset))
+        .catch(asset.setError.bind(asset))
+
+    map[assetId] = asset.toObject()
+    localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(map))
+  }
+
+  #onNodeCreate(event: NodeCreateEvent): void {
     const { nodeId } = event
     this.#add([{ type: 'node:create', nodeId, init: this.#movie.nodes.get(nodeId).toObject() }])
   }
@@ -279,6 +307,41 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
       { type: 'node:move', nodeId, from: parent && { parentId: parent.id, index: node.index } },
       { type: 'node:delete', nodeId, from: node.toObject() },
     ])
+  }
+
+  #getAssetMap(): Record<string, Schema.Asset> {
+    return JSON.parse(localStorage.getItem(this.#ASSETS_KEY) ?? '[]')
+  }
+
+  listFiles(): Array<Schema.Asset> {
+    try {
+      return Object.values(this.#getAssetMap())
+    } catch {
+      return []
+    }
+  }
+
+  async hasCompleteFile(key: string): Promise<boolean> {
+    return await this.storage.hasCompleteFile(key)
+  }
+
+  async createFile(
+    asset: Schema.Asset,
+    stream: ReadableStream<Uint8Array>,
+    options: StorageFileWriteOptions,
+  ): Promise<void> {
+    const key = asset.id
+    await this.storage.fromStream(key, stream, options)
+    localStorage.setItem(this.#ASSETS_KEY, JSON.stringify({ ...this.#getAssetMap(), [asset.id]: asset }))
+  }
+
+  async getFile(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
+    return await this.storage.getFile(key, name, options)
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    await this.storage.delete(key)
+    localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(this.listFiles().filter((a) => a.id !== key)))
   }
 
   reset(): void {

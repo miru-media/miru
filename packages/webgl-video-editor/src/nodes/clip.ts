@@ -58,12 +58,12 @@ export class Clip extends BaseClip {
     super(init, root)
 
     this._defineReactive('source', init.source, {
-      onChange: (value) => (this.sourceAsset = this.root.nodes.get(value.assetId)),
+      onChange: (value) => (this.sourceAsset = this.root.assets.get(value.assetId) as MediaAsset),
       equal: (a, b) => a.assetId === b.assetId,
     })
     this._defineReactive('filter', init.filter, {
       onChange: (value) => {
-        this.#filter.value = value && this.root.nodes.get<VideoEffectAsset>(value.assetId)
+        this.#filter.value = value && (this.root.assets.get(value.assetId) as VideoEffectAsset)
         this.#filterIntensity.value = value?.intensity ?? 1
       },
       equal: (a, b) => (!a && !b) || (!!a && !!b && a.assetId === b.assetId && a.intensity === b.intensity),
@@ -72,7 +72,7 @@ export class Clip extends BaseClip {
     this.transition = init.transition
 
     this.error = useMediaError(this.media)
-    this.sourceAsset = this.root.nodes.get(init.source.assetId)
+    this.sourceAsset = this.root.assets.get(init.source.assetId) as MediaAsset
 
     this.scope.run(() => {
       // keep media URL updated

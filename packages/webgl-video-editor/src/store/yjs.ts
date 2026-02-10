@@ -3,6 +3,7 @@ import * as Y from 'yjs'
 import { YTree } from 'yjs-orderedtree'
 
 import type {
+  AssetCreateEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
   NodeMoveEvent,
@@ -15,9 +16,11 @@ import type {
 import type { AnyNode } from '../../types/internal'
 import { ROOT_NODE_ID } from '../constants.ts'
 import type { BaseNode } from '../nodes/base-node.ts'
+import { storage } from '../storage/index.ts'
+import type { StorageFileWriteOptions } from '../storage/storage.ts'
 
-import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
-import { createInitialMovie, importFromJson, initYmapFromJson } from './utils.ts'
+import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY } from './constants.ts'
+import { createInitialMovie, initYmapsFromJson } from './utils.ts'
 
 const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
   if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
@@ -35,21 +38,11 @@ const updateYnode = (ynode: Y.Map<unknown>, updates: Partial<Schema.AnyNodeSchem
 
 const OBSERVED = new WeakSet<Y.Map<unknown>>()
 
-const getOrCreateYmap = <T>(ymap: Y.Map<unknown>, key: string): Y.Map<T> => {
-  let newYmap = (ymap as Y.Map<Y.Map<T>>).get(key)
-
-  if (!newYmap) {
-    newYmap = new Y.Map()
-    ymap.set(key, newYmap)
-  }
-
-  return newYmap
-}
-
 export class VideoEditorYjsStore implements VideoEditorStore {
   #movie!: VideoEditor['_editor']['_movie']
 
   readonly ydoc: Y.Doc
+  readonly assetsYmap: Y.Map<Schema.Asset>
   readonly #ytree!: YTree
   readonly #yundo!: Y.UndoManager
   readonly #ignoreOrigin = Symbol('ignore-undo')
@@ -64,21 +57,22 @@ export class VideoEditorYjsStore implements VideoEditorStore {
   }
 
   readonly #abort = new AbortController()
+  readonly storage = storage
 
   #isSyncingYdocToMovie = false
   get #shouldSkipNodeEvent(): boolean {
     return this.#yundo.undoing || this.#yundo.redoing || this.#isSyncingYdocToMovie
   }
 
-  constructor(ymap: Y.Map<unknown>) {
-    const ydoc = ymap.doc!
+  constructor(treeYmap: Y.Map<unknown>, assetsYmap: Y.Map<unknown>) {
+    const ydoc = treeYmap.doc!
     this.ydoc = ydoc
+    this.assetsYmap = assetsYmap as Y.Map<Schema.Asset>
+
     ydoc.on('destroy', this.dispose.bind(this))
 
-    const ytreeMap = getOrCreateYmap<unknown>(ymap, YTREE_YMAP_KEY)
-
-    this.#ytree = new YTree(ytreeMap)
-    this.#yundo = new Y.UndoManager(ymap)
+    this.#ytree = new YTree(treeYmap)
+    this.#yundo = new Y.UndoManager([treeYmap, assetsYmap])
 
     try {
       this.#ytree.getNodeValueFromKey(YTREE_NULL_PARENT_KEY)
@@ -97,9 +91,13 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     } catch {}
 
     const movie = (this.#movie = _editor._movie)
-    movie.nodes.map.forEach((node) => this.#onCreate({ nodeId: node.id }))
 
     this.#ytree.observe(this.#onYtreeChange)
+
+    movie.assets.forEach((asset) =>
+      this.#onAssetCreate({ assetId: asset.id, source: 'raw' in asset ? asset.raw.url : undefined }),
+    )
+    movie.nodes.map.forEach((node) => this.#onNodeCreate({ nodeId: node.id }))
 
     const bindNodeListener = <T extends unknown[]>(
       listener: (...args: T) => unknown,
@@ -112,17 +110,20 @@ export class VideoEditorYjsStore implements VideoEditorStore {
 
     const options: AddEventListenerOptions = { signal: this.#abort.signal }
     /* eslint-disable @typescript-eslint/unbound-method -- false positive */
-    movie.on('node:create', bindNodeListener(this.#onCreate), options)
+    movie.on('asset:create', bindNodeListener(this.#onAssetCreate), options)
+    movie.on('node:create', bindNodeListener(this.#onNodeCreate), options)
     movie.on('node:move', bindNodeListener(this.#onMove), options)
     movie.on('node:update', bindNodeListener(this.#onUpdate), options)
     movie.on('node:delete', bindNodeListener(this.#onDelete), options)
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (isNewMovie) {
-      importFromJson(movie, createInitialMovie())
-      _editor.createInitialAssets()
+      movie.importFromJson(createInitialMovie())
     }
 
+    this.assetsYmap.forEach((asset) => {
+      if (!movie.assets.has(asset.id)) movie.createAsset(asset)
+    })
     this.#onYtreeChange()
 
     const onStackChange = (): void => {
@@ -237,7 +238,21 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     })
   }
 
-  #onCreate(event: Pick<NodeCreateEvent, 'nodeId'>): void {
+  #onAssetCreate({ assetId, source }: Pick<AssetCreateEvent, 'assetId' | 'source'>) {
+    const ymap = this.assetsYmap
+    const asset = this.#movie.assets.get(assetId)!
+
+    if (source != null && asset.type === 'asset:media:av') {
+      this.storage
+        .getOrCreateFile(asset.id, source)
+        .then(asset.setBlob.bind(asset))
+        .catch(asset.setError.bind(asset))
+    }
+
+    if (!ymap.get(assetId)) ymap.set(assetId, asset.toObject())
+  }
+
+  #onNodeCreate(event: Pick<NodeCreateEvent, 'nodeId'>): void {
     const { nodeId } = event
     const node = this.#movie.nodes.get(nodeId)
     const ytree = this.#ytree
@@ -298,6 +313,33 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     this.#ytree.moveChildToParent(nodeId, YTREE_NULL_PARENT_KEY)
   }
 
+  listFiles(): Iterable<Schema.Asset> {
+    return this.assetsYmap.values()
+  }
+
+  async hasCompleteFile(key: string): Promise<boolean> {
+    return await this.storage.hasCompleteFile(key)
+  }
+
+  async createFile(
+    asset: Schema.Asset,
+    stream: ReadableStream<Uint8Array>,
+    options: StorageFileWriteOptions,
+  ): Promise<void> {
+    const key = asset.id
+    await this.storage.fromStream(key, stream, options)
+    this.assetsYmap.set(key, asset)
+  }
+
+  async getFile(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
+    return await this.storage.getFile(key, name, options)
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    await this.storage.delete(key)
+    this.assetsYmap.delete(key)
+  }
+
   reset(): void {
     this.#yundo.clear()
   }
@@ -311,7 +353,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
   }
 
   /** @internal @hidden */
-  serializeYdoc() {
+  serializeYdoc(): Schema.SerializedMovie {
     const ytree = this.#ytree
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
@@ -328,12 +370,10 @@ export class VideoEditorYjsStore implements VideoEditorStore {
 
     return {
       ...this.#movie.toObject(),
-      assets: movie.assetLibrary.children.map((asset) =>
-        serialize<Schema.VideoEffectAsset | Schema.AvMediaAsset>(asset.id),
-      ),
-      tracks: movie.assetLibrary.children.map((track) => serialize<Schema.SerializedTrack>(track.id)),
+      assets: Array.from(this.assetsYmap.values()),
+      tracks: movie.timeline.children.map((track) => serialize<Schema.SerializedTrack>(track.id)),
     }
   }
 
-  static initYmapFromJson = initYmapFromJson
+  static initYmapsFromJson = initYmapsFromJson
 }

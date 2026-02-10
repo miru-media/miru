@@ -1,6 +1,6 @@
 import { computed, ref } from 'fine-jsx'
 import { uid } from 'uid'
-import { type ExportResult, getDefaultFilterDefinitions, type Renderer } from 'webgl-effects'
+import type { ExportResult, Renderer } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 import { remap0 } from 'shared/utils/math'
@@ -23,7 +23,6 @@ import {
   type Track,
   type VideoEffectAsset,
 } from './nodes/index.ts'
-import { importFromJson } from './store/utils.ts'
 
 const getClipAtTime = (track: Track, time: number) => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -78,7 +77,7 @@ export class VideoEditor {
   readonly #effects = computed(
     () =>
       new Map(
-        this._movie.assetLibrary.children
+        Array.from(this._movie.assets.values())
           .filter((asset) => asset.type === 'asset:effect:video')
           .map((effect) => [effect.id, effect]),
       ),
@@ -120,35 +119,18 @@ export class VideoEditor {
     })
   }
 
-  createInitialAssets(): void {
-    const { assetLibrary } = this._movie
-
-    getDefaultFilterDefinitions()
-      .map(
-        (def, index): Schema.VideoEffectAsset => ({
-          ...def,
-          id: `${this.generateId()}-${def.id ?? index.toString()}`,
-          type: 'asset:effect:video',
-        }),
-      )
-      .forEach((init) => {
-        const asset = this._movie.createNode(init)
-        asset.position({ parentId: assetLibrary.id, index: assetLibrary.count })
-      })
-  }
-
   generateId(): string {
     const { store } = this
     return store ? store.generateId() : uid()
   }
 
   importJson(content: Schema.SerializedMovie): void {
-    importFromJson(this._movie, content)
+    this._movie.importFromJson(content)
   }
 
   async createMediaAsset(source: string | Blob): Promise<MediaAsset> {
     const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
-    return MediaAsset.fromInit(init, this._movie, source)
+    return new MediaAsset(init, { root: this._movie, source })
   }
 
   async addClip(track: Track, source: string | Blob | Schema.Clip): Promise<Clip> {
@@ -172,7 +154,9 @@ export class VideoEditor {
     }
 
     return this._transact(() => {
-      if (newAssetData) MediaAsset.fromInit(newAssetData.init, this._movie, newAssetData.source)
+      if (newAssetData)
+        void new MediaAsset(newAssetData.init, { root: this._movie, source: newAssetData.source })
+
       const clip = new Clip(init, this._movie)
 
       clip.position({ parentId: track.id, index: track.count })
@@ -188,7 +172,7 @@ export class VideoEditor {
     const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
 
     this._transact(() => {
-      const asset = MediaAsset.fromInit(init, this._movie, source)
+      const asset = new MediaAsset(init, { root: this._movie, source })
 
       clip.duration = Math.min(asset.duration, clip.duration)
       clip.sourceAsset = asset
@@ -356,7 +340,7 @@ export class VideoEditor {
   }
 
   toObject(): Schema.SerializedMovie {
-    const serialize = <T extends Schema.AnyNodeSchema | Schema.VideoEffectAsset>(
+    const serialize = <T extends Schema.AnyNodeSchema | Schema.Asset>(
       node: Extract<AnyNode, BaseNode<T>>,
     ): Extract<AnyNodeSerializedSchema, { type: T['type'] }> => {
       if ('children' in node && node.children != null) {
@@ -370,11 +354,11 @@ export class VideoEditor {
       return node.toObject() as any
     }
 
-    const { assetLibrary, timeline } = this._movie
+    const { assets: _assets, timeline } = this._movie
 
     return {
       ...this._movie.toObject(),
-      assets: assetLibrary.children.map(serialize as any),
+      assets: Array.from(_assets.values()).map(serialize as any),
       tracks: timeline.children.map(serialize),
     }
   }

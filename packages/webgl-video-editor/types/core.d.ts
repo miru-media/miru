@@ -182,6 +182,27 @@ export interface VideoEditorStore {
   /** Clear undo hsitory */
   reset: () => void
 
+  /** Get an Iterable of all media asset files that are available to the project */
+  listFiles: () => Iterable<Schema.Asset>
+
+  /** The entire file has been stored and can be retrieved */
+  hasCompleteFile: (key: string) => Promise<boolean>
+
+  /** Save a new file from a source stream */
+  createFile: (
+    asset: Asset,
+    stream: ReadableStream<Uint8Array>,
+    options: {
+      size?: number
+      onProgress?: (progress: number) => void
+      signal?: AbortSignal | null
+    },
+  ) => Promise<void>
+  /** Get a media asset as a File instance */
+  getFile: (key: string, name?: string, options?: FilePropertyBag) => Promise<File>
+  /** Delete a media asset form the store */
+  deleteFile: (key: string) => Promise<void>
+
   /** Dispose this history object */
   dispose: () => void
 }

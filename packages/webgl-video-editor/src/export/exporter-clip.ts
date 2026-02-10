@@ -47,10 +47,10 @@ export class ExtractorClip extends BaseClip {
     const { _renderer: renderer, root } = track
 
     this.source = init.source
-    this.sourceAsset = root.nodes.get(init.source.assetId)
+    this.sourceAsset = root.assets.get(init.source.assetId) as MediaAsset
     this.track = track
     this.context = track._context
-    this.#filter.value = init.filter && root.nodes.get<VideoEffectAsset>(init.filter.assetId)
+    this.#filter.value = init.filter && (root.assets.get(init.filter.assetId) as VideoEffectAsset)
     this.#filterIntensity.value = init.filter?.intensity ?? 1
     this.transition = init.transition
 

@@ -1,24 +1,24 @@
 import { ref } from 'fine-jsx'
 import { Effect } from 'webgl-effects'
 
+import { Janitor } from 'shared/utils/general.ts'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
 import type { RootNode } from '../../types/internal'
-import { NodeCreateEvent, NodeMoveEvent } from '../events.ts'
+import { AssetCreateEvent } from '../events.ts'
 import { storage } from '../storage/index.ts'
 
-import { BaseNode } from './base-node.ts'
 import type { Schema } from './index.ts'
 import type { Movie } from './movie.ts'
 
-export abstract class BaseAsset<T extends Schema.Asset> extends BaseNode<T> {
+export abstract class BaseAsset<T extends Schema.Asset> {
   id: string
   type: T['type']
   raw: T
   abstract isLoading: boolean
+  readonly #janitor = new Janitor()
 
-  constructor(init: T, root: RootNode) {
-    super(init.id, root)
+  constructor(init: T) {
     this.id = init.id
     this.type = init.type
     this.raw = init
@@ -26,6 +26,14 @@ export abstract class BaseAsset<T extends Schema.Asset> extends BaseNode<T> {
 
   toObject(): T {
     return this.raw
+  }
+
+  onDispose(fn: () => void) {
+    this.#janitor.add(fn)
+  }
+
+  dispose() {
+    this.#janitor.dispose()
   }
 }
 
@@ -38,7 +46,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
   audio?: { duration: number }
   video?: { duration: number; rotation: number }
 
-  blob: Blob
+  blob!: Blob
   readonly #objectUrl = ref('')
   #isRefreshing = false
   readonly #isLoading = ref(true)
@@ -60,12 +68,13 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
     return this.#error.value
   }
 
-  protected constructor(init: Schema.AvMediaAsset, options: { blob: Blob; root: Movie }) {
-    const { root } = options
-    super(init, root)
+  constructor(init: Schema.AvMediaAsset, options: { source?: Blob | string; root: Movie }) {
+    const { root, source } = options
+    super(init)
 
-    this.#setBlob(options.blob)
-    this.blob = options.blob
+    const blob = source == null || typeof source === 'string' ? new Blob() : source
+
+    this.setBlob(blob)
     const { mimeType, duration, audio, video } = init
 
     this.mimeType = mimeType
@@ -73,18 +82,23 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
     this.audio = audio
     this.video = video
 
-    root._emit(new NodeCreateEvent(this.id))
-
     this.onDispose(() => {
       URL.revokeObjectURL(this.objectUrl)
       storage.delete(this.id).catch(() => undefined)
     })
+
+    root.assets.set(this.id, this)
+    root._emit(new AssetCreateEvent(this.id, source))
   }
 
-  #setBlob(blob: Blob) {
+  setBlob(blob: Blob) {
     URL.revokeObjectURL(this.objectUrl)
     this.blob = blob
     this.#objectUrl.value = URL.createObjectURL(blob)
+  }
+
+  setError(error: unknown) {
+    this.#error.value = error
   }
 
   async _refreshObjectUrl() {
@@ -103,7 +117,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
         throw new Error(`[webgl-video-editor] couldn't get asset data from storage (${this.id})`)
 
       const blob = await storage.getFile(this.id)
-      this.#setBlob(blob)
+      this.setBlob(blob)
     } finally {
       this.#isRefreshing = this.#isLoading.value = false
     }
@@ -179,49 +193,8 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
     init: Schema.AvMediaAsset,
     root: Movie,
     source: string | (Blob & { name?: string }) | undefined = init.url,
-    requestInit?: RequestInit,
-  ) {
-    const { id } = init
-
-    const asset = new MediaAsset(init, { blob: new Blob(), root })
-
-    ;(async () => {
-      const storageHasFile = await storage.hasCompleteFile(id)
-
-      if (!storageHasFile) {
-        if (source == null) throw new Error('[webgl-video-editor] Missing media source')
-
-        let stream
-        let size: number | undefined
-
-        if (typeof source === 'string') {
-          const res = await fetch(source, requestInit)
-          const { body } = res
-          if (!res.ok || !body) throw new Error('Fetch failed')
-          const contentLength = res.headers.get('content-length')
-
-          if (contentLength) {
-            const parsed = parseInt(contentLength, 10)
-            size = isNaN(parsed) ? undefined : parsed
-          }
-
-          stream = body
-        } else {
-          stream = source.stream()
-          ;({ size } = source)
-        }
-
-        await storage.fromStream(id, stream, { size, signal: requestInit?.signal })
-      }
-
-      asset.#setBlob(await storage.getFile(id))
-    })().catch((error: unknown) => {
-      asset.#error.value = error
-    })
-
-    const { assetLibrary } = root
-    asset.position({ parentId: assetLibrary.id, index: assetLibrary.count })
-    root._emit(new NodeMoveEvent(asset.id, undefined))
+  ): MediaAsset {
+    const asset = new MediaAsset(init, { source, root })
 
     return asset
   }
@@ -231,14 +204,17 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> {
   }
 }
 
-export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> {
-  type = 'asset:effect:video' as const
+export class VideoEffectAsset {
+  readonly id: string
+  readonly type = 'asset:effect:video' as const
   declare children?: never
   declare parent?: never
 
   readonly #effect: Effect
   readonly #isLoading = ref(false)
   shaders: string[] = []
+
+  readonly #janitor = new Janitor()
 
   get name() {
     return this.#effect.name
@@ -254,15 +230,20 @@ export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> {
   }
 
   constructor(init: Schema.VideoEffectAsset, root: RootNode) {
-    super(init, root)
-    const effect = (this.#effect = new Effect(
-      init,
-      root.renderer,
-      (e) => (this.#isLoading.value = e.isLoading),
-    ))
+    this.id = init.id
+    this.#effect = new Effect(init, root.renderer, (e) => (this.#isLoading.value = e.isLoading))
+    root.assets.set(this.id, this)
+    root._emit(new AssetCreateEvent(this.id))
 
-    this.onDispose(effect.dispose.bind(effect))
-    root._emit(new NodeCreateEvent(this.id))
+    this.#janitor.add(this.#effect.dispose.bind(this.#effect))
+  }
+
+  dispose() {
+    this.#janitor.dispose()
+  }
+
+  onDispose(fn: () => void) {
+    this.#janitor.add(fn)
   }
 
   toObject(): Schema.VideoEffectAsset {

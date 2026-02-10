@@ -1,7 +1,7 @@
 import { computed, createEffectScope, effect, ref, watch } from 'fine-jsx'
 import Stats from 'stats.js'
 import VideoContext from 'videocontext'
-import { Renderer } from 'webgl-effects'
+import { getDefaultFilterDefinitions, Renderer } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 import { getWebgl2Context, setObjectSize, useDocumentVisibility } from 'shared/utils'
@@ -9,6 +9,7 @@ import { clamp } from 'shared/utils/math'
 import { useRafLoop } from 'shared/video/utils'
 
 import type { AnyNode, NodeMap as INodeMap } from '../../types/internal'
+import type { AvMediaAsset } from '../../types/schema'
 import {
   ASSET_URL_REFRESH_TIMEOUT_MS,
   DEFAULT_FRAMERATE,
@@ -39,6 +40,19 @@ export namespace Movie {
   }
 }
 
+const createInitialAssets = (movie: Movie) =>
+  getDefaultFilterDefinitions().forEach(
+    (def, index): VideoEffectAsset =>
+      new VideoEffectAsset(
+        {
+          ...def,
+          id: def.id ?? index.toString(),
+          type: 'asset:effect:video',
+        },
+        movie,
+      ),
+  )
+
 class NodeMap implements INodeMap {
   map = new Map<string, AnyNode | BaseNode>()
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
@@ -56,7 +70,7 @@ class NodeMap implements INodeMap {
   }
 }
 
-export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> | Collection<'timeline'>> {
+export class Movie extends ParentNode<Schema.Movie, Collection<'timeline'>> {
   declare parent?: never
 
   type = 'movie' as const
@@ -73,11 +87,12 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
   readonly #scope = createEffectScope()
 
   readonly #currentTime = ref(0)
-  readonly #duration = computed(
-    () => this.#timeline.value?.children.reduce((end, track) => Math.max(track.duration, end), 0) ?? 0,
+  readonly #duration = computed(() =>
+    this.timeline.children.reduce((end, track) => Math.max(track.duration, end), 0),
   )
   readonly #noRender = ref(0)
   nodes = new NodeMap()
+  assets = new Map<string, MediaAsset | VideoEffectAsset>()
 
   stats = new Stats()
 
@@ -91,9 +106,7 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
   get isReady(): boolean {
     const state = this.#state.value
     if (state === VideoContextState.STALLED || state === VideoContextState.BROKEN) return false
-    return (
-      this.#timeline.value?.children.every((track) => track.children.every((clip) => clip.isReady)) ?? true
-    )
+    return this.timeline.children.every((track) => track.children.every((clip) => clip.isReady))
   }
 
   get duration(): number {
@@ -104,20 +117,7 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
     return this.#currentTime.value
   }
 
-  readonly #assetsLibrary = computed(() =>
-    this.children.find((child) => child.isKind(Collection.ASSET_LIBRARY)),
-  )
-  get assetLibrary(): Collection<'asset-library'> {
-    return this.#assetsLibrary.value!
-  }
-
-  readonly #timeline = computed(() => this.children.find((child) => child.isKind(Collection.TIMELINE)))
-
-  get timeline(): Collection<'timeline'> {
-    const timeline = this.#timeline.value
-    if (!timeline) throw new Error(`[webgl-video-editor] Missing timeline collection node.`)
-    return timeline
-  }
+  readonly timeline: Collection<'timeline'>
 
   constructor() {
     super(ROOT_NODE_ID)
@@ -130,6 +130,7 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
     this._defineReactive('frameRate', DEFAULT_FRAMERATE)
 
     this._emit(new NodeCreateEvent(this.id))
+    this.timeline = new Collection({ id: Collection.TIMELINE, kind: Collection.TIMELINE }, this)
 
     const { canvas } = this
 
@@ -144,21 +145,17 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
 
     this.#scope.run(() => {
       // keep VideoContext nodes connected in the right order
-      watch(
-        [() => this.#timeline.value?.children.map((t) => t._node.value)],
-        ([trackNodes], _prev, onCleanup) => {
-          if (!trackNodes) return
-          trackNodes.forEach((node) => node.connect(videoContext.destination))
-          onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
-        },
-      )
+      watch([() => this.timeline.children.map((t) => t._node.value)], ([trackNodes], _prev, onCleanup) => {
+        trackNodes.forEach((node) => node.connect(videoContext.destination))
+        onCleanup(() => trackNodes.forEach((node) => node.disconnect()))
+      })
 
       watch([this.isStalled], ([stalled], _prev, onCleanup) => {
         if (!stalled) return
 
         const timeoutId = setTimeout(
           () =>
-            this.assetLibrary.children.forEach((asset) => {
+            this.assets.forEach((asset) => {
               if (asset.type === 'asset:media:av') void asset._refreshObjectUrl()
             }),
           ASSET_URL_REFRESH_TIMEOUT_MS,
@@ -222,6 +219,8 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
       this.videoContext.destination.destroy()
       this.#scope.stop()
     })
+
+    createInitialAssets(this)
   }
 
   createNode<T extends Schema.AnyNodeSchema>(init: T) {
@@ -237,14 +236,8 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
       case 'clip':
         node = new Clip(init, this)
         break
-      case 'asset:media:av':
-        node = MediaAsset.fromInit(init, this)
-        break
-      case 'asset:effect:video':
-        node = new VideoEffectAsset(init, this)
-        break
       default:
-        throw new Error(`[webgl-video-editor] Unexpected ${init.type} init.`)
+        throw new Error(`[webgl-video-editor] Unexpected init of type "${init.type}".`)
     }
 
     type TCollectionKind = Extract<T, Schema.Collection>['kind']
@@ -253,9 +246,19 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
       collection: Collection<TCollectionKind>
       track: Track
       clip: Clip
-      'asset:media:av': MediaAsset
-      'asset:effect:video': VideoEffectAsset
     }[T['type']]
+  }
+
+  createAsset<T extends Schema.Asset>(
+    init: T,
+    source?: Blob | string,
+  ): T extends Schema.VideoEffectAsset ? VideoEffectAsset : AvMediaAsset {
+    const asset =
+      init.type === 'asset:effect:video'
+        ? new VideoEffectAsset(init, this)
+        : new MediaAsset(init, { root: this, source: source ?? init.url })
+
+    return asset as T extends Schema.VideoEffectAsset ? VideoEffectAsset : AvMediaAsset
   }
 
   play() {
@@ -295,7 +298,7 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
   }
 
   get isEmpty(): boolean {
-    return this.#timeline.value?.children.every((track) => track.count === 0) ?? true
+    return this.timeline.children.every((track) => track.count === 0)
   }
 
   refresh(): void {
@@ -316,25 +319,21 @@ export class Movie extends ParentNode<Schema.Movie, Collection<'asset-library'> 
     }
   }
 
-  clearAllContent(clearCache: true): Promise<void>
-  clearAllContent(clearCache?: false): void
-  clearAllContent(clearCache = false): Promise<void> | void {
-    ;([Collection.ASSET_LIBRARY, Collection.TIMELINE] as const).forEach((kind, index) => {
-      const collection =
-        this.children.find((c) => c.kind === kind) ??
-        (this.createNode({ id: kind, type: 'collection', kind }) as
-          | Collection<'asset-library'>
-          | Collection<'timeline'>)
-      collection.position({ parentId: this.id, index })
-    })
+  importFromJson(content: Schema.SerializedMovie) {
+    this.resolution = content.resolution
+    this.frameRate = content.frameRate
 
-    this.children.forEach((collection) => {
-      while (collection.tail) collection.tail.dispose()
-    })
+    content.assets.forEach((init) => this.createAsset(init))
 
-    this.renderer.clear()
+    const createChildren = (parent: AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
+      childrenInit.forEach((childInit, index) => {
+        const childNode = this.createNode(childInit)
+        childNode.position({ parentId: parent.id, index })
+        if ('children' in childInit) createChildren(childNode, childInit.children)
+      })
+    }
 
-    if (clearCache) return MediaAsset.clearCache().then(() => undefined)
+    createChildren(this.timeline, content.tracks)
   }
 
   on<T extends keyof VideoEditorEvents>(

@@ -4,14 +4,18 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import { WebrtcProvider } from 'y-webrtc'
 import * as Y from 'yjs'
 
+import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
 import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
 
 export const INITIAL_DOC_UPDATE_BASE64 =
-  'AAACQA8NAAJCBgAEShACAQNCEAALJwUoAScBKAUnACiuAZgBdmlkZW8tZWRpdG9yeXRyZWVyb290X3BhcmVudEhpc3RvcnludWxsdmFsdWVfcGFyZW50SGlzdG9yeXJvb3RtZXRhX19ST09UX05PREVfX19fUk9PVF9OT0RFX192YWx1ZWlkdHlwZWFzc2V0c3RyYWNrc3Jlc29sdXRpb25mcmFtZVJhdGVfcGFyZW50SGlzdG9yeXJvb3QMBQQOBAUORABNAAUCBEYACgkOBAcBAAAFAQAAAkEHAkEHARIAdgIHY291bnRlcn0ABW9yZGVydwXCgMKpB3cNX19ST09UX05PREVfX3cNX19ST09UX05PREVfX3cFbW92aWV1AHUAdgIFd2lkdGh9gB4GaGVpZ2h0fbgQfRh2Agdjb3VudGVyfQAFb3JkZXJ3BMOAHQoA'
+  'AAACQBIQAAQABQACAQNCEAQCAQBCCgATJwQoACcBKAUnACgAJwEoAicAKNkBvAF5dHJlZXJvb3RfcGFyZW50SGlzdG9yeXl0cmVlbnVsbHZhbHVlX3BhcmVudEhpc3Rvcnlyb290eXRyZWVfX1JPT1RfTk9ERV9fdmFsdWVpZHR5cGVhc3NldHN0cmFja3NyZXNvbHV0aW9uZnJhbWVSYXRlX3BhcmVudEhpc3Rvcnlyb290eXRyZWV0aW1lbGluZXZhbHVlaWR0eXBla2luZF9wYXJlbnRIaXN0b3J5X19ST09UX05PREVfXwUEDgUEBQ4EBQ0FAgRGAAoJDgQFCAUCRAAODQ8BAAAAAQAAAgEAAAgBAAACQQkCQQoBFwB2Agdjb3VudGVyfQAFb3JkZXJ3BMKABAd3DV9fUk9PVF9OT0RFX193BW1vdmlldQB1AHYCBXdpZHRofYAeBmhlaWdodH24EH0YdgIHY291bnRlcn0ABW9yZGVydwTDgDIJdwh0aW1lbGluZXcKY29sbGVjdGlvbncIdGltZWxpbmV2Agdjb3VudGVyfQAFb3JkZXJ3BcKAwqABAA=='
 
 export const useVideoEditorStore = (
   id: MaybeRefOrGetter<string>,
-): { store: Ref<VideoEditorYjsStore | undefined>; webrtc: Ref<WebrtcProvider | undefined> } => {
+): {
+  store: Ref<VideoEditorYjsStore | undefined>
+  webrtc: Ref<WebrtcProvider | undefined>
+} => {
   const store = ref<VideoEditorYjsStore>()
   const webrtc = ref<WebrtcProvider>()
 
@@ -21,7 +25,7 @@ export const useVideoEditorStore = (
       if (import.meta.env.SSR) return { store }
       if (!id) return
 
-      const ydoc = new Y.Doc({ guid: id })
+      const ydoc = new Y.Doc()
       Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
       const idb = new IndexeddbPersistence(id, ydoc)
 
@@ -37,7 +41,7 @@ export const useVideoEditorStore = (
 
       void idb.whenSynced.then(() => {
         if (isStale) return
-        store.value = markRaw(new VideoEditorYjsStore(ydoc.getMap('video-editor')))
+        store.value = markRaw(new VideoEditorYjsStore(ydoc.getMap(YTREE_YMAP_KEY), ydoc.getMap('assets')))
         webrtc.value = new WebrtcProvider(id, ydoc)
       })
     },

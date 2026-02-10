@@ -4,15 +4,7 @@ import type { Renderer } from 'webgl-effects'
 import type { Size } from 'shared/types'
 
 import type { ExportMovie } from '../src/export/export-movie.ts'
-import type {
-  BaseNode,
-  Clip,
-  Collection,
-  MediaAsset,
-  Movie,
-  Track,
-  VideoEffectAsset,
-} from '../src/nodes/index.ts'
+import type { BaseNode, Clip, Collection, Movie, Track, VideoEffectAsset } from '../src/nodes/index.ts'
 import type { VideoEditor as VideoEditor_ } from '../src/video-editor.ts'
 
 import type { ChildNodePosition, Schema } from './core.ts'
@@ -56,7 +48,7 @@ export interface MediaElementInfo {
   height: number
 }
 
-export type AnyNode = Movie | Collection<CollectionKind> | Track | Clip | MediaAsset | VideoEffectAsset
+export type AnyNode = Movie | Collection<CollectionKind> | Track | Clip
 
 export interface NodeMap {
   map: Map<string, AnyNode | BaseNode>

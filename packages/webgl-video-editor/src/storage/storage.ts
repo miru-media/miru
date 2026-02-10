@@ -42,7 +42,7 @@ const requestPersistence = async () => {
   if (await shouldRequestPersistence()) navigator.storage.persist().catch(() => undefined)
 }
 
-interface StorageFileWriteOptions extends StorageWorkerFileInfo {
+export interface StorageFileWriteOptions extends StorageWorkerFileInfo {
   onProgress?: (progress: number) => void
   signal?: AbortSignal | null
 }
@@ -121,6 +121,42 @@ export const storage = {
   async getFile(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
     const file = await (await getFileHandle(key)).getFile()
     return new File([file], name ?? file.name, options)
+  },
+
+  async getOrCreateFile(
+    key: string,
+    source: Blob | string | undefined,
+    requestInit?: RequestInit,
+  ): Promise<File> {
+    const storageHasFile = await storage.hasCompleteFile(key)
+
+    if (!storageHasFile) {
+      if (source == null) throw new Error('[webgl-video-editor] Missing media source')
+
+      let stream
+      let size: number | undefined
+
+      if (typeof source === 'string') {
+        const res = await fetch(source, requestInit)
+        const { body } = res
+        if (!res.ok || !body) throw new Error('Fetch failed')
+        const contentLength = res.headers.get('content-length')
+
+        if (contentLength) {
+          const parsed = parseInt(contentLength, 10)
+          size = isNaN(parsed) ? undefined : parsed
+        }
+
+        stream = body
+      } else {
+        stream = source.stream()
+        ;({ size } = source)
+      }
+
+      await storage.fromStream(key, stream, { size, signal: requestInit?.signal })
+    }
+
+    return await storage.getFile(key)
   },
 
   async hasCompleteFile(key: string): Promise<boolean> {
