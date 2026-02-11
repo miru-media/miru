@@ -1,0 +1,31 @@
+{
+  "name": "nextgraph-video-editor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build --mode=production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "@ng-org/web": "0.1.2-alpha.6",
+    "@types/base64-js": "catalog:",
+    "app-video-editor": "workspace:^",
+    "base64-js": "catalog:",
+    "fine-jsx": "catalog:",
+    "shared": "workspace:^",
+    "uid": "catalog:",
+    "vue": "catalog:",
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^",
+    "webgl-video-editor": "workspace:^",
+    "y-indexeddb": "catalog:",
+    "yjs": "catalog:"
+  }
+}
