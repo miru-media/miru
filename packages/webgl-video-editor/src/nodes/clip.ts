@@ -1,30 +1,28 @@
-import { effect, ref, type Ref, toRef, watch } from 'fine-jsx'
-import VideoContext, { type TransitionNode } from 'videocontext'
+import { effect, ref, type Ref, watch } from 'fine-jsx'
+import * as Pixi from 'pixi.js'
 
-import { createHiddenMediaElement } from 'shared/utils'
+import { createHiddenMediaElement, whenLoadedMetadata } from 'shared/utils'
 import { useMediaError } from 'shared/video/utils'
 
-import type { CustomSourceNodeOptions, RootNode } from '../../types/internal.ts'
-import { TRANSITION_DURATION_S } from '../constants.ts'
+import type { RootNode } from '../../types/internal.ts'
+import type { MediaAsset, VideoEffectAsset } from '../assets.ts'
 import { NodeCreateEvent } from '../events.ts'
-import { AudioElementNode, VideoElementNode } from '../video-context-nodes/index.ts'
 
-import type { MediaAsset, VideoEffectAsset } from './assets.ts'
 import { BaseClip } from './base-clip.ts'
+import { ClipPlayback } from './clip-playback.ts'
 import type { Schema } from './index.ts'
-
-type TransitionType = keyof typeof VideoContext.DEFINITIONS
 
 export class Clip extends BaseClip {
   media = ref<HTMLVideoElement | HTMLAudioElement>(document.createElement('video'))
   readonly #source = ref<MediaAsset>(undefined as never)
   declare source: Schema.Clip['source']
   error: Ref<MediaError | undefined>
-  node = ref<VideoElementNode | AudioElementNode>(undefined as never)
-  readonly #transitionNode = ref<TransitionNode<{ mix: number }>>()
+  rendererNode = new Pixi.Sprite(new Pixi.Texture())
 
   readonly #filter = ref<VideoEffectAsset>()
   readonly #filterIntensity = ref(1)
+
+  readonly playback = new ClipPlayback(this)
 
   get start(): number {
     return this.sourceStart
@@ -37,19 +35,12 @@ export class Clip extends BaseClip {
     this.#setMedia(asset)
   }
 
-  get outTransitionNode() {
-    return this.#transitionNode.value
-  }
-  get inTransitionNode() {
-    return this.prev && this.prev.#transitionNode.value
-  }
-
   get isReady(): boolean {
-    return this.node.value._isReady()
+    return this.playback.mediaState.isReady.value && !this.sourceAsset.isLoading
   }
 
   get everHadEnoughData(): boolean {
-    return this.node.value.mediaState.wasEverPlayable.value
+    return this.playback.mediaState.wasEverPlayable.value
   }
 
   declare filter: Schema.Clip['filter']
@@ -72,127 +63,70 @@ export class Clip extends BaseClip {
     this.transition = init.transition
 
     this.error = useMediaError(this.media)
-    this.sourceAsset = this.root.assets.get(init.source.assetId) as MediaAsset
 
     this.scope.run(() => {
       // keep media URL updated
-      watch([() => this.sourceAsset.objectUrl], ([url]) => {
-        const media = this.media.value
-        if (media.src && media.src !== url) media.src = url
-      })
+      watch(
+        [() => this.sourceAsset.objectUrl, () => this.sourceAsset.isLoading, () => this.parent?.trackType],
+        ([url, loading, trackType], _prev, onCleanup) => {
+          if (loading || !trackType) return
+          this.#unloadCurrentMedia()
+
+          const mediaElement = (this.media.value = createHiddenMediaElement(trackType, url))
+          const { rendererNode } = this
+
+          let isStale = false
+          onCleanup(() => (isStale = true))
+
+          void whenLoadedMetadata(mediaElement).then(() => {
+            if (isStale) return
+
+            if (trackType === 'video') {
+              const { texture } = rendererNode
+              texture.source = new Pixi.ImageSource({ resource: mediaElement as HTMLVideoElement })
+              texture.update()
+            }
+          })
+        },
+      )
 
       // make sure media type matches parent track type
       watch([() => this.parent], () => this.#setMedia(this.sourceAsset))
 
-      watch(
-        [
-          () => this.transition?.type,
-          // Workaround to recreate processing nodes when the movie resolution changes
-          // beacause VideoContext assumes the canvas size is constant
-          // TODO
-          () => this.root.resolution,
-        ],
-        ([type], _prev, onCleanup) => {
-          if (!type || !(type in VideoContext.DEFINITIONS)) return (this.#transitionNode.value = undefined)
-
-          const transitionNode = (this.#transitionNode.value = this.root.videoContext.transition<{
-            mix: number
-          }>(VideoContext.DEFINITIONS[type as TransitionType]))
-
-          onCleanup(() => transitionNode.destroy())
-        },
-      )
-
-      // schedule the out transition
-      effect(() => {
-        const transitionNode = this.#transitionNode.value
-        const { transition, time } = this
-        if (!transitionNode || !transition) return
-
-        transitionNode.clearTransitions()
-        transitionNode.transitionAt(time.end - TRANSITION_DURATION_S, time.end, 0, 1, 'mix')
-      })
+      effect(() => this.resizeSprite(this.rendererNode))
     })
 
-    this.onDispose(this.#unloadCurrentMedia.bind(this))
-    root._emit(new NodeCreateEvent(this.id))
+    this.onDispose(this.#unloadCurrentMedia.bind(this, true))
+    root._emit(new NodeCreateEvent(this))
   }
 
   connect() {
     const { parent } = this
 
-    const node = this.node.value
-    const outTransition = this.#transitionNode.value
-    const inTransition = this.prev && this.prev.#transitionNode.value
-
-    if (outTransition) {
-      outTransition.inputs[0]?.disconnect()
-      ;(inTransition ?? node).connect(outTransition, 0)
-      if (parent) outTransition.connect(parent._node.value)
+    if (parent?.trackType === 'video') {
+      const { rendererNode } = this
+      if (parent.container !== rendererNode.parent) parent.container.addChild(rendererNode)
+      rendererNode.zIndex = this.index
     }
-    if (inTransition) {
-      inTransition.inputs[1]?.disconnect()
-      node.connect(inTransition, 1)
-    }
-
-    if (!outTransition && !inTransition && parent) node.connect(parent._node.value)
   }
 
   disconnect() {
-    this.node.value.disconnect()
-    const transitionNode = this.#transitionNode.value
-
-    if (transitionNode) {
-      transitionNode.disconnect()
-      transitionNode.inputs[0]?.disconnect()
-      transitionNode.inputs[1]?.disconnect()
-    }
+    this.rendererNode.removeFromParent()
   }
 
   #setMedia(asset: MediaAsset) {
-    const { parent, root: movie } = this
-    const mediaType = parent?.trackType ?? 'video'
-
-    if (
-      typeof this.sourceAsset !== 'undefined' &&
-      this.sourceAsset.id === asset.id &&
-      this.media.value.nodeName === mediaType
-    )
-      return
-
-    this.#unloadCurrentMedia()
-
     this.#source.value = asset
-
-    this.media.value = createHiddenMediaElement(mediaType, asset.objectUrl)
-
-    const customNodeOptions: CustomSourceNodeOptions = {
-      videoEffect: this.#filter,
-      videoEffectIntensity: this.#filterIntensity,
-      source: this.sourceAsset,
-      renderer: movie.renderer,
-      movieIsPaused: movie.isPaused,
-      movieIsStalled: movie.isStalled,
-      movieResolution: toRef(() => movie.resolution),
-      getClipTime: () => this.time,
-      getPresentationTime: () => this.presentationTime,
-      getPlayableTime: () => this.playableTime,
-    }
-
-    this.node.value = movie.videoContext.customSourceNode<VideoElementNode | AudioElementNode>(
-      mediaType === 'video' ? VideoElementNode : AudioElementNode,
-      this.media.value,
-      customNodeOptions,
-    )
+    this.rendererNode.visible = false
   }
 
-  #unloadCurrentMedia() {
-    const media = this.media.value
-    media.removeAttribute('src')
-    media.remove()
+  #unloadCurrentMedia(dispose?: boolean) {
+    const mediaElement = this.media.value
+    mediaElement.removeAttribute('src')
+    mediaElement.remove()
 
-    const contextNode = this.node.value
-    if (typeof contextNode !== 'undefined') contextNode.destroy()
+    this.rendererNode.visible = false
+    if (dispose) this.rendererNode.destroy(true)
+    else this.rendererNode.texture.source.unload()
   }
 
   _ensureDurationIsPlayable() {

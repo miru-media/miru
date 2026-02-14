@@ -8,7 +8,7 @@ import { provideI18n } from 'shared/utils'
 import { ReadyState } from 'shared/video/constants.ts'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
-import { EXPORT_VIDEO_CODECS, SourceNodeState } from '../constants.ts'
+import { EXPORT_VIDEO_CODECS } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { Clip } from '../nodes/clip.ts'
 import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
@@ -76,14 +76,16 @@ export const VideoEditorUI = (props: {
               {() =>
                 movie.timeline.children.map((track) =>
                   (track.children as Clip[]).map((clip) => {
-                    const node = clip.node.value
-                    const { mediaState } = node
+                    const { playback } = clip
+                    const { mediaState } = playback
 
                     return (
                       <div style="font-family:monospace">
                         <div>
                           {() =>
-                            [mediaState.time.value.toFixed(2), mediaState.latestEvent.value?.type].join(' ')
+                            [playback.mediaTime.value.toFixed(2), mediaState.latestEvent.value?.type].join(
+                              ' ',
+                            )
                           }
                         </div>
                         <div>
@@ -93,18 +95,14 @@ export const VideoEditorUI = (props: {
                                 (key) =>
                                   ReadyState[key as keyof typeof ReadyState] === mediaState.readyState.value,
                               )}{' '}
-                              |{' '}
-                              {Object.keys(SourceNodeState).find(
-                                (key) => SourceNodeState[key as keyof typeof SourceNodeState] === node.state,
-                              )}{' '}
-                              | {clip.error.value?.code}
+                              | | {clip.error.value?.code}
                             </>
                           )}
                         </div>
 
                         <div>
                           <label>
-                            source time
+                            source time{' '}
                             <input
                               type="number"
                               min="0"

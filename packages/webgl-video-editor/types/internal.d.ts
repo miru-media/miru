@@ -3,12 +3,19 @@ import type { Renderer } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 
-import type { ExportMovie } from '../src/export/export-movie.ts'
-import type { BaseNode, Clip, Collection, Movie, Track, VideoEffectAsset } from '../src/nodes/index.ts'
+import type {
+  BaseMovie,
+  BaseNode,
+  Clip,
+  MediaAsset,
+  Movie,
+  Timeline,
+  Track,
+  VideoEffectAsset,
+} from '../src/nodes/index.ts'
 import type { VideoEditor as VideoEditor_ } from '../src/video-editor.ts'
 
 import type { ChildNodePosition, Schema } from './core.ts'
-import type { CollectionKind } from './schema'
 
 export interface CustomSourceNodeOptions {
   videoEffect?: Ref<VideoEffectAsset | undefined>
@@ -25,7 +32,7 @@ export interface CustomSourceNodeOptions {
 
 export type TrackMovie = Pick<
   Movie,
-  'id' | 'nodes' | 'videoContext' | 'renderer' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
+  'id' | 'nodes' | 'pixi' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
 >
 
 export interface SchemaTypes {
@@ -48,10 +55,21 @@ export interface MediaElementInfo {
   height: number
 }
 
-export type AnyNode = Movie | Collection<CollectionKind> | Track | Clip
-
+export type AnyNode = BaseMovie | Timeline | Track | Clip
+export interface NodesByType {
+  movie: Movie
+  timeline: Timeline
+  track: Track
+  clip: Clip
+}
 export interface NodeMap {
   map: Map<string, AnyNode | BaseNode>
+  byType: {
+    movie: Set<BaseMovie>
+    timeline: Set<Timeline>
+    track: Set<Track>
+    clip: Set<BaseClip>
+  }
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get: <T extends AnyNode>(id: string) => T
   set: (node: AnyNode | BaseNode) => void
@@ -73,6 +91,8 @@ declare module './core' {
   }
 }
 
-export type RootNode = Movie | ExportMovie
+export type RootNode = BaseMovie
+
+export type AnyAsset = MediaAsset | VideoEffectAsset
 
 export type NonReadonly<T> = { -readonly [P in keyof T]: T[P] }

@@ -39,8 +39,8 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this.#languages.value = value
   }
 
-  get renderer() {
-    return this._editor.renderer
+  get effectRenderer() {
+    return this._editor.effectRenderer
   }
   get canvas() {
     return this._editor.canvas

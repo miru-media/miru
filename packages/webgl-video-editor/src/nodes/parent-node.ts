@@ -33,9 +33,7 @@ export abstract class ParentNode<
     super(id, root)
 
     this.onDispose(() => {
-      const { children } = this
       while (this.tail) this.tail.dispose()
-      children.length = 0
       this.#head.value = this.#tail.value = undefined
     })
   }

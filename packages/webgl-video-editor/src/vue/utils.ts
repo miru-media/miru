@@ -22,7 +22,7 @@ type PublicToVueOrSameType<T> =
         ? Extract<Mappings, [T, unknown]>[1][]
         : T)
 
-type EditorStaticProps = '_editor' | 'store' | 'canvas' | 'renderer'
+type EditorStaticProps = '_editor' | 'store' | 'canvas' | 'effectRenderer'
 type EditorMethodProps =
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- needed
   keyof { [P in keyof pub.VideoEditor as pub.VideoEditor[P] extends Function ? P : never]: unknown }
@@ -68,8 +68,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
         switch (node.type) {
           case 'track':
             reactiveValue = Vue.reactive({
-              id: node.id,
-              trackType: node.trackType,
+              ...node.toObject(),
               children: toVue(() => node.children.map(getVueNode)),
               dispose: node.dispose.bind(node),
             })
@@ -77,6 +76,8 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
           case 'clip':
             reactiveValue = Vue.reactive({
               id: node.id,
+              type: node.type,
+              source: toVue(() => node.source),
               start: toVue(() => node.start),
               duration: toVue(() => node.duration),
               sourceStart: toVue(() => node.sourceStart),
@@ -96,9 +97,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
             break
           case 'asset:media:av':
             reactiveValue = Vue.reactive({
-              id: node.id,
-              name: node.name,
-              duration: node.duration,
+              ...node.toObject(),
               blob: toVue(() => node.blob) as unknown as Blob,
               dispose: node.dispose.bind(node),
             })
@@ -106,6 +105,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
           case 'asset:effect:video':
             reactiveValue = Vue.reactive({
               ...node.toObject(),
+              ops: node.ops,
               dispose: node.dispose.bind(node),
             })
             break
@@ -128,7 +128,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       _editor: Vue.markRaw(editor),
       store: editor.store && Vue.markRaw(editor.store),
       canvas: editor.canvas,
-      renderer: Vue.markRaw(editor.renderer),
+      effectRenderer: Vue.markRaw(editor.effectRenderer),
       resolution: toVue(
         () => editor._movie.resolution,
         (value) => (editor._movie.resolution = value),

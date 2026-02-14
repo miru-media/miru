@@ -39,7 +39,7 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
   }
 
   isDisposed = false
-  _cleanups: (() => void)[] = []
+  readonly #cleanups: (() => void)[] = []
 
   readonly #index = computed((): number => {
     const { prev } = this
@@ -55,10 +55,7 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
   constructor(id: string, root?: RootNode) {
     this.id = id
 
-    if (root) {
-      this.root = root
-      root.nodes.set(this)
-    }
+    if (root) this.root = root
   }
 
   abstract toObject(): T
@@ -94,7 +91,7 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
     if (position) newParent?.positionChildAt(this, position.index)
     else (this as NonReadonly<typeof this>).parent = undefined
 
-    this.root._emit(new NodeMoveEvent(this.id, fromParent && { parentId: fromParent.id, index: fromIndex }))
+    this.root._emit(new NodeMoveEvent(this, fromParent && { parentId: fromParent.id, index: fromIndex }))
   }
 
   remove(): void {
@@ -102,7 +99,8 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
   }
 
   #emitUpdate<Key extends Exclude<keyof T, 'id' | 'type'>>(key: Key, oldValue: T[Key]): void {
-    this.root._emit(new NodeUpdateEvent(this.id, { [key]: oldValue }))
+    const event = new NodeUpdateEvent(this, { [key]: oldValue })
+    this.root._emit(event)
   }
 
   protected _defineReactive<Key extends Exclude<Extract<keyof T, string>, 'id' | 'type'>>(
@@ -139,14 +137,15 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
   dispose() {
     if (this.isDisposed) return
 
-    this._cleanups.forEach((fn) => fn())
+    this.#cleanups.forEach((fn) => fn())
+
     this.parent?.unlinkChild(this)
-    this.root._emit(new NodeDeleteEvent(this.id))
-    this.root.nodes.map.delete(this.id)
+    this.root._emit(new NodeDeleteEvent(this))
     this.isDisposed = true
+    ;(this as unknown as NonReadonly<typeof this.root>).root = undefined as never
   }
 
   onDispose(fn: () => void) {
-    this._cleanups.push(fn)
+    this.#cleanups.push(fn)
   }
 }

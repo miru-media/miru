@@ -24,7 +24,7 @@ const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: nu
   if (prevFilter && prevFilter.assetId === effect) {
     editor._editor._untracked(() => (clip.filter = newFilter))
     const node = editor._editor._movie.nodes.get<Clip>(clip.id)
-    node.root._emit(new NodeUpdateEvent(node.id, { filter: prevFilter }, 'filter'))
+    node.root._emit(new NodeUpdateEvent(node, { filter: prevFilter }, 'filter'))
   } else clip.filter = newFilter
 
   const { start, end } = clip._presentationTime
@@ -33,12 +33,12 @@ const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: nu
   if (currentTime < start || currentTime >= end) editor.seekTo(start)
 }
 
-const texture = editor.renderer.createTexture()
+const texture = editor.effectRenderer.createTexture()
 const isLoadingTexture = ref(true)
 const img = new Image()
 useEventListener(img, 'load', () => {
   isLoadingTexture.value = false
-  editor.renderer.loadImage(texture, img)
+  editor.effectRenderer.loadImage(texture, img)
 })
 
 img.src = sampleImage
@@ -58,7 +58,7 @@ watch(
     :sourceTexture="texture"
     :sourceSize="img"
     :thumbnailSize="fit(img, { width: 200, height: 200 })"
-    :renderer="editor.renderer"
+    :renderer="editor.effectRenderer"
     :effects="editor.effects"
     :effect="editor.selection?.filter?.assetId"
     :intensity="editor.selection?.filter?.intensity ?? 1"

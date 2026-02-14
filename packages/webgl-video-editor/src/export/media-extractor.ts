@@ -1,5 +1,5 @@
 import { ref } from 'fine-jsx'
-import type { RenderGraph } from 'videocontext'
+import * as Pixi from 'pixi.js'
 
 import {
   type AudioBufferData,
@@ -8,14 +8,15 @@ import {
 } from 'shared/video/coder-transforms'
 import type { EncodedMediaChunk } from 'shared/video/types'
 
-import type { CustomSourceNodeOptions } from '../../types/internal.ts'
-import { CustomSourceNode } from '../video-context-nodes/index.ts'
+import type { CustomSourceNodeOptions } from '../../types/internal'
+
+import type { ExporterClip } from './exporter-clip.ts'
 
 export interface ExtractorNodeOptions extends CustomSourceNodeOptions {
   targetFrameRate: number
 }
 
-export namespace MediaExtractorNode {
+export namespace MediaExtractor {
   export interface AudioInit {
     config: AudioDecoderConfig
     getStream: () => ReadableStream<EncodedMediaChunk>
@@ -27,11 +28,13 @@ export namespace MediaExtractorNode {
   }
 }
 
-export class MediaExtractorNode extends CustomSourceNode {
+export class MediaExtractor {
+  clip: ExporterClip
+  media?: TexImageSource | HTMLAudioElement
   videoIsReady = false
 
-  audioInit?: MediaExtractorNode.AudioInit
-  videoInit?: MediaExtractorNode.VideoInit
+  audioInit?: MediaExtractor.AudioInit
+  videoInit?: MediaExtractor.VideoInit
 
   videoStream?: VideoDecoderTransform
   audioStream?: AudioDecoderTransform
@@ -45,37 +48,30 @@ export class MediaExtractorNode extends CustomSourceNode {
 
   currentVideoFrame?: VideoFrame
   currentAudioData?: AudioBufferData
+  sprite?: Pixi.Sprite
 
-  _audioReady = false
-  _isReady() {
-    return this.videoIsReady
+  constructor(clip: ExporterClip) {
+    this.clip = clip
+    this.targetFrameDurationUs = 1e6 / clip.root.frameRate
+    clip.onDispose(this.dispose.bind(this))
   }
 
-  // eslint-disable-next-line @typescript-eslint/max-params -- matches parent class
-  constructor(
-    _src: undefined,
-    gl: WebGL2RenderingContext,
-    renderGraph: RenderGraph,
-    currentTime: number,
-    options: ExtractorNodeOptions,
-  ) {
-    super(gl, renderGraph, currentTime, options)
-    this._displayName = 'MediaExtractorNode'
-    this.targetFrameDurationUs = 1e6 / options.targetFrameRate
-  }
-
-  init({ audio, video }: { audio?: MediaExtractorNode.AudioInit; video?: MediaExtractorNode.VideoInit }) {
+  init({ audio, video }: { audio?: MediaExtractor.AudioInit; video?: MediaExtractor.VideoInit }) {
     if (audio) this.audioInit = audio
     if (video) {
-      const { codedWidth, codedHeight } = video.config
-
       this.videoInit = video
-      const rotation = this.source.video?.rotation ?? 0
-      ;[this.mediaSize.width, this.mediaSize.height] =
-        rotation % 180 ? [codedHeight, codedWidth] : [codedWidth, codedHeight]
+
+      const { mediaSize } = this.clip
+      const sprite = (this.sprite = new Pixi.Sprite(
+        new Pixi.Texture({ source: new Pixi.ImageSource(mediaSize) }),
+      ))
+      sprite.visible = false
+
+      this.clip.resizeSprite(sprite)
+      this.clip.parent!.container.addChild(sprite)
     }
 
-    const { playableTime } = this
+    const { playableTime } = this.clip
     const start = playableTime.source
     const end = start + playableTime.duration
     this.decoderRange = { start, end }
@@ -83,20 +79,23 @@ export class MediaExtractorNode extends CustomSourceNode {
     this.everHadEnoughData = true
   }
 
-  async seekVideo(timeS: number): Promise<boolean> {
+  async seekVideo(): Promise<boolean> {
     this.videoIsReady = true
-    this._seek(timeS)
+
+    const { clip } = this
+    const timeS = clip.root.currentTime
 
     if (!this.videoInit) return false
 
-    const { presentationTime } = this
+    const { presentationTime } = clip
 
     if (timeS < presentationTime.start || timeS >= presentationTime.end) {
       this.media = undefined
+      this.sprite!.visible = false
       return false
     }
 
-    const sourceTimeUs = this.expectedMediaTime.value * 1e6
+    const sourceTimeUs = clip.expectedMediaTime * 1e6
 
     if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
       return true
@@ -129,8 +128,13 @@ export class MediaExtractorNode extends CustomSourceNode {
     this.currentVideoFrame?.close()
     const { done, value } = await this.videoReader.read()
     this.currentVideoFrame = this.media = value
-    this.imageChanged = false
-    if (value) this.renderer.loadImage(this.mediaTexture, value)
+
+    if (value) {
+      const textureSource = this.sprite!.texture.source
+      textureSource.resource = value
+      textureSource.update()
+      this.sprite!.visible = true
+    }
 
     return done
   }
@@ -138,7 +142,7 @@ export class MediaExtractorNode extends CustomSourceNode {
   async seekAudio(timeS: number): Promise<boolean> {
     if (!this.audioInit) return false
 
-    const { playableTime } = this
+    const { playableTime } = this.clip
 
     if (timeS < playableTime.start || timeS >= playableTime.end) return false
 
@@ -201,21 +205,17 @@ export class MediaExtractorNode extends CustomSourceNode {
     return data.timestamp <= sourceTimeUs && sourceTimeUs < data.timestamp + data.duration
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
-  _play() {}
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
-  _pause() {}
-
   getTextureImageSource() {
     return this.media as VideoFrame
   }
 
-  destroy() {
+  dispose() {
     this.videoStream?.dispose()
     this.audioStream?.dispose()
 
     this.currentVideoFrame?.close()
+    this.sprite?.destroy()
 
-    super.destroy()
+    this.clip = undefined as never
   }
 }

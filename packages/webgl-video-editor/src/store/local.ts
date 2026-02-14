@@ -5,6 +5,7 @@ import type * as core from '../../types/core'
 import type { Schema } from '../../types/core'
 import type {
   AssetCreateEvent,
+  AssetDeleteEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
   NodeMoveEvent,
@@ -73,6 +74,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     const options: AddEventListenerOptions = { signal: this.#abort.signal }
 
     movie.on('asset:create', this.#onAssetCreate.bind(this), options)
+    movie.on('asset:delete', this.#onAssetDelete.bind(this), options)
     movie.on('node:create', this.#onNodeCreate.bind(this), options)
     movie.on('node:move', this.#onMove.bind(this), options)
     movie.on('node:update', this.#onUpdate.bind(this), options)
@@ -260,9 +262,8 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     this.#undoRedo(true)
   }
 
-  #onAssetCreate({ assetId, source }: AssetCreateEvent) {
+  #onAssetCreate({ asset, source }: AssetCreateEvent) {
     const map = this.#getAssetMap()
-    const asset = this.#movie.assets.get(assetId)!
 
     if (source != null && asset.type === 'asset:media:av')
       this.storage
@@ -270,24 +271,26 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
         .then(asset.setBlob.bind(asset))
         .catch(asset.setError.bind(asset))
 
-    map[assetId] = asset.toObject()
+    map[asset.id] = asset.toObject()
     localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(map))
   }
 
-  #onNodeCreate(event: NodeCreateEvent): void {
-    const { nodeId } = event
-    this.#add([{ type: 'node:create', nodeId, init: this.#movie.nodes.get(nodeId).toObject() }])
+  #onAssetDelete({ asset }: AssetDeleteEvent) {
+    const map = this.#getAssetMap()
+
+    map[asset.id] = undefined as never
+    localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(map))
   }
-  #onMove(event: NodeMoveEvent): void {
-    const { from, nodeId } = event
-    const node = this.#movie.nodes.get(nodeId)
+
+  #onNodeCreate({ node }: NodeCreateEvent): void {
+    this.#add([{ type: 'node:create', nodeId: node.id, init: node.toObject() }])
+  }
+  #onMove({ node, from }: NodeMoveEvent): void {
     const to = node.parent && { parentId: node.parent.id, index: node.index }
 
-    this.#add([{ type: 'node:move', nodeId, from, to }])
+    this.#add([{ type: 'node:move', nodeId: node.id, from, to }])
   }
-  #onUpdate(event: NodeUpdateEvent): void {
-    const { from, nodeId } = event
-    const node = this.#movie.nodes.get(nodeId)
+  #onUpdate({ node, from }: NodeUpdateEvent): void {
     const to: Record<string, unknown> = {}
 
     for (const key in from) {
@@ -296,12 +299,11 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
       }
     }
 
-    this.#add([{ type: 'node:update', nodeId: event.nodeId, from, to }])
+    this.#add([{ type: 'node:update', nodeId: node.id, from, to }])
   }
-  #onDelete(event: NodeDeleteEvent): void {
-    const { nodeId } = event
-    const node = this.#movie.nodes.get(nodeId)
+  #onDelete({ node }: NodeDeleteEvent): void {
     const { parent } = node
+    const nodeId = node.id
 
     this.#add([
       { type: 'node:move', nodeId, from: parent && { parentId: parent.id, index: node.index } },
@@ -309,11 +311,11 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     ])
   }
 
-  #getAssetMap(): Record<string, Schema.Asset> {
+  #getAssetMap(): Record<string, Schema.AnyAsset> {
     return JSON.parse(localStorage.getItem(this.#ASSETS_KEY) ?? '[]')
   }
 
-  listFiles(): Array<Schema.Asset> {
+  listFiles(): Array<Schema.AnyAsset> {
     try {
       return Object.values(this.#getAssetMap())
     } catch {
@@ -326,7 +328,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   }
 
   async createFile(
-    asset: Schema.Asset,
+    asset: Schema.AnyAsset,
     stream: ReadableStream<Uint8Array>,
     options: StorageFileWriteOptions,
   ): Promise<void> {

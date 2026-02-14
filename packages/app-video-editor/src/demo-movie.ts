@@ -5,16 +5,9 @@ import wavesAudio from 'https://github.com/miru-media/static-assets/raw/main/dis
 import waves from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-MustaKor-pixabay.mp4'
 import wavesRocks from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-rocks-McPix22-pixabay.mp4'
 import { uid } from 'uid'
-import { getDefaultFilterDefinitions } from 'webgl-effects'
 import type { Schema } from 'webgl-video-editor'
 
 import { createInitialMovie } from 'webgl-video-editor/store/utils.js'
-
-const filters = getDefaultFilterDefinitions().map((def) => ({
-  ...def,
-  id: def.id!,
-  type: 'asset:effect:video' as const,
-}))
 
 const assets = {
   waves: {
@@ -24,7 +17,7 @@ const assets = {
     name: `Ocean bird's eye view`,
     url: waves,
     duration: 7.021333,
-    video: { duration: 7.021333, rotation: 0 },
+    video: { duration: 7.021333, rotation: 0, width: 1920, height: 1080 },
   },
   wavesRocks: {
     id: 'demo:wavesRocks',
@@ -33,7 +26,7 @@ const assets = {
     name: 'Rocky shore',
     url: wavesRocks,
     duration: 7.07,
-    video: { duration: 7.07, rotation: 0 },
+    video: { duration: 7.07, rotation: 0, width: 1920, height: 1080 },
   },
   waveBreaking: {
     id: 'demo:waveBreaking',
@@ -42,7 +35,7 @@ const assets = {
     name: 'Wave breaking',
     url: waveBreaking,
     duration: 10,
-    video: { duration: 10, rotation: 0 },
+    video: { duration: 10, rotation: 0, width: 1280, height: 720 },
   },
   turtle: {
     id: 'demo:turtle',
@@ -51,7 +44,7 @@ const assets = {
     name: 'Turtle swimming',
     url: turtle,
     duration: 10,
-    video: { duration: 10, rotation: 0 },
+    video: { duration: 10, rotation: 0, width: 1280, height: 720 },
   },
   wavesAudio: {
     id: 'demo:wavesAudio',
@@ -77,7 +70,7 @@ export const demoMovie = createInitialMovie()
 
 demoMovie.resolution = { width: 1080, height: 1920 }
 demoMovie.frameRate = 24
-demoMovie.assets = [...Object.values(assets), ...filters]
+demoMovie.assets = Object.values(assets)
 demoMovie.tracks.push(
   {
     id: uid(),

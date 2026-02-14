@@ -13,6 +13,7 @@ import type {
   Xywh,
 } from '../types.ts'
 import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent.ts'
+import { ReadyState } from '../video/constants.ts'
 import { getImageSize } from '../video/utils.ts'
 
 const getCanvasContext = (
@@ -116,6 +117,8 @@ export const fit = (source: Size, container: Size, mode: 'contain' | 'cover' | '
     y,
     left: x,
     top: y,
+    scaleX: width / source.width,
+    scaleY: height / source.height,
   }
 }
 
@@ -221,13 +224,22 @@ export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
   return media
 }
 
-const loadVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
+const loadVideoUrl = async (url: string, crossOrigin?: CrossOrigin): Promise<HTMLVideoElement> => {
   if (!url) throw new Error('Empty video source URL')
   const video = createHiddenMediaElement('video', url, crossOrigin)
+  await whenLoadedMetadata(video)
+  return video
+}
 
-  return new Promise<HTMLVideoElement>((resolve, reject) => {
+export const whenLoadedMetadata = (media: HTMLMediaElement): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (media.readyState >= ReadyState.HAVE_METADATA) {
+      resolve()
+      return
+    }
+
     const onLoadedMetadata = () => {
-      resolve(video)
+      resolve()
       removeListeners()
     }
     const onAbort = () => {
@@ -235,21 +247,20 @@ const loadVideoUrl = (url: string, crossOrigin?: CrossOrigin) => {
       removeListeners()
     }
     const onError = (event: ErrorEvent) => {
-      reject((video.error ?? event.error ?? new Error('Unknown video error.')) as Error)
+      reject((media.error ?? event.error ?? new Error('Unknown video error.')) as Error)
       removeListeners()
     }
 
     const removeListeners = () => {
-      video.removeEventListener('loadedmetadata', onLoadedMetadata)
-      video.removeEventListener('abort', onAbort)
-      video.removeEventListener('abort', onAbort)
+      media.removeEventListener('loadedmetadata', onLoadedMetadata)
+      media.removeEventListener('abort', onAbort)
+      media.removeEventListener('error', onAbort)
     }
 
-    video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true })
-    video.addEventListener('abort', onAbort, { once: true })
-    video.addEventListener('error', onError, { once: true })
+    media.addEventListener('loadedmetadata', onLoadedMetadata)
+    media.addEventListener('abort', onAbort)
+    media.addEventListener('error', onError)
   })
-}
 
 const setMediaSrc = (media: HTMLImageElement | HTMLMediaElement, url: string, crossOrigin?: CrossOrigin) => {
   // set crossOrigin value if provided

@@ -18,7 +18,7 @@ export const SourceNodeState = {
 } as const
 export type SourceNodeState = (typeof SourceNodeState)[keyof typeof SourceNodeState]
 
-export const VIDEO_PRESEEK_TIME_S = 2
+export const VIDEO_PREPLAY_TIME_S = 2
 export const MEDIA_SYNC_INTERVAL_MS = 500
 export const MEDIA_SYNC_TOLERANCE_S = 0.3
 

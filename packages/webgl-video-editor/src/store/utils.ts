@@ -19,7 +19,7 @@ export const createInitialMovie = (): SerializedMovie =>
 
 export const initYmapsFromJson = (
   treeYmap: Y.Map<unknown>,
-  assetsYmap: Y.Map<Schema.Asset> | undefined,
+  assetsYmap: Y.Map<Schema.AnyAsset> | undefined,
   content: SerializedMovie,
 ) => {
   const ydoc = treeYmap.doc
@@ -67,8 +67,7 @@ export const initYmapsFromJson = (
     } catch {
       addNodeAndChildren(ROOT_NODE_ID, {
         id: 'timeline',
-        type: 'collection',
-        kind: 'timeline',
+        type: 'timeline',
         children: content.tracks,
       } as const)
     }
@@ -77,7 +76,10 @@ export const initYmapsFromJson = (
     if (assetsYmap) content.assets.forEach((asset) => assetsYmap.set(asset.id, asset))
   })
 }
-export const createInitialUpdate = (treeYmap: Y.Map<unknown>, assetsYmap?: Y.Map<Schema.Asset>): string => {
+export const createInitialUpdate = (
+  treeYmap: Y.Map<unknown>,
+  assetsYmap?: Y.Map<Schema.AnyAsset>,
+): string => {
   initYmapsFromJson(treeYmap, assetsYmap, createInitialMovie())
 
   return Buffer.from(Y.encodeStateAsUpdateV2(treeYmap.doc!)).toString('base64')

@@ -15,20 +15,17 @@ export interface Movie extends Base {
   frameRate: number
 }
 
-export type CollectionKind = 'timeline'
-
-export interface Collection<T extends CollectionKind = CollectionKind> extends Base {
-  type: 'collection'
-  kind: T
+export interface Timeline extends Base {
+  type: 'timeline'
 }
 
-export interface AssetBase<T extends string> {
+export interface BaseAsset<T extends string> {
   id: string
   type: `asset:${T}`
   name?: string
 }
 
-export interface AvMediaAsset extends AssetBase<'media:av'> {
+export interface AvMediaAsset extends BaseAsset<'media:av'> {
   mimeType: string
   url?: string
   duration: number
@@ -38,14 +35,16 @@ export interface AvMediaAsset extends AssetBase<'media:av'> {
   video?: {
     duration: number
     rotation: number
+    width: number
+    height: number
   }
 }
 
-export interface VideoEffectAsset extends AssetBase<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {
+export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {
   name: string
 }
 
-export type Asset = AvMediaAsset | VideoEffectAsset
+export type AnyAsset = AvMediaAsset | VideoEffectAsset
 
 export interface Track extends Base {
   type: 'track'
@@ -70,13 +69,9 @@ export interface SerializedMovie extends Movie {
   tracks: SerializedTrack[]
 }
 
-export interface SerializedCollection<T extends CollectionKind> extends Collection<T> {
-  children: T extends 'timeline' ? SerializedTrack[] : never[]
+export interface SerializedTimeline extends Timeline {
+  children: SerializedTrack[]
 }
 
-export type AnyNodeSchema = Movie | Collection | Track | Clip
-export type AnyNodeSerializedSchema =
-  | SerializedMovie
-  | SerializedCollection<CollectionKind>
-  | SerializedTrack
-  | Clip
+export type AnyNodeSchema = Movie | Timeline | Track | Clip
+export type AnyNodeSerializedSchema = SerializedMovie | SerializedTimeline | SerializedTrack | Clip

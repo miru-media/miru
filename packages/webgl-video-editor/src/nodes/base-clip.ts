@@ -1,10 +1,15 @@
 import { computed, createEffectScope } from 'fine-jsx'
+import type * as Pixi from 'pixi.js'
+
+import type { Size } from 'shared/types.ts'
+import { fit } from 'shared/utils/images.ts'
+import { clamp } from 'shared/utils/math.ts'
 
 import type { ClipTime } from '../../types/core.ts'
 import type { RootNode } from '../../types/internal'
-import { TRANSITION_DURATION_S } from '../constants.ts'
+import type { MediaAsset } from '../assets.ts'
+import { TRANSITION_DURATION_S, VIDEO_PREPLAY_TIME_S } from '../constants.ts'
 
-import type { MediaAsset } from './assets.ts'
 import { BaseNode } from './base-node.ts'
 import type { Schema, Track } from './index.ts'
 
@@ -30,29 +35,11 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
 
   scope = createEffectScope()
 
-  readonly #derivedState = computed(
-    (): {
-      start: number
-      end: number
-      index: number
-    } => {
-      const { prev, index } = this
-      if (!prev)
-        return {
-          start: 0,
-          end: this.duration,
-          index,
-        }
-
-      const prevTime = prev.time
-      const start = prevTime.start + prevTime.duration
-
-      return { start, end: start + this.duration, index }
-    },
-  )
-
   readonly #time = computed((): ClipTime => {
-    const { start, end } = this.#derivedState.value
+    const prevTime = this.prev?.time
+    const start = prevTime ? prevTime.start + prevTime.duration : 0
+    const end = start + this.duration
+
     const { duration } = this
     const source = this.sourceStart
     return { start, source, duration, end }
@@ -72,20 +59,46 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
     if (presentation.source >= 0) return presentation
 
     const { start, end, source, duration } = presentation
-    return { start: start - source, source: 0, duration: duration + source, end }
+    const preplayDuration = Math.max(0, start - Math.min(VIDEO_PREPLAY_TIME_S, source))
+
+    return {
+      start: start - preplayDuration,
+      source: source - preplayDuration,
+      duration: duration + preplayDuration,
+      end,
+    }
+  })
+  readonly #expectedMediaTime = computed((): number => {
+    const { start, source, duration } = this.playableTime
+    return clamp(this.root.currentTime - start + source, source, source + duration)
   })
 
-  get time() {
+  readonly #mediaSize = computed((): Size => {
+    const { video } = this.sourceAsset
+    if (!video) return { width: 0, height: 0 }
+
+    const { width, height } = video
+    return video.rotation % 180 ? { width: height, height: width } : { width, height }
+  })
+
+  get time(): ClipTime {
     return this.#time.value
   }
-  get presentationTime() {
+  get presentationTime(): ClipTime {
     return this.#presentationTime.value
   }
-  get _presentationTime() {
+  get _presentationTime(): ClipTime {
     return this.#presentationTime.value
   }
-  get playableTime() {
+  get playableTime(): ClipTime {
     return this.#playableTime.value
+  }
+  get expectedMediaTime(): number {
+    return this.#expectedMediaTime.value
+  }
+
+  get mediaSize(): Size {
+    return this.#mediaSize.value
   }
 
   get displayName() {
@@ -110,6 +123,15 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
 
   abstract connect(): void
   abstract disconnect(): void
+
+  resizeSprite(sprite: Pixi.Sprite) {
+    const { video } = this.sourceAsset
+    if (!video) return
+
+    const fitProps = fit(this.mediaSize, this.root.resolution, 'cover')
+    sprite.scale.set(fitProps.scaleX, fitProps.scaleY)
+    sprite.position.set(fitProps.x, fitProps.y)
+  }
 
   _ensureDurationIsPlayable(sourceDuration: number) {
     const clipTime = this.time

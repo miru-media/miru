@@ -11,8 +11,8 @@ import type { AnyNodeSerializedSchema } from '../types/schema'
 import type * as pub from '../types/webgl-video-editor'
 
 import { MIN_CLIP_DURATION_S } from './constants.ts'
-import { NodeMoveEvent, NodeUpdateEvent } from './events.ts'
-import { MovieExporter } from './export/movie-exporter.ts'
+import { type NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from './events.ts'
+import { ExporterMovie } from './export/exporter-movie.ts'
 import {
   type BaseClip,
   type BaseNode,
@@ -60,8 +60,8 @@ export class VideoEditor {
     x: ref(0),
   }
 
-  get renderer(): Renderer {
-    return this._movie.renderer
+  get effectRenderer(): Renderer {
+    return this._movie.effectRenderer
   }
   get canvas(): HTMLCanvasElement {
     return this._movie.canvas
@@ -114,8 +114,8 @@ export class VideoEditor {
 
     if (store) store.init(this as unknown as pub.VideoEditor)
 
-    this._movie.on('node:delete', ({ nodeId }) => {
-      if (nodeId === this.selection?.id) this.selectClip(undefined)
+    this._movie.on('node:delete', ({ node }: NodeDeleteEvent) => {
+      if (node.id === this.selection?.id) this.selectClip(undefined)
     })
   }
 
@@ -315,9 +315,9 @@ export class VideoEditor {
         if (!from) continue
         const node = root.nodes.get(from.id)
 
-        root._emit(new NodeUpdateEvent(from.id, from.node))
+        root._emit(new NodeUpdateEvent(node, from.node))
 
-        if (node.parent?.id !== from.position?.parentId) root._emit(new NodeMoveEvent(from.id, from.position))
+        if (node.parent?.id !== from.position?.parentId) root._emit(new NodeMoveEvent(node, from.position))
       }
     })
   }
@@ -340,7 +340,7 @@ export class VideoEditor {
   }
 
   toObject(): Schema.SerializedMovie {
-    const serialize = <T extends Schema.AnyNodeSchema | Schema.Asset>(
+    const serialize = <T extends Schema.AnyNodeSchema | Schema.AnyAsset>(
       node: Extract<AnyNode, BaseNode<T>>,
     ): Extract<AnyNodeSerializedSchema, { type: T['type'] }> => {
       if ('children' in node && node.children != null) {
@@ -372,7 +372,7 @@ export class VideoEditor {
     onProgress(0)
 
     try {
-      const exporter = new MovieExporter(this._movie)
+      const exporter = new ExporterMovie(this._movie)
 
       await this._movie
         .withoutRendering(async () => {

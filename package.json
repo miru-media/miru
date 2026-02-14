@@ -156,7 +156,6 @@
     "patchedDependencies": {
       "glsl-tokenizer": "patches/glsl-tokenizer.patch",
       "libavjs-webcodecs-polyfill": "patches/libavjs-webcodecs-polyfill.patch",
-      "videocontext": "patches/videocontext.patch",
       "@mediapipe/tasks-vision": "patches/@mediapipe__tasks-vision.patch",
       "vitepress": "patches/vitepress.patch"
     },

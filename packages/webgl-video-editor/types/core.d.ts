@@ -18,12 +18,12 @@ export interface ClipTime {
   end: number
 }
 
-export interface Clip {
-  id: string
+export interface Movie extends Schema.Movie {
+  dispose: () => void
+}
+
+export interface Clip extends Schema.Clip {
   readonly start: number
-  duration: number
-  sourceStart: number
-  filter?: { assetId: string; intensity: number }
   parent?: Track
   prev?: Clip | undefined
   next?: Clip | undefined
@@ -33,21 +33,17 @@ export interface Clip {
 export interface Track {
   id: string
   trackType: TrackType
+  parent?: Timeline
   children: Clip[]
   dispose: () => void
 }
 
-export interface MediaAsset {
-  id: string
-  name: string
-  duration: number
+export interface MediaAsset extends Schema.AvMediaAsset {
   blob: Blob
   dispose: () => void
 }
 
-export interface VideoEffectAsset {
-  id: string
-  name: string
+export interface VideoEffectAsset extends Schema.VideoEffectAsset {
   dispose: () => void
 }
 
@@ -85,7 +81,7 @@ export interface VideoEditor {
   state: Schema.Movie
 
   /** The webgl-effects Renderer instance */
-  renderer: Renderer
+  effectRenderer: Renderer
 
   /** Select the given clip */
   selectClip: (clip: Clip | undefined) => void
@@ -183,7 +179,7 @@ export interface VideoEditorStore {
   reset: () => void
 
   /** Get an Iterable of all media asset files that are available to the project */
-  listFiles: () => Iterable<Schema.Asset>
+  listFiles: () => Iterable<Schema.AnyAsset>
 
   /** The entire file has been stored and can be retrieved */
   hasCompleteFile: (key: string) => Promise<boolean>
