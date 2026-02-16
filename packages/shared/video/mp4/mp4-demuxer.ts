@@ -252,7 +252,7 @@ export class MP4Demuxer {
 
             if (state.isEnded) {
               this.#file.unsetExtractionOptions(trackId)
-              controller.terminate()
+              if (this.#trackStates.every((s) => s.isEnded)) controller.terminate()
             }
           } catch (error) {
             state.isEnded = true
