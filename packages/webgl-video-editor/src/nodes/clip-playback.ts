@@ -1,5 +1,6 @@
 import { computed, ref, type Ref } from 'fine-jsx'
 
+import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { ReadyState } from 'shared/video/constants.ts'
 import { rangeContainsTime, useInterval } from 'shared/video/utils.ts'
 
@@ -123,14 +124,26 @@ export class ClipPlayback {
   #onUpdate(): void {
     const { rendererNode } = this.clip
 
-    if (this.isInPresentationTime.value) rendererNode.visible ||= this.mediaState.wasEverPlayable.value
-    else rendererNode.visible &&= false
+    if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
 
-    if (this.isInPlayableTime.value) {
-      this.mediaTime.value = this.mediaElement.currentTime
-      if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA)
-        rendererNode.texture.source.update()
-    }
+    if (this.isInPresentationTime.value) {
+      rendererNode.visible ||= this.mediaState.wasEverPlayable.value
+
+      if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
+        try {
+          if (IS_FIREFOX && this.mediaElement instanceof HTMLVideoElement) {
+            const { source } = rendererNode.texture
+            const videoFrame = new VideoFrame(this.mediaElement, {
+              timestamp: this.mediaElement.currentTime * 1e6,
+            })
+
+            ;(source.resource as Partial<VideoFrame>).close?.()
+            source.resource = videoFrame
+            source.update()
+          } else rendererNode.texture.source.update()
+        } catch {}
+      }
+    } else rendererNode.visible &&= false
 
     if (this.clip.root.isStalled.value) {
       if (!this.mediaIsPaused) this.pause()
@@ -144,6 +157,7 @@ export class ClipPlayback {
   }
 
   dispose(): void {
+    ;(this.clip.rendererNode.texture.source.resource as Partial<VideoFrame> | undefined)?.close?.()
     this.clip = undefined as never
     this.#disposeAbort.abort()
   }

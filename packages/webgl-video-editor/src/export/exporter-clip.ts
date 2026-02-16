@@ -1,4 +1,5 @@
 import { ref } from 'fine-jsx'
+import type { Sprite } from 'pixi.js'
 
 import type { MediaAsset, VideoEffectAsset } from '../assets.ts'
 import { BaseClip } from '../nodes/base-clip.ts'
@@ -37,6 +38,10 @@ export class ExporterClip extends BaseClip {
     this.transition = init.transition
 
     this.extractor = new MediaExtractor(this)
+  }
+
+  resizeSprite(sprite: Sprite): void {
+    super.resizeSprite(sprite, true)
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stubs */

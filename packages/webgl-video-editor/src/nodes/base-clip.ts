@@ -2,6 +2,7 @@ import { computed, createEffectScope } from 'fine-jsx'
 import type * as Pixi from 'pixi.js'
 
 import type { Size } from 'shared/types.ts'
+import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { fit } from 'shared/utils/images.ts'
 import { clamp } from 'shared/utils/math.ts'
 
@@ -101,7 +102,7 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
     return this.#mediaSize.value
   }
 
-  get displayName() {
+  get displayName(): string {
     return this.name || this.sourceAsset.name || ''
   }
 
@@ -124,16 +125,26 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
   abstract connect(): void
   abstract disconnect(): void
 
-  resizeSprite(sprite: Pixi.Sprite) {
+  resizeSprite(sprite: Pixi.Sprite, isExtracting = false): void {
     const { video } = this.sourceAsset
     if (!video) return
 
     const fitProps = fit(this.mediaSize, this.root.resolution, 'cover')
     sprite.scale.set(fitProps.scaleX, fitProps.scaleY)
     sprite.position.set(fitProps.x, fitProps.y)
+
+    let rotation = this.sourceAsset.video?.rotation ?? 0
+
+    if (rotation % 180 && (IS_FIREFOX || (isExtracting && rotation !== 90))) {
+      if (IS_FIREFOX) rotation = -rotation
+
+      sprite.angle = rotation
+      if (rotation === 90) sprite.position.x += fitProps.width
+      else sprite.position.y += fitProps.height
+    }
   }
 
-  _ensureDurationIsPlayable(sourceDuration: number) {
+  _ensureDurationIsPlayable(sourceDuration: number): void {
     const clipTime = this.time
     const durationOutsideClip = sourceDuration - (clipTime.source + clipTime.duration)
     this.sourceStart += Math.min(0, durationOutsideClip)
