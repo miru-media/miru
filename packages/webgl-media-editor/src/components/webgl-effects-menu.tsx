@@ -114,6 +114,7 @@ export const WebglEffectsMenu = (props: {
     const intensity = event.target.valueAsNumber
 
     onChange(currentEffect.value, intensity)
+    event.stopPropagation()
   }
 
   const onScroll = throttle(SCROLL_SELECT_EVENT_THROTTLE_MS, () => {
@@ -176,17 +177,14 @@ export const WebglEffectsMenu = (props: {
   const fb = renderer.createFramebufferAndTexture(toValue(props.thumbnailSize))
 
   effect(async (onCleanup) => {
+    const effects = [ORIGINAL_EFFECT, ...toValue(props.effects).values()]
+
+    if (toValue(props.loading) === true || effects.some((e) => e.isLoading)) return
+
     let isStale = false as boolean
-
-    if (toValue(props.loading)) {
-      imageData.value = undefined
-      return
-    }
-
     onCleanup(() => (isStale = true))
 
     const { width, height } = toValue(props.thumbnailSize)
-    const effects = [ORIGINAL_EFFECT, ...toValue(props.effects).values()]
     const textureSize = { width: width * effects.length, height }
 
     renderer.resizeTexture(fb.texture, textureSize)
@@ -219,7 +217,10 @@ export const WebglEffectsMenu = (props: {
     await renderer.waitAsync()
     if (isStale) return
 
-    imageData.value = await renderer.getImageData(fb.framebuffer, textureSize)
+    const data = await renderer.getImageData(fb.framebuffer, textureSize)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- may have changed after await
+    if (isStale) return
+    imageData.value = data
   })
 
   onScopeDispose(() => {
@@ -236,21 +237,23 @@ export const WebglEffectsMenu = (props: {
       >
         {() =>
           [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => (
-            <EffectItem
-              effect={effect}
-              id={id || ''}
-              imageData={imageData}
-              thumbnailIndex={thumbnailIndex}
-              size={props.thumbnailSize}
-              isActive={() => currentEffect.value === id}
-              onClick={() => onClickFilter(id)}
-              class={[
-                () => scrolledEffectId.value === id && styles['miru--hov'],
-                () =>
-                  ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                  styles['miru--loading'],
-              ]}
-            ></EffectItem>
+            <>
+              <EffectItem
+                effect={effect}
+                id={id || ''}
+                imageData={imageData}
+                thumbnailIndex={thumbnailIndex}
+                size={props.thumbnailSize}
+                isActive={() => currentEffect.value === id}
+                onClick={() => onClickFilter(id)}
+                class={[
+                  () => scrolledEffectId.value === id && styles['miru--hov'],
+                  () =>
+                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                    styles['miru--loading'],
+                ]}
+              ></EffectItem>
+            </>
           ))
         }
       </p>
@@ -263,6 +266,7 @@ export const WebglEffectsMenu = (props: {
           max: 1,
           value: toRef(props.intensity),
           onInput: onInputIntensity,
+          onChange: onInputIntensity,
           disabled: () => !currentEffect.value,
         })
       }

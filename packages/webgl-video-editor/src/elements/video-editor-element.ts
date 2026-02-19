@@ -1,5 +1,4 @@
 import { createEffectScope, effect, ref } from 'fine-jsx'
-import type { Effect } from 'webgl-effects'
 
 import { HTMLElementOrStub } from 'shared/utils/window'
 import { renderComponentTo } from 'shared/video/render-to'
@@ -66,7 +65,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   get currentTime() {
     return this._editor.currentTime
   }
-  get effects(): Map<string, Effect> {
+  get effects(): Map<string, pub.VideoEffectAsset> {
     return this._editor.effects as any
   }
 

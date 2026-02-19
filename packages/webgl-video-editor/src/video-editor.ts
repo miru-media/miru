@@ -1,6 +1,6 @@
 import { computed, ref } from 'fine-jsx'
 import { uid } from 'uid'
-import type { ExportResult, Renderer } from 'webgl-effects'
+import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 import { remap0 } from 'shared/utils/math'
@@ -60,9 +60,8 @@ export class VideoEditor {
     x: ref(0),
   }
 
-  get effectRenderer(): Renderer {
-    return this._movie.effectRenderer
-  }
+  effectRenderer: EffectRenderer
+
   get canvas(): HTMLCanvasElement {
     return this._movie.canvas
   }
@@ -111,6 +110,8 @@ export class VideoEditor {
 
     this._movie = new Movie()
     this.store = store
+
+    this.effectRenderer = new EffectRenderer()
 
     if (store) store.init(this as unknown as pub.VideoEditor)
 

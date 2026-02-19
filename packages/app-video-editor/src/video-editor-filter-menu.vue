@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onScopeDispose, ref, watch } from 'vue'
+import { markRaw, onScopeDispose, ref, watch } from 'vue'
 import type { Reactive } from 'vue'
 import { type WebglEffectsMenuElement } from 'webgl-media-editor'
 import 'webgl-media-editor'
@@ -8,24 +8,34 @@ import sampleImage from 'shared/assets/320px-bianchi.jpg'
 import { fit, useEventListener } from 'shared/utils'
 
 import type { VideoEditor } from 'webgl-video-editor'
-import type { Clip } from '../../webgl-video-editor/src/nodes'
-import { NodeUpdateEvent } from '../../webgl-video-editor/src/events'
+import { Effect } from 'reactive-effects/effect'
 
 const { editor } = defineProps<{ editor: Reactive<VideoEditor> }>()
+const effects = ref(new Map<string, Effect>())
+
+watch(
+  [() => editor.effects],
+  ([effectAssets], _pref, onCleanup) => {
+    effects.value = new Map(
+      Array.from(effectAssets).map(([id, effect]) => [
+        id,
+        markRaw(new Effect(effect.raw, editor.effectRenderer as any)),
+      ]),
+    )
+
+    onCleanup(() => effects.value.forEach((e) => e.dispose()))
+  },
+  { immediate: true },
+)
 
 const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: number }>) => {
   const clip = editor.selection
   if (!clip) return
 
   const { effect, intensity } = event.detail
-  const prevFilter = clip.filter
   const newFilter = effect ? { assetId: effect, intensity } : undefined
 
-  if (prevFilter && prevFilter.assetId === effect) {
-    editor._editor._untracked(() => (clip.filter = newFilter))
-    const node = editor._editor._movie.nodes.get<Clip>(clip.id)
-    node.root._emit(new NodeUpdateEvent(node, { filter: prevFilter }, 'filter'))
-  } else clip.filter = newFilter
+  clip.filter = newFilter
 
   const { start, end } = clip._presentationTime
   const { currentTime } = editor
@@ -59,7 +69,7 @@ watch(
     :sourceSize="img"
     :thumbnailSize="fit(img, { width: 200, height: 200 })"
     :renderer="editor.effectRenderer"
-    :effects="editor.effects"
+    :effects="effects"
     :effect="editor.selection?.filter?.assetId"
     :intensity="editor.selection?.filter?.intensity ?? 1"
     :loading="isLoadingTexture"

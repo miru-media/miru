@@ -11,7 +11,7 @@ export class Effect implements Effect_ {
   name: string
   ops: RendererEffectOp[]
   isDisposed = false
-  isLoading = false
+  isLoading = true
   private readonly janitor = new Janitor()
   private readonly resources: TextureResource[]
   private readonly shaders: string[] = []
@@ -109,6 +109,8 @@ export class Effect implements Effect_ {
 
       this.isDisposed = true
     })
+
+    onResourceStateChange()
   }
 
   toObject(): EffectDefinition {

@@ -6,7 +6,7 @@ import type { Renderer } from './renderer.ts'
 
 export class TextureResource {
   promise?: Promise<never>
-  isLoading = false
+  isLoading = true
   error: unknown
   janitor = new Janitor()
   texture: WebGLTexture
@@ -27,33 +27,28 @@ export class TextureResource {
       } else {
         renderer.loadImage(this.texture, decodedImage, SOURCE_TEX_OPTIONS)
       }
+
+      this.isLoading = false
+      onStateChange(this)
     }
 
-    if (isSyncSource(source)) onDecoded(source)
-    else {
-      this.isLoading = true
-
+    if (isSyncSource(source)) {
+      onDecoded(source)
+    } else {
       const { promise, close } = loadAsyncImageSource(source, crossOrigin, type === 'video')
 
-      promise
-        .then(onDecoded)
-        .catch((e: unknown) => {
-          this.error = e
-          onStateChange(this)
-        })
-        .finally(() => {
-          this.isLoading = false
-          onStateChange(this)
-        })
+      promise.then(onDecoded).catch((e: unknown) => {
+        this.error = e
+        this.isLoading = false
+      })
 
       this.janitor.add(close)
+      onStateChange(this)
     }
 
     this.janitor.add(() => {
       renderer.deleteTexture(this.texture)
     })
-
-    onStateChange(this)
   }
 
   dispose() {

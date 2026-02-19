@@ -56,11 +56,14 @@ export class Clip extends BaseClip {
     })
     this._defineReactive('filter', init.filter, {
       onChange: (value) => {
+        this.#filterIntensity.value = value?.intensity ?? 1
+
+        if (value?.assetId === this.#filter.value?.id) return
+
         this._pixiFilters.forEach((filter) => filter.destroy())
         this._pixiFilters.length = 0
 
         this.#filter.value = value && (this.root.assets.get(value.assetId) as VideoEffectAsset)
-        this.#filterIntensity.value = value?.intensity ?? 1
 
         this.rendererNode.filters = this._pixiFilters =
           this.#filter.value?.raw.ops.map((op) => new MiruFilter(op, this.#filterIntensity)) ?? []
@@ -109,6 +112,11 @@ export class Clip extends BaseClip {
     })
 
     this.onDispose(this.#unloadCurrentMedia.bind(this, true))
+    this.onDispose(() => {
+      this._pixiFilters.forEach((filter) =>
+        filter.sprites.forEach((sprite) => this.root.stage.addChild(sprite)),
+      )
+    })
     root._emit(new NodeCreateEvent(this))
   }
 

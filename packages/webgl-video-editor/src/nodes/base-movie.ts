@@ -1,6 +1,6 @@
 import { computed, effect, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
-import { Renderer as EffectRenderer, getDefaultFilterDefinitions } from 'webgl-effects'
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import { setObjectSize } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
@@ -95,8 +95,6 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
   whenRendererIsReady: Promise<void>
   readonly #createdOwnRenderer: boolean
 
-  effectRenderer: EffectRenderer
-
   protected readonly _currentTime = ref(0)
   readonly #duration = computed(() =>
     this.timeline.children.reduce((end, track) => Math.max(track.duration, end), 0),
@@ -124,11 +122,7 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
 
   readonly timeline: Timeline
 
-  constructor(
-    options: Partial<
-      Pick<BaseMovie, 'gl' | 'renderer' | 'effectRenderer' | 'assets' | 'resolution' | 'frameRate'>
-    >,
-  ) {
+  constructor(options: Partial<Pick<BaseMovie, 'gl' | 'renderer' | 'assets' | 'resolution' | 'frameRate'>>) {
     super(ROOT_NODE_ID)
     this.root = this
 
@@ -145,7 +139,6 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
       this.#createdOwnRenderer = true
     }
 
-    this.effectRenderer = options.effectRenderer ?? new EffectRenderer({ gl: this.gl })
     this.canvas = this.gl.canvas
     this.stage = new Pixi.Container()
 

@@ -64,6 +64,12 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       const scope = new EffectScope(true)
       let reactiveValue
 
+      const getWritableProp = (node: any, key: string) =>
+        toVue(
+          () => node[key],
+          (value) => (node[key] = value),
+        )
+
       scope.run(() => {
         switch (node.type) {
           case 'track':
@@ -77,11 +83,11 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
             reactiveValue = Vue.reactive({
               id: node.id,
               type: node.type,
-              source: toVue(() => node.source),
-              start: toVue(() => node.start),
-              duration: toVue(() => node.duration),
-              sourceStart: toVue(() => node.sourceStart),
-              filter: toVue(() => node.filter),
+              source: getWritableProp(node, 'source'),
+              start: getWritableProp(node, 'start'),
+              duration: getWritableProp(node, 'duration'),
+              sourceStart: getWritableProp(node, 'sourceStart'),
+              filter: getWritableProp(node, 'filter'),
               get prev() {
                 return node.prev && getVueNode(node.prev)
               },
@@ -105,7 +111,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
           case 'asset:effect:video':
             reactiveValue = Vue.reactive({
               ...node.toObject(),
-              ops: node.ops,
+              raw: node.raw,
               dispose: node.dispose.bind(node),
             })
             break
@@ -141,7 +147,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       isPaused: toVue(() => editor._movie.isPaused.value),
       currentTime: toVue(() => editor.currentTime),
       tracks: toVue(() => editor.tracks.map(getVueNode)),
-      selection: toVue(() => editor.selection),
+      selection: toVue(() => editor.selection && getVueNode(editor.selection)),
       effects: toVue(() => editor.effects as Map<string, pub.VideoEffectAsset>) as any,
       exportResult: toVue(() => editor.exportResult),
       state: toVue(() => editor.toObject()),

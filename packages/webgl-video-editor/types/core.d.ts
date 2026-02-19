@@ -1,4 +1,4 @@
-import type { Effect, Renderer } from 'webgl-effects'
+import type { EffectDefinition, Renderer } from 'webgl-effects'
 
 import type * as Schema from './schema.ts'
 
@@ -44,6 +44,7 @@ export interface MediaAsset extends Schema.AvMediaAsset {
 }
 
 export interface VideoEffectAsset extends Schema.VideoEffectAsset {
+  raw: EffectDefinition
   dispose: () => void
 }
 
@@ -69,7 +70,7 @@ export interface VideoEditor {
   currentTime: number
 
   /** The webgl-effects that are loaded into the editor */
-  effects: Map<string, Effect>
+  effects: Map<string, VideoEffectAsset>
 
   /** The currently selected video clip on the timeline. */
   selection?: Clip

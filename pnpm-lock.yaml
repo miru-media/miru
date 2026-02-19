@@ -499,6 +499,9 @@ importers:
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.4.0(vue@3.5.26(typescript@5.9.3))
+      reactive-effects:
+        specifier: workspace:^
+        version: link:../reactive-effects
       shared:
         specifier: workspace:^
         version: link:../shared

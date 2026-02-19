@@ -283,18 +283,25 @@ export class ImageSourceInternal {
 
   #applyEditValuesToRenderer(effect?: Effect, adjustments?: AdjustmentsState) {
     const renderer = this.#renderer
+    const intensity = this.intensity.value
 
-    const ops = effect?.ops.slice() ?? []
+    const ops =
+      effect?.ops.map((op) => ({
+        ...op,
+        intensity: op.intensity * intensity,
+      })) ?? []
+
     if (adjustments) {
       const { uniforms } = this.#adjustColorOp
       uniforms.brightness = adjustments.brightness
       uniforms.contrast = adjustments.contrast
       uniforms.saturation = adjustments.saturation
+
       ops.unshift(this.#adjustColorOp)
     }
 
     renderer.setEffect({ ops })
-    renderer.setIntensity(this.intensity.value)
+    renderer.setIntensity(1)
   }
 
   drawFullSize() {

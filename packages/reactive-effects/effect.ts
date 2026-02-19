@@ -6,7 +6,7 @@ import type { Effect as Effect_ } from '../webgl-effects/src/types/classes.ts'
 
 export class Effect implements Effect_ {
   readonly #effect: BaseEffect
-  readonly #isLoading = ref(false)
+  readonly #isLoading = ref(true)
   shaders: string[] = []
 
   get id() {
@@ -29,11 +29,9 @@ export class Effect implements Effect_ {
   }
 
   constructor(definition: EffectDefinition, renderer: Renderer) {
-    this.#effect = new BaseEffect(
-      definition,
-      renderer,
-      ({ isLoading }) => (this.#isLoading.value = isLoading),
-    )
+    this.#effect = new BaseEffect(definition, renderer, ({ isLoading }) => {
+      this.#isLoading.value = isLoading
+    })
   }
 
   toObject() {

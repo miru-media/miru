@@ -1,6 +1,7 @@
 @import url('./common.module.css');
 @import url('./clip.module.css');
 @import url('./timeline.module.css');
+@import url('./filter-menu.module.css');
 
 .videoEditor {
   display: flex;

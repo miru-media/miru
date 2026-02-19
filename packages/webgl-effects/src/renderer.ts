@@ -10,7 +10,6 @@ import {
   isOffscreenCanvas,
   loadLut,
   setObjectSize,
-  setTextureParameters,
 } from 'shared/utils/images'
 
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants.ts'
@@ -33,6 +32,17 @@ interface Size {
 }
 
 const DRAW_COUNT = 6
+
+const setTextureParameters = (
+  gl: WebGL2RenderingContext,
+  texture: WebGLTexture,
+  options: twgl.TextureOptions,
+) => {
+  twgl.setTextureParameters(gl, texture, options)
+  gl.pixelStorei(GL.UNPACK_COLORSPACE_CONVERSION_WEBGL, options.colorspaceConversion ?? false)
+  gl.pixelStorei(GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, options.premultiplyAlpha ?? false)
+  gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, options.flipY ?? false)
+}
 
 export class Renderer implements Renderer_ {
   #gl: WebGL2RenderingContext
@@ -95,7 +105,7 @@ export class Renderer implements Renderer_ {
     this.#fbs = [createFb(), createFb()]
   }
 
-  createTexture(textureOptions: twgl.TextureOptions = SOURCE_TEX_OPTIONS) {
+  createTexture(textureOptions: twgl.TextureOptions = SOURCE_TEX_OPTIONS): WebGLTexture {
     const gl = this.#gl
     const {
       target = GL.TEXTURE_2D,
@@ -118,7 +128,7 @@ export class Renderer implements Renderer_ {
     return texture
   }
 
-  createFramebufferAndTexture(size?: Size) {
+  createFramebufferAndTexture(size?: Size): { framebuffer: WebGLFramebuffer; texture: WebGLTexture } {
     const gl = this.#gl
     const texture = this.createTexture()
     if (size) this.resizeTexture(texture, size)
@@ -135,7 +145,7 @@ export class Renderer implements Renderer_ {
     texture: WebGLTexture,
     source: TexImageSource,
     textureOptions: Omit<twgl.TextureOptions, 'width' | 'height'> = SOURCE_TEX_OPTIONS,
-  ) {
+  ): void {
     const gl = this.#gl
     const { internalFormat = GL.RGBA, format = GL.RGBA, type = GL.UNSIGNED_BYTE } = textureOptions
 
@@ -153,7 +163,7 @@ export class Renderer implements Renderer_ {
     crop?: CropState,
     flipY = false,
     transform?: mat4,
-  ) {
+  ): void {
     crop ??= { x: 0, y: 0, width: textureSize.width, height: textureSize.height, rotate: 0 }
 
     this.#uniforms.u_flipY = flipY
@@ -187,16 +197,16 @@ export class Renderer implements Renderer_ {
     }
   }
 
-  loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut) {
+  loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut): void {
     const isHald = type === 'hald-lut'
     loadLut(this.#gl, texture, imageData, isHald, LUT_TEX_OPTIONS)
   }
 
-  setEffect(effect?: RendererEffect) {
+  setEffect(effect?: RendererEffect): void {
     this.effectOps = (effect?.ops ?? []).slice()
   }
 
-  setIntensity(value: number) {
+  setIntensity(value: number): void {
     this.#uniforms.u_intensity = value
   }
 
@@ -210,19 +220,19 @@ export class Renderer implements Renderer_ {
       format = GL.RGBA,
       type = GL.UNSIGNED_BYTE,
     }: twgl.TextureOptions = SOURCE_TEX_OPTIONS,
-  ) {
+  ): void {
     const gl = this.#gl
     gl.bindTexture(target, texture)
     gl.texImage2D(target, level, internalFormat, size.width, size.height, 0, format, type, null)
   }
 
-  clear(color: ArrayLike<number> = [0, 0, 0, 1]) {
+  clear(color: ArrayLike<number> = [0, 0, 0, 1]): void {
     const gl = this.#gl
     gl.clearColor(color[0], color[1], color[2], color[3])
     gl.clear(GL.COLOR_BUFFER_BIT)
   }
 
-  getProgram(fragmentShader: string) {
+  getProgram(fragmentShader: string): twgl.ProgramInfo {
     const entry = this.#fragmentsToPrograms.get(fragmentShader) ?? {
       programInfo: twgl.createProgramInfo(this.#gl, [vs, fragmentShader]),
       refCount: 0,
@@ -233,7 +243,7 @@ export class Renderer implements Renderer_ {
     return entry.programInfo
   }
 
-  dropProgram(fragmentShader: string) {
+  dropProgram(fragmentShader: string): void {
     const entry = this.#fragmentsToPrograms.get(fragmentShader)
     if (!entry) return
 
@@ -245,7 +255,7 @@ export class Renderer implements Renderer_ {
     }
   }
 
-  draw(options: RendererDrawOptions = {}) {
+  draw(options: RendererDrawOptions = {}): void {
     const gl = this.#gl
 
     const { framebuffer: outFramebuffer = null } = options
@@ -313,8 +323,8 @@ export class Renderer implements Renderer_ {
         }
 
         twgl.setUniforms(op.programInfo, {
-          ...op.uniforms,
           ...this.#uniforms,
+          ...op.uniforms,
           u_flipY: true,
           u_matrix,
           u_textureMatrix,
@@ -328,7 +338,7 @@ export class Renderer implements Renderer_ {
     if (!outFramebuffer) this.waitSync()
   }
 
-  #flushWaitSync() {
+  #flushWaitSync(): { sync: WebGLSync | null; status: number | null } {
     const gl = this.#gl
     const sync = gl.fenceSync(GL.SYNC_GPU_COMMANDS_COMPLETE, 0)
     gl.flush()
@@ -341,14 +351,14 @@ export class Renderer implements Renderer_ {
     return { sync, status }
   }
 
-  waitSync() {
+  waitSync(): void {
     const gl = this.#gl
     const { sync } = this.#flushWaitSync()
 
     if (sync) gl.deleteSync(sync)
   }
 
-  async waitAsync(intervalMs = 10) {
+  async waitAsync(intervalMs = 10): Promise<void> {
     const gl = this.#gl
     const { sync, status } = this.#flushWaitSync()
 
@@ -365,7 +375,9 @@ export class Renderer implements Renderer_ {
     if (status === GL.WAIT_FAILED) throw new Error('[webgl-effects] gl.clientWaitSync() failed!')
   }
 
-  async drawAndTransfer(options: RendererDrawOptions & { context: Context2D | ImageBitmapRenderingContext }) {
+  async drawAndTransfer(
+    options: RendererDrawOptions & { context: Context2D | ImageBitmapRenderingContext },
+  ): Promise<void> {
     this.draw(options)
 
     const gl = this.#gl
@@ -391,7 +403,7 @@ export class Renderer implements Renderer_ {
     }
   }
 
-  async getImageData(framebuffer: WebGLFramebuffer, size: Size) {
+  async getImageData(framebuffer: WebGLFramebuffer, size: Size): Promise<ImageData> {
     const gl = this.#gl
     const pbo = gl.createBuffer()
     const image = new ImageData(size.width, size.height)
@@ -418,18 +430,18 @@ export class Renderer implements Renderer_ {
     return image
   }
 
-  async toBlob(options?: ImageEncodeOptions) {
+  async toBlob(options?: ImageEncodeOptions): Promise<Blob> {
     return await canvasToBlob(this.#gl.canvas, options)
   }
 
-  deleteTexture(texture: WebGLTexture) {
+  deleteTexture(texture: WebGLTexture): void {
     this.#gl.deleteTexture(texture)
   }
-  deleteFramebuffer(framebuffer: WebGLFramebuffer) {
+  deleteFramebuffer(framebuffer: WebGLFramebuffer): void {
     this.#gl.deleteFramebuffer(framebuffer)
   }
 
-  dispose() {
+  dispose(): void {
     const gl = this.#gl
     const programInfo = this.#passthroughProgram
 
