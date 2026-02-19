@@ -18,6 +18,7 @@ import {
   PlaybackSeekEvent,
 } from '../events.ts'
 import { PlaybackPauseEvent, PlaybackPlayEvent } from '../events.ts'
+import { LutUploaderSystem } from '../pixi/pixi-lut-source.ts'
 
 import type { BaseClip, BaseNode, Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
@@ -35,6 +36,8 @@ export const enum PlaybackState {
 const PLAY_EVENT = new PlaybackPlayEvent()
 const PAUSE_EVENT = new PlaybackPauseEvent()
 const SEEK_EVENT = new PlaybackSeekEvent()
+
+Pixi.extensions.add(LutUploaderSystem)
 
 class NodeMap implements INodeMap {
   map = new Map<string, AnyNode | BaseNode>()

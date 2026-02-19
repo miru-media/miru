@@ -1,13 +1,11 @@
 #version 300 es
 
 precision mediump float;
-precision mediump sampler3D;
 
-in vec2 v_unitPosition;
 in vec2 v_texCoord;
 
 uniform sampler2D u_image;
-uniform vec2 u_resolution;
+uniform vec4 u_resolution;
 uniform float u_intensity;
 
 out vec4 fragColor;
@@ -16,5 +14,7 @@ out vec4 fragColor;
 
 void main() {
   vec4 color = texture(u_image, v_texCoord);
-  fragColor = vec4(filmGrain(color.rgb, v_texCoord, u_resolution, u_intensity), color.a);
+  fragColor = vec4(filmGrain(color.rgb, v_texCoord, u_resolution.xy, u_intensity), color.a);
 }
+
+#pragma glslify: export(main)

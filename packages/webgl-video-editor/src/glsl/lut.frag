@@ -1,0 +1,1 @@
+#pragma glslify: main = require(../../../webgl-effects/src/glsl/lut.frag,v_texCoord=vTextureCoord,lut=lut,u_image=uTexture,u_size=uInputSize,u_intensity=u_intensity,fragColor=fragColor)

@@ -1,0 +1,1 @@
+#pragma glslify: main = require(../../../webgl-effects/src/glsl/sepia.frag,v_texCoord=vTextureCoord,u_image=uTexture,u_size=uInputSize,u_resolution=uOutputFrame,u_intensity=u_intensity,fragColor=fragColor)

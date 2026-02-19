@@ -1,5 +1,5 @@
 import { ref } from 'fine-jsx'
-import { Effect, type EffectOp } from 'webgl-effects'
+import type { EffectOp } from 'webgl-effects'
 
 import { Janitor } from 'shared/utils/general.ts'
 import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
@@ -213,20 +213,16 @@ export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> impleme
   declare children?: never
   declare parent?: never
 
-  readonly #effect: Effect
   readonly #isLoading = ref(false)
   shaders: string[] = []
 
   readonly #janitor = new Janitor()
 
   get name(): string {
-    return this.#effect.name
+    return this.raw.name
   }
   get ops(): EffectOp[] {
     return this.raw.ops
-  }
-  get promise(): Promise<undefined[]> | undefined {
-    return this.#effect.promise
   }
   get isLoading(): boolean {
     return this.#isLoading.value
@@ -235,11 +231,8 @@ export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> impleme
   constructor(init: Schema.VideoEffectAsset, root: RootNode) {
     super(init, root)
     this.id = init.id
-    this.#effect = new Effect(init, root.effectRenderer, (e) => (this.#isLoading.value = e.isLoading))
     root.assets.set(this.id, this)
     root._emit(new AssetCreateEvent(this))
-
-    this.#janitor.add(this.#effect.dispose.bind(this.#effect))
   }
 
   dispose(): void {
@@ -252,7 +245,7 @@ export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> impleme
 
   toObject(): Schema.VideoEffectAsset {
     return {
-      ...this.#effect.toObject(),
+      ...this.raw,
       name: this.name,
       id: this.id,
       type: 'asset:effect:video',

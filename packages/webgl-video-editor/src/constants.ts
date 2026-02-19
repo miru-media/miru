@@ -31,3 +31,6 @@ export const DEFAULT_RESOLUTION = { width: 1920, height: 1080 }
 export const ASSET_TYPE_PREFIX = 'asset:'
 
 export const ROOT_NODE_ID = '__ROOT_NODE__'
+
+export const PIXI_LUT_UPLOADER_ID = 'webgl-video-editor:lut'
+export const PIXI_HALD_LUT_UPLOADER_ID = 'webgl-video-editor:hald-lut'

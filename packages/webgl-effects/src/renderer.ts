@@ -8,7 +8,9 @@ import {
   get2dContext,
   getWebgl2Context,
   isOffscreenCanvas,
+  loadLut,
   setObjectSize,
+  setTextureParameters,
 } from 'shared/utils/images'
 
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants.ts'
@@ -32,17 +34,6 @@ interface Size {
 
 const DRAW_COUNT = 6
 
-const setTextureParameters = (
-  gl: WebGL2RenderingContext,
-  texture: WebGLTexture,
-  options: twgl.TextureOptions,
-) => {
-  twgl.setTextureParameters(gl, texture, options)
-  gl.pixelStorei(GL.UNPACK_COLORSPACE_CONVERSION_WEBGL, options.colorspaceConversion ?? false)
-  gl.pixelStorei(GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, options.premultiplyAlpha ?? false)
-  gl.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, options.flipY ?? false)
-}
-
 export class Renderer implements Renderer_ {
   #gl: WebGL2RenderingContext
   readonly #ownsGl: boolean
@@ -51,7 +42,7 @@ export class Renderer implements Renderer_ {
     u_flipY: true,
     u_resolution: [1, 1],
     u_image: null as WebGLTexture | null,
-    u_size: [1, 1],
+    u_size: [1, 1, 1, 1],
     u_intensity: 1,
     u_matrix: mat4.create(),
     u_textureMatrix: mat4.create(),
@@ -83,14 +74,14 @@ export class Renderer implements Renderer_ {
     const unitQuad = new Float32Array([1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0])
 
     ;[
-      unitQuad, // a_position
-      unitQuad, // a_texCoord
-    ].forEach((data, location) => {
+      this.#passthroughProgram.attribLocations.a_position,
+      this.#passthroughProgram.attribLocations.a_texCoord,
+    ].forEach((location) => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- mismatch between TS and eslint?
       const buffer = gl.createBuffer()!
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+      gl.bufferData(gl.ARRAY_BUFFER, unitQuad, gl.STATIC_DRAW)
       gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(location)
       this.#vertexBuffers.push(buffer)
@@ -167,7 +158,7 @@ export class Renderer implements Renderer_ {
 
     this.#uniforms.u_flipY = flipY
     this.#uniforms.u_image = texture
-    this.#uniforms.u_size = [crop.width, crop.height]
+    this.#uniforms.u_size = [crop.width, crop.height, 1 / crop.height, 1 / crop.width]
     this.#uniforms.u_resolution = [resolution.width, resolution.height]
 
     {
@@ -198,54 +189,7 @@ export class Renderer implements Renderer_ {
 
   loadLut(texture: WebGLTexture, imageData: ImageData, type?: AssetType.Lut | AssetType.HaldLut) {
     const isHald = type === 'hald-lut'
-    this.#loadLut(texture, imageData, isHald)
-  }
-
-  #loadLut(texture: WebGLTexture, imageData: ImageData | undefined, isHald: boolean) {
-    const gl = this.#gl
-
-    if (imageData == null) return
-
-    const format = GL.RGBA
-    const type = GL.UNSIGNED_BYTE
-
-    const { width, height } = imageData
-    const size = Math.cbrt(width * height)
-    const slicesPerRow = width / size
-
-    setTextureParameters(gl, texture, LUT_TEX_OPTIONS)
-
-    if (isHald || width === 1 || height === 1) {
-      gl.texImage3D(GL.TEXTURE_3D, 0, format, size, size, size, 0, format, type, imageData.data)
-      return
-    }
-
-    gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
-    gl.pixelStorei(GL.UNPACK_ROW_LENGTH, width)
-    gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, height)
-    gl.texStorage3D(GL.TEXTURE_3D, 1, GL.RGBA8, size, size, size)
-
-    const pixelBuffer = gl.createBuffer()
-    gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, pixelBuffer)
-    gl.bufferData(GL.PIXEL_UNPACK_BUFFER, imageData.data, GL.STREAM_DRAW)
-
-    for (let z = 0; z < size; z++) {
-      const skipX = (z % slicesPerRow) * size
-      const skipY = Math.floor(z / slicesPerRow) * size
-
-      gl.pixelStorei(GL.UNPACK_SKIP_PIXELS, skipX)
-      gl.pixelStorei(GL.UNPACK_SKIP_ROWS, skipY)
-      gl.texSubImage3D(GL.TEXTURE_3D, 0, 0, 0, z, size, size, 1, format, type, 0)
-    }
-
-    gl.pixelStorei(GL.UNPACK_ALIGNMENT, 4)
-    gl.pixelStorei(GL.UNPACK_ROW_LENGTH, 0)
-    gl.pixelStorei(GL.UNPACK_IMAGE_HEIGHT, 0)
-    gl.pixelStorei(GL.UNPACK_SKIP_PIXELS, 0)
-    gl.pixelStorei(GL.UNPACK_SKIP_ROWS, 0)
-
-    // gl.deleteBuffer(pixelBuffer)
-    gl.bindBuffer(GL.PIXEL_UNPACK_BUFFER, null)
+    loadLut(this.#gl, texture, imageData, isHald, LUT_TEX_OPTIONS)
   }
 
   setEffect(effect?: RendererEffect) {

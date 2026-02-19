@@ -9,6 +9,8 @@ import {
 import type { EncodedMediaChunk } from 'shared/video/types'
 
 import type { CustomSourceNodeOptions } from '../../types/internal'
+import type { VideoEffectAsset } from '../assets.ts'
+import { MiruFilter } from '../pixi/pixi-miru-filter.ts'
 
 import type { ExporterClip } from './exporter-clip.ts'
 
@@ -61,7 +63,7 @@ export class MediaExtractor {
     if (video) {
       this.videoInit = video
 
-      const { mediaSize } = this.clip
+      const { mediaSize, filter, root } = this.clip
       const sprite = (this.sprite = new Pixi.Sprite(
         new Pixi.Texture({ source: new Pixi.ImageSource(mediaSize) }),
       ))
@@ -69,6 +71,15 @@ export class MediaExtractor {
 
       this.clip.resizeSprite(sprite)
       this.clip.parent!.container.addChild(sprite)
+
+      if (filter) {
+        const filterAsset = root.assets.get(filter.assetId) as VideoEffectAsset
+        const filters = (sprite.filters = filterAsset.ops.map(
+          (op) => new MiruFilter(op, ref(filter.intensity)),
+        ))
+
+        filters.forEach((filter) => filter.sprites.forEach((sprite) => root.stage.addChild(sprite)))
+      }
     }
 
     const { playableTime } = this.clip

@@ -1,3 +1,4 @@
+import * as twgl from 'twgl.js'
 import type { AssetType, Context2D, CropState } from 'webgl-effects'
 
 import type {
@@ -144,6 +145,7 @@ export const loadAsyncImageSource = <IsVideo extends boolean>(
   source: AsyncImageSource,
   crossOrigin: CrossOrigin | undefined,
   isVideo: IsVideo | undefined,
+  signal?: AbortSignal,
 ) => {
   let isClosed = false
   let toRevoke: string | undefined
@@ -154,8 +156,9 @@ export const loadAsyncImageSource = <IsVideo extends boolean>(
       ? loadVideoUrl(
           source instanceof Blob ? (source = toRevoke = URL.createObjectURL(source)) : source,
           crossOrigin,
+          signal,
         )
-      : loadImageUrlOrBlob(source, crossOrigin)
+      : loadImageUrlOrBlob(source, crossOrigin, signal)
 
   const promise = loadPromise
     // reject if already closed
@@ -193,13 +196,14 @@ export const loadAsyncImageSource = <IsVideo extends boolean>(
   return { promise, close }
 }
 
-const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrigin) => {
+const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrigin, signal?: AbortSignal) => {
   const blob =
     typeof source === 'string'
       ? // fetch url source as blob
-        await fetch(source, { credentials: crossOrigin === 'use-credentials' ? 'include' : 'omit' }).then(
-          (res) => res.blob(),
-        )
+        await fetch(source, {
+          credentials: crossOrigin === 'use-credentials' ? 'include' : 'omit',
+          signal,
+        }).then((res) => res.blob())
       : // use blob source
         source
 
@@ -224,10 +228,18 @@ export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
   return media
 }
 
-const loadVideoUrl = async (url: string, crossOrigin?: CrossOrigin): Promise<HTMLVideoElement> => {
+const loadVideoUrl = async (
+  url: string,
+  crossOrigin?: CrossOrigin,
+  signal?: AbortSignal,
+): Promise<HTMLVideoElement> => {
   if (!url) throw new Error('Empty video source URL')
   const video = createHiddenMediaElement('video', url, crossOrigin)
-  await whenLoadedMetadata(video)
+  try {
+    await Promise.race([signal?.aborted, whenLoadedMetadata(video)])
+  } catch {
+    video.removeAttribute('src')
+  }
   return video
 }
 
@@ -399,4 +411,66 @@ export const centerTo = (rect: Partial<Xywh & Tlwh> & Size, newCenter: { x: numb
   const center = getCenter(rect)
 
   return offsetBy(rect, { x: newCenter.x - center.x, y: newCenter.y - center.y })
+}
+
+export const setTextureParameters = (
+  gl: WebGL2RenderingContext,
+  texture: WebGLTexture,
+  options: twgl.TextureOptions,
+) => {
+  twgl.setTextureParameters(gl, texture, options)
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, options.colorspaceConversion ?? false)
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, options.premultiplyAlpha ?? false)
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, options.flipY ?? false)
+}
+
+export const loadLut = (
+  gl: WebGL2RenderingContext,
+  texture: WebGLTexture,
+  imageData: ImageData | undefined,
+  isHald: boolean,
+  textureOptions: twgl.TextureOptions, // eslint-disable-next-line @typescript-eslint/max-params -- internal
+): void => {
+  if (imageData == null) return
+
+  const format = gl.RGBA
+  const type = gl.UNSIGNED_BYTE
+
+  const { width, height } = imageData
+  const size = Math.cbrt(width * height)
+  const slicesPerRow = width / size
+
+  setTextureParameters(gl, texture, textureOptions)
+
+  if (isHald || width === 1 || height === 1) {
+    gl.texImage3D(gl.TEXTURE_3D, 0, format, size, size, size, 0, format, type, imageData.data)
+    return
+  }
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4)
+  gl.pixelStorei(gl.UNPACK_ROW_LENGTH, width)
+  gl.pixelStorei(gl.UNPACK_IMAGE_HEIGHT, height)
+  gl.texStorage3D(gl.TEXTURE_3D, 1, gl.RGBA8, size, size, size)
+
+  const pixelBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pixelBuffer)
+  gl.bufferData(gl.PIXEL_UNPACK_BUFFER, imageData.data, gl.STREAM_DRAW)
+
+  for (let z = 0; z < size; z++) {
+    const skipX = (z % slicesPerRow) * size
+    const skipY = Math.floor(z / slicesPerRow) * size
+
+    gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, skipX)
+    gl.pixelStorei(gl.UNPACK_SKIP_ROWS, skipY)
+    gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, z, size, size, 1, format, type, 0)
+  }
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4)
+  gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0)
+  gl.pixelStorei(gl.UNPACK_IMAGE_HEIGHT, 0)
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0)
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0)
+
+  // gl.deleteBuffer(pixelBuffer)
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null)
 }

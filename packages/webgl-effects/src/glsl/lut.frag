@@ -18,3 +18,5 @@ void main() {
   vec4 color = texture(u_image, v_texCoord);
   fragColor = lookup(color, lut, u_intensity);
 }
+
+#pragma glslify: export(main)

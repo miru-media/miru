@@ -11,12 +11,18 @@
   "exports": {
     ".": {
       "import": "./src/index.ts"
+    },
+    "./glsl/*": {
+      "import": "./src/glsl/*"
     }
   },
   "publishConfig": {
     "exports": {
       ".": {
         "import": "./dist/webgl-effects.js"
+      },
+      "./glsl/*": {
+        "import": "./dist/glsl/*"
       }
     }
   },

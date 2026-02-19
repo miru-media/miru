@@ -21,7 +21,10 @@ const packageOptions = (async () => {
         'webgl-effects': 'src/index.ts',
       },
       copy: (options) => ({
-        targets: [{ src: path.resolve(options.root, 'src/types/*'), dest: options.dist }],
+        targets: [
+          { src: path.resolve(options.root, 'src/types/*'), dest: options.dist },
+          { src: path.resolve(options.root, 'src/glsl'), dest: options.dist },
+        ],
       }),
       alwaysBundle: ['@libav.js/variant-opus'],
     },

@@ -1,0 +1,1 @@
+#pragma glslify: main = require(../../../webgl-effects/src/glsl/adjust-color.frag,v_texCoord=vTextureCoord,u_image=uTexture,u_size=uInputSize,u_intensity=u_intensity,brightness=brightness,contrast=contrast,saturation=saturation,fragColor=fragColor)

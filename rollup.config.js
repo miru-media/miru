@@ -101,7 +101,7 @@ export default (await packageOptions).map((options) => {
       postcss({ inject: true }),
       autoImport(autoImportOptions),
       icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
-      glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
+      glslOptimize({ optimize: isProd, compress: isProd, glslify: true }),
       url({
         include: ['**/*.svg', '**/*.png', '**/*.jp(e)?g', '**/*.gif', '**/*.webp', '**/*.wasm'],
         limit: 0,

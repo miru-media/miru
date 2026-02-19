@@ -5,8 +5,6 @@ import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants.ts'
 import type { Renderer } from './renderer.ts'
 
 export class TextureResource {
-  canvas?: HTMLCanvasElement
-  context?: ImageBitmapRenderingContext
   promise?: Promise<never>
   isLoading = false
   error: unknown
@@ -18,8 +16,6 @@ export class TextureResource {
     renderer: Renderer,
     onStateChange: (textureResource: TextureResource) => void,
   ) {
-    this.canvas = document.createElement('canvas')
-    this.context = this.canvas.getContext('bitmaprenderer') ?? undefined
     this.texture = renderer.createTexture(
       type === 'lut' || type === 'hald-lut' ? LUT_TEX_OPTIONS : SOURCE_TEX_OPTIONS,
     )
@@ -54,7 +50,6 @@ export class TextureResource {
     }
 
     this.janitor.add(() => {
-      this.context = this.canvas = undefined
       renderer.deleteTexture(this.texture)
     })
 

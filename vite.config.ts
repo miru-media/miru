@@ -47,7 +47,7 @@ export default defineConfig({
       },
     }),
     globImportFrag(),
-    glslOptimize({ optimize: !isProd, compress: isProd, glslify: true }),
+    glslOptimize({ optimize: isProd, compress: isProd, glslify: true }),
     !!process.env.BASIC_SSL && basicSsl(),
     !!process.env.BUNDLE_ANALYZER && analyzer({ openAnalyzer: false, analyzerPort: 5173 }),
   ],

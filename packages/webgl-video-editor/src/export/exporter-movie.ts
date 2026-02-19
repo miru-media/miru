@@ -4,7 +4,6 @@ import type { MediaContainerMetadata } from 'shared/video/types'
 import { assertDecoderConfigIsSupported, setVideoEncoderConfigCodec } from 'shared/video/utils'
 
 import { VIDEO_DECODER_HW_ACCEL_PREF } from '../constants.ts'
-import type { Clip } from '../nodes/clip.ts'
 import { BaseMovie, type MediaAsset, type Movie } from '../nodes/index.ts'
 import { Track } from '../nodes/track.ts'
 
@@ -66,9 +65,6 @@ export class ExporterMovie extends BaseMovie {
       const track = new Track(track_.toObject(), this)
       this.timeline.pushChild(track)
       track_.children.forEach((clip_) => {
-        // unload all original clip textures while exporting
-        ;(clip_ as Clip).rendererNode.texture.source.unload()
-
         const clip = new ExporterClip(clip_.toObject(), track)
         track.pushChild(clip)
 

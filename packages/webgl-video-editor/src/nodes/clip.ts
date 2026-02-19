@@ -7,6 +7,7 @@ import { useMediaError } from 'shared/video/utils'
 import type { RootNode } from '../../types/internal.ts'
 import type { MediaAsset, VideoEffectAsset } from '../assets.ts'
 import { NodeCreateEvent } from '../events.ts'
+import { MiruFilter } from '../pixi/pixi-miru-filter.ts'
 
 import { BaseClip } from './base-clip.ts'
 import { ClipPlayback } from './clip-playback.ts'
@@ -44,6 +45,7 @@ export class Clip extends BaseClip {
   }
 
   declare filter: Schema.Clip['filter']
+  _pixiFilters: MiruFilter[] = []
 
   constructor(init: Schema.Clip, root: RootNode) {
     super(init, root)
@@ -54,8 +56,18 @@ export class Clip extends BaseClip {
     })
     this._defineReactive('filter', init.filter, {
       onChange: (value) => {
+        this._pixiFilters.forEach((filter) => filter.destroy())
+        this._pixiFilters.length = 0
+
         this.#filter.value = value && (this.root.assets.get(value.assetId) as VideoEffectAsset)
         this.#filterIntensity.value = value?.intensity ?? 1
+
+        this.rendererNode.filters = this._pixiFilters =
+          this.#filter.value?.raw.ops.map((op) => new MiruFilter(op, this.#filterIntensity)) ?? []
+
+        this._pixiFilters.forEach((filter) =>
+          filter.sprites.forEach((sprite) => this.root.stage.addChild(sprite)),
+        )
       },
       equal: (a, b) => (!a && !b) || (!!a && !!b && a.assetId === b.assetId && a.intensity === b.intensity),
     })
