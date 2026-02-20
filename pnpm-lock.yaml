@@ -45,12 +45,6 @@ catalogs:
     comlink:
       specifier: ^4.4.2
       version: 4.4.2
-    ebml:
-      specifier: ^3.0.0
-      version: 3.0.0
-    ebml-block:
-      specifier: ^1.1.2
-      version: 1.1.2
     fine-jsx:
       specifier: ^0.0.11
       version: 0.0.11
@@ -63,12 +57,9 @@ catalogs:
     libavjs-webcodecs-polyfill:
       specifier: ^0.5.5
       version: 0.5.5
-    mp4-muxer:
-      specifier: ^5.2.1
-      version: 5.2.2
-    mp4box:
-      specifier: ^1.5.0
-      version: 1.5.0
+    mediabunny:
+      specifier: ^1.34.4
+      version: 1.34.4
     stats.js:
       specifier: ^0.17.0
       version: 0.17.0
@@ -90,9 +81,6 @@ catalogs:
     vue-i18n-lite:
       specifier: ^1.0.2
       version: 1.0.2
-    webm-muxer:
-      specifier: ^5.1.3
-      version: 5.1.4
     y-indexeddb:
       specifier: ^9.0.12
       version: 9.0.12
@@ -163,9 +151,6 @@ importers:
         specifier: workspace:^
         version: link:packages/webgl-video-editor
     devDependencies:
-      '@esbuild-plugins/node-globals-polyfill':
-        specifier: ^0.2.3
-        version: 0.2.3(esbuild@0.27.2)
       '@eslint/compat':
         specifier: ^1.3.2
         version: 1.3.2(eslint@9.34.0(jiti@2.5.1))
@@ -226,9 +211,6 @@ importers:
       '@types/dom-webcodecs':
         specifier: ^0.1.16
         version: 0.1.16
-      '@types/ebml':
-        specifier: ^3.0.5
-        version: 3.0.5
       '@types/json-pointer':
         specifier: ^1.0.34
         version: 1.0.34
@@ -499,9 +481,6 @@ importers:
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.4.0(vue@3.5.26(typescript@5.9.3))
-      reactive-effects:
-        specifier: workspace:^
-        version: link:../reactive-effects
       shared:
         specifier: workspace:^
         version: link:../shared
@@ -565,30 +544,15 @@ importers:
 
   packages/media-trimmer:
     dependencies:
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
-      ebml:
-        specifier: ^3.0.0
-        version: 3.0.0
-      ebml-block:
-        specifier: 'catalog:'
-        version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.11
-      mp4-muxer:
+      mediabunny:
         specifier: 'catalog:'
-        version: 5.2.2
-      mp4box:
-        specifier: 'catalog:'
-        version: 1.5.0
+        version: 1.34.4
       throttle-debounce:
         specifier: 'catalog:'
         version: 5.0.2
-      webm-muxer:
-        specifier: 'catalog:'
-        version: 5.1.4
 
   packages/reactive-effects:
     dependencies:
@@ -601,33 +565,18 @@ importers:
 
   packages/shared:
     dependencies:
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
-      ebml:
-        specifier: ^3.0.0
-        version: 3.0.0
-      ebml-block:
-        specifier: 'catalog:'
-        version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.11
-      mp4-muxer:
+      mediabunny:
         specifier: 'catalog:'
-        version: 5.2.2
-      mp4box:
-        specifier: 'catalog:'
-        version: 1.5.0
+        version: 1.34.4
       throttle-debounce:
         specifier: 'catalog:'
         version: 5.0.2
       webgl-effects:
         specifier: workspace:^
         version: link:../webgl-effects
-      webm-muxer:
-        specifier: 'catalog:'
-        version: 5.1.4
     devDependencies:
       twgl.js:
         specifier: 'catalog:'
@@ -696,18 +645,9 @@ importers:
       '@interactjs/modifiers':
         specifier: ^1.10.27
         version: 1.10.27(@interactjs/core@1.10.27(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
       comlink:
         specifier: 'catalog:'
         version: 4.4.2
-      ebml:
-        specifier: 'catalog:'
-        version: 3.0.0
-      ebml-block:
-        specifier: 'catalog:'
-        version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
         version: 0.0.11
@@ -717,12 +657,9 @@ importers:
       idb-keyval:
         specifier: 'catalog:'
         version: 6.2.2
-      mp4-muxer:
+      mediabunny:
         specifier: 'catalog:'
-        version: 5.2.2
-      mp4box:
-        specifier: 'catalog:'
-        version: 1.5.0
+        version: 1.34.4
       pixi.js:
         specifier: ^8.16.0
         version: 8.16.0
@@ -747,9 +684,6 @@ importers:
       webgl-media-editor:
         specifier: workspace:^
         version: link:../webgl-media-editor
-      webm-muxer:
-        specifier: 'catalog:'
-        version: 5.1.4
       yjs:
         specifier: 'catalog:'
         version: 13.6.27
@@ -1812,11 +1746,6 @@ packages:
 
   '@emnapi/wasi-threads@1.1.0':
     resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
-
-  '@esbuild-plugins/node-globals-polyfill@0.2.3':
-    resolution: {integrity: sha512-r3MIryXDeXDOZh7ih1l/yE9ZLORCd5e8vWg02azWRGj5SPTuoh69A2AIyn0Z31V/kHBfZ4HgWJ+OK3GTTwLmnw==}
-    peerDependencies:
-      esbuild: '*'
 
   '@esbuild/aix-ppc64@0.25.9':
     resolution: {integrity: sha512-OaGtL73Jck6pBKjNIe24BnFE6agGl+6KxDtTfHhy1HmhthfKouEcOhqpSL64K4/0WCtbKFLOdzD/44cJ4k9opA==}
@@ -2974,6 +2903,12 @@ packages:
   '@types/doctrine@0.0.9':
     resolution: {integrity: sha512-eOIHzCUSH7SMfonMG1LsC2f8vxBFtho6NGBznK41R84YzPuvSBzrhEps33IsQiOW9+VL6NQ9DbjQJznk/S4uRA==}
 
+  '@types/dom-mediacapture-transform@0.1.11':
+    resolution: {integrity: sha512-Y2p+nGf1bF2XMttBnsVPHUWzRRZzqUoJAKmiP10b5umnO6DDrWI0BrGDJy1pOHoOULVmGSfFNkQrAlC5dcj6nQ==}
+
+  '@types/dom-webcodecs@0.1.13':
+    resolution: {integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==}
+
   '@types/dom-webcodecs@0.1.16':
     resolution: {integrity: sha512-gRNWaC3YW5EzhPRjVYy7BnxCbtLGqsgu+uTkmV/IxOF1bllFD+FAJ1KBdsDFsuJB+F+CE+nWmMlWt8vaZ3yYXA==}
 
@@ -2982,9 +2917,6 @@ packages:
 
   '@types/earcut@3.0.0':
     resolution: {integrity: sha512-k/9fOUGO39yd2sCjrbAJvGDEQvRwRnQIZlBz43roGwUZo5SHAmyVvSFyaVVZkicRVCaDXPKlbxrUcBuJoSWunQ==}
-
-  '@types/ebml@3.0.5':
-    resolution: {integrity: sha512-6hBHfvrza9g9R5JudsAZOOePryZ03CDFCcuGThMpXKGE1OtFfpmyid0HXMjorN4XM2/w69WPbhiY0yNpVfODXw==}
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -3118,9 +3050,6 @@ packages:
 
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
-
-  '@types/wicg-file-system-access@2020.9.8':
-    resolution: {integrity: sha512-ggMz8nOygG7d/stpH40WVaNvBwuyYLnrg5Mbyf6bmsj/8+gb6Ei4ZZ9/4PNpcPNTT8th9Q8sM8wYmWGjMWLX/A==}
 
   '@types/wrap-ansi@8.1.0':
     resolution: {integrity: sha512-Pt0qXwu5s9KKODY8bB93mwgOsUvkCOGt//kvHGMaUZi0u//Yge5X5/iME08eSU+Oxf9sZlwAFaJwORDSIjd8pw==}
@@ -3811,10 +3740,6 @@ packages:
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
-  buffers@0.1.1:
-    resolution: {integrity: sha512-9q/rDEGSb/Qsvv2qvzIzdluL5k7AaJOTrw23z9reQthrbF7is4CtlT0DXyO1oei2DCp4uojjzQ7igaSHp1kAEQ==}
-    engines: {node: '>=0.2.0'}
-
   bulma@1.0.4:
     resolution: {integrity: sha512-Ffb6YGXDiZYX3cqvSbHWqQ8+LkX6tVoTcZuVB3lm93sbAVXlO0D6QlOTMnV6g18gILpAXqkG2z9hf9z4hCjz2g==}
 
@@ -4296,14 +4221,6 @@ packages:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
 
-  debug@3.1.0:
-    resolution: {integrity: sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
     peerDependencies:
@@ -4446,13 +4363,6 @@ packages:
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
-
-  ebml-block@1.1.2:
-    resolution: {integrity: sha512-HgNlIsRFP6D9VKU5atCeHRJY7XkJP8bOe8yEhd8NB7B3b4++VWTyauz6g650iiPmLfPLGlVpoJmGSgMfXDYusg==}
-
-  ebml@3.0.0:
-    resolution: {integrity: sha512-Q6C1u4/TX1nYipT9HNIopp95YyyyI0zs1GXdNRKO7XL7k+oo+ZtDc1CaJjpCdmlLxWsnlKBOXJCXkYU0K/Anlg==}
-    engines: {node: '>= 6.4'}
 
   electron-to-chromium@1.5.212:
     resolution: {integrity: sha512-gE7ErIzSW+d8jALWMcOIgf+IB6lpfsg6NwOhPVwKzDtN2qcBix47vlin4yzSregYDxTCXOUqAZjVY/Z3naS7ww==}
@@ -5938,6 +5848,9 @@ packages:
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
+  mediabunny@1.34.4:
+    resolution: {integrity: sha512-f1B95A60YoCsZQO/JQYxPDorybEz2Sjasf4RrpwGSMmJW6JVyhI/iJDri9LF6kk5WwUovF8oiTvRNM6xGjWo5w==}
+
   meow@13.2.0:
     resolution: {integrity: sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA==}
     engines: {node: '>=18'}
@@ -6156,20 +6069,9 @@ packages:
   mlly@1.8.0:
     resolution: {integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g==}
 
-  mp4-muxer@5.2.2:
-    resolution: {integrity: sha512-dhozjTywI0h2qFzeShagt8YYw811fh1XlwiDCE2f6Aeqf6xG2CyuShoSa5E0AZDO8pPF0JOZ3wOmWBNWIGdSpQ==}
-    deprecated: This library is superseded by Mediabunny. Please migrate to it.
-
-  mp4box@1.5.0:
-    resolution: {integrity: sha512-gPXu7mlFNElkyYc6xhtB2S2aR4yzUTrJqZfktkT3XWww3kQv3Bt3wGTayN0x5jKXxxPAo4U00+bqcWRlwlHtVg==}
-    engines: {node: '>=20.8.1'}
-
   mrmime@2.0.1:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
     engines: {node: '>=10'}
-
-  ms@2.0.0:
-    resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -8480,10 +8382,6 @@ packages:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
 
-  webm-muxer@5.1.4:
-    resolution: {integrity: sha512-ditzgFVFbfqPaugkIr4mGhAdob5K9HY6Rzlh7TRsA368yA1sp/m5O7nQCcMLdgFDeNGtFPg8B+MeXLtpzKWX6Q==}
-    deprecated: This library is superseded by Mediabunny. Please migrate to it.
-
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -9871,10 +9769,6 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@esbuild-plugins/node-globals-polyfill@0.2.3(esbuild@0.27.2)':
-    dependencies:
-      esbuild: 0.27.2
-
   '@esbuild/aix-ppc64@0.25.9':
     optional: true
 
@@ -10862,15 +10756,17 @@ snapshots:
   '@types/doctrine@0.0.9':
     optional: true
 
+  '@types/dom-mediacapture-transform@0.1.11':
+    dependencies:
+      '@types/dom-webcodecs': 0.1.16
+
+  '@types/dom-webcodecs@0.1.13': {}
+
   '@types/dom-webcodecs@0.1.16': {}
 
   '@types/draco3d@1.4.10': {}
 
   '@types/earcut@3.0.0': {}
-
-  '@types/ebml@3.0.5':
-    dependencies:
-      '@types/node': 24.3.0
 
   '@types/estree@1.0.8': {}
 
@@ -10998,8 +10894,6 @@ snapshots:
   '@types/webxr@0.5.23': {}
 
   '@types/whatwg-mimetype@3.0.2': {}
-
-  '@types/wicg-file-system-access@2020.9.8': {}
 
   '@types/wrap-ansi@8.1.0':
     dependencies:
@@ -11812,8 +11706,6 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  buffers@0.1.1: {}
-
   bulma@1.0.4: {}
 
   cac@6.7.14: {}
@@ -12382,10 +12274,6 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
-  debug@3.1.0:
-    dependencies:
-      ms: 2.0.0
-
   debug@3.2.7:
     dependencies:
       ms: 2.1.3
@@ -12526,15 +12414,6 @@ snapshots:
   earcut@3.0.2: {}
 
   eastasianwidth@0.2.0: {}
-
-  ebml-block@1.1.2: {}
-
-  ebml@3.0.0:
-    dependencies:
-      buffers: 0.1.1
-      debug: 3.1.0
-    transitivePeerDependencies:
-      - supports-color
 
   electron-to-chromium@1.5.212: {}
 
@@ -14322,6 +14201,11 @@ snapshots:
 
   mdurl@2.0.0: {}
 
+  mediabunny@1.34.4:
+    dependencies:
+      '@types/dom-mediacapture-transform': 0.1.11
+      '@types/dom-webcodecs': 0.1.13
+
   meow@13.2.0: {}
 
   merge2@1.4.1: {}
@@ -14656,16 +14540,7 @@ snapshots:
       pkg-types: 1.3.1
       ufo: 1.6.1
 
-  mp4-muxer@5.2.2:
-    dependencies:
-      '@types/dom-webcodecs': 0.1.16
-      '@types/wicg-file-system-access': 2020.9.8
-
-  mp4box@1.5.0: {}
-
   mrmime@2.0.1: {}
-
-  ms@2.0.0: {}
 
   ms@2.1.3: {}
 
@@ -17321,11 +17196,6 @@ snapshots:
   watlas@1.0.1: {}
 
   web-streams-polyfill@3.3.3: {}
-
-  webm-muxer@5.1.4:
-    dependencies:
-      '@types/dom-webcodecs': 0.1.16
-      '@types/wicg-file-system-access': 2020.9.8
 
   webpack-virtual-modules@0.6.2: {}
 

@@ -1,8 +1,8 @@
 import { ref } from 'fine-jsx'
+import * as Mb from 'mediabunny'
 import type { EffectOp } from 'webgl-effects'
 
 import { Janitor } from 'shared/utils/general.ts'
-import { getContainerMetadata, getMediaElementInfo } from 'shared/video/utils'
 
 import type * as pub from '../types/core'
 import type { Schema } from '../types/core'
@@ -44,8 +44,8 @@ export abstract class BaseAsset<T extends Schema.AnyAsset = any> {
 export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.MediaAsset {
   duration: number
   mimeType: string
-  audio?: { duration: number }
-  video?: { duration: number; rotation: number; width: number; height: number }
+  audio?: Schema.AvMediaAsset['audio']
+  video?: Schema.AvMediaAsset['video']
 
   blob!: Blob
   readonly #objectUrl = ref('')
@@ -59,6 +59,10 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
 
   get name() {
     return this.raw.name ?? ''
+  }
+
+  get size() {
+    return this.raw.size
   }
 
   get isLoading() {
@@ -131,64 +135,72 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
     let mimeType = isBlobSource ? source.type : ''
     const name = isBlobSource ? ('name' in source ? source.name : undefined) : source.replace(/.*\//, '')
 
-    let stream: ReadableStream<Uint8Array>
+    let mbSource: Mb.Source
+    let size: number
 
     if (isBlobSource) {
-      stream = source.stream()
-      mimeType ||= source.type
+      mbSource = new Mb.BlobSource(source)
+      ;({ size } = source)
     } else {
       try {
         const res = await fetch(source, requestInit)
         const { body } = res
         if (!res.ok || !body) throw new Error('Fetch failed')
 
-        stream = body
         mimeType ||= res.headers.get('content-type') ?? ''
+
+        const contentLength = res.headers.get('content-length')
+        if (contentLength) {
+          size = parseInt(contentLength, 10)
+          mbSource = new Mb.UrlSource(source)
+        } else {
+          const blob = await res.blob()
+          mbSource = new Mb.BlobSource(blob)
+          ;({ size } = blob)
+        }
       } catch (error) {
         throw new Error(`[webgl-video-editor] Failed to fetch asset from "${source}".`, { cause: error })
       }
     }
 
-    const containerOrElementInfo = await getContainerMetadata(stream, requestInit).catch(() =>
-      getMediaElementInfo(source, requestInit),
-    )
-    let { duration } = containerOrElementInfo
+    const input = new Mb.Input({
+      formats: Mb.ALL_FORMATS,
+      source: mbSource,
+    })
 
-    let hasAudio = false
-    let audio
-    let video
+    const video = await input.getPrimaryVideoTrack()
+    const audio = await input.getPrimaryAudioTrack()
 
-    if ('hasAudio' in containerOrElementInfo) {
-      ;({ hasAudio } = containerOrElementInfo)
-      const { width, height } = containerOrElementInfo
-
-      audio = hasAudio ? { duration } : undefined
-      // we can't know whether or not there's a video track
-      video = { duration, rotation: 0, width, height }
-    } else {
-      const { audio: audio_, video: video_ } = containerOrElementInfo
-      audio = audio_ && {
-        duration: audio_.duration,
-      }
-      video = video_ && {
-        duration: video_.duration,
-        rotation: video_.rotation,
-        width: video_.codedWidth,
-        height: video_.codedHeight,
-      }
-      hasAudio = !!containerOrElementInfo.audio
-
-      duration = Math.min(duration, audio?.duration ?? Infinity, video?.duration ?? Infinity)
-    }
+    if (video?.codec === null) throw new Error(`[webgl-video-editor] Couldn't get media video codec.`)
+    if (audio?.codec === null) throw new Error(`[webgl-audio-editor] Couldn't get media audio codec.`)
 
     return {
       id,
       type: 'asset:media:av',
-      mimeType,
+      mimeType: await input.getMimeType(),
       name,
-      duration,
-      audio,
-      video,
+      size,
+      audio: audio
+        ? {
+            codec: audio.codec,
+            duration: await audio.computeDuration(),
+            numberOfChannels: audio.numberOfChannels,
+            sampleRate: audio.sampleRate,
+            firstTimestamp: await audio.getFirstTimestamp(),
+          }
+        : undefined,
+      video: video
+        ? {
+            codec: video.codec,
+            duration: await video.computeDuration(),
+            rotation: video.rotation,
+            width: video.codedWidth,
+            height: video.codedHeight,
+            frameRate: (await video.computePacketStats()).averagePacketRate,
+            firstTimestamp: await video.getFirstTimestamp(),
+          }
+        : undefined,
+      duration: await input.computeDuration(),
     }
   }
 

@@ -4,7 +4,6 @@ import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
 import { remap0 } from 'shared/utils/math'
-import { assertCanDecodeMediaFile, hasVideoDecoder } from 'shared/video/utils'
 
 import type { AnyNode, NodeSnapshot } from '../types/internal'
 import type { AnyNodeSerializedSchema } from '../types/schema'
@@ -139,7 +138,6 @@ export class VideoEditor {
     let newAssetData: { init: Schema.AvMediaAsset; source: string | Blob } | undefined
 
     if (typeof source === 'string' || source instanceof Blob) {
-      if (track.trackType === 'audio' && hasVideoDecoder()) await assertCanDecodeMediaFile(source)
       const assetId = this.generateId()
       const assetInit = await MediaAsset.getAvMediaAssetInfo(assetId, source)
       const { duration } = assetInit

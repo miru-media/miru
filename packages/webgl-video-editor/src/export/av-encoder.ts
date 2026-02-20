@@ -1,4 +1,4 @@
-import { ArrayBufferTarget, Muxer, type MuxerOptions } from 'mp4-muxer'
+import * as Mb from 'mediabunny'
 
 import { win } from 'shared/utils'
 import { AudioEncoderTransform, VideoEncoderTransform } from 'shared/video/coder-transforms'
@@ -15,7 +15,7 @@ export namespace AVEncoder {
     onOutput?: (type: 'audio' | 'video', timestamp: number) => void
   }
   export interface VideoOptions extends VideoEncoderConfig {
-    rotation?: Required<MuxerOptions<ArrayBufferTarget>>['video']['rotation']
+    rotation?: Mb.Rotation
   }
 
   export interface AudioOptions extends Omit<AudioEncoderConfig, 'codec'> {
@@ -26,16 +26,16 @@ export namespace AVEncoder {
 export class AVEncoder {
   readonly #options: AVEncoder.Options
   #video?: {
-    config: AVEncoder.VideoOptions
     transform: VideoEncoderTransform
+    source: Mb.EncodedVideoPacketSource
     promise?: Promise<void>
   }
   #audio?: {
-    config: AVEncoder.AudioOptions
     transform: AudioEncoderTransform
+    source: Mb.EncodedAudioPacketSource
     promise?: Promise<void>
   }
-  muxer!: Muxer<ArrayBufferTarget>
+  output!: Mb.Output<Mb.OutputFormat, Mb.BufferTarget>
   onOutput?: (type: 'audio' | 'video', timestamp: number) => void
   firstVideoFrameTimeUs?: number
 
@@ -54,38 +54,60 @@ export class AVEncoder {
 
   async init() {
     const options = this.#options
+    let outputFormat: Mb.OutputFormat | undefined
 
     if (options.video) {
-      this.#video = {
-        config: options.video,
-        transform: new VideoEncoderTransform(options.video),
-        promise: undefined,
-      }
-      const video = this.#video
-
       let lastError: unknown
 
-      for (const codec of EXPORT_VIDEO_CODECS) {
-        video.config.codec = codec
+      const config = { ...options.video }
+      for (const checkCodec of [config.codec, ...EXPORT_VIDEO_CODECS]) {
+        config.codec = checkCodec
         try {
-          await assertEncoderConfigIsSupported('video', video.config)
+          await assertEncoderConfigIsSupported('video', config)
           break
         } catch (error) {
           lastError = error
         }
       }
 
-      if (!video.config.codec) throw lastError as Error
+      let codecName: 'avc' | 'vp9' | undefined
+      if (config.codec.startsWith('avc')) {
+        codecName = 'avc'
+        outputFormat = new Mb.Mp4OutputFormat()
+      } else if (config.codec.startsWith('vp09')) {
+        codecName = 'vp9'
+        outputFormat = new Mb.WebMOutputFormat()
+      }
 
-      video.promise = video.transform.readable.pipeTo(
-        new WritableStream({
-          write: ([chunk, meta]) => {
-            this.firstVideoFrameTimeUs ??= chunk.timestamp
-            this.muxer.addVideoChunk(chunk, meta, chunk.timestamp - this.firstVideoFrameTimeUs)
-            this.#options.onOutput?.('video', chunk.timestamp)
-          },
-        }),
-      )
+      if (!config.codec || !codecName)
+        throw new Error(
+          `[webgl-video-editor] No supported video codecs from the list ${EXPORT_VIDEO_CODECS.join()}`,
+          { cause: lastError },
+        )
+
+      const transform = new VideoEncoderTransform(config)
+      const source = new Mb.EncodedVideoPacketSource(codecName)
+
+      const promise = transform.readable
+        .pipeTo(
+          new WritableStream({
+            write: async ([chunk, meta]) => {
+              this.firstVideoFrameTimeUs ??= chunk.timestamp
+
+              const data = new Uint8Array(chunk.byteLength)
+              chunk.copyTo(data)
+
+              const { type, timestamp, duration } = chunk
+              const packet = new Mb.EncodedPacket(data, type, timestamp / 1e6, duration! / 1e6)
+              await source.add(packet, meta)
+
+              this.#options.onOutput?.('video', chunk.timestamp)
+            },
+          }),
+        )
+        .finally(() => source.close())
+
+      this.#video = { transform, source, promise }
     }
 
     if (options.audio) {
@@ -101,44 +123,51 @@ export class AVEncoder {
 
       await Promise.all([assertEncoderConfigIsSupported('audio', options.audio, AudioEncoder)])
 
-      this.#audio = {
-        config: options.audio,
-        transform: new AudioEncoderTransform(options.audio, AudioEncoder),
-        promise: undefined,
-      }
-      const audio = this.#audio
+      const transform = new AudioEncoderTransform(options.audio, AudioEncoder)
+      const source = new Mb.EncodedAudioPacketSource(options.audio.codec)
 
       let hasFirstChunk = false
       let firstTimetsamp = 0
 
-      audio.promise = audio.transform.readable.pipeTo(
-        new WritableStream({
-          write: ([chunk, meta]) => {
-            if (!hasFirstChunk) {
-              hasFirstChunk = true
-              firstTimetsamp = chunk.timestamp
-            }
+      const promise = transform.readable
+        .pipeTo(
+          new WritableStream({
+            write: async ([chunk, meta]) => {
+              if (!hasFirstChunk) {
+                hasFirstChunk = true
+                firstTimetsamp = chunk.timestamp
+              }
 
-            const timestamp = chunk.timestamp - firstTimetsamp
-            if (useAudioEncoderPolyfil) {
-              const data = (chunk as unknown as EncodedAudioChunkPolyfill)._libavGetData()
-              this.muxer.addAudioChunkRaw(data, chunk.type, timestamp, chunk.duration!, meta)
-            } else this.muxer.addAudioChunk(chunk, meta, timestamp)
-            this.onOutput?.('audio', chunk.timestamp)
-          },
-        }),
-      )
+              const timestamp = chunk.timestamp - firstTimetsamp
+              let data: Uint8Array
+
+              if (useAudioEncoderPolyfil)
+                data = (chunk as unknown as EncodedAudioChunkPolyfill)._libavGetData()
+              else {
+                data = new Uint8Array(chunk.byteLength)
+                chunk.copyTo(data)
+              }
+
+              const packet = new Mb.EncodedPacket(data, chunk.type, timestamp / 1e6, chunk.duration! / 1e6)
+              await source.add(packet, meta)
+              this.onOutput?.('audio', timestamp)
+            },
+          }),
+        )
+        .finally(() => source.close())
+
+      this.#audio = { transform, source, promise }
     }
 
-    this.muxer = new Muxer({
-      target: new ArrayBufferTarget(),
-      video: this.#video && {
-        ...this.#video.config,
-        codec: this.#video.config.codec.startsWith('avc') ? 'avc' : 'vp9',
-      },
-      audio: this.#audio?.config,
-      fastStart: 'in-memory',
-    })
+    const output = (this.output = new Mb.Output({
+      format: outputFormat ?? new Mb.Mp4OutputFormat(),
+      target: new Mb.BufferTarget(),
+    }))
+
+    if (this.#video) output.addVideoTrack(this.#video.source)
+    if (this.#audio) output.addAudioTrack(this.#audio.source)
+
+    await this.output.start()
 
     return this
   }
@@ -147,9 +176,9 @@ export class AVEncoder {
     await Promise.all([this.#video?.promise, this.#audio?.promise])
   }
 
-  finalize() {
-    const { muxer } = this
-    muxer.finalize()
-    return muxer.target.buffer
+  async finalize() {
+    const { output } = this
+    await output.finalize()
+    return output.target.buffer!
   }
 }

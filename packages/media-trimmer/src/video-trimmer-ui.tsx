@@ -1,16 +1,11 @@
-import { h } from 'fine-jsx'
+import { h, toRef } from 'fine-jsx'
 import { computed, effect, type MaybeRefOrGetter, type Ref, ref, toValue } from 'fine-jsx'
+import * as Mb from 'mediabunny'
 
 import { Button } from 'shared/components/button.tsx'
 import { useElementSize, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
-import {
-  formatDuration,
-  formatTime,
-  getContainerMetadata,
-  getMediaElementInfo,
-  useMediaReadyState,
-} from 'shared/video/utils'
+import { formatDuration, formatTime, useMediaReadyState } from 'shared/video/utils'
 
 import styles from './media-trimmer.module.css'
 import type { LoadInfo, TrimState } from './types/ui.ts'
@@ -20,15 +15,13 @@ const MIN_CLIP_DURATION_S = 0.25
 const MIN_CLIP_WIDTH_PX = 1
 
 const Clip = ({
-  startTime,
-  endTime,
+  range,
   pixelsPerSecond,
   mediaDuration,
   seekTo,
   onResize,
 }: {
-  startTime: Ref<number>
-  endTime: Ref<number>
+  range: Ref<{ start: number; end: number }>
   pixelsPerSecond: Ref<number>
   mediaDuration: Ref<number>
   seekTo: (time: number) => void
@@ -37,9 +30,10 @@ const Clip = ({
   const resizeLeft = ref<HTMLElement>()
   const resizeRight = ref<HTMLElement>()
   const boxEdges = computed(() => {
+    const { start, end } = range.value
     const pps = pixelsPerSecond.value
-    const left = startTime.value * pps
-    const right = Math.max(endTime.value * pps, left + MIN_CLIP_WIDTH_PX)
+    const left = start * pps
+    const right = Math.max(end * pps, left + MIN_CLIP_WIDTH_PX)
 
     return { left, right }
   })
@@ -55,8 +49,9 @@ const Clip = ({
     downCoords.x = event.pageX
     downCoords.y = event.pageY
 
-    initialTime.start = startTime.value
-    initialTime.duration = endTime.value - startTime.value
+    const { start, end } = range.value
+    initialTime.start = start
+    initialTime.duration = end - start
 
     handle.setPointerCapture(event.pointerId)
     isResizing.value = handle === resizeLeft.value ? 'left' : 'right'
@@ -69,6 +64,7 @@ const Clip = ({
 
     let newStartTime
     let newDuration
+    const { start, end } = range.value
 
     if (isResizing.value === 'left') {
       newStartTime = clamp(
@@ -76,10 +72,10 @@ const Clip = ({
         0,
         initialTime.start + initialTime.duration - MIN_CLIP_DURATION_S,
       )
-      newDuration = endTime.value - startTime.value + (startTime.value - newStartTime)
+      newDuration = end - start + (start - newStartTime)
       seekTo(newStartTime)
     } else {
-      newStartTime = startTime.value
+      newStartTime = start
       newDuration = clamp(
         initialTime.duration + deltaS,
         MIN_CLIP_DURATION_S,
@@ -123,7 +119,7 @@ const Clip = ({
 
 export const VideoTrimmerUI = (props: {
   source: MaybeRefOrGetter<string | Blob | undefined | null>
-  state: MaybeRefOrGetter<TrimState | undefined>
+  state: MaybeRefOrGetter<TrimState>
   onLoad: (info: LoadInfo) => void
   onChange?: (state: TrimState) => void
   onError: (error: unknown) => void
@@ -141,14 +137,12 @@ export const VideoTrimmerUI = (props: {
   const pixelsPerSecond = computed(() => containerSize.value.width / mediaDuration.value || 0)
   const isPaused = ref(true)
   const hasAudio = ref(false)
-  const muteOutput = ref(false)
+  const stateRef = toRef(props.state)
   const currentTime = ref(0)
   const errorMessage = ref('')
   const unableToDecode = ref(!hasRequiredApis())
 
   const mediaDuration = ref(0)
-  const startTime = ref(0)
-  const endTime = ref(0)
 
   ;['timeupdate', 'seeking'].forEach((type) =>
     useEventListener(media, type, () => (currentTime.value = media.currentTime)),
@@ -172,18 +166,21 @@ export const VideoTrimmerUI = (props: {
   const onScrubberUp = () => (isScrubbing.value = false)
 
   const seekTo = (time: number) => {
-    media.currentTime = currentTime.value = clamp(time, startTime.value, endTime.value)
+    const { start, end } = stateRef.value
+    media.currentTime = currentTime.value = clamp(time, start, end)
   }
 
   effect(() => {
-    media.muted = muteOutput.value
+    const { start, end, mute } = stateRef.value
+
+    media.muted = mute
 
     const current = currentTime.value
 
-    if (current < startTime.value) seekTo(startTime.value)
-    else if (current >= endTime.value) {
+    if (current < start) seekTo(start)
+    else if (current >= end) {
       media.pause()
-      seekTo(endTime.value)
+      seekTo(end)
     }
   })
 
@@ -192,7 +189,6 @@ export const VideoTrimmerUI = (props: {
 
     media.pause()
     errorMessage.value = ''
-    unableToDecode.value = !hasRequiredApis()
 
     if (source == null || source === '') {
       mediaDuration.value = 0
@@ -201,85 +197,67 @@ export const VideoTrimmerUI = (props: {
 
     const isStringSource = typeof source === 'string'
     url = isStringSource ? source : URL.createObjectURL(source)
-    let isStale = false as boolean
+    const abort = new AbortController()
 
     onCleanup(() => {
-      isStale = true
+      abort.abort()
       if (!isStringSource) URL.revokeObjectURL(url)
     })
 
-    let info
-    try {
-      info = await getContainerMetadata(url)
-    } catch (error) {
-      unableToDecode.value = true
-      props.onError(error)
+    const input = new Mb.Input({
+      formats: Mb.ALL_FORMATS,
+      source: isStringSource
+        ? new Mb.UrlSource(source, { requestInit: { signal: abort.signal } })
+        : new Mb.BlobSource(source),
+    })
 
-      try {
-        info = await getMediaElementInfo(url)
-      } catch {
-        media.src = ''
-        mediaDuration.value = 0
-        errorMessage.value = String(error)
-        props.onError(error)
-        return
-      }
-    }
-    if (isStale) return
+    const video = await input.getPrimaryVideoTrack()
+    const audio = await input.getPrimaryAudioTrack()
+
+    hasAudio.value = !!audio
+    unableToDecode.value = (await Promise.all([video?.canDecode(), audio?.canDecode()])).some(
+      (can) => can === false,
+    )
+    const duration = await input.computeDuration()
+
+    if (abort.signal.aborted) return
 
     media.src = url
     media.load()
-    mediaDuration.value = info.duration
-    hasAudio.value = 'hasAudio' in info ? info.hasAudio : !!info.audio
+    mediaDuration.value = duration
 
-    const stateIn = toValue(props.state)
+    const state = stateRef.value
+
+    let start: number
+    let end: number
 
     if (unableToDecode.value) {
-      startTime.value = 0
-      endTime.value = info.duration
+      start = 0
+      end = duration
     } else {
-      startTime.value = stateIn?.start ?? 0
-      endTime.value = stateIn?.end ?? info.duration
+      start = Math.min(state.start, duration)
+      end = state.end !== 0 ? clamp(state.end, state.start, duration) : duration
     }
 
-    props.onLoad({ duration: info.duration, hasAudio: hasAudio.value })
-  })
-
-  effect(() => {
-    if (!mediaDuration.value) return
-
-    if (unableToDecode.value) {
-      startTime.value = 0
-      endTime.value = mediaDuration.value
-      return
-    }
-
-    const stateIn = toValue(props.state)
-    if (!stateIn) return
-
-    const newStart = clamp(stateIn.start, 0, mediaDuration.value)
-    startTime.value = newStart
-    endTime.value = stateIn.end
-  })
-
-  effect(() => {
-    const start = startTime.value
-    const end = endTime.value
-
-    const value = { start, end, mute: muteOutput.value, isFullDuration: end - start === mediaDuration.value }
-    props.onChange?.(value)
+    props.onLoad({ duration, hasAudio: hasAudio.value })
+    props.onChange?.({ start, end, mute: state.mute })
   })
 
   const onTogglePlayback = () => {
     if (isPaused.value) {
-      if (currentTime.value >= endTime.value || media.ended) seekTo(startTime.value)
+      const { start, end } = stateRef.value
+      if (currentTime.value >= end || media.ended) seekTo(start)
       media.play().catch(() => undefined)
     } else media.pause()
   }
 
+  const onToggleMute = () => {
+    const { start, end, mute } = stateRef.value
+    props.onChange?.({ start, end, mute: !mute })
+  }
+
   const onResize = (start: number, end: number, edge: 'left' | 'right') => {
-    startTime.value = start
-    endTime.value = end
+    props.onChange?.({ start, end, mute: stateRef.value.mute })
     if (edge === 'left') seekTo(start)
     else seekTo(end)
   }
@@ -312,16 +290,21 @@ export const VideoTrimmerUI = (props: {
           </div>
           <div class={styles.controlsCenter}>{() => formatTime(currentTime.value, false)}</div>
           <div class={styles.controlsRight}>
-            <div>{() => formatDuration(Math.round(endTime.value - startTime.value))}</div>
+            <div>
+              {() => {
+                const { start, end } = stateRef.value
+                formatDuration(Math.round(end - start))
+              }}
+            </div>
             {() =>
               unableToDecode.value ? (
                 <div></div>
               ) : hasAudio.value ? (
                 <Button
-                  label={() => (muteOutput.value ? 'Include audio' : 'Remove audio')}
-                  onClick={() => (muteOutput.value = !muteOutput.value)}
+                  label={() => (stateRef.value.mute ? 'Include audio' : 'Remove audio')}
+                  onClick={onToggleMute}
                 >
-                  {() => (muteOutput.value ? <IconTablerVolumeOff /> : <IconTablerVolume />)}
+                  {() => (stateRef.value.mute ? <IconTablerVolumeOff /> : <IconTablerVolume />)}
                 </Button>
               ) : (
                 <Button disabled onClick={() => undefined}>
@@ -349,8 +332,7 @@ export const VideoTrimmerUI = (props: {
             ) : mediaDuration.value ? (
               <>
                 <Clip
-                  startTime={startTime}
-                  endTime={endTime}
+                  range={stateRef}
                   mediaDuration={mediaDuration}
                   pixelsPerSecond={pixelsPerSecond}
                   seekTo={seekTo}

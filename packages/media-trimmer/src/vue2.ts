@@ -8,7 +8,7 @@ import { VideoTrimmerUI } from './video-trimmer-ui.jsx'
 interface VueInstance {
   __scope: EffectScope
   __source: Ref<string | undefined>
-  __state: Ref<TrimState | undefined>
+  __state: Ref<TrimState>
   source: string | undefined
   state: TrimState | undefined
   $el: HTMLElement
@@ -32,7 +32,7 @@ export const MediaTrimmer = {
   beforeCreate(this: VueInstance) {
     this.__scope = createEffectScope()
     this.__source = ref<string>()
-    this.__state = ref<TrimState>()
+    this.__state = ref<TrimState>({ start: 0, end: 0, mute: false })
   },
   render(h: (...args: unknown[]) => unknown) {
     return h('div')
@@ -43,7 +43,7 @@ export const MediaTrimmer = {
         this.$watch('source', (value: string | undefined) => (this.__source.value = value), {
           immediate: true,
         }),
-        this.$watch('state', (value: TrimState | undefined) => (this.__state.value = value), {
+        this.$watch('state', (value: TrimState) => (this.__state.value = value), {
           immediate: true,
         }),
       ]

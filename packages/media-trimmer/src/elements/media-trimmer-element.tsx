@@ -4,7 +4,7 @@ import { HTMLElementOrStub } from 'shared/utils'
 import { renderComponentTo } from 'shared/video/render-to'
 
 import { trim } from '../trim.ts'
-import type { TrimState } from '../types/ui.ts'
+import type { LoadInfo, TrimState } from '../types/ui.ts'
 import { VideoTrimmerUI } from '../video-trimmer-ui.jsx'
 
 const OBSERVED_ATTRS = ['source', 'start', 'end', 'mute'] as const
@@ -14,33 +14,46 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
   static observedAttributes = OBSERVED_ATTRS
 
   readonly #scope = createEffectScope()
-  readonly #source = ref<string>('')
-  readonly #state = ref<TrimState>()
+  readonly #source = ref<string | Blob>()
+  readonly #state = ref<TrimState>({ start: 0, end: 0, mute: false })
   #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   #isTrimming = false
+  #mediaInfo?: LoadInfo
 
-  get source() {
+  get source(): string | Blob | undefined {
     return this.#source.value
   }
-  set source(value: string) {
+  set source(value: string | Blob | undefined) {
     this.#source.value = value
   }
 
-  get state() {
-    return this.#state.value
+  get start(): number {
+    return this.#state.value.start
   }
-  set state(value: TrimState | undefined) {
-    this.#state.value = value
+  set start(value: number) {
+    this.#state.value = { ...this.#state.value, start: value }
+  }
+
+  get end(): number {
+    return this.#state.value.end
+  }
+  set end(value: number) {
+    this.#state.value = { ...this.#state.value, end: value }
+  }
+
+  get mute(): boolean {
+    return this.#state.value.mute
+  }
+  set mute(value: boolean) {
+    this.#state.value = { ...this.#state.value, mute: value }
   }
 
   attributeChangedCallback(name: 'start' | 'end', _oldValue: number, newValue: number): void
   attributeChangedCallback(name: 'mute', _oldValue: boolean, newValue: boolean): void
   attributeChangedCallback(name: 'source', _oldValue: string, newValue: string): void
-  attributeChangedCallback(name: string, _oldValue: any, newValue: any): void {
-    if (name === 'start' || name === 'end' || name === 'mute')
-      this.state = { start: 0, end: 0, mute: false, ...this.state, [name]: newValue }
-    else if (name === 'source') this[name] = newValue
+  attributeChangedCallback(name: (typeof OBSERVED_ATTRS)[number], _oldValue: any, newValue: any): void {
+    ;(this as any)[name] = newValue
   }
 
   connectedCallback() {
@@ -53,9 +66,9 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
         {
           source: this.#source,
           state: this.#state,
-          onChange: (value) => this.#dispatch('change', value),
-          onError: (error) => this.#dispatch('error', error),
-          onLoad: (info) => this.#dispatch('load', info),
+          onLoad: this.#onLoad.bind(this),
+          onChange: this.#onChange.bind(this),
+          onError: this.#onError.bind(this),
         },
         this,
       ),
@@ -69,21 +82,44 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
   }
 
   async toBlob() {
-    const { state, source } = this
+    const { source, start, end, mute } = this
+
     if (this.#isTrimming) throw new Error('[media-trimmer] Trim is already in progress.')
-    if (!source) throw new Error(`[media-trimmer]: Can't export without source.`)
+    if (source == null || source === '') throw new Error(`[media-trimmer]: Source media wasn't set.`)
+    if (!this.#mediaInfo) throw new Error(`[media-trimmer] Source isn't ready yet`)
 
     this.#isTrimming = true
+    const { duration, hasAudio } = this.#mediaInfo
 
-    if (!state || state.isFullDuration) return await fetch(source).then((res) => res.blob())
+    try {
+      if (start === 0 && end === duration && (!hasAudio || !mute))
+        return typeof source === 'string' ? await fetch(source).then((res) => res.blob()) : source
 
-    return await trim(source, {
-      ...state,
-      onProgress: (progress) => this.#dispatch('progress', { progress }),
-    }).finally(() => (this.#isTrimming = false))
+      return await trim(source, {
+        start,
+        end,
+        mute,
+        onProgress: (progress) => this.#dispatch('progress', { progress }),
+      })
+    } finally {
+      this.#isTrimming = false
+    }
+  }
+
+  #onLoad(info: LoadInfo) {
+    this.#mediaInfo = info
+    this.#dispatch('load', info)
+  }
+  #onChange(state: TrimState) {
+    this.#state.value = state
+    this.#dispatch('change', state)
+  }
+  #onError(error: unknown) {
+    this.#dispatch('error', new ErrorEvent('error', { error }))
   }
 
   #dispatch(type: string, detail: unknown) {
+    if (type === 'load') this.#mediaInfo = detail as LoadInfo
     this.dispatchEvent(new CustomEvent(type, { detail }))
   }
 }

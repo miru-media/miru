@@ -60,9 +60,7 @@ trimmer.addEventListener('progress', (event) => progress.value = event.detail.pr
 
 Powered by:
 
-- [mp4Box.js](https://gpac.github.io/mp4box.js/)
-- [mp4-muxer](https://github.com/Vanilagy/mp4-muxer)
-- [webm-muxer](https://github.com/Vanilagy/webm-muxer)
+- [Mediabunny](https://mediabunny.dev/)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
 
 ## Roadmap

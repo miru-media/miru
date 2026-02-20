@@ -97,18 +97,6 @@ declare module '@webxdc/vite-plugins' {
   export const buildXDC: () => any
 }
 
-declare module 'ebml-block' {
-  const ebmlBlock: (buffer: Buffer) => {
-    trackNumber: 1
-    timecode: number
-    invisible: boolean
-    keyframe: boolean
-    discardable: boolean
-    frames: Buffer[]
-  }
-  export default ebmlBlock
-}
-
 declare module 'libavjs-webcodecs-polyfill' {
   const { AudioData, AudioEncoder } = window
   class EncodedAudioChunk_ extends EncodedAudioChunk_ {

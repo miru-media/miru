@@ -19,6 +19,11 @@ export class MiruFilter extends Pixi.Filter implements Pick<Pixi.Filter, 'resour
   public enabled = true
   readonly #intensity: Ref<number>
 
+  readonly #getIsLoading?: () => boolean
+  get isLoading(): boolean {
+    return this.#getIsLoading?.() === true
+  }
+
   constructor(op: EffectOp, intensity: Ref<number>) {
     const expandedOp = expandOp(op)
 
@@ -28,6 +33,7 @@ export class MiruFilter extends Pixi.Filter implements Pick<Pixi.Filter, 'resour
     this.#intensity = intensity
     this.sprites = expandedOp.sprites
     this.opIntensity = op.intensity ?? 1
+    this.#getIsLoading = expandedOp.getIsLoading
   }
 
   apply(
@@ -53,19 +59,22 @@ const expandOp = (op: EffectOp) => {
   const uniforms: Record<string, any> = { u_intensity: { type: 'f32', value: intensity } }
   const resources: Record<string, any> = {}
   const sprites: Pixi.Sprite[] = []
+  let getIsLoading: (() => boolean) | undefined
 
   fragmentShader = ADJUST_COLOR
 
   switch (op.type) {
     case 'lut': {
+      const lutSource = new LutSource(op.lut)
       const sprite = new Pixi.Sprite({
-        texture: new Pixi.Texture({ source: new LutSource(op.lut) }),
+        texture: new Pixi.Texture({ source: lutSource }),
         visible: false,
       })
       sprites.push(sprite)
 
       resources.lut = sprite.texture.source
       fragmentShader = FRAGMENT_SHADERS.lut
+      getIsLoading = () => lutSource.isLoading
       break
     }
     case 'vignette':
@@ -103,6 +112,7 @@ const expandOp = (op: EffectOp) => {
     fragment: fragmentShader,
     intensity,
     resources: { ...resources, filterUniforms: new Pixi.UniformGroup(uniforms) },
+    getIsLoading,
     sprites,
   }
 }

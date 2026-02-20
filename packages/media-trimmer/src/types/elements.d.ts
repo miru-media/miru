@@ -1,15 +1,11 @@
-import type { TrimState } from './media-trimmer.ts'
-import { HTMLElementOrStub } from './utils.ts'
-
-export declare class MediaTrimmerElement extends HTMLElementOrStub {
+export declare class MediaTrimmerElement extends HTMLElement {
   get source(): string
-  set source(value: string)
-  get state(): TrimState | undefined
-  set state(value: TrimState | undefined)
-  attributeChangedCallback(name: 'start' | 'end', _oldValue: number, newValue: number): void
-  attributeChangedCallback(name: 'mute', _oldValue: boolean, newValue: boolean): void
-  attributeChangedCallback(name: 'source', _oldValue: string, newValue: string): void
-  connectedCallback(): void
-  disconnectedCallback(): void
+  set source(value: string | Blob | undefined)
+  get start(): number
+  set start(value: number)
+  get end(): number
+  set end(value: number)
+  get mute(): boolean
+  set mute(value: boolean)
   toBlob(): Promise<Blob>
 }

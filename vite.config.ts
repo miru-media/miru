@@ -1,7 +1,5 @@
-import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 
-import NodeGlobalsPolyfill from '@esbuild-plugins/node-globals-polyfill'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import glslOptimize from 'rollup-plugin-glsl-optimize'
 import { presetIcons, presetWind3 } from 'unocss'
@@ -16,8 +14,6 @@ import { autoImportOptions } from './scripts/auto-import-options.js'
 import { globImportFrag } from './scripts/glob-import-frag.js'
 
 const isProd = process.env.NODE_ENV === 'production'
-
-const require = createRequire(import.meta.url)
 
 export default defineConfig({
   plugins: [
@@ -51,11 +47,6 @@ export default defineConfig({
     !!process.env.BASIC_SSL && basicSsl(),
     !!process.env.BUNDLE_ANALYZER && analyzer({ openAnalyzer: false, analyzerPort: 5173 }),
   ],
-  resolve: {
-    alias: {
-      ebml: require.resolve('ebml/lib/ebml.umd.js'),
-    },
-  },
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'fine-jsx',
@@ -65,12 +56,6 @@ export default defineConfig({
       define: {
         global: 'globalThis',
       },
-      plugins: [
-        (NodeGlobalsPolyfill as unknown as { default: (...args: unknown[]) => any }).default({
-          process: true,
-          buffer: true,
-        }),
-      ],
     },
   },
   build: {

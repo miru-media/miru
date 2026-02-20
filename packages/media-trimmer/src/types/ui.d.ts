@@ -7,5 +7,4 @@ export interface TrimState {
   start: number
   end: number
   mute: boolean
-  isFullDuration?: boolean
 }

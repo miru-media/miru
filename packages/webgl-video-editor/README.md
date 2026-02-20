@@ -45,8 +45,7 @@ npm install webgl-video-editor
 
 Powered by:
 
-- [mp4Box.js](https://gpac.github.io/mp4box.js/)
-- [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) and [webm-muxer](https://github.com/Vanilagy/webm-muxer)
+- [Mediabunny](https://mediabunny.dev/)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
 - [LibAVJS-WebCodecs-Polyfill](https://github.com/ennuicastr/libavjs-webcodecs-polyfill)
 

@@ -29,14 +29,22 @@ export interface AvMediaAsset extends BaseAsset<'media:av'> {
   mimeType: string
   url?: string
   duration: number
+  size: number
   audio?: {
+    codec: string
     duration: number
+    numberOfChannels: number
+    sampleRate: number
+    firstTimestamp: number
   }
   video?: {
+    codec: string
     duration: number
     rotation: number
     width: number
     height: number
+    frameRate: number
+    firstTimestamp: number
   }
 }
 

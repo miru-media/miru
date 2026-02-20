@@ -30,7 +30,6 @@ export class ClipPlayback {
     )
   })
   isInPlayableTime = computed(() => rangeContainsTime(this.clip.playableTime, this.clip.root.currentTime))
-  isInClipTime = computed(() => rangeContainsTime(this.clip.time, this.clip.root.currentTime))
 
   shouldPlay = computed(() => {
     const { root } = this.clip
@@ -79,7 +78,11 @@ export class ClipPlayback {
         { active: () => !this.shouldPlay.value },
       )
     })
-    this.clip.onDispose(this.dispose.bind(this))
+
+    const { source } = clip.sprite.texture
+    source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
+
+    clip.onDispose(this.dispose.bind(this))
   }
 
   seek(): void {
@@ -122,7 +125,7 @@ export class ClipPlayback {
   }
 
   #onUpdate(): void {
-    const { rendererNode } = this.clip
+    const { sprite: rendererNode } = this.clip
 
     if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
 
@@ -157,7 +160,6 @@ export class ClipPlayback {
   }
 
   dispose(): void {
-    ;(this.clip.rendererNode.texture.source.resource as Partial<VideoFrame> | undefined)?.close?.()
     this.clip = undefined as never
     this.#disposeAbort.abort()
   }

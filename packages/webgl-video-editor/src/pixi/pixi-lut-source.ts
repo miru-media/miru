@@ -1,3 +1,4 @@
+import { ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 import { type EffectOp, LUT_TEX_OPTIONS } from 'webgl-effects'
 
@@ -42,7 +43,12 @@ export class LutUploaderSystem {
 export class LutSource extends Pixi.TextureSource {
   readonly #disposeAbort = new AbortController()
   readonly uploadMethodId: typeof PIXI_LUT_UPLOADER_ID | typeof PIXI_HALD_LUT_UPLOADER_ID
+  readonly #isLoading = ref(true)
   resource: SyncImageSource | undefined
+
+  get isLoading(): boolean {
+    return this.#isLoading.value
+  }
 
   constructor(sourceOption: EffectOp.Lut['lut']) {
     super({ viewDimension: '3d', format: 'rgba8unorm', minFilter: 'linear', magFilter: 'linear' })
@@ -59,16 +65,18 @@ export class LutSource extends Pixi.TextureSource {
     this.uploadMethodId = type === 'lut' ? PIXI_LUT_UPLOADER_ID : PIXI_HALD_LUT_UPLOADER_ID
 
     if (isSyncSource(source)) {
-      this.resource = source
-      this.update()
+      this.#onLoaded(source)
     } else {
       const { promise, close } = loadAsyncImageSource(source, undefined, false, this.#disposeAbort.signal)
       this.#disposeAbort.signal.addEventListener('abort', close)
-      void promise.then((bitmap) => {
-        this.resource = bitmap
-        this.update()
-      })
+      void promise.then(this.#onLoaded.bind(this))
     }
+  }
+
+  #onLoaded(source: SyncImageSource) {
+    this.resource = source
+    this.#isLoading.value = false
+    this.update()
   }
 
   update(): void {

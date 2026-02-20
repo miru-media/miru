@@ -1,4 +1,4 @@
-import { computed, createEffectScope, effect, ref, watch } from 'fine-jsx'
+import { createEffectScope, effect, ref, watch } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 import Stats from 'stats.js'
 
@@ -38,12 +38,6 @@ export class Movie extends BaseMovie {
 
   declare canvas: HTMLCanvasElement
 
-  readonly #activeClipIsStalled = computed(() => {
-    for (let track = this.timeline.head; track; track = track.next)
-      for (let clip = track.head; clip; clip = clip.next)
-        if (!clip.isReady && (clip as Clip).playback.isInPlayableTime.value) return true
-    return false
-  })
   readonly #delayedActiveClipIsStalled = ref(false)
 
   get isReady(): boolean {
@@ -91,7 +85,7 @@ export class Movie extends BaseMovie {
       let activeClipIsStalledTimeout: any
 
       effect((onCleanup) => {
-        if (this.#activeClipIsStalled.value)
+        if (this.activeClipIsStalled.value)
           activeClipIsStalledTimeout = setTimeout(
             () => (this.#delayedActiveClipIsStalled.value = true),
             CLIP_STALLED_DELAY_MS,

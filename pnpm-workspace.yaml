@@ -14,18 +14,14 @@ catalog:
   '@vitejs/plugin-vue': ^6.0.1
   '@vueuse/core': 13.4.0
   'base64-js': '^1.5.1'
-  buffer: ^6.0.3
   color-diff: ^1.4.0
   comlink: ^4.4.2
-  ebml: ^3.0.0
-  ebml-block: ^1.1.2
   filesize: ^10.1.6
   fine-jsx: ^0.0.11
   gl-matrix: ^3.4.4
   idb-keyval: ^6.2.2
   libavjs-webcodecs-polyfill: ^0.5.5
-  mp4-muxer: ^5.2.1
-  mp4box: ^1.5.0
+  mediabunny: '^1.34.4'
   stats.js: ^0.17.0
   three: ^0.177.0
   throttle-debounce: ^5.0.2
@@ -33,7 +29,6 @@ catalog:
   uid: ^2.0.2
   vue: ^3.5.26
   vue-i18n-lite: ^1.0.2
-  webm-muxer: ^5.1.3
   yjs: ^13.6.27
   y-indexeddb: ^9.0.12
   yjs-orderedtree: 1.0.1-beta.3

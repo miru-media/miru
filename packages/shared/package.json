@@ -6,15 +6,10 @@
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "buffer": "^6.0.3",
-    "ebml": "^3.0.0",
-    "ebml-block": "catalog:",
     "fine-jsx": "catalog:",
-    "mp4-muxer": "catalog:",
-    "mp4box": "catalog:",
+    "mediabunny": "catalog:",
     "throttle-debounce": "catalog:",
-    "webgl-effects": "workspace:^",
-    "webm-muxer": "catalog:"
+    "webgl-effects": "workspace:^"
   },
   "devDependencies": {
     "twgl.js": "catalog:"

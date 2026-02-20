@@ -54,13 +54,8 @@
     "mp4"
   ],
   "dependencies": {
-    "buffer": "^6.0.3",
-    "ebml": "^3.0.0",
-    "ebml-block": "catalog:",
     "fine-jsx": "catalog:",
-    "mp4-muxer": "catalog:",
-    "mp4box": "catalog:",
-    "throttle-debounce": "catalog:",
-    "webm-muxer": "catalog:"
+    "mediabunny": "catalog:",
+    "throttle-debounce": "catalog:"
   }
 }

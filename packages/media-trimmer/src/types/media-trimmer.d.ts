@@ -28,8 +28,7 @@ export interface TrimOptions {
 
 /**
  *
- * @param url The url of the input file. The file must be a `.mp4`/`.mov` file with a video tra
- *            and the browser must support the WebCodecs API with the codecs in the video.
+ * @param source The url string or Blob of the input video file with a video track that the browser's WebCodecs API can decode.
  * @param options An object with start, end, and other options.
  * @returns A promise that resolves to a Blob of the new, trimmed video file.
  *
@@ -46,9 +45,8 @@ export interface TrimOptions {
  *   alert(error)
  * }
  */
-export declare const trim: (url: string, options: TrimOptions) => Promise<Blob>
+export declare const trim: (source: string | Blob, options: TrimOptions) => Promise<Blob>
 
 export default trim
 
-export * from './utils.ts'
 export type * from './ui.ts'

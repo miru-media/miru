@@ -18,7 +18,7 @@ export class Clip extends BaseClip {
   readonly #source = ref<MediaAsset>(undefined as never)
   declare source: Schema.Clip['source']
   error: Ref<MediaError | undefined>
-  rendererNode = new Pixi.Sprite(new Pixi.Texture())
+  sprite = new Pixi.Sprite(new Pixi.Texture())
 
   readonly #filter = ref<VideoEffectAsset>()
   readonly #filterIntensity = ref(1)
@@ -37,7 +37,9 @@ export class Clip extends BaseClip {
   }
 
   get isReady(): boolean {
-    return this.playback.mediaState.isReady.value && !this.sourceAsset.isLoading
+    return (
+      this.playback.mediaState.isReady.value && !this.sourceAsset.isLoading && !this.#filter.value?.isLoading
+    )
   }
 
   get everHadEnoughData(): boolean {
@@ -65,7 +67,7 @@ export class Clip extends BaseClip {
 
         this.#filter.value = value && (this.root.assets.get(value.assetId) as VideoEffectAsset)
 
-        this.rendererNode.filters = this._pixiFilters =
+        this.sprite.filters = this._pixiFilters =
           this.#filter.value?.raw.ops.map((op) => new MiruFilter(op, this.#filterIntensity)) ?? []
 
         this._pixiFilters.forEach((filter) =>
@@ -88,7 +90,7 @@ export class Clip extends BaseClip {
           this.#unloadCurrentMedia()
 
           const mediaElement = (this.media.value = createHiddenMediaElement(trackType, url))
-          const { rendererNode } = this
+          const { sprite } = this
 
           let isStale = false
           onCleanup(() => (isStale = true))
@@ -97,7 +99,7 @@ export class Clip extends BaseClip {
             if (isStale) return
 
             if (trackType === 'video') {
-              const { texture } = rendererNode
+              const { texture } = sprite
               texture.source = new Pixi.ImageSource({ resource: mediaElement as HTMLVideoElement })
               texture.update()
             }
@@ -108,15 +110,10 @@ export class Clip extends BaseClip {
       // make sure media type matches parent track type
       watch([() => this.parent], () => this.#setMedia(this.sourceAsset))
 
-      effect(() => this.resizeSprite(this.rendererNode))
+      effect(() => this.resizeSprite(this.sprite))
     })
 
-    this.onDispose(this.#unloadCurrentMedia.bind(this, true))
-    this.onDispose(() => {
-      this._pixiFilters.forEach((filter) =>
-        filter.sprites.forEach((sprite) => this.root.stage.addChild(sprite)),
-      )
-    })
+    this.onDispose(this.#onDispose.bind(this))
     root._emit(new NodeCreateEvent(this))
   }
 
@@ -124,29 +121,32 @@ export class Clip extends BaseClip {
     const { parent } = this
 
     if (parent?.trackType === 'video') {
-      const { rendererNode } = this
-      if (parent.container !== rendererNode.parent) parent.container.addChild(rendererNode)
-      rendererNode.zIndex = this.index
+      const { sprite } = this
+      if (parent.container !== sprite.parent) parent.container.addChild(sprite)
+      sprite.zIndex = this.index
     }
   }
 
   disconnect() {
-    this.rendererNode.removeFromParent()
+    this.sprite.removeFromParent()
   }
 
   #setMedia(asset: MediaAsset) {
     this.#source.value = asset
-    this.rendererNode.visible = false
+    this.sprite.visible = false
   }
 
-  #unloadCurrentMedia(dispose?: boolean) {
+  #unloadCurrentMedia() {
     const mediaElement = this.media.value
     mediaElement.removeAttribute('src')
     mediaElement.remove()
 
-    this.rendererNode.visible = false
-    if (dispose) this.rendererNode.destroy(true)
-    else this.rendererNode.texture.source.unload()
+    this.sprite.visible = false
+  }
+
+  #onDispose() {
+    this.#unloadCurrentMedia()
+    this._pixiFilters.forEach((filter) => filter.sprites.forEach((sprite) => sprite.removeFromParent()))
   }
 
   _ensureDurationIsPlayable() {

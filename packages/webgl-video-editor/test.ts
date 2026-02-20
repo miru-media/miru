@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers, no-console -- test file */
+import * as Mb from 'mediabunny'
 import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
-import { MP4Demuxer } from 'shared/video/mp4/mp4-demuxer'
 
 import { AVEncoder } from './src/export/av-encoder.ts'
 
@@ -42,15 +42,14 @@ const test = async () => {
   }
 
   await av.flush()
-  const buffer = av.finalize()
+  const buffer = await av.finalize()
 
-  const demuxer = new MP4Demuxer()
   const blob = new Blob([buffer])
-  const url = URL.createObjectURL(blob)
+  const input = new Mb.Input({ formats: [new Mb.Mp4InputFormat()], source: new Mb.BlobSource(blob) })
 
   const videoEl = document.body.appendChild(document.createElement('video'))
   document.body.appendChild(document.createElement('br'))
-  videoEl.src = url
+  videoEl.src = URL.createObjectURL(blob)
   videoEl.preload = 'auto'
   videoEl.muted = true
 
@@ -60,14 +59,12 @@ const test = async () => {
   })
     .then(() => videoEl.play())
     .then(() => new Promise((resolve) => setTimeout(resolve, 200)))
-  const videoInfo = (await demuxer.init((await fetch(url)).body!)).video!
 
-  const chunks = demuxer.getChunkStream(videoInfo)
-  demuxer.start()
-  const { value: sample } = await chunks.getReader().read()
+  const videoTrack = await input.getPrimaryVideoTrack()
+  const packet = await new Mb.EncodedPacketSink(videoTrack!).getFirstPacket()
 
-  if (!sample) throw new Error(`Demuxer didn't extract any samples`)
-  const chunk = new EncodedVideoChunk(sample)
+  if (!packet) throw new Error(`Demuxer didn't extract any samples`)
+  const chunk = new EncodedVideoChunk(packet)
   let decodedFrame: VideoFrame | undefined
 
   const decoder = new VideoDecoder({
@@ -75,7 +72,7 @@ const test = async () => {
     error: (e) => console.error(e),
   })
   decoder.configure({
-    ...videoInfo,
+    ...(await videoTrack?.getDecoderConfig()),
     ...config,
     hardwareAcceleration: 'prefer-software',
   })
@@ -112,7 +109,7 @@ const test = async () => {
 
   return result
 
-  function renderImage(renderer: Renderer, image: TexImageSource) {
+  function renderImage(renderer: Renderer, image: TexImageSource): void {
     const texture = renderer.createTexture()
 
     const fb = renderer.createFramebufferAndTexture(rotatedSize)
@@ -131,7 +128,7 @@ const test = async () => {
     renderer.deleteTexture(fb.texture)
   }
 
-  function checkImage(image: CanvasImageSource, label: string) {
+  function checkImage(image: CanvasImageSource, label: string): boolean {
     const { width, height } = rotatedSize
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')!

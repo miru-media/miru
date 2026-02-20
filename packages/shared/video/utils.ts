@@ -1,19 +1,14 @@
 import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, watch } from 'fine-jsx'
 
 import type { Size } from 'shared/types'
-import { isElement, loadAsyncImageSource, promiseWithResolvers, useEventListener, win } from 'shared/utils'
+import { promiseWithResolvers, useEventListener, win } from 'shared/utils'
 
 import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent.ts'
 
 import { EXPORT_VIDEO_CODECS, ReadyState } from './constants.ts'
-import { Demuxer } from './demuxer.ts'
-import type { AudioMetadata, VideoMetadata } from './types.ts'
 
 export const hasVideoDecoder = () => typeof VideoDecoder === 'function'
 export const hasAudioDecoder = () => typeof AudioDecoder === 'function'
-export const hasRvfc = () =>
-  typeof HTMLVideoElement === 'function' &&
-  typeof HTMLVideoElement.prototype.requestVideoFrameCallback === 'function'
 
 export const assertDecoderConfigIsSupported = async (
   type: 'audio' | 'video',
@@ -32,8 +27,7 @@ export const assertDecoderConfigIsSupported = async (
 }
 
 export const assertCanExtractVideoFrames = () => {
-  if (!hasVideoDecoder() && !hasRvfc())
-    throw new Error('Missing VideoDecoder and requestVideoFrameCallback APIs.')
+  if (!hasVideoDecoder()) throw new Error('Missing VideoDecoder and requestVideoFrameCallback APIs.')
 }
 
 export const assertEncoderConfigIsSupported = async (
@@ -49,16 +43,6 @@ export const assertEncoderConfigIsSupported = async (
 
   if (!support.supported)
     throw new Error(`Encoding ${type} config '${JSON.stringify(config)}' is not supported by the user agent.`)
-}
-
-export const assertCanDecodeTrack = async (track: AudioMetadata | VideoMetadata) => {
-  if (track.type === 'video') {
-    const { codec, codedWidth, codedHeight } = track
-    await assertEncoderConfigIsSupported('video', { codec, width: codedWidth, height: codedHeight })
-  } else {
-    const { codec, sampleRate, numberOfChannels } = track
-    await assertEncoderConfigIsSupported('audio', { codec, sampleRate, numberOfChannels })
-  }
 }
 
 export const useMappedUniqueArray = <T extends object, U>(
@@ -187,50 +171,6 @@ export const formatDuration = (durationS: number, languages = navigator.language
   return `${minutes ? `${minutesFormat.format(minutes)} ` : ''}${secondsFormat.format(seconds)}`
 }
 
-export const getMediaElementInfo = async (
-  source: Blob | string,
-  options?: { signal?: AbortSignal | null },
-) => {
-  const { promise, close } = loadAsyncImageSource(source, undefined, true)
-
-  options?.signal?.addEventListener('abort', close)
-
-  const media = await promise
-  const { duration } = media
-  const media_ = media as unknown as {
-    audioTracks?: unknown[]
-    mozHasAudio: boolean
-    webkitAudioDecodedByteCount: number
-  }
-  const hasAudio = !!(
-    (media_.audioTracks?.length ?? 0) ||
-    media_.mozHasAudio ||
-    media_.webkitAudioDecodedByteCount
-  )
-
-  close()
-
-  return {
-    duration,
-    hasAudio,
-    width: media.videoWidth,
-    height: media.videoHeight,
-  }
-}
-
-export const getContainerMetadata = async (
-  source: Blob | string | ReadableStream<Uint8Array>,
-  options?: RequestInit,
-) => {
-  const demuxer = new Demuxer()
-
-  try {
-    return await demuxer.init(source, options)
-  } finally {
-    demuxer.stop()
-  }
-}
-
 export const seekAndWait = async (video: HTMLVideoElement, timeS: number, signal: AbortSignal) => {
   const p = promiseWithResolvers<unknown>()
 
@@ -258,17 +198,6 @@ export const getImageSize = (image: TexImageSource): Size => {
   if ('naturalWidth' in image) return { width: image.naturalWidth, height: image.naturalHeight }
   if ('codedWidth' in image) return { width: image.codedWidth, height: image.codedHeight }
   return { width: image.width, height: image.height }
-}
-
-export const assertCanDecodeMediaFile = async (file: Blob | string) => {
-  const { audio, video } = await getContainerMetadata(file)
-
-  if (!audio && !video) throw new Error('Media file has no video or audio tracks.')
-
-  if (video) await assertCanDecodeTrack(video)
-  // AudioContext is used to decode audio
-
-  return true
 }
 
 export const useRafLoop = (
@@ -302,9 +231,6 @@ export const useInterval = (
     onCleanup(() => clearInterval(id))
   })
 }
-
-export const isAudioElement = (thing?: unknown): thing is HTMLAudioElement =>
-  thing != null && isElement(thing) && thing.nodeName === 'AUDIO'
 
 export const setVideoEncoderConfigCodec = async (
   config: VideoEncoderConfig,

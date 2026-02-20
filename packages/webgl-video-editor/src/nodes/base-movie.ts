@@ -110,6 +110,11 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
   readonly #eventTarget = new EventTarget()
   readonly #disposeAbort = new AbortController()
 
+  readonly activeClipIsStalled = computed(() => {
+    for (let track = this.timeline.head; track; track = track.next)
+      for (let clip = track.head; clip; clip = clip.next) if (!clip.isReady && clip.isInClipTime) return true
+    return false
+  })
   abstract get isReady(): boolean
 
   get duration(): number {
@@ -208,10 +213,10 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
     this._emit(SEEK_EVENT)
   }
 
-  async whenReady() {
-    await new Promise<void>((resolve) => {
-      if (this.isReady) return
+  async whenReady(): Promise<void> {
+    if (this.isReady) return
 
+    await new Promise<void>((resolve) => {
       const stop = effect(() => {
         if (!this.isReady) return
         stop()

@@ -1,5 +1,4 @@
 import { promiseWithResolvers, win } from 'shared/utils'
-import type { EncodedMediaChunk } from 'shared/video/types'
 
 export interface AudioBufferData {
   timestamp: number
@@ -7,9 +6,19 @@ export interface AudioBufferData {
   buffer: AudioBuffer
 }
 
+interface EncodedChunkInit {
+  type: 'key' | 'delta'
+  timestamp: number
+  duration?: number
+  data: ArrayBuffer
+  colorSpace?: VideoColorSpaceInit
+  codedWidth: number
+  codedHeight: number
+}
+
 export abstract class CodecTransform<
   Processor extends AudioDecoder | AudioEncoder | VideoDecoder | VideoEncoder,
-  In extends VideoFrame | AudioData | EncodedMediaChunk,
+  In extends VideoFrame | AudioData | EncodedChunkInit,
   Out = unknown,
 > extends TransformStream<In, Out> {
   processor: Processor
@@ -69,7 +78,7 @@ interface Options<T extends VideoFrame | AudioBufferData> {
 abstract class DecoderTransform<
   Processor extends VideoDecoder | AudioDecoder,
   T extends VideoFrame | AudioBufferData,
-> extends CodecTransform<Processor, EncodedMediaChunk, T> {
+> extends CodecTransform<Processor, EncodedChunkInit, T> {
   options: Options<T>
   startUs: number
   endUs: number
@@ -131,7 +140,7 @@ export class VideoDecoderTransform extends DecoderTransform<VideoDecoder, VideoF
     })
   }
 
-  process(chunk: EncodedMediaChunk) {
+  process(chunk: EncodedChunkInit) {
     if (this.#doneDecoding) return
     this.processor.decode(new EncodedVideoChunk(chunk))
   }
@@ -183,7 +192,7 @@ export class AudioDecoderTransform extends DecoderTransform<AudioDecoder, AudioB
     })
   }
 
-  process(chunk: EncodedMediaChunk) {
+  process(chunk: EncodedChunkInit) {
     if (this.#doneDecoding) return
     this.processor.decode(new EncodedAudioChunk(chunk))
   }

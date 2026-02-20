@@ -1,9 +1,12 @@
 import { Trimmer } from './trimmer.ts'
 import type * as pub from './types/media-trimmer.ts'
 
-export const trim: typeof pub.trim = async (url: string, options: pub.TrimOptions): Promise<Blob> => {
+export const trim: typeof pub.trim = async (
+  source: string | Blob,
+  options: pub.TrimOptions,
+): Promise<Blob> => {
   const { onProgress } = options
-  const trimmer = new Trimmer(url, options)
+  const trimmer = new Trimmer(source, options)
 
   if (!onProgress) return await trimmer.trim().finally(() => trimmer.dispose())
 

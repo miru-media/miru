@@ -1,37 +1,27 @@
-import { setObjectSize } from 'shared/utils'
-import { Demuxer } from 'shared/video/demuxer'
-import type { MediaContainerMetadata } from 'shared/video/types'
-import { assertDecoderConfigIsSupported, setVideoEncoderConfigCodec } from 'shared/video/utils'
+import * as Mb from 'mediabunny'
 
-import { VIDEO_DECODER_HW_ACCEL_PREF } from '../constants.ts'
+import { setObjectSize } from 'shared/utils'
+import { setVideoEncoderConfigCodec } from 'shared/video/utils'
+
 import { BaseMovie, type MediaAsset, type Movie } from '../nodes/index.ts'
 import { Track } from '../nodes/track.ts'
 
 import { AVEncoder } from './av-encoder.ts'
 import { ExporterClip } from './exporter-clip.ts'
-import type { MediaExtractor } from './media-extractor.ts'
-
-const EMPTY_STREAM = new ReadableStream<never>({ start: (controller) => controller.close() })
-
-let decoderAudioContext: OfflineAudioContext | undefined
-
-const multiTee = <T>(source: ReadableStream<T>, n: number) => {
-  const streams = [source]
-  for (let i = 0; i < n - 1; i++) streams.push(...streams.pop()!.tee())
-  return streams
-}
 
 interface AvAssetEntry {
   asset: MediaAsset
   start: number
   end: number
-  demuxer: Demuxer
-  info?: MediaContainerMetadata
-  audio?: MediaExtractor.AudioInit
-  video?: MediaExtractor.VideoInit
+  input: Mb.Input
+  audio: Mb.InputAudioTrack | null
+  video: Mb.InputVideoTrack | null
+  audioBuffer?: AudioBuffer
   isAudioOnly: boolean
   consumers: number
 }
+
+let decoderAudioContext: OfflineAudioContext | undefined
 
 export class ExporterMovie extends BaseMovie {
   clips: ExporterClip[] = []
@@ -54,7 +44,9 @@ export class ExporterMovie extends BaseMovie {
     this._currentTime.value = timeS
   }
 
-  readonly isReady = false
+  get isReady(): boolean {
+    return !this.activeClipIsStalled.value
+  }
 
   constructor(movie: Movie) {
     super(movie)
@@ -74,6 +66,7 @@ export class ExporterMovie extends BaseMovie {
     })
 
     this.onDispose(() => {
+      this.sources.forEach((entry) => entry.input.dispose())
       this.sources.clear()
     })
   }
@@ -86,15 +79,17 @@ export class ExporterMovie extends BaseMovie {
     let sourceEntry = this.sources.get(source.objectUrl)
 
     if (!sourceEntry) {
-      const demuxer = new Demuxer()
+      const input = new Mb.Input({
+        formats: Mb.ALL_FORMATS,
+        source: new Mb.BlobSource(source.blob),
+      })
       sourceEntry = {
         asset: clip.sourceAsset,
         start: sourceStart,
         end: sourceEnd,
-        demuxer,
-        info: undefined,
-        video: undefined,
-        audio: undefined,
+        input,
+        video: null,
+        audio: null,
         isAudioOnly: trackType === 'audio',
         consumers: 0,
       }
@@ -108,78 +103,26 @@ export class ExporterMovie extends BaseMovie {
     sourceEntry.end = Math.max(sourceEntry.end, sourceEnd)
   }
 
-  async #prepareSource(source: string, entry: AvAssetEntry) {
+  async #prepareSource(entry: AvAssetEntry) {
     await entry.asset._refreshObjectUrl()
 
-    const getAudioBuffer = async () => {
+    const { input, isAudioOnly } = entry
+    const video = isAudioOnly ? null : (entry.video = await input.getPrimaryVideoTrack())
+    const audio = (entry.audio = await input.getPrimaryAudioTrack())
+
+    if (audio && !(await audio.canDecode())) {
       const encodedFileData = await entry.asset.blob.arrayBuffer()
-      return await (decoderAudioContext ??= new OfflineAudioContext({
-        ...this.audioEncoderConfig,
-        length: 1,
-      })).decodeAudioData(encodedFileData)
+      decoderAudioContext ??= new OfflineAudioContext({ ...this.audioEncoderConfig, length: 1 })
+      entry.audioBuffer = await decoderAudioContext.decodeAudioData(encodedFileData)
     }
 
-    const { start, end, demuxer } = entry
-    let metadata: MediaContainerMetadata
+    if (video && !(await video.canDecode()))
+      throw new Error(
+        `[webgl-video-editor] Unable to decode video codec "${(await video.getDecoderConfig())?.codec ?? 'unknown'}"`,
+      )
 
-    try {
-      metadata = entry.info = await demuxer.init(source)
-    } catch (error) {
-      // If the source can't be demuxed, decode with an AudioContext
-      if (entry.isAudioOnly) {
-        this.hasAudio = true
-        const audioBuffer = await getAudioBuffer()
-        const { numberOfChannels, sampleRate } = audioBuffer
-
-        entry.audio = {
-          config: { codec: 'unused', numberOfChannels, sampleRate },
-          audioBuffer,
-          getStream: () => EMPTY_STREAM,
-        }
-        return
-      }
-
-      throw error
-    }
-
-    if (!entry.isAudioOnly) {
-      this.hasVideo = true
-      const videoInfo = metadata.video!
-      await assertDecoderConfigIsSupported('video', videoInfo)
-
-      const streams = multiTee(demuxer.getChunkStream(videoInfo, start, end), entry.consumers)
-
-      entry.video = {
-        config: { ...videoInfo, hardwareAcceleration: VIDEO_DECODER_HW_ACCEL_PREF },
-        getStream: () => streams.pop()!,
-      }
-    }
-
-    const audioInfo = metadata.audio
-
-    if (audioInfo) {
-      this.hasAudio = true
-
-      try {
-        await assertDecoderConfigIsSupported('audio', audioInfo)
-
-        const streams = multiTee(demuxer.getChunkStream(audioInfo, start, end), entry.consumers)
-
-        entry.audio = {
-          config: audioInfo,
-          getStream: () => streams.pop()!,
-        }
-      } catch {
-        // If decoding the audio with WebCodecs isn't supported, decode with an AudioContext instead
-        entry.audio = {
-          config: audioInfo,
-          audioBuffer: await getAudioBuffer(),
-          getStream: () => EMPTY_STREAM,
-        }
-      }
-    }
-
-    demuxer.start()
+    this.hasVideo ||= !isAudioOnly
+    this.hasAudio ||= !!audio
   }
 
   async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
@@ -193,15 +136,9 @@ export class ExporterMovie extends BaseMovie {
     })
     const { audioEncoderConfig } = this
 
-    await Promise.all(
-      Array.from(this.sources.entries()).map(([source, entry]) => this.#prepareSource(source, entry)),
-    )
+    await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
 
-    this.clips.forEach((clip) => {
-      const { audio, video } = this.sources.get(clip.sourceAsset.objectUrl)!
-
-      clip.extractor.init({ audio, video })
-    })
+    this.clips.forEach((clip) => clip.init(this.sources.get(clip.sourceAsset.objectUrl)!))
 
     const durationUs = duration * 1e6
 
@@ -221,7 +158,7 @@ export class ExporterMovie extends BaseMovie {
 
     await avEncoder.flush()
 
-    const buffer = avEncoder.finalize()
+    const buffer = await avEncoder.finalize()
     return new Blob([buffer], { type: 'video/mp4' })
   }
 
@@ -240,7 +177,13 @@ export class ExporterMovie extends BaseMovie {
 
     for (let i = 0; i < totalFrames && !signal?.aborted; i++) {
       this.currentTime = duration * (i / totalFrames)
-      await Promise.all(this.clips.map((clip) => clip.extractor.seekVideo()))
+      await Promise.all(
+        this.clips.map(async (clip) => {
+          await clip.seekVideo()
+          // make sure effects etc. are loaded
+          if (!clip.isReady) await clip.whenReady()
+        }),
+      )
 
       this.renderer.render(renderOptions)
 
@@ -266,11 +209,11 @@ export class ExporterMovie extends BaseMovie {
 
     await Promise.all(
       this.clips.map(async (clip) => {
-        const { extractor, time: clipTime } = clip
-        await extractor.seekAudio(clipTime.start)
+        const { time: clipTime } = clip
+        await clip.seekAudio(clipTime.start)
 
-        while (extractor.currentAudioData && !signal?.aborted) {
-          const { buffer, timestamp, duration } = extractor.currentAudioData
+        while (clip.currentAudioData && !signal?.aborted) {
+          const { buffer, timestamp, duration } = clip.currentAudioData
           const bufferOffsetS = timestamp / 1e6 - clipTime.source
           const trimStartS = -Math.min(bufferOffsetS, 0)
           const durationS = duration / 1e6
@@ -286,7 +229,7 @@ export class ExporterMovie extends BaseMovie {
             bufferSource.connect(ctx.destination)
           }
 
-          await extractor.readNextAudio()
+          await clip.readNextAudio()
         }
       }),
     )

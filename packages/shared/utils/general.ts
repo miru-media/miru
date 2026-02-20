@@ -41,7 +41,9 @@ interface DevSlowDown {
 }
 
 const VITE_DEV_SLOW_DOWN_MS =
-  (import.meta.env.VITE_DEV_SLOW_DOWN_MS != null && parseInt(import.meta.env.VITE_DEV_SLOW_DOWN_MS)) || 0
+  /* @__PURE__ */ (import.meta.env.VITE_DEV_SLOW_DOWN_MS != null &&
+    parseInt(import.meta.env.VITE_DEV_SLOW_DOWN_MS)) ||
+  0
 const slowResolveQueue: (() => void)[] = /* @__PURE__ */ []
 const setResolveTimeout = () =>
   setTimeout(() => {
@@ -49,7 +51,7 @@ const setResolveTimeout = () =>
     if (slowResolveQueue.length) setResolveTimeout()
   }, VITE_DEV_SLOW_DOWN_MS)
 
-export const devSlowDown: DevSlowDown | undefined = VITE_DEV_SLOW_DOWN_MS
+export const devSlowDown: DevSlowDown | undefined = /* @__PURE__ */ VITE_DEV_SLOW_DOWN_MS
   ? async <T>(value?: T | PromiseLike<T>) => {
       if (!slowResolveQueue.length) setResolveTimeout()
 

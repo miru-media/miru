@@ -1,10 +1,11 @@
-import { computed, createEffectScope } from 'fine-jsx'
+import { computed, createEffectScope, effect } from 'fine-jsx'
 import type * as Pixi from 'pixi.js'
 
 import type { Size } from 'shared/types.ts'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { fit } from 'shared/utils/images.ts'
 import { clamp } from 'shared/utils/math.ts'
+import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import type { ClipTime } from '../../types/core.ts'
 import type { RootNode } from '../../types/internal'
@@ -33,6 +34,7 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
   declare sourceStart: Schema.Clip['sourceStart']
   declare duration: Schema.Clip['duration']
   declare transition: Schema.Clip['transition']
+  declare sprite?: Pixi.Sprite
 
   scope = createEffectScope()
 
@@ -53,7 +55,7 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
     const source = time.source - inTransitionDuration
     const duration = time.duration + inTransitionDuration
 
-    return { start, source, duration, end: time.end }
+    return { start, source, duration, end: start + duration }
   })
   readonly #playableTime = computed((): ClipTime => {
     const presentation = this.#presentationTime.value
@@ -73,6 +75,7 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
     const { start, source, duration } = this.playableTime
     return clamp(this.root.currentTime - start + source, source, source + duration)
   })
+  readonly #isInClipTime = computed(() => rangeContainsTime(this.presentationTime, this.root.currentTime))
 
   readonly #mediaSize = computed((): Size => {
     const { video } = this.sourceAsset
@@ -97,6 +100,9 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
   get expectedMediaTime(): number {
     return this.#expectedMediaTime.value
   }
+  get isInClipTime(): boolean {
+    return this.#isInClipTime.value
+  }
 
   get mediaSize(): Size {
     return this.#mediaSize.value
@@ -118,6 +124,7 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
 
     this.onDispose(() => {
       this.disconnect()
+      this.sprite?.destroy()
       this.scope.stop()
     })
   }
@@ -142,6 +149,20 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
       if (rotation === 90) sprite.position.x += fitProps.width
       else sprite.position.y += fitProps.height
     }
+  }
+
+  async whenReady(): Promise<void> {
+    if (this.isReady) return
+
+    await new Promise<void>((resolve) => {
+      this.scope.run(() => {
+        const stop = effect(() => {
+          if (!this.isReady) return
+          stop()
+          resolve()
+        })
+      })
+    })
   }
 
   _ensureDurationIsPlayable(sourceDuration: number): void {
