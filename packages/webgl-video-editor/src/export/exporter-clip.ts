@@ -6,8 +6,10 @@ import type { AudioBufferData } from 'shared/video/coder-transforms'
 
 import type { MediaAsset, VideoEffectAsset } from '../assets.ts'
 import { BaseClip } from '../nodes/base-clip.ts'
-import type { Schema, Track } from '../nodes/index.ts'
+import type { Schema } from '../nodes/index.ts'
 import { MiruFilter } from '../pixi/pixi-miru-filter.ts'
+
+import type { ExporterMovie } from './exporter-movie.ts'
 
 export namespace ExporterClip {
   export interface InitOptions {
@@ -18,6 +20,7 @@ export namespace ExporterClip {
 }
 
 export class ExporterClip extends BaseClip {
+  declare container?: Pixi.Sprite
   readonly videoEffect: VideoEffectAsset | undefined
   readonly #filterIntensity = ref(1)
   sourceAsset: MediaAsset
@@ -52,10 +55,8 @@ export class ExporterClip extends BaseClip {
     return this.isReady
   }
 
-  constructor(init: Schema.Clip, track: Track) {
-    super(init, track.root)
-
-    const { root } = this
+  constructor(init: Schema.Clip, root: ExporterMovie) {
+    super(init, root)
 
     this.source = init.source
     this.sourceAsset = root.assets.get(init.source.assetId) as MediaAsset
@@ -72,8 +73,8 @@ export class ExporterClip extends BaseClip {
     })
   }
 
-  resizeSprite(sprite: Pixi.Sprite): void {
-    super.resizeSprite(sprite, true)
+  resizeSprite(): void {
+    super.resizeSprite(true)
   }
 
   init(options: ExporterClip.InitOptions): void {
@@ -97,12 +98,13 @@ export class ExporterClip extends BaseClip {
       this.videoSamples = new Mb.VideoSampleSink(video).samples(start, end)
 
       const { mediaSize, filter, root } = this
-      const sprite = (this.sprite = new Pixi.Sprite(
-        new Pixi.Texture({ source: new Pixi.ImageSource(mediaSize) }),
-      ))
-      sprite.visible = false
+      const sprite = (this.container = new Pixi.Sprite({
+        texture: new Pixi.Texture({ source: new Pixi.ImageSource(mediaSize) }),
+        visible: true,
+        zIndex: this.index,
+      }))
 
-      this.resizeSprite(sprite)
+      this.resizeSprite()
       this.parent!.container.addChild(sprite)
 
       if (filter) {

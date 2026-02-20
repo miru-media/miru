@@ -16,6 +16,7 @@ import {
   type BaseClip,
   type BaseNode,
   Clip,
+  type Gap,
   MediaAsset,
   Movie,
   type Schema,
@@ -24,10 +25,10 @@ import {
 } from './nodes/index.ts'
 
 const getClipAtTime = (track: Track, time: number) => {
-  for (let clip = track.head; clip; clip = clip.next) {
+  for (let clip = track.firstClip; clip; clip = clip.nextClip) {
     const clipTime = clip.time
 
-    if (clipTime.start <= time && time < clipTime.end) return clip as Clip
+    if (clipTime.start <= time && time < clipTime.end) return clip
   }
 }
 
@@ -45,7 +46,7 @@ export class VideoEditor {
   _movie!: Movie
   readonly store?: pub.VideoEditorStore
 
-  readonly #selection = ref<Clip>()
+  readonly #selection = ref<Clip | Gap>()
   _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
   _timelineSize = ref<Size>({ width: 1, height: 1 })
 
@@ -96,7 +97,7 @@ export class VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): Clip | undefined {
+  get selection(): Clip | Gap | undefined {
     return this.#selection.value
   }
 
@@ -115,7 +116,7 @@ export class VideoEditor {
     if (store) store.init(this as unknown as pub.VideoEditor)
 
     this._movie.on('node:delete', ({ node }: NodeDeleteEvent) => {
-      if (node.id === this.selection?.id) this.selectClip(undefined)
+      if (node.id === this.selection?.id) this.select(undefined)
     })
   }
 
@@ -166,7 +167,7 @@ export class VideoEditor {
 
   async replaceClipSource(source: string | Blob): Promise<void> {
     const clip = this.#selection.value
-    if (!clip) return
+    if (!clip?.isClip()) return
 
     const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
 
@@ -224,7 +225,7 @@ export class VideoEditor {
       startClip.position({ parentId: parent.id, index: clip.index })
       endClip.position({ parentId: parent.id, index: clip.index + 1 })
 
-      this.#selectClip(startClip, false)
+      this.#select(startClip, false)
       clip.dispose()
 
       return endClip
@@ -260,10 +261,10 @@ export class VideoEditor {
     this._movie.seekTo(time)
   }
 
-  selectClip(id: string | undefined, seek = true): void {
-    this.#selectClip(id ? this._movie.nodes.get<Clip>(id) : undefined, seek)
+  select(id: string | undefined, seek = true): void {
+    this.#select(id ? this._movie.nodes.get<Clip | Gap>(id) : undefined, seek)
   }
-  #selectClip(clip: Clip | undefined, seek: boolean): void {
+  #select(clip: Clip | Gap | undefined, seek: boolean): void {
     this.#selection.value = clip
 
     if (clip && seek) {
@@ -277,7 +278,7 @@ export class VideoEditor {
 
   _startClipDrag(clip: Clip): void {
     this._drag.isDragging.value = true
-    this._drag.from = [clip.prev?.getSnapshot(), clip.getSnapshot(), clip.next?.getSnapshot()]
+    this._drag.from = [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()]
   }
   _endClipDrag(): void {
     const { isDragging, x, from } = this._drag
@@ -294,7 +295,7 @@ export class VideoEditor {
 
     this._resize.value = {
       movieDuration: movie.duration,
-      from: [clip.prev?.getSnapshot(), clip.getSnapshot(), clip.next?.getSnapshot()],
+      from: [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()],
     }
   }
   _endClipResize(): void {

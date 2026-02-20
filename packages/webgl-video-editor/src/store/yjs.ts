@@ -14,7 +14,7 @@ import type {
   VideoEditorStore,
 } from 'webgl-video-editor'
 
-import type { AnyNode } from '../../types/internal'
+import type { AnyNode, AnyParentNode } from '../../types/internal'
 import { ROOT_NODE_ID } from '../constants.ts'
 import { AssetCreateEvent, NodeCreateEvent } from '../events.ts'
 import type { BaseNode } from '../nodes/base-node.ts'
@@ -226,9 +226,11 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     const childIdSet = new Set(childIds)
 
     // remove children that are no longer under the parent in the ytree
-    ;(this.#movie.nodes.get(parentKey) as AnyNode | undefined)?.children?.forEach((child) => {
-      if (!childIdSet.has(child.id)) child.remove()
-    })
+    ;(this.#movie.nodes.get(parentKey) as Partial<AnyParentNode> | undefined)?.children?.forEach(
+      (child: AnyNode) => {
+        if (!childIdSet.has(child.id)) child.remove()
+      },
+    )
 
     childIds.forEach((nodeId, index) => {
       const ynode = this.#getYtreeNode(nodeId)
@@ -278,8 +280,8 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       const nextId = node.next?.id
       const prevId = node.prev?.id
 
-      if (nextId && ytreeSiblingIds.has(nextId)) ytree.setNodeBefore(node.id, nextId)
-      else if (prevId && ytreeSiblingIds.has(prevId)) ytree.setNodeAfter(node.id, prevId)
+      if (nextId != null && ytreeSiblingIds.has(nextId)) ytree.setNodeBefore(node.id, nextId)
+      else if (prevId != null && ytreeSiblingIds.has(prevId)) ytree.setNodeAfter(node.id, prevId)
     }
   }
 

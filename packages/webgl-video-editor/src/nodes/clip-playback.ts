@@ -79,8 +79,10 @@ export class ClipPlayback {
       )
     })
 
-    const { source } = clip.sprite.texture
-    source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
+    if (clip.sprite) {
+      const { source } = clip.sprite.texture
+      source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
+    }
 
     clip.onDispose(this.dispose.bind(this))
   }
@@ -125,17 +127,17 @@ export class ClipPlayback {
   }
 
   #onUpdate(): void {
-    const { sprite: rendererNode } = this.clip
+    const { sprite } = this.clip
 
     if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
 
-    if (this.isInPresentationTime.value) {
-      rendererNode.visible ||= this.mediaState.wasEverPlayable.value
+    if (sprite && this.isInPresentationTime.value) {
+      sprite.visible ||= this.mediaState.wasEverPlayable.value
 
       if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
         try {
           if (IS_FIREFOX && this.mediaElement instanceof HTMLVideoElement) {
-            const { source } = rendererNode.texture
+            const { source } = sprite.texture
             const videoFrame = new VideoFrame(this.mediaElement, {
               timestamp: this.mediaElement.currentTime * 1e6,
             })
@@ -143,10 +145,10 @@ export class ClipPlayback {
             ;(source.resource as Partial<VideoFrame>).close?.()
             source.resource = videoFrame
             source.update()
-          } else rendererNode.texture.source.update()
+          } else sprite.texture.source.update()
         } catch {}
       }
-    } else rendererNode.visible &&= false
+    } else if (sprite) sprite.visible &&= false
 
     if (this.clip.root.isStalled.value) {
       if (!this.mediaIsPaused) this.pause()

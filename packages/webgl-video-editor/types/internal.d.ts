@@ -4,9 +4,10 @@ import type { Renderer } from 'webgl-effects'
 import type { Size } from 'shared/types'
 
 import type {
+  BaseClip,
   BaseMovie,
   BaseNode,
-  Clip,
+  Gap,
   MediaAsset,
   Movie,
   Timeline,
@@ -55,20 +56,21 @@ export interface MediaElementInfo {
   height: number
 }
 
-export type AnyNode = BaseMovie | Timeline | Track | Clip
 export interface NodesByType {
-  movie: Movie
+  movie: BaseMovie
   timeline: Timeline
   track: Track
-  clip: Clip
+  clip: BaseClip
+  gap: Gap
 }
+
+export type AnyParentNode = BaseMovie | Timeline | Track
+export type AnyNode = NodesByType[keyof NodesByType]
+
 export interface NodeMap {
   map: Map<string, AnyNode | BaseNode>
   byType: {
-    movie: Set<BaseMovie>
-    timeline: Set<Timeline>
-    track: Set<Track>
-    clip: Set<BaseClip>
+    [Type in keyof NodesByType]: Set<NodesByType[Type]>
   }
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get: <T extends AnyNode>(id: string) => T

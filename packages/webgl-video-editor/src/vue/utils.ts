@@ -3,13 +3,14 @@ import * as Vue from 'vue'
 
 import * as interop from 'shared/utils/interop'
 
+import type { AnyNode } from '../../types/internal'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import type * as nodes from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
 type Mappings =
   | [nodes.Track, pub.Track]
-  | [nodes.Clip, pub.Clip]
+  | [nodes.Gap, pub.Gap]
   | [nodes.BaseClip, pub.Clip]
   | [nodes.MediaAsset, pub.MediaAsset]
   | [nodes.VideoEffectAsset, pub.VideoEffectAsset]
@@ -70,12 +71,21 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
           (value) => (node[key] = value),
         )
 
+      const getTypePredicateMethods = (node: AnyNode) => ({
+        isMovie: node.isMovie.bind(node),
+        isTimeline: node.isTimeline.bind(node),
+        isTrack: node.isTrack.bind(node),
+        isClip: node.isClip.bind(node),
+        isGap: node.isGap.bind(node),
+      })
+
       scope.run(() => {
         switch (node.type) {
           case 'track':
             reactiveValue = Vue.reactive({
               ...node.toObject(),
               children: toVue(() => node.children.map(getVueNode)),
+              ...getTypePredicateMethods(node),
               dispose: node.dispose.bind(node),
             })
             break
@@ -98,6 +108,26 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
                 return node.parent && getVueNode(node.parent)
               },
               _presentationTime: toVue(() => node.presentationTime),
+              ...getTypePredicateMethods(node),
+              dispose: node.dispose.bind(node),
+            })
+            break
+          case 'gap':
+            reactiveValue = Vue.reactive({
+              id: node.id,
+              type: node.type,
+              start: getWritableProp(node, 'start'),
+              duration: getWritableProp(node, 'duration'),
+              get prev() {
+                return node.prev && getVueNode(node.prev)
+              },
+              get next() {
+                return node.next && getVueNode(node.next)
+              },
+              get parent() {
+                return node.parent && getVueNode(node.parent)
+              },
+              ...getTypePredicateMethods(node),
               dispose: node.dispose.bind(node),
             })
             break
@@ -157,7 +187,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       seekTo: editor.seekTo.bind(editor),
       addClip: (track: pub.Track, source: string | Blob | pub.Schema.Clip) =>
         editor.addClip(editor._movie.nodes.get(track.id), source as any),
-      selectClip: (clip: pub.Clip | undefined) => editor.selectClip(clip?.id),
+      select: (clip: pub.Clip | pub.Gap | undefined) => editor.select(clip?.id),
       async createMediaAsset(source: string | Blob) {
         return getVueNode(await editor.createMediaAsset(source))
       },

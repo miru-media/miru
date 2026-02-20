@@ -84,7 +84,7 @@ export const Timeline = ({
     editor.seekTo(editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
   }
 
-  const totalClips = computed(() => movie.timeline.children.reduce((acc, track) => acc + track.count, 0))
+  const hasAnyClips = computed(() => movie.timeline.children.some((track) => !!track.firstClip))
 
   const onInputClipFile = async (event: InputEvent, track: Track | undefined) => {
     const file = event.target.files?.[0]
@@ -100,7 +100,7 @@ export const Timeline = ({
   }
 
   const onPointerdownScroller = (event: Event) => {
-    if (!(event.target as HTMLElement).closest(`.${styles.clip}`)) editor.selectClip(undefined)
+    if (!(event.target as HTMLElement).closest(`.${styles.clip}`)) editor.select(undefined)
   }
 
   return (
@@ -147,12 +147,16 @@ export const Timeline = ({
                   class={styles.track}
                   style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
                 >
-                  {(track.children as ClipType[]).map((clip) => (
-                    <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
+                  {track.clips.map((clip) => (
+                    <Clip
+                      editor={editor}
+                      clip={clip as ClipType}
+                      isSelected={() => editor.selection?.id === clip.id}
+                    />
                   ))}
                   <label
                     class={() => [styles.trackButton, track.count > 0 && styles.square]}
-                    hidden={totalClips.value === 0 && trackIndex !== 0}
+                    hidden={() => !hasAnyClips.value && trackIndex !== 0}
                   >
                     {() =>
                       track.count ? (

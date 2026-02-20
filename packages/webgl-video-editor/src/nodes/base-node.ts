@@ -1,38 +1,43 @@
 import { computed, ref } from 'fine-jsx'
+import type * as Pixi from 'pixi.js'
 
-import type { NodeSnapshot, NonReadonly, RootNode } from '../../types/internal'
+import type { AnyParentNode, NodeSnapshot, NonReadonly, RootNode } from '../../types/internal'
 import { NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
-import type { ChildNodePosition, Schema } from '../index.ts'
+import type { ChildNodePosition, Movie, Schema, Track } from '../index.ts'
 
-import type { ParentNode } from './parent-node.ts'
+import type { BaseClip, Gap, Timeline } from './index.ts'
 
-export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
+export abstract class BaseNode<
+  T extends Schema.Base = Schema.Base,
+  TParent extends AnyParentNode = AnyParentNode,
+> {
   abstract readonly type: T['type']
   readonly id: string
-  declare readonly parent?: ParentNode<any, BaseNode<T>>
   declare readonly root: RootNode
   abstract readonly children?: unknown
+  abstract container?: Pixi.Container
 
-  readonly #parent = ref<ParentNode<any, BaseNode<T>>>()
+  readonly #parent = ref<TParent>()
 
-  get ['parent' as never](): typeof this.parent {
+  declare parent?: TParent | undefined
+  get ['parent' as never](): TParent | undefined {
     return this.#parent.value
   }
-  set ['parent' as never](parent: typeof this.parent) {
-    this.#parent.value = parent
+  set ['parent' as never](node: TParent | undefined) {
+    this.#parent.value = node
   }
 
-  readonly #prev = ref<BaseNode<T>>()
-  readonly #next = ref<BaseNode<T>>()
+  readonly #prev = ref<NonNullable<TParent['children']>[number]>()
+  readonly #next = ref<NonNullable<TParent['children']>[number]>()
 
-  get prev(): this | undefined {
-    return this.#prev.value as typeof this | undefined
+  get prev() {
+    return this.#prev.value
   }
   set prev(other) {
     this.#prev.value = other
   }
-  get next(): this | undefined {
-    return this.#next.value as typeof this | undefined
+  get next() {
+    return this.#next.value
   }
   set next(other) {
     this.#next.value = other
@@ -42,7 +47,7 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
   readonly #cleanups: (() => void)[] = []
 
   readonly #index = computed((): number => {
-    const { prev } = this
+    const prev = this.prev as BaseNode | undefined
     if (prev) return prev.index + 1
     if (this.parent?.head === this) return 0
     return -1
@@ -84,12 +89,21 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
 
     const fromParent = this.parent
     const fromIndex = this.index
-    const newParent = parentId ? (this.root.nodes.get(parentId) as ParentNode<any, BaseNode<any>>) : undefined
+    const newParent = parentId ? (this.root.nodes.get(parentId) as unknown as TParent) : undefined
 
     if (fromParent && fromParent.id !== parentId) fromParent.unlinkChild(this)
 
     if (position) newParent?.positionChildAt(this, position.index)
     else (this as NonReadonly<typeof this>).parent = undefined
+
+    const { container } = this
+    if (container) {
+      if (!newParent) container.removeFromParent()
+      else {
+        if (newParent.id !== fromParent?.id) newParent.container?.addChild(container)
+        container.zIndex = this.index
+      }
+    }
 
     this.root._emit(new NodeMoveEvent(this, fromParent && { parentId: fromParent.id, index: fromIndex }))
   }
@@ -97,6 +111,24 @@ export abstract class BaseNode<T extends Schema.Base = Schema.Base> {
   remove(): void {
     this.position(undefined)
   }
+
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isMovie(): this is Movie {
+    return false
+  }
+  isTimeline(): this is Timeline {
+    return false
+  }
+  isTrack(): this is Track {
+    return false
+  }
+  isClip(): this is BaseClip {
+    return false
+  }
+  isGap(): this is Gap {
+    return false
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   #emitUpdate<Key extends Exclude<keyof T, 'id' | 'type'>>(key: Key, oldValue: T[Key]): void {
     const event = new NodeUpdateEvent(this, { [key]: oldValue })

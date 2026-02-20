@@ -62,7 +62,7 @@ useEventListener(
 
         <button
           v-if="getSelectedType() === 'video'"
-          :class="['toolbar-button', editor.selection?.filter && 'active']"
+          :class="['toolbar-button', editor.selection.isClip() && editor.selection.filter && 'active']"
           @click="() => (showFilterMenu = !showFilterMenu)"
         >
           <div :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'" />

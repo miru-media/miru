@@ -30,7 +30,7 @@ watch(
 
 const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: number }>) => {
   const clip = editor.selection
-  if (!clip) return
+  if (!clip?.isClip()) return
 
   const { effect, intensity } = event.detail
   const newFilter = effect ? { assetId: effect, intensity } : undefined
@@ -58,12 +58,13 @@ const menu = ref<WebglEffectsMenuElement>()
 
 watch(
   () => editor.selection,
-  () => menu.value?.scrollToEffect(editor.selection?.filter?.assetId, 'instant'),
+  () => editor.selection?.isClip() && menu.value?.scrollToEffect(editor.selection.filter?.assetId, 'instant'),
 )
 </script>
 
 <template>
   <webgl-effects-menu
+    v-if="editor.selection?.isClip()"
     ref="menu"
     :sourceTexture="texture"
     :sourceSize="img"

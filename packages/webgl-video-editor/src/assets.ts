@@ -222,8 +222,6 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
 export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> implements pub.VideoEffectAsset {
   readonly id: string
   readonly type = 'asset:effect:video' as const
-  declare children?: never
-  declare parent?: never
 
   readonly #isLoading = ref(false)
   shaders: string[] = []

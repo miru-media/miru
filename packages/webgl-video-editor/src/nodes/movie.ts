@@ -12,7 +12,7 @@ import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants.ts'
 import { PlaybackUpdateEvent } from '../events.ts'
 
 import { BaseMovie } from './base-movie.ts'
-import { Clip, type Schema } from './index.ts'
+import { Clip, Gap, type Schema } from './index.ts'
 import { Timeline } from './timeline.ts'
 import { Track } from './track.ts'
 
@@ -116,6 +116,9 @@ export class Movie extends BaseMovie {
         break
       case 'clip':
         node = new Clip(init, this)
+        break
+      case 'gap':
+        node = new Gap(init, this)
         break
       default:
         throw new Error(`[webgl-video-editor] Unexpected init of type "${init.type}".`)

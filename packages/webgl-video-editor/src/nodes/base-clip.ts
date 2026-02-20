@@ -12,29 +12,28 @@ import type { RootNode } from '../../types/internal'
 import type { MediaAsset } from '../assets.ts'
 import { TRANSITION_DURATION_S, VIDEO_PREPLAY_TIME_S } from '../constants.ts'
 
-import { BaseNode } from './base-node.ts'
-import type { Schema, Track } from './index.ts'
+import type { Schema } from './index.ts'
+import { TrackChild } from './track-child.ts'
 
-export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.Clip {
+export abstract class BaseClip extends TrackChild<Schema.Clip> {
   abstract sourceAsset: MediaAsset
   abstract isReady: boolean
   abstract everHadEnoughData: boolean
   type = 'clip' as const
 
-  declare parent?: Track
   declare root: RootNode
-  declare children?: never
+  declare children: undefined
   declare name: string
 
-  get start(): number {
-    return this.sourceStart
+  abstract container?: Pixi.Sprite
+  get sprite(): Pixi.Sprite | undefined {
+    return this.container
   }
 
   declare abstract source: Schema.Clip['source']
   declare sourceStart: Schema.Clip['sourceStart']
   declare duration: Schema.Clip['duration']
   declare transition: Schema.Clip['transition']
-  declare sprite?: Pixi.Sprite
 
   scope = createEffectScope()
 
@@ -88,6 +87,9 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
   get time(): ClipTime {
     return this.#time.value
   }
+  get start(): number {
+    return this.time.start
+  }
   get presentationTime(): ClipTime {
     return this.#presentationTime.value
   }
@@ -115,26 +117,27 @@ export abstract class BaseClip extends BaseNode<Schema.Clip> implements Schema.C
   abstract filter: Schema.Clip['filter']
 
   constructor(init: Schema.Clip, root: RootNode) {
-    super(init.id, root)
+    super(init, root)
 
     this._defineReactive('name', init.name)
     this._defineReactive('sourceStart', init.sourceStart)
-    this._defineReactive('duration', init.duration)
     this._defineReactive('transition', init.transition)
 
     this.onDispose(() => {
-      this.disconnect()
       this.sprite?.destroy()
       this.scope.stop()
     })
   }
 
-  abstract connect(): void
-  abstract disconnect(): void
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
+  isClip(): this is BaseClip {
+    return true
+  }
 
-  resizeSprite(sprite: Pixi.Sprite, isExtracting = false): void {
+  resizeSprite(isExtracting = false): void {
     const { video } = this.sourceAsset
-    if (!video) return
+    const { sprite } = this
+    if (!video || !sprite) return
 
     const fitProps = fit(this.mediaSize, this.root.resolution, 'cover')
     sprite.scale.set(fitProps.scaleX, fitProps.scaleY)

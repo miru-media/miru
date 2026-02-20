@@ -20,7 +20,7 @@ import {
 import { PlaybackPauseEvent, PlaybackPlayEvent } from '../events.ts'
 import { LutUploaderSystem } from '../pixi/pixi-lut-source.ts'
 
-import type { BaseClip, BaseNode, Schema } from './index.ts'
+import type { BaseClip, BaseNode, Gap, Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 import { Timeline } from './timeline.ts'
 import type { Track } from './track.ts'
@@ -46,6 +46,7 @@ class NodeMap implements INodeMap {
     timeline: new Set<Timeline>(),
     track: new Set<Track>(),
     clip: new Set<BaseClip>(),
+    gap: new Set<Gap>(),
   }
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get<T extends AnyNode>(id: string): T {
@@ -80,9 +81,10 @@ const createInitialAssets = (movie: BaseMovie) =>
   )
 
 export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> implements pub.Movie {
-  declare parent?: never
-  declare readonly root: this
   type = 'movie' as const
+  declare parent?: undefined
+  declare readonly root: this
+  declare container: undefined
 
   nodes = new NodeMap()
   assets: Map<string, AnyAsset>
@@ -91,9 +93,12 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
   canvas: HTMLCanvasElement | OffscreenCanvas
   gl: WebGL2RenderingContext
   renderer: Pixi.WebGLRenderer
-  stage: Pixi.Container
   whenRendererIsReady: Promise<void>
   readonly #createdOwnRenderer: boolean
+
+  get stage(): Pixi.Container {
+    return this.timeline.container
+  }
 
   protected readonly _currentTime = ref(0)
   readonly #duration = computed(() =>
@@ -112,7 +117,8 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
 
   readonly activeClipIsStalled = computed(() => {
     for (let track = this.timeline.head; track; track = track.next)
-      for (let clip = track.head; clip; clip = clip.next) if (!clip.isReady && clip.isInClipTime) return true
+      for (let clip = track.firstClip; clip; clip = clip.nextClip)
+        if (!clip.isReady && clip.isInClipTime) return true
     return false
   })
   abstract get isReady(): boolean
@@ -145,7 +151,6 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
     }
 
     this.canvas = this.gl.canvas
-    this.stage = new Pixi.Container()
 
     this._defineReactive('resolution', options.resolution ?? DEFAULT_RESOLUTION, {
       onChange: (value) => {
@@ -178,6 +183,11 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
       this.stage.destroy()
       this.#disposeAbort.abort()
     })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
+  isMovie(): this is pub.Movie {
+    return true
   }
 
   async #initPixi(): Promise<void> {

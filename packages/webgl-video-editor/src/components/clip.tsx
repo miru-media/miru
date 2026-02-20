@@ -157,9 +157,10 @@ export const Clip = ({
               const newCenterTime = newStartTime + clip.time.duration / 2
 
               let insertBefore: ClipType | undefined
-              for (let { prev } = clip; prev; { prev } = prev) {
-                const { start, duration } = prev.time
-                if (start >= newStartTime || start + duration / 2 >= newCenterTime) insertBefore = prev
+              for (let { prevClip } = clip; prevClip; { prevClip } = prevClip) {
+                const { start, duration } = prevClip.time
+                if (start >= newStartTime || start + duration / 2 >= newCenterTime)
+                  insertBefore = prevClip as ClipType
                 else break
               }
 
@@ -171,9 +172,10 @@ export const Clip = ({
               const newEndTime = newStartTime + clip.time.duration
 
               let insertAfter: ClipType | undefined
-              for (let { next } = clip; next; { next } = next) {
-                const { end, duration } = next.time
-                if (end <= newEndTime || end - duration / 2 <= newCenterTime) insertAfter = next
+              for (let { nextClip } = clip; nextClip; { nextClip } = nextClip) {
+                const { end, duration } = nextClip.time
+                if (end <= newEndTime || end - duration / 2 <= newCenterTime)
+                  insertAfter = nextClip as ClipType
                 else break
               }
               if (insertAfter) {
@@ -208,7 +210,7 @@ export const Clip = ({
         --clip-color: ${clipColor.value};
       `}
     >
-      <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.selectClip(clip.id, false)}>
+      <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.select(clip.id, false)}>
         <span class={styles.clipName}>{clip.displayName}</span>
         <div class={styles.clipControls}>
           <div class={styles.clipResizeLeft}>

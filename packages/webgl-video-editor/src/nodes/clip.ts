@@ -18,16 +18,12 @@ export class Clip extends BaseClip {
   readonly #source = ref<MediaAsset>(undefined as never)
   declare source: Schema.Clip['source']
   error: Ref<MediaError | undefined>
-  sprite = new Pixi.Sprite(new Pixi.Texture())
+  container = new Pixi.Sprite(new Pixi.Texture())
 
   readonly #filter = ref<VideoEffectAsset>()
   readonly #filterIntensity = ref(1)
 
   readonly playback = new ClipPlayback(this)
-
-  get start(): number {
-    return this.sourceStart
-  }
 
   get sourceAsset(): MediaAsset {
     return this.#source.value
@@ -67,12 +63,14 @@ export class Clip extends BaseClip {
 
         this.#filter.value = value && (this.root.assets.get(value.assetId) as VideoEffectAsset)
 
-        this.sprite.filters = this._pixiFilters =
-          this.#filter.value?.raw.ops.map((op) => new MiruFilter(op, this.#filterIntensity)) ?? []
+        if (this.sprite) {
+          this.sprite.filters = this._pixiFilters =
+            this.#filter.value?.raw.ops.map((op) => new MiruFilter(op, this.#filterIntensity)) ?? []
 
-        this._pixiFilters.forEach((filter) =>
-          filter.sprites.forEach((sprite) => this.root.stage.addChild(sprite)),
-        )
+          this._pixiFilters.forEach((filter) =>
+            filter.sprites.forEach((sprite) => this.root.stage.addChild(sprite)),
+          )
+        }
       },
       equal: (a, b) => (!a && !b) || (!!a && !!b && a.assetId === b.assetId && a.intensity === b.intensity),
     })
@@ -90,50 +88,36 @@ export class Clip extends BaseClip {
           this.#unloadCurrentMedia()
 
           const mediaElement = (this.media.value = createHiddenMediaElement(trackType, url))
-          const { sprite } = this
 
           let isStale = false
           onCleanup(() => (isStale = true))
 
-          void whenLoadedMetadata(mediaElement).then(() => {
-            if (isStale) return
+          const { sprite } = this
+          if (sprite) {
+            void whenLoadedMetadata(mediaElement).then(() => {
+              if (isStale) return
 
-            if (trackType === 'video') {
               const { texture } = sprite
               texture.source = new Pixi.ImageSource({ resource: mediaElement as HTMLVideoElement })
               texture.update()
-            }
-          })
+            })
+          }
         },
       )
 
       // make sure media type matches parent track type
       watch([() => this.parent], () => this.#setMedia(this.sourceAsset))
 
-      effect(() => this.resizeSprite(this.sprite))
+      effect(this.resizeSprite.bind(this, undefined))
     })
 
     this.onDispose(this.#onDispose.bind(this))
     root._emit(new NodeCreateEvent(this))
   }
 
-  connect() {
-    const { parent } = this
-
-    if (parent?.trackType === 'video') {
-      const { sprite } = this
-      if (parent.container !== sprite.parent) parent.container.addChild(sprite)
-      sprite.zIndex = this.index
-    }
-  }
-
-  disconnect() {
-    this.sprite.removeFromParent()
-  }
-
   #setMedia(asset: MediaAsset) {
     this.#source.value = asset
-    this.sprite.visible = false
+    if (this.sprite) this.sprite.visible = false
   }
 
   #unloadCurrentMedia() {
@@ -141,7 +125,7 @@ export class Clip extends BaseClip {
     mediaElement.removeAttribute('src')
     mediaElement.remove()
 
-    this.sprite.visible = false
+    if (this.sprite) this.sprite.visible = false
   }
 
   #onDispose() {

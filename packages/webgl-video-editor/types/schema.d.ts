@@ -59,17 +59,24 @@ export interface Track extends Base {
   trackType: 'audio' | 'video'
 }
 
-export interface Clip extends Base {
+export interface TrackChild extends Base {
+  duration: number
+}
+
+export interface Clip extends TrackChild {
   type: 'clip'
   sourceStart: number
-  duration: number
   source: { assetId: string }
   filter?: { assetId: string; intensity: number }
   transition?: { type: string }
 }
 
+export interface Gap extends TrackChild {
+  type: 'gap'
+}
+
 export interface SerializedTrack extends Track {
-  children: Clip[]
+  children: (SerializedClip | SerializedGap)[]
 }
 
 export interface SerializedMovie extends Movie {
@@ -81,5 +88,13 @@ export interface SerializedTimeline extends Timeline {
   children: SerializedTrack[]
 }
 
-export type AnyNodeSchema = Movie | Timeline | Track | Clip
-export type AnyNodeSerializedSchema = SerializedMovie | SerializedTimeline | SerializedTrack | Clip
+export type SerializedClip = Clip
+export type SerializedGap = Gap
+
+export type AnyNodeSchema = Movie | Timeline | Track | Clip | Gap
+export type AnyNodeSerializedSchema =
+  | SerializedMovie
+  | SerializedTimeline
+  | SerializedTrack
+  | SerializedClip
+  | SerializedGap

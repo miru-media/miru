@@ -1,14 +1,15 @@
 import { ref } from 'fine-jsx'
 
 import type { Schema } from '../../types/core'
-import type { NonReadonly, RootNode } from '../../types/internal'
+import type { AnyParentNode, NonReadonly, RootNode } from '../../types/internal'
 
 import { BaseNode } from './base-node.ts'
 
 export abstract class ParentNode<
   T extends Schema.AnyNodeSchema,
-  TChild extends BaseNode,
-> extends BaseNode<T> {
+  TParent extends AnyParentNode = AnyParentNode,
+  TChild extends BaseNode = any,
+> extends BaseNode<T, TParent> {
   readonly #head = ref<TChild>()
   readonly #tail = ref<TChild>()
 
@@ -19,7 +20,9 @@ export abstract class ParentNode<
     return this.#tail.value
   }
 
-  get children(): TChild[] {
+  declare children: TChild[]
+
+  get ['children' as never](): TChild[] {
     const array: TChild[] = []
     for (let current = this.#head.value; current; current = current.next) array.push(current)
     return array
@@ -39,11 +42,11 @@ export abstract class ParentNode<
   }
 
   #setChildparent(child: this['children'][number]): void {
-    ;(child as NonReadonly<typeof child>).parent = this
+    ;(child as NonReadonly<typeof child>).parent = this as unknown as TParent
   }
 
   positionChildAt(node: TChild, index: number): void {
-    if (node.index === index && node.parent === this) return
+    if (node.index === index && node.parent === (this as unknown as TParent)) return
 
     let other = this.head
     for (; !!other && other.index < index; other = other.next);
@@ -61,7 +64,7 @@ export abstract class ParentNode<
     return array
   }
 
-  pushChild(node: TChild): void {
+  #pushChild(node: TChild): void {
     this.unlinkChild(node)
     this.#setChildparent(node)
 
@@ -83,8 +86,8 @@ export abstract class ParentNode<
 
     if (node === head) this.#head.value = next
     if (node === tail) this.#tail.value = prev
-    if (prev) prev.next = next
-    if (next) next.prev = prev
+    if (prev != null) prev.next = next
+    if (next != null) next.prev = prev
 
     node.prev = node.next = undefined
   }
@@ -98,7 +101,7 @@ export abstract class ParentNode<
     node.next = before
 
     if (!before) {
-      this.pushChild(node)
+      this.#pushChild(node)
       return
     }
 
@@ -107,7 +110,7 @@ export abstract class ParentNode<
     const { head } = this
     const { prev } = before
     if (before === head) this.#head.value = node
-    if (prev) prev.next = node
+    if (prev != null) prev.next = node
 
     before.prev = node
   }

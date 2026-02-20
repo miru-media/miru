@@ -73,16 +73,16 @@ if (!import.meta.env.SSR) {
         break
 
       case 'ArrowLeft': {
-        const prev = editor.selection?.prev
-        if (prev) editor.selectClip(prev)
+        const prev = editor.selection?.prevClip
+        if (prev) editor.select(prev)
 
         event.preventDefault()
         break
       }
 
       case 'ArrowRight': {
-        const next = editor.selection?.next
-        if (next) editor.selectClip(next)
+        const next = editor.selection?.nextClip
+        if (next) editor.select(next)
         event.preventDefault()
         break
       }

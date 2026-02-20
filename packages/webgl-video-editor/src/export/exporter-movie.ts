@@ -3,7 +3,7 @@ import * as Mb from 'mediabunny'
 import { setObjectSize } from 'shared/utils'
 import { setVideoEncoderConfigCodec } from 'shared/video/utils'
 
-import { BaseMovie, type MediaAsset, type Movie } from '../nodes/index.ts'
+import { BaseMovie, Gap, type MediaAsset, type Movie } from '../nodes/index.ts'
 import { Track } from '../nodes/track.ts'
 
 import { AVEncoder } from './av-encoder.ts'
@@ -53,15 +53,21 @@ export class ExporterMovie extends BaseMovie {
 
     this.isPaused.value = false
 
-    movie.timeline.children.forEach((track_) => {
+    movie.timeline.children.forEach((track_, trackIndex) => {
       const track = new Track(track_.toObject(), this)
-      this.timeline.pushChild(track)
-      track_.children.forEach((clip_) => {
-        const clip = new ExporterClip(clip_.toObject(), track)
-        track.pushChild(clip)
+      track.position({ parentId: this.timeline.id, index: trackIndex })
 
-        this.clips.push(clip)
-        this.#prepareClip(clip)
+      track_.children.forEach((trackChild, index) => {
+        let child
+
+        if (trackChild.isClip()) {
+          child = new ExporterClip(trackChild.toObject(), this)
+
+          this.clips.push(child)
+          this.#prepareClip(child, track.trackType)
+        } else child = new Gap(trackChild, this)
+
+        child.position({ parentId: track.id, index })
       })
     })
 
@@ -71,8 +77,7 @@ export class ExporterMovie extends BaseMovie {
     })
   }
 
-  #prepareClip(clip: ExporterClip) {
-    const { trackType } = clip.parent!
+  #prepareClip(clip: ExporterClip, trackType: Track.TrackType) {
     const { sourceAsset: source } = clip
     const { source: sourceStart, duration } = clip.time
     const sourceEnd = sourceStart + duration

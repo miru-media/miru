@@ -72,7 +72,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   get tracks(): pub.Track[] {
     return this._editor.tracks
   }
-  get selection(): pub.Clip | undefined {
+  get selection(): pub.Clip | pub.Gap | undefined {
     return this._editor.selection
   }
   get exportResult() {
@@ -139,8 +139,8 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   async addClip(track: pub.Track, source: string | Blob | pub.Schema.Clip): Promise<pub.Clip> {
     return await this._editor.addClip(track as nodes.Track, source)
   }
-  selectClip(clip: pub.Clip | undefined) {
-    this._editor.selectClip(clip?.id)
+  select(clip: pub.Clip | pub.Gap | undefined) {
+    this._editor.select(clip?.id)
   }
   async createMediaAsset(source: string | Blob) {
     return await this._editor.createMediaAsset(source)

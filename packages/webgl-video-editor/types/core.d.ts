@@ -18,34 +18,46 @@ export interface ClipTime {
   end: number
 }
 
-export interface Movie extends Schema.Movie {
+export interface Base {
+  isMovie: () => this is Movie
+  isTimeline: () => this is Timeline
+  isTrack: () => this is Track
+  isClip: () => this is Clip
+  isGap: () => this is Gap
   dispose: () => void
 }
 
-export interface Clip extends Schema.Clip {
+export interface Movie extends Schema.Movie, Base {
+  timeline: Timeline
+}
+
+export interface Timeline extends Schema.Timeline, Base {}
+
+interface TrackChild extends Base {
   readonly start: number
   parent?: Track
-  prev?: Clip | undefined
-  next?: Clip | undefined
-  dispose: () => void
+  prev?: Clip | Gap | undefined
+  next?: Clip | Gap | undefined
+  prevClip?: Clip | undefined
+  nextClip?: Clip | undefined
 }
 
-export interface Track {
-  id: string
+export interface Clip extends Schema.Clip, TrackChild {}
+
+export interface Gap extends Schema.Gap, TrackChild {}
+
+export interface Track extends Schema.Track, Base {
   trackType: TrackType
   parent?: Timeline
-  children: Clip[]
-  dispose: () => void
+  children: (Clip | Gap)[]
 }
 
 export interface MediaAsset extends Schema.AvMediaAsset {
   blob: Blob
-  dispose: () => void
 }
 
 export interface VideoEffectAsset extends Schema.VideoEffectAsset {
   raw: EffectDefinition
-  dispose: () => void
 }
 
 export interface VideoEditor {
@@ -73,7 +85,7 @@ export interface VideoEditor {
   effects: Map<string, VideoEffectAsset>
 
   /** The currently selected video clip on the timeline. */
-  selection?: Clip
+  selection?: Clip | Gap
 
   /** The audio and video tracks which contain clips */
   tracks: Track[]
@@ -84,8 +96,8 @@ export interface VideoEditor {
   /** The webgl-effects Renderer instance */
   effectRenderer: Renderer
 
-  /** Select the given clip */
-  selectClip: (clip: Clip | undefined) => void
+  /** Select the given track item */
+  select: (clip: Clip | Gap | undefined) => void
 
   /** Play the video at the current time or from the start if the video is ended. */
   play: () => void
