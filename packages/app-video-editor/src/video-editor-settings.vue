@@ -109,5 +109,10 @@ const onBlur = (event: FocusEvent) => {
   padding-right: max(env(safe-area-inset-right, 1.25rem), 1.25rem);
   padding-top: max(env(safe-area-inset-top, 1.25rem), 1.25rem);
   padding-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
+  pointer-events: none;
+
+  > * > * {
+    pointer-events: all;
+  }
 }
 </style>

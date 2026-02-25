@@ -1,51 +1,36 @@
-import { computed, createEffectScope, effect } from 'fine-jsx'
-import type * as Pixi from 'pixi.js'
+import { computed, createEffectScope, effect, type EffectScope, type Ref } from 'fine-jsx'
 
 import type { Size } from 'shared/types.ts'
-import { IS_FIREFOX } from 'shared/userAgent.ts'
-import { fit } from 'shared/utils/images.ts'
 import { clamp } from 'shared/utils/math.ts'
 import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import type { ClipTime } from '../../types/core.ts'
-import type { RootNode } from '../../types/internal'
+import type { AnyClip, RootNode } from '../../types/internal'
 import type { MediaAsset } from '../assets.ts'
 import { TRANSITION_DURATION_S, VIDEO_PREPLAY_TIME_S } from '../constants.ts'
 
 import type { Schema } from './index.ts'
 import { TrackChild } from './track-child.ts'
 
-export abstract class BaseClip extends TrackChild<Schema.Clip> {
+export abstract class BaseClip<T extends Schema.BaseClip = Schema.AnyClip> extends TrackChild<T> {
   abstract sourceAsset: MediaAsset
   abstract isReady: boolean
   abstract everHadEnoughData: boolean
-  type = 'clip' as const
+  declare readonly type: 'clip'
+  abstract clipType: T['clipType']
 
   declare root: RootNode
   declare children: undefined
   declare name: string
 
-  abstract container?: Pixi.Sprite
-  get sprite(): Pixi.Sprite | undefined {
-    return this.container
-  }
+  declare abstract source: Schema.BaseClip['source']
+  declare sourceStart: Schema.BaseClip['sourceStart']
+  declare duration: Schema.BaseClip['duration']
+  declare transition: Schema.BaseClip['transition']
 
-  declare abstract source: Schema.Clip['source']
-  declare sourceStart: Schema.Clip['sourceStart']
-  declare duration: Schema.Clip['duration']
-  declare transition: Schema.Clip['transition']
+  declare scope: EffectScope
+  declare private _time: Ref<ClipTime>
 
-  scope = createEffectScope()
-
-  readonly #time = computed((): ClipTime => {
-    const prevTime = this.prev?.time
-    const start = prevTime ? prevTime.start + prevTime.duration : 0
-    const end = start + this.duration
-
-    const { duration } = this
-    const source = this.sourceStart
-    return { start, source, duration, end }
-  })
   readonly #presentationTime = computed((): ClipTime => {
     const { time } = this
     const inTransitionDuration = this.prev?.transition ? TRANSITION_DURATION_S : 0
@@ -76,24 +61,15 @@ export abstract class BaseClip extends TrackChild<Schema.Clip> {
   })
   readonly #isInClipTime = computed(() => rangeContainsTime(this.presentationTime, this.root.currentTime))
 
-  readonly #mediaSize = computed((): Size => {
-    const { video } = this.sourceAsset
-    if (!video) return { width: 0, height: 0 }
-
-    const { width, height } = video
-    return video.rotation % 180 ? { width: height, height: width } : { width, height }
-  })
+  declare private _mediaSize: Ref<Size>
 
   get time(): ClipTime {
-    return this.#time.value
+    return this._time.value
   }
   get start(): number {
     return this.time.start
   }
   get presentationTime(): ClipTime {
-    return this.#presentationTime.value
-  }
-  get _presentationTime(): ClipTime {
     return this.#presentationTime.value
   }
   get playableTime(): ClipTime {
@@ -107,52 +83,51 @@ export abstract class BaseClip extends TrackChild<Schema.Clip> {
   }
 
   get mediaSize(): Size {
-    return this.#mediaSize.value
+    return this._mediaSize.value
   }
 
   get displayName(): string {
     return this.name || this.sourceAsset.name || ''
   }
 
-  abstract filter: Schema.Clip['filter']
-
-  constructor(init: Schema.Clip, root: RootNode) {
+  constructor(init: T, root: RootNode) {
     super(init, root)
+    this.onDispose(this.#onDispose.bind(this))
+  }
+
+  protected _init(init: T): void {
+    super._init(init)
+    this.clipType = init.clipType
+
+    this.scope = createEffectScope()
+    this._time = computed((): ClipTime => {
+      const prevTime = this.prev?.time
+      const start = prevTime ? prevTime.start + prevTime.duration : 0
+      const end = start + this.duration
+
+      const { duration } = this
+      const source = this.sourceStart
+      return { start, source, duration, end }
+    })
+
+    this._mediaSize = computed((): Size => {
+      const { video } = this.sourceAsset
+      if (!video) return { width: 0, height: 0 }
+
+      const { width, height } = video
+      return video.rotation % 180 ? { width: height, height: width } : { width, height }
+    })
 
     this._defineReactive('name', init.name)
     this._defineReactive('sourceStart', init.sourceStart)
     this._defineReactive('transition', init.transition)
-
-    this.onDispose(() => {
-      this.sprite?.destroy()
-      this.scope.stop()
-    })
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
-  isClip(): this is BaseClip {
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isClip(): this is AnyClip {
     return true
   }
-
-  resizeSprite(isExtracting = false): void {
-    const { video } = this.sourceAsset
-    const { sprite } = this
-    if (!video || !sprite) return
-
-    const fitProps = fit(this.mediaSize, this.root.resolution, 'cover')
-    sprite.scale.set(fitProps.scaleX, fitProps.scaleY)
-    sprite.position.set(fitProps.x, fitProps.y)
-
-    let rotation = this.sourceAsset.video?.rotation ?? 0
-
-    if (rotation % 180 && (IS_FIREFOX || (isExtracting && rotation !== 90))) {
-      if (IS_FIREFOX) rotation = -rotation
-
-      sprite.angle = rotation
-      if (rotation === 90) sprite.position.x += fitProps.width
-      else sprite.position.y += fitProps.height
-    }
-  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   async whenReady(): Promise<void> {
     if (this.isReady) return
@@ -175,17 +150,22 @@ export abstract class BaseClip extends TrackChild<Schema.Clip> {
     this.duration = Math.min(clipTime.duration, sourceDuration)
   }
 
-  toObject(): Schema.Clip {
-    const { id, type, sourceAsset: source, time, transition, filter } = this
+  toObject(): Schema.BaseClip<T['clipType']> {
+    const { id, type, clipType, sourceAsset: source, time, transition } = this
 
     return {
       id,
       type,
+      clipType,
       source: { assetId: source.id },
       sourceStart: time.source,
       duration: time.duration,
       transition: transition && { type: transition.type },
-      filter: filter && { assetId: filter.assetId, intensity: filter.intensity },
     }
+  }
+
+  #onDispose() {
+    this.container?.destroy()
+    this.scope.stop()
   }
 }

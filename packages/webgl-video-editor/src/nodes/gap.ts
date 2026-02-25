@@ -2,8 +2,6 @@ import { computed } from 'fine-jsx'
 
 import type { ClipTime, Schema } from '../../types/core'
 import type * as pub from '../../types/core.d.ts'
-import type { RootNode } from '../../types/internal'
-import { NodeCreateEvent } from '../events.ts'
 
 import { TrackChild } from './track-child.ts'
 
@@ -31,15 +29,11 @@ export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
 
   declare readonly transition: undefined
 
-  constructor(init: Schema.Gap, root: RootNode) {
-    super(init, root)
-    root._emit(new NodeCreateEvent(this))
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isGap(): this is Gap {
     return true
   }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toObject(): Schema.Gap {
     return { id: this.id, type: this.type, duration: this.duration }

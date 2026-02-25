@@ -4,6 +4,7 @@ import type { AnyAsset, AnyNode } from '../types/internal'
 
 import type { BaseAsset, MediaAsset } from './assets.ts'
 import type { BaseNode } from './nodes/base-node.ts'
+import type { VisualClip } from './nodes/visual-clip.ts'
 
 export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
   declare readonly type: 'node:create'
@@ -92,7 +93,7 @@ export class AssetDeleteEvent extends Event implements pub.AssetDeleteEvent {
   }
 }
 
-export class PlaybackPlayEvent extends Event {
+export class PlaybackPlayEvent extends Event implements pub.PlaybackPlayEvent {
   declare readonly type: 'playback:play'
 
   constructor() {
@@ -100,7 +101,7 @@ export class PlaybackPlayEvent extends Event {
   }
 }
 
-export class PlaybackPauseEvent extends Event {
+export class PlaybackPauseEvent extends Event implements pub.PlaybackPauseEvent {
   declare readonly type: 'playback:pause'
 
   constructor() {
@@ -108,7 +109,7 @@ export class PlaybackPauseEvent extends Event {
   }
 }
 
-export class PlaybackUpdateEvent extends Event {
+export class PlaybackUpdateEvent extends Event implements pub.PlaybackUpdateEvent {
   declare readonly type: 'playback:update'
 
   constructor() {
@@ -116,10 +117,20 @@ export class PlaybackUpdateEvent extends Event {
   }
 }
 
-export class PlaybackSeekEvent extends Event {
+export class PlaybackSeekEvent extends Event implements pub.PlaybackSeekEvent {
   declare readonly type: 'playback:seek'
 
   constructor() {
     super('playback:seek')
+  }
+}
+
+export class CanvasEvent<T extends string> extends Event implements pub.CanvasEvent<T> {
+  declare readonly type: `canvas:${T}`
+  readonly node?: VisualClip
+
+  constructor(type: T, node: VisualClip | undefined) {
+    super(`canvas:${type}`)
+    this.node = node
   }
 }

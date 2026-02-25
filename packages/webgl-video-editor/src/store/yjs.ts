@@ -242,7 +242,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
         (node.parent?.id ?? YTREE_ROOT_KEY) !== parentKey ||
         (parentKey !== YTREE_ROOT_KEY && node.index !== index)
       )
-        node.position(parentKey === YTREE_ROOT_KEY ? undefined : { parentId: parentKey, index })
+        node.treePosition(parentKey === YTREE_ROOT_KEY ? undefined : { parentId: parentKey, index })
 
       this.#onYtreeChange_(nodeId)
     })

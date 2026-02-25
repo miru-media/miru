@@ -1,17 +1,14 @@
 import { computed, ref } from 'fine-jsx'
 import type * as Pixi from 'pixi.js'
 
+import type { ChildNodePosition } from '../../types/core'
 import type { AnyParentNode, NodeSnapshot, NonReadonly, RootNode } from '../../types/internal'
-import { NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
-import type { ChildNodePosition, Movie, Schema, Track } from '../index.ts'
+import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
 
-import type { BaseClip, Gap, Timeline } from './index.ts'
+import type { AudioClip, BaseClip, BaseMovie, Gap, Schema, Timeline, Track, VisualClip } from './index.ts'
 
-export abstract class BaseNode<
-  T extends Schema.Base = Schema.Base,
-  TParent extends AnyParentNode = AnyParentNode,
-> {
-  abstract readonly type: T['type']
+export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyParentNode = AnyParentNode> {
+  readonly type: T['type']
   readonly id: string
   declare readonly root: RootNode
   abstract readonly children?: unknown
@@ -30,16 +27,19 @@ export abstract class BaseNode<
   readonly #prev = ref<NonNullable<TParent['children']>[number]>()
   readonly #next = ref<NonNullable<TParent['children']>[number]>()
 
-  get prev() {
+  declare prev: TParent['children'][number] | undefined
+  declare next: TParent['children'][number] | undefined
+
+  get ['prev' as never]() {
     return this.#prev.value
   }
-  set prev(other) {
+  set ['prev' as never](other: this['prev']) {
     this.#prev.value = other
   }
-  get next() {
+  get ['next' as never]() {
     return this.#next.value
   }
-  set next(other) {
+  set ['next' as never](other: this['next']) {
     this.#next.value = other
   }
 
@@ -57,18 +57,23 @@ export abstract class BaseNode<
     return this.#index.value
   }
 
-  constructor(id: string, root?: RootNode) {
-    this.id = id
+  constructor(init: T, root?: RootNode) {
+    this.id = init.id
+    this.type = init.type
 
     if (root) this.root = root
+
+    this._init(init)
+    root?._emit(new NodeCreateEvent(this))
   }
 
-  abstract toObject(): T
+  protected abstract _init(init: T): void
+
+  abstract toObject(): Schema.Base
 
   getSnapshot(): NodeSnapshot<T extends Schema.AnyNodeSchema ? T : any> {
     return {
       node: this.toObject() as T extends Schema.AnyNodeSchema ? T : any,
-      id: this.id,
       position: this.parent && { parentId: this.parent.id, index: this.#index.value },
     }
   }
@@ -83,7 +88,7 @@ export abstract class BaseNode<
     }
   }
 
-  position(position: ChildNodePosition | undefined) {
+  treePosition(position: ChildNodePosition | undefined) {
     const parentId = position?.parentId
     if (parentId === this.parent?.id && (!position || position.index === this.index)) return
 
@@ -91,15 +96,15 @@ export abstract class BaseNode<
     const fromIndex = this.index
     const newParent = parentId ? (this.root.nodes.get(parentId) as unknown as TParent) : undefined
 
-    if (fromParent && fromParent.id !== parentId) fromParent.unlinkChild(this)
+    if (fromParent && fromParent.id !== parentId) fromParent._unlinkChild(this)
 
-    if (position) newParent?.positionChildAt(this, position.index)
+    if (position) newParent?._positionChildAt(this, position.index)
     else (this as NonReadonly<typeof this>).parent = undefined
 
     const { container } = this
     if (container) {
       if (!newParent) container.removeFromParent()
-      else {
+      else if (this.isVisual()) {
         if (newParent.id !== fromParent?.id) newParent.container?.addChild(container)
         container.zIndex = this.index
       }
@@ -109,11 +114,11 @@ export abstract class BaseNode<
   }
 
   remove(): void {
-    this.position(undefined)
+    this.treePosition(undefined)
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isMovie(): this is Movie {
+  isMovie(): this is BaseMovie {
     return false
   }
   isTimeline(): this is Timeline {
@@ -128,20 +133,27 @@ export abstract class BaseNode<
   isGap(): this is Gap {
     return false
   }
+  isVisual(): this is VisualClip | Track {
+    return false
+  }
+  isAudio(): this is AudioClip | Track {
+    return false
+  }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-  #emitUpdate<Key extends Exclude<keyof T, 'id' | 'type'>>(key: Key, oldValue: T[Key]): void {
+  #emitUpdate<Key extends keyof T>(key: Exclude<Key, 'id' | 'type'>, oldValue: T[Key]): void {
     const event = new NodeUpdateEvent(this, { [key]: oldValue })
     this.root._emit(event)
   }
 
-  protected _defineReactive<Key extends Exclude<Extract<keyof T, string>, 'id' | 'type'>>(
-    key: Key,
+  protected _defineReactive<Key extends keyof T>(
+    key: Extract<Exclude<Key, 'id' | 'type'>, string>,
     initialValue: T[Key],
     options: {
       equal?: (a: T[Key], b: T[Key]) => boolean
       emit?: boolean
       onChange?: (value: T[Key]) => void
+      defaultValue?: T[Key]
     } = {},
   ): void {
     const ref_ = ref(initialValue)
@@ -150,7 +162,9 @@ export abstract class BaseNode<
 
     Object.defineProperty(this, key, {
       get() {
-        return ref_.value
+        const { value } = ref_
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
+        return value === undefined ? options.defaultValue : value
       },
       set(this: This, value: T[Key]) {
         const prev = ref_.value
@@ -161,6 +175,8 @@ export abstract class BaseNode<
         options.onChange?.(value)
         if (options.emit !== false) this.#emitUpdate(key, prev)
       },
+      configurable: true,
+      enumerable: true,
     })
 
     options.onChange?.(initialValue)
@@ -171,7 +187,7 @@ export abstract class BaseNode<
 
     this.#cleanups.forEach((fn) => fn())
 
-    this.parent?.unlinkChild(this)
+    this.parent?._unlinkChild(this)
     this.root._emit(new NodeDeleteEvent(this))
     this.isDisposed = true
     ;(this as unknown as NonReadonly<typeof this.root>).root = undefined as never

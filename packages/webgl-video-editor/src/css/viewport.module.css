@@ -1,0 +1,53 @@
+.viewportOverlay {
+  position: absolute;
+  inset: 0;
+
+  width: var(--viewport-width);
+  height: var(--viewport-height);
+  margin: auto;
+}
+
+.transformControls {
+  composes: viewportOverlay;
+  overflow: visible;
+  pointer-events: none;
+  fill: var(--yellow);
+  stroke: var(--yellow);
+  stroke-width: 0.1875rem;
+}
+
+.transformBox {
+  fill: none;
+  stroke-dasharray: 1rem 1rem;
+}
+
+.transformEdges {
+  pointer-events: stroke;
+  fill: none;
+  stroke: transparent;
+  stroke-width: 1rem;
+}
+
+.transformDrag {
+  pointer-events: all;
+  fill: none;
+  stroke: none;
+}
+
+.transformResizeCorner {
+  pointer-events: all;
+  stroke: none;
+  r: 0.5rem;
+}
+
+.transformRotateLine {
+  r: 0.25rem;
+  stroke-width: 0.25rem;
+}
+
+.transformRotateHandle {
+  pointer-events: all;
+  cursor: rotate;
+  stroke: none;
+  r: 0.5rem;
+}

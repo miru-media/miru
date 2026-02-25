@@ -4,9 +4,10 @@ import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
+import type { AnyClip } from '../../types/internal'
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { Clip as ClipType, Track } from '../nodes/index.ts'
+import type { Track } from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
 import { Clip } from './clip.jsx'
@@ -150,7 +151,7 @@ export const Timeline = ({
                   {track.clips.map((clip) => (
                     <Clip
                       editor={editor}
-                      clip={clip as ClipType}
+                      clip={clip as AnyClip}
                       isSelected={() => editor.selection?.id === clip.id}
                     />
                   ))}

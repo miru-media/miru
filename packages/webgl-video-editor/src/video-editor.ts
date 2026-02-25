@@ -1,11 +1,12 @@
-import { computed, ref } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 import { uid } from 'uid'
 import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
+import { useElementSize } from 'shared/utils/composables.ts'
 import { remap0 } from 'shared/utils/math'
 
-import type { AnyNode, NodeSnapshot } from '../types/internal'
+import type { AnyClip, AnyNode, AnyTrackChild, NodeSnapshot } from '../types/internal'
 import type { AnyNodeSerializedSchema } from '../types/schema'
 import type * as pub from '../types/webgl-video-editor'
 
@@ -15,8 +16,6 @@ import { ExporterMovie } from './export/exporter-movie.ts'
 import {
   type BaseClip,
   type BaseNode,
-  Clip,
-  type Gap,
   MediaAsset,
   Movie,
   type Schema,
@@ -24,20 +23,20 @@ import {
   type VideoEffectAsset,
 } from './nodes/index.ts'
 
-const getClipAtTime = (track: Track, time: number) => {
+const getClipAtTime = (track: Track, time: number): AnyClip | undefined => {
   for (let clip = track.firstClip; clip; clip = clip.nextClip) {
     const clipTime = clip.time
 
-    if (clipTime.start <= time && time < clipTime.end) return clip
+    if (clipTime.start <= time && time < clipTime.end) return clip as AnyClip
   }
 }
 
 const INITIAL_SECONDS_PER_PIXEL = 0.01
 
 type DragResizeInitialState = [
-  prev: NodeSnapshot<Schema.Clip> | undefined,
-  cur: NodeSnapshot<Schema.Clip>,
-  next: NodeSnapshot<Schema.Clip> | undefined,
+  prev: NodeSnapshot<Schema.AnyClip> | undefined,
+  cur: NodeSnapshot<Schema.AnyClip>,
+  next: NodeSnapshot<Schema.AnyClip> | undefined,
 ]
 
 export class VideoEditor {
@@ -46,9 +45,11 @@ export class VideoEditor {
   _movie!: Movie
   readonly store?: pub.VideoEditorStore
 
-  readonly #selection = ref<Clip | Gap>()
+  readonly #selection = ref<AnyTrackChild>()
   _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
   _timelineSize = ref<Size>({ width: 1, height: 1 })
+  _viewportSize: Ref<Size>
+  _zoom = computed(() => this.viewportSize.width / this._movie.resolution.width)
 
   _resize = ref<{
     movieDuration: number
@@ -97,12 +98,20 @@ export class VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): Clip | Gap | undefined {
+  get selection(): AnyTrackChild | undefined {
     return this.#selection.value
   }
 
   get tracks(): Track[] {
     return this._movie.timeline.children
+  }
+
+  get viewportSize(): Size {
+    return this._viewportSize.value
+  }
+
+  get zoom(): number {
+    return this._zoom.value
   }
 
   constructor(options: { store?: pub.VideoEditorStore }) {
@@ -118,6 +127,10 @@ export class VideoEditor {
     this._movie.on('node:delete', ({ node }: NodeDeleteEvent) => {
       if (node.id === this.selection?.id) this.select(undefined)
     })
+
+    this._movie.on('canvas:pointerdown', ({ node }) => this.select(node?.id))
+
+    this._viewportSize = useElementSize(this.canvas)
   }
 
   generateId(): string {
@@ -134,8 +147,8 @@ export class VideoEditor {
     return new MediaAsset(init, { root: this._movie, source })
   }
 
-  async addClip(track: Track, source: string | Blob | Schema.Clip): Promise<Clip> {
-    let init: Schema.Clip
+  async addClip(track: Track, source: string | Blob | Schema.AnyClip): Promise<AnyClip> {
+    let init: Schema.BaseClip
     let newAssetData: { init: Schema.AvMediaAsset; source: string | Blob } | undefined
 
     if (typeof source === 'string' || source instanceof Blob) {
@@ -148,7 +161,14 @@ export class VideoEditor {
         source,
       }
 
-      init = { id: this.generateId(), type: 'clip', source: { assetId }, sourceStart: 0, duration }
+      init = {
+        id: this.generateId(),
+        type: 'clip',
+        clipType: track.trackType,
+        source: { assetId },
+        sourceStart: 0,
+        duration,
+      }
     } else {
       init = source
     }
@@ -157,9 +177,9 @@ export class VideoEditor {
       if (newAssetData)
         void new MediaAsset(newAssetData.init, { root: this._movie, source: newAssetData.source })
 
-      const clip = new Clip(init, this._movie)
+      const clip = this._movie.createNode(init)
 
-      clip.position({ parentId: track.id, index: track.count })
+      clip.treePosition({ parentId: track.id, index: track.count })
 
       return clip
     })
@@ -179,7 +199,7 @@ export class VideoEditor {
     })
   }
 
-  splitClipAtCurrentTime(): Clip | undefined {
+  splitClipAtCurrentTime(): AnyClip | undefined {
     const { currentTime } = this._movie
     const trackOfSelectedClip = this.#selection.value?.parent
 
@@ -202,28 +222,22 @@ export class VideoEditor {
 
     if (delta < MIN_CLIP_DURATION_S) return
 
-    return this._transact((): Clip => {
-      const startClip = new Clip(
-        {
-          ...clip.toObject(),
-          id: this.generateId(),
-          transition: undefined,
-          duration: delta,
-        },
-        this._movie,
-      )
-      const endClip = new Clip(
-        {
-          ...clip.toObject(),
-          id: this.generateId(),
-          sourceStart: prevClipTime.source + delta,
-          duration: prevClipTime.duration - delta,
-        },
-        this._movie,
-      )
+    return this._transact((): AnyClip => {
+      const startClip = this._movie.createNode({
+        ...clip.toObject(),
+        id: this.generateId(),
+        transition: undefined,
+        duration: delta,
+      })
+      const endClip = this._movie.createNode({
+        ...clip.toObject(),
+        id: this.generateId(),
+        sourceStart: prevClipTime.source + delta,
+        duration: prevClipTime.duration - delta,
+      })
 
-      startClip.position({ parentId: parent.id, index: clip.index })
-      endClip.position({ parentId: parent.id, index: clip.index + 1 })
+      startClip.treePosition({ parentId: parent.id, index: clip.index })
+      endClip.treePosition({ parentId: parent.id, index: clip.index + 1 })
 
       this.#select(startClip, false)
       clip.dispose()
@@ -232,12 +246,12 @@ export class VideoEditor {
     })
   }
 
-  addTrack(type: 'video' | 'audio'): Track {
+  addTrack(trackType: 'video' | 'audio'): Track {
     const movie = this._movie
 
     return this._transact(() => {
-      const track = movie.createNode({ id: this.generateId(), trackType: type, type: 'track' })
-      track.position({ parentId: movie.timeline.id, index: movie.count })
+      const track = movie.createNode({ id: this.generateId(), trackType, type: 'track' })
+      track.treePosition({ parentId: movie.timeline.id, index: movie.count })
       return track
     })
   }
@@ -262,9 +276,9 @@ export class VideoEditor {
   }
 
   select(id: string | undefined, seek = true): void {
-    this.#select(id ? this._movie.nodes.get<Clip | Gap>(id) : undefined, seek)
+    this.#select(id ? this._movie.nodes.get<AnyTrackChild>(id) : undefined, seek)
   }
-  #select(clip: Clip | Gap | undefined, seek: boolean): void {
+  #select(clip: AnyTrackChild | undefined, seek: boolean): void {
     this.#selection.value = clip
 
     if (clip && seek) {
@@ -276,7 +290,7 @@ export class VideoEditor {
     }
   }
 
-  _startClipDrag(clip: Clip): void {
+  _startClipDrag(clip: AnyClip): void {
     this._drag.isDragging.value = true
     this._drag.from = [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()]
   }
@@ -313,7 +327,7 @@ export class VideoEditor {
     this._transact(() => {
       for (const from of states) {
         if (!from) continue
-        const node = root.nodes.get(from.id)
+        const node = root.nodes.get(from.node.id)
 
         root._emit(new NodeUpdateEvent(node, from.node))
 

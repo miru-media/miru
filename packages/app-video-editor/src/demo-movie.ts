@@ -9,6 +9,16 @@ import type { Schema } from 'webgl-video-editor'
 
 import { createInitialMovie } from 'webgl-video-editor/store/utils.js'
 
+const transform1080p = {
+  position: { x: -420, y: 420 },
+  scale: { x: 1.7778, y: 1.7778 },
+}
+
+const transform720p = {
+  position: { x: -105, y: 600 },
+  scale: { x: 2.6667, y: 2.6667 },
+}
+
 const assets = {
   waves: {
     id: 'demo:waves',
@@ -131,41 +141,51 @@ demoMovie.tracks.push(
       {
         id: uid(),
         type: 'clip',
+        clipType: 'video',
         sourceStart: 3,
         duration: 3,
         source: { assetId: assets.waves.id },
+        ...transform1080p,
         filter: { assetId: 'Crispy Cyan', intensity: 1 },
       },
       {
         id: uid(),
         type: 'clip',
+        clipType: 'video',
         sourceStart: 2,
         duration: 4,
         source: { assetId: assets.wavesRocks.id },
+        ...transform1080p,
         filter: { assetId: 'Crispy Cyan', intensity: 0.5 },
       },
       {
         id: uid(),
         type: 'clip',
+        clipType: 'video',
         sourceStart: 3,
         duration: 3,
         source: { assetId: assets.waveBreaking.id },
+        ...transform720p,
         filter: { assetId: 'Chromatic', intensity: 0.75 },
       },
       {
         id: uid(),
         type: 'clip',
+        clipType: 'video',
         sourceStart: 2.18,
         duration: 5,
         source: { assetId: assets.turtle.id },
+        ...transform720p,
         filter: { assetId: 'Vintage', intensity: 0.3 },
       },
       {
         id: uid(),
         type: 'clip',
+        clipType: 'video',
         sourceStart: 1,
         duration: 2,
         source: { assetId: assets.waves.id },
+        ...transform1080p,
         filter: { assetId: 'Crispy Cyan', intensity: 1 },
       },
     ],
@@ -178,6 +198,7 @@ demoMovie.tracks.push(
       {
         id: uid(),
         type: 'clip',
+        clipType: 'audio',
         sourceStart: 19,
         duration: 10,
         source: { assetId: assets.wavesAudio.id },
@@ -185,6 +206,7 @@ demoMovie.tracks.push(
       {
         id: uid(),
         type: 'clip',
+        clipType: 'audio',
         sourceStart: 0,
         duration: 5,
         source: { assetId: assets.underwaterAudio.id },
@@ -192,6 +214,7 @@ demoMovie.tracks.push(
       {
         id: uid(),
         type: 'clip',
+        clipType: 'audio',
         sourceStart: 16,
         duration: 2,
         source: { assetId: assets.wavesAudio.id },

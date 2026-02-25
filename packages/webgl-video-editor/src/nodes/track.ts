@@ -1,20 +1,19 @@
 import { computed, createEffectScope } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
-import type { RootNode } from '../../types/internal'
-import { NodeCreateEvent } from '../events.ts'
+import type { AnyTrackChild, RootNode } from '../../types/internal'
 
-import type { BaseClip, Gap, Schema, Timeline } from './index.ts'
+import type { BaseClip, Schema, Timeline } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 
 export namespace Track {
   export type TrackType = 'video' | 'audio'
 }
 
-export class Track extends ParentNode<Schema.Track, Timeline, BaseClip | Gap> {
+export class Track extends ParentNode<Schema.Track, Timeline, AnyTrackChild> {
   type = 'track' as const
 
-  trackType: Track.TrackType
+  trackType!: Track.TrackType
   container = new Pixi.Container({ sortableChildren: true })
 
   readonly #scope = createEffectScope()
@@ -46,17 +45,29 @@ export class Track extends ParentNode<Schema.Track, Timeline, BaseClip | Gap> {
   }
 
   constructor(init: Schema.Track, root: RootNode) {
-    super(init.id, root)
-
-    this.trackType = init.trackType
+    super(init, root)
 
     this.onDispose(() => {
       this.#scope.stop()
       this.container.removeFromParent()
     })
-
-    root._emit(new NodeCreateEvent(this))
   }
+
+  protected _init(init: Schema.Track): void {
+    this.trackType = init.trackType
+  }
+
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isTrack(): this is Track {
+    return true
+  }
+  isVisual(): this is Track & { trackType: 'video' } {
+    return true
+  }
+  isAudio(): this is Track & { trackType: 'audio' } {
+    return false
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toObject(): Schema.Track {
     return {

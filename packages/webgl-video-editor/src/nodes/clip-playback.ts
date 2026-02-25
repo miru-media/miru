@@ -79,7 +79,7 @@ export class ClipPlayback {
       )
     })
 
-    if (clip.sprite) {
+    if (clip.isVisual()) {
       const { source } = clip.sprite.texture
       source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
     }
@@ -127,28 +127,34 @@ export class ClipPlayback {
   }
 
   #onUpdate(): void {
-    const { sprite } = this.clip
+    const { clip } = this
+    const { sourceAsset } = this.clip
 
     if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
 
-    if (sprite && this.isInPresentationTime.value) {
-      sprite.visible ||= this.mediaState.wasEverPlayable.value
+    if (clip.isVisual()) {
+      const { sprite } = clip
 
-      if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
-        try {
-          if (IS_FIREFOX && this.mediaElement instanceof HTMLVideoElement) {
-            const { source } = sprite.texture
-            const videoFrame = new VideoFrame(this.mediaElement, {
-              timestamp: this.mediaElement.currentTime * 1e6,
-            })
+      if (this.isInPresentationTime.value) {
+        sprite.visible ||= this.mediaState.wasEverPlayable.value
 
-            ;(source.resource as Partial<VideoFrame>).close?.()
-            source.resource = videoFrame
-            source.update()
-          } else sprite.texture.source.update()
-        } catch {}
-      }
-    } else if (sprite) sprite.visible &&= false
+        if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
+          const rotation = sourceAsset.video?.rotation ?? 0
+          try {
+            if (IS_FIREFOX && rotation % 180 && this.mediaElement instanceof HTMLVideoElement) {
+              const { source } = sprite.texture
+              const videoFrame = new VideoFrame(this.mediaElement, {
+                timestamp: this.mediaElement.currentTime * 1e6,
+              })
+
+              ;(source.resource as Partial<VideoFrame>).close?.()
+              source.resource = videoFrame
+              source.update()
+            } else sprite.texture.source.update()
+          } catch {}
+        }
+      } else sprite.visible &&= false
+    }
 
     if (this.clip.root.isStalled.value) {
       if (!this.mediaIsPaused) this.pause()

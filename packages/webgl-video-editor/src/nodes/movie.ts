@@ -9,12 +9,14 @@ import type { AnyNode, NodesByType } from '../../types/internal'
 import type { AvMediaAsset } from '../../types/schema'
 import { MediaAsset, VideoEffectAsset } from '../assets.ts'
 import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants.ts'
-import { PlaybackUpdateEvent } from '../events.ts'
+import { CanvasEvent, PlaybackUpdateEvent } from '../events.ts'
 
+import { AudioClip } from './audio-clip.ts'
 import { BaseMovie } from './base-movie.ts'
-import { Clip, Gap, type Schema } from './index.ts'
+import { Gap, type Schema } from './index.ts'
 import { Timeline } from './timeline.ts'
 import { Track } from './track.ts'
+import { VisualClip } from './visual-clip.ts'
 
 export namespace Movie {
   export interface Init {
@@ -98,6 +100,12 @@ export class Movie extends BaseMovie {
 
     this.stats.showPanel(0)
 
+    this.stage.eventMode = 'static'
+    this.stage.on('pointerdown', () => this._emit(new CanvasEvent('pointerdown', undefined)))
+    this.stage.on('pointermove', () => this._emit(new CanvasEvent('pointermove', undefined)))
+    this.stage.on('pointerup', () => this._emit(new CanvasEvent('pointerup', undefined)))
+    this.stage.on('pointerupoutside', () => this._emit(new CanvasEvent('pointerup', undefined)))
+
     this.onDispose(() => {
       this.#scope.stop()
       this.ticker.destroy()
@@ -115,7 +123,14 @@ export class Movie extends BaseMovie {
         node = new Track(init, this)
         break
       case 'clip':
-        node = new Clip(init, this)
+        switch (init.clipType) {
+          case 'video':
+            node = new VisualClip(init, this)
+            break
+          case 'audio':
+            node = new AudioClip(init, this)
+            break
+        }
         break
       case 'gap':
         node = new Gap(init, this)
@@ -183,7 +198,7 @@ export class Movie extends BaseMovie {
     const createChildren = (parent: AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
       childrenInit.forEach((childInit, index) => {
         const childNode = this.createNode(childInit)
-        childNode.position({ parentId: parent.id, index })
+        childNode.treePosition({ parentId: parent.id, index })
         if ('children' in childInit) createChildren(childNode, childInit.children)
       })
     }

@@ -10,9 +10,9 @@ import { computed, effect, ref } from 'fine-jsx'
 import { Button } from 'shared/components/button.tsx'
 import { stringHashCode, useI18n } from 'shared/utils'
 
+import type { AnyClip } from '../../types/internal'
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { Clip as ClipType } from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
 const CLIP_COLORS = [
@@ -30,7 +30,7 @@ export const Clip = ({
   editor,
   isSelected,
 }: {
-  clip: ClipType
+  clip: AnyClip
   editor: VideoEditor
   isSelected: () => boolean
 }) => {
@@ -156,30 +156,30 @@ export const Clip = ({
               const newStartTime = editor.pixelsToSeconds(rect.left)
               const newCenterTime = newStartTime + clip.time.duration / 2
 
-              let insertBefore: ClipType | undefined
+              let insertBefore: AnyClip | undefined
               for (let { prevClip } = clip; prevClip; { prevClip } = prevClip) {
                 const { start, duration } = prevClip.time
                 if (start >= newStartTime || start + duration / 2 >= newCenterTime)
-                  insertBefore = prevClip as ClipType
+                  insertBefore = prevClip as AnyClip
                 else break
               }
 
               if (insertBefore) {
-                clip.position({ parentId: parent.id, index: insertBefore.index })
+                clip.treePosition({ parentId: parent.id, index: insertBefore.index })
                 return
               }
 
               const newEndTime = newStartTime + clip.time.duration
 
-              let insertAfter: ClipType | undefined
+              let insertAfter: AnyClip | undefined
               for (let { nextClip } = clip; nextClip; { nextClip } = nextClip) {
                 const { end, duration } = nextClip.time
                 if (end <= newEndTime || end - duration / 2 <= newCenterTime)
-                  insertAfter = nextClip as ClipType
+                  insertAfter = nextClip as AnyClip
                 else break
               }
               if (insertAfter) {
-                clip.position({ parentId: parent.id, index: insertAfter.index + 1 })
+                clip.treePosition({ parentId: parent.id, index: insertAfter.index + 1 })
               }
             })
           },

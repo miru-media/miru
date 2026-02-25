@@ -46,7 +46,7 @@ export default tseslint.config(
       ...importPlugin.flatConfigs.typescript.rules,
       '@typescript-eslint/no-magic-numbers': [
         'error',
-        { ignore: [-2, -1, 0, 1, 2, 3, 4, 5, 10, 16, 60, 90, 180, 1e3, 1e6, 1e9] },
+        { ignore: [-2, -1, 0, 1, 2, 3, 4, 5, 10, 16, 60, 90, 180, 270, 1e3, 1e6, 1e9] },
       ],
       '@typescript-eslint/prefer-destructuring': [
         'error',

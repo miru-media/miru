@@ -3,7 +3,6 @@ import * as Vue from 'vue'
 
 import * as interop from 'shared/utils/interop'
 
-import type { AnyNode } from '../../types/internal'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import type * as nodes from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
@@ -11,7 +10,9 @@ import type { VideoEditor } from '../video-editor.ts'
 type Mappings =
   | [nodes.Track, pub.Track]
   | [nodes.Gap, pub.Gap]
-  | [nodes.BaseClip, pub.Clip]
+  | [nodes.BaseClip, pub.VisualClip | pub.AudioClip]
+  | [nodes.VisualClip, pub.VisualClip]
+  | [nodes.AudioClip, pub.AudioClip]
   | [nodes.MediaAsset, pub.MediaAsset]
   | [nodes.VideoEffectAsset, pub.VideoEffectAsset]
 
@@ -54,9 +55,10 @@ export const fromVue = interop.fromVue.bind(null, Vue.toValue, Vue.watchEffect) 
 
 export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
   const fineJsxScope = createEffectScope()
+  const vueScope = Vue.getCurrentScope()
   const nodeMap = new WeakMap<Mappings[0], Mappings[1]>()
 
-  const getVueNode = <T extends Mappings[0]>(node: T): Extract<Mappings, [T, unknown]>[1] => {
+  const getVueNode_ = <T extends Mappings[0]>(node: T): Extract<Mappings, [T, unknown]>[1] => {
     let vueNode = nodeMap.get(node) as Extract<Mappings, [T, unknown]>[1] | undefined
 
     if (!vueNode) {
@@ -71,12 +73,14 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
           (value) => (node[key] = value),
         )
 
-      const getTypePredicateMethods = (node: AnyNode) => ({
+      const getTypePredicateMethods = (node: nodes.BaseNode) => ({
         isMovie: node.isMovie.bind(node),
         isTimeline: node.isTimeline.bind(node),
         isTrack: node.isTrack.bind(node),
         isClip: node.isClip.bind(node),
         isGap: node.isGap.bind(node),
+        isVisual: node.isVisual.bind(node),
+        isAudio: node.isAudio.bind(node),
       })
 
       scope.run(() => {
@@ -89,15 +93,21 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
               dispose: node.dispose.bind(node),
             })
             break
-          case 'clip':
+          case 'clip': {
             reactiveValue = Vue.reactive({
               id: node.id,
               type: node.type,
+              clipType: node.clipType,
               source: getWritableProp(node, 'source'),
               start: getWritableProp(node, 'start'),
               duration: getWritableProp(node, 'duration'),
               sourceStart: getWritableProp(node, 'sourceStart'),
               filter: getWritableProp(node, 'filter'),
+              position: getWritableProp(node, 'position'),
+              rotation: getWritableProp(node, 'rotation'),
+              scale: getWritableProp(node, 'scale'),
+              volume: getWritableProp(node, 'volume'),
+              mute: getWritableProp(node, 'mute'),
               get prev() {
                 return node.prev && getVueNode(node.prev)
               },
@@ -107,11 +117,11 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
               get parent() {
                 return node.parent && getVueNode(node.parent)
               },
-              _presentationTime: toVue(() => node.presentationTime),
               ...getTypePredicateMethods(node),
               dispose: node.dispose.bind(node),
             })
             break
+          }
           case 'gap':
             reactiveValue = Vue.reactive({
               id: node.id,
@@ -159,6 +169,10 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
     return vueNode
   }
 
+  const getVueNode: <T extends Mappings[0]>(node: T) => Extract<Mappings, [T, unknown]>[1] = vueScope
+    ? (node) => vueScope.run(() => getVueNode_(node))!
+    : getVueNode_
+
   return fineJsxScope.run(() =>
     Vue.reactive<VueVideoEditorRaw>({
       _editor: Vue.markRaw(editor),
@@ -185,7 +199,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       play: editor.play.bind(editor),
       pause: editor.pause.bind(editor),
       seekTo: editor.seekTo.bind(editor),
-      addClip: (track: pub.Track, source: string | Blob | pub.Schema.Clip) =>
+      addClip: (track: pub.Track, source: string | Blob | pub.Schema.BaseClip) =>
         editor.addClip(editor._movie.nodes.get(track.id), source as any),
       select: (clip: pub.Clip | pub.Gap | undefined) => editor.select(clip?.id),
       async createMediaAsset(source: string | Blob) {

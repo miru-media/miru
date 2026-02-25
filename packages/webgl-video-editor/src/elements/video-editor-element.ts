@@ -136,7 +136,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   seekTo(time: number) {
     this._editor.seekTo(time)
   }
-  async addClip(track: pub.Track, source: string | Blob | pub.Schema.Clip): Promise<pub.Clip> {
+  async addClip(track: pub.Track, source: string | Blob | pub.Schema.BaseClip): Promise<pub.Clip> {
     return await this._editor.addClip(track as nodes.Track, source)
   }
   select(clip: pub.Clip | pub.Gap | undefined) {

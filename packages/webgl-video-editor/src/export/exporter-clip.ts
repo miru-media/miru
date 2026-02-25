@@ -4,10 +4,12 @@ import * as Pixi from 'pixi.js'
 
 import type { AudioBufferData } from 'shared/video/coder-transforms'
 
+import type * as pub from '../../types/core.d.ts'
 import type { MediaAsset, VideoEffectAsset } from '../assets.ts'
 import { BaseClip } from '../nodes/base-clip.ts'
-import type { Schema } from '../nodes/index.ts'
+import type { AudioClip, Schema, Track, VisualClip } from '../nodes/index.ts'
 import { MiruFilter } from '../pixi/pixi-miru-filter.ts'
+import { updateSpriteTransform } from '../utils.ts'
 
 import type { ExporterMovie } from './exporter-movie.ts'
 
@@ -19,12 +21,22 @@ export namespace ExporterClip {
   }
 }
 
-export class ExporterClip extends BaseClip {
+export class ExporterClip
+  extends BaseClip
+  implements Omit<pub.VisualClip, 'clipType'>, Omit<pub.AudioClip, 'clipType'>
+{
   declare container?: Pixi.Sprite
+  declare clipType: 'video' | 'audio'
   readonly videoEffect: VideoEffectAsset | undefined
   readonly #filterIntensity = ref(1)
   sourceAsset: MediaAsset
-  source: Schema.Clip['source']
+  source: Schema.BaseClip['source']
+
+  declare position: { x: number; y: number }
+  declare rotation: number
+  declare scale: { x: number; y: number }
+  declare volume: number
+  declare mute: boolean
 
   videoIsReady = false
 
@@ -43,9 +55,17 @@ export class ExporterClip extends BaseClip {
 
   #miruFilters?: MiruFilter[]
 
-  get filter(): BaseClip['filter'] {
+  get sprite(): Pixi.Sprite | undefined {
+    return this.container
+  }
+
+  get filter(): VisualClip['filter'] {
     const effect = this.videoEffect
     return effect && { assetId: effect.id, intensity: this.#filterIntensity.value }
+  }
+
+  get videoRotation(): number {
+    return this.sourceAsset.video?.rotation ?? 0
   }
 
   get isReady(): boolean {
@@ -55,13 +75,25 @@ export class ExporterClip extends BaseClip {
     return this.isReady
   }
 
-  constructor(init: Schema.Clip, root: ExporterMovie) {
+  constructor(init: Schema.AnyClip, root: ExporterMovie) {
     super(init, root)
 
     this.source = init.source
     this.sourceAsset = root.assets.get(init.source.assetId) as MediaAsset
-    this.videoEffect = init.filter && (root.assets.get(init.filter.assetId) as VideoEffectAsset)
-    this.#filterIntensity.value = init.filter?.intensity ?? 1
+
+    if (init.clipType === 'video') {
+      this.container = new Pixi.Sprite()
+      this.videoEffect = init.filter && (root.assets.get(init.filter.assetId) as VideoEffectAsset)
+      this.#filterIntensity.value = init.filter?.intensity ?? 1
+
+      this.position = init.position ?? { x: 0, y: 0 }
+      this.rotation = init.rotation ?? 0
+      this.scale = init.scale ?? { x: 1, y: 1 }
+    } else {
+      this.volume = init.volume ?? 1
+      this.mute = init.mute ?? false
+    }
+
     this.transition = init.transition
 
     this.targetFrameDurationUs = 1e6 / root.frameRate
@@ -73,8 +105,11 @@ export class ExporterClip extends BaseClip {
     })
   }
 
-  resizeSprite(): void {
-    super.resizeSprite(true)
+  isVisual(): this is VisualClip | Track {
+    return !!this.parent?.isVisual()
+  }
+  isAudio(): this is AudioClip | Track {
+    return !!this.parent?.isAudio()
   }
 
   init(options: ExporterClip.InitOptions): void {
@@ -97,23 +132,29 @@ export class ExporterClip extends BaseClip {
     if (video) {
       this.videoSamples = new Mb.VideoSampleSink(video).samples(start, end)
 
-      const { mediaSize, filter, root } = this
+      const { mediaSize, root } = this
       const sprite = (this.container = new Pixi.Sprite({
         texture: new Pixi.Texture({ source: new Pixi.ImageSource(mediaSize) }),
         visible: true,
         zIndex: this.index,
       }))
 
-      this.resizeSprite()
-      this.parent!.container.addChild(sprite)
+      if (this.isVisual()) {
+        updateSpriteTransform(this)
+        this.parent!.container.addChild(sprite)
 
-      if (filter) {
-        const filterAsset = root.assets.get(filter.assetId) as VideoEffectAsset
-        this.#miruFilters = sprite.filters = filterAsset.ops.map(
-          (op) => new MiruFilter(op, ref(filter.intensity)),
-        )
+        const { filter } = this
 
-        this.#miruFilters.forEach((filter) => filter.sprites.forEach((sprite) => root.stage.addChild(sprite)))
+        if (filter) {
+          const filterAsset = root.assets.get(filter.assetId) as VideoEffectAsset
+          this.#miruFilters = sprite.filters = filterAsset.ops.map(
+            (op) => new MiruFilter(op, ref(filter.intensity)),
+          )
+
+          this.#miruFilters.forEach((filter) =>
+            filter.sprites.forEach((sprite) => root.stage.addChild(sprite)),
+          )
+        }
       }
     }
   }
@@ -128,7 +169,7 @@ export class ExporterClip extends BaseClip {
     const { presentationTime } = this
 
     if (timeS < presentationTime.start || timeS >= presentationTime.end) {
-      this.sprite!.visible = false
+      this.container!.visible = false
       return false
     }
 
@@ -160,7 +201,7 @@ export class ExporterClip extends BaseClip {
       this.currentVideoFrame = undefined
     } else {
       const sample = next.value
-      const sprite = this.sprite!
+      const sprite = this.container!
       const textureSource = sprite.texture.source
       textureSource.resource = this.currentVideoFrame = sample.toVideoFrame()
       textureSource.update()

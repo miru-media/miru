@@ -4,7 +4,7 @@ import type { Renderer } from 'webgl-effects'
 import type { Size } from 'shared/types'
 
 import type {
-  BaseClip,
+  AudioClip,
   BaseMovie,
   BaseNode,
   Gap,
@@ -13,6 +13,7 @@ import type {
   Timeline,
   Track,
   VideoEffectAsset,
+  VisualClip,
 } from '../src/nodes/index.ts'
 import type { VideoEditor as VideoEditor_ } from '../src/video-editor.ts'
 
@@ -38,14 +39,13 @@ export type TrackMovie = Pick<
 
 export interface SchemaTypes {
   track: Schema.Track
-  clip: Schema.Clip
+  clip: Schema.AnyClip
   'asset:media:av': Schema.MediaAsset
   'asset:effect:video': Schema.VideoEffectAsset
 }
 
 export interface NodeSnapshot<T extends Schema.AnyNodeSchema = Schema.AnyNodeSchema> {
   node: T
-  id: string
   position?: ChildNodePosition
 }
 
@@ -60,12 +60,14 @@ export interface NodesByType {
   movie: BaseMovie
   timeline: Timeline
   track: Track
-  clip: BaseClip
+  clip: VisualClip | AudioClip
   gap: Gap
 }
 
 export type AnyParentNode = BaseMovie | Timeline | Track
 export type AnyNode = NodesByType[keyof NodesByType]
+export type AnyClip = NodesByType['clip']
+export type AnyTrackChild = AnyClip | Gap
 
 export interface NodeMap {
   map: Map<string, AnyNode | BaseNode>
@@ -80,11 +82,6 @@ export interface NodeMap {
 }
 
 declare module './core' {
-  export interface Clip {
-    /** @internal */
-    _presentationTime: ClipTime
-  }
-
   export interface VideoEditor {
     /** @internal @hidden */
     _editor: VideoEditor_

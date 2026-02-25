@@ -12,7 +12,6 @@ import type {
   NodeUpdateEvent,
 } from '../events.ts'
 import type { Movie } from '../nodes/movie.ts'
-import type { ParentNode } from '../nodes/parent-node.ts'
 import { storage, type StorageFileWriteOptions } from '../storage/storage.ts'
 
 import { createInitialMovie } from './utils.ts'
@@ -203,8 +202,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
               const node = nodes.get(nodeId)
               const { to } = op
               if (node.parent?.id !== to?.parentId) node.remove()
-              if (to)
-                (nodes.get(to.parentId) as ParentNode<any, any> | undefined)?.positionChildAt(node, to.index)
+              if (to) node.treePosition(to)
               break
             }
             // udpate
@@ -229,11 +227,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
               const node = nodes.get(nodeId)
               const { from } = op
               if (node.parent?.id !== from?.parentId) node.remove()
-              if (from)
-                (nodes.get(from.parentId) as ParentNode<any, any> | undefined)?.positionChildAt(
-                  node,
-                  from.index,
-                )
+              if (from) node.treePosition(from)
               break
             }
             // revert udpate

@@ -55,7 +55,7 @@ export class ExporterMovie extends BaseMovie {
 
     movie.timeline.children.forEach((track_, trackIndex) => {
       const track = new Track(track_.toObject(), this)
-      track.position({ parentId: this.timeline.id, index: trackIndex })
+      track.treePosition({ parentId: this.timeline.id, index: trackIndex })
 
       track_.children.forEach((trackChild, index) => {
         let child
@@ -67,7 +67,7 @@ export class ExporterMovie extends BaseMovie {
           this.#prepareClip(child, track.trackType)
         } else child = new Gap(trackChild, this)
 
-        child.position({ parentId: track.id, index })
+        child.treePosition({ parentId: track.id, index })
       })
     })
 

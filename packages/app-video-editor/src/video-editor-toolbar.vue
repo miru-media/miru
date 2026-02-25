@@ -23,12 +23,11 @@ const onInputVideoFile = async (event: Event) => {
   await editor.replaceClipSource(file)
 }
 
-const getSelectedType = () => editor.selection?.parent?.trackType
-
 const showFilterMenu = ref(false)
 
 watchEffect(() => {
-  if (editor.selection?.parent?.trackType !== 'video') showFilterMenu.value = false
+  const { selection } = editor
+  showFilterMenu.value &&= !!selection?.isVisual()
 })
 
 const showDebugButtons = ref(import.meta.env.DEV)
@@ -61,8 +60,8 @@ useEventListener(
         </button>
 
         <button
-          v-if="getSelectedType() === 'video'"
-          :class="['toolbar-button', editor.selection.isClip() && editor.selection.filter && 'active']"
+          v-if="editor.selection.isVisual()"
+          :class="['toolbar-button', editor.selection.filter && 'active']"
           @click="() => (showFilterMenu = !showFilterMenu)"
         >
           <div :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'" />
@@ -73,12 +72,12 @@ useEventListener(
           <div class="icon i-tabler-exchange" />
           <input
             type="file"
-            :accept="getSelectedType() === 'audio' ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES"
+            :accept="editor.selection.isAudio() ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES"
             :disabled="!editor.selection"
             @input="onInputVideoFile"
             hidden
           />
-          {{ $t(`change_${getSelectedType() ?? ''}`) }}
+          {{ $t(`change_${editor.selection.parent?.trackType ?? ''}`) }}
         </label>
       </template>
 

@@ -3,7 +3,7 @@
 @import url('@unocss/reset/sanitize/forms.css');
 @import url('@unocss/reset/sanitize/assets.css');
 
-/* eslint-enable import/no-extraneous-dependencies -- -- */
+/* eslint-enable import/no-extraneous-dependencies */
 
 @import url('./utility.module.css');
 

@@ -30,14 +30,15 @@ watch(
 
 const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: number }>) => {
   const clip = editor.selection
-  if (!clip?.isClip()) return
+  if (!clip?.isVisual()) return
 
   const { effect, intensity } = event.detail
   const newFilter = effect ? { assetId: effect, intensity } : undefined
 
   clip.filter = newFilter
 
-  const { start, end } = clip._presentationTime
+  const start = clip.start
+  const end = clip.start + clip.duration
   const { currentTime } = editor
 
   if (currentTime < start || currentTime >= end) editor.seekTo(start)
@@ -58,13 +59,14 @@ const menu = ref<WebglEffectsMenuElement>()
 
 watch(
   () => editor.selection,
-  () => editor.selection?.isClip() && menu.value?.scrollToEffect(editor.selection.filter?.assetId, 'instant'),
+  () =>
+    editor.selection?.isVisual() && menu.value?.scrollToEffect(editor.selection.filter?.assetId, 'instant'),
 )
 </script>
 
 <template>
   <webgl-effects-menu
-    v-if="editor.selection?.isClip()"
+    v-if="editor.selection?.isVisual()"
     ref="menu"
     :sourceTexture="texture"
     :sourceSize="img"

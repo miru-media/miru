@@ -10,12 +10,12 @@ import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/ut
 
 import { EXPORT_VIDEO_CODECS } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { Clip } from '../nodes/clip.ts'
 import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
 
 import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
+import { TransformControls } from './transform-controls.jsx'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor_
@@ -47,8 +47,14 @@ export const VideoEditorUI = (props: {
   return (
     <div class={styles.videoEditor}>
       {() => editor._showStats.value && movie.stats.dom}
-      <div class={styles.viewport}>
+      <div
+        class={styles.viewport}
+        style={() =>
+          `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
+        }
+      >
         {h(movie.canvas, { class: styles.viewportCanvas })}
+        <TransformControls editor={editor} />
         <LoadingOverlay loading={() => !movie.isReady} />
         <PlaybackControls editor={editor} />
       </div>
@@ -75,7 +81,9 @@ export const VideoEditorUI = (props: {
             <p style="display:flex;gap:0.25rem">
               {() =>
                 movie.timeline.children.map((track) =>
-                  (track.children as Clip[]).map((clip) => {
+                  track.children.map((clip) => {
+                    if (!clip.isClip()) return null
+
                     const { playback } = clip
                     const { mediaState } = playback
 

@@ -24,6 +24,8 @@ export interface Base {
   isTrack: () => this is Track
   isClip: () => this is Clip
   isGap: () => this is Gap
+  isVisual: () => this is VisualClip | Track
+  isAudio: () => this is AudioClip | Track
   dispose: () => void
 }
 
@@ -42,7 +44,17 @@ interface TrackChild extends Base {
   nextClip?: Clip | undefined
 }
 
-export interface Clip extends Schema.Clip, TrackChild {}
+export interface Clip extends Schema.BaseClip, TrackChild {}
+
+export interface VisualClip extends Schema.VisualClip, Clip {
+  position: { x: number; y: number }
+  rotation: number
+  scale: { x: number; y: number }
+}
+export interface AudioClip extends Schema.AudioClip, Clip {
+  volume: number
+  mute: boolean
+}
 
 export interface Gap extends Schema.Gap, TrackChild {}
 
@@ -117,7 +129,7 @@ export interface VideoEditor {
    */
   addClip: (
     track: Track,
-    source: string | Blob | Schema.Clip,
+    source: string | Blob | Schema.BaseClip,
     options?: AddNodeOptions,
   ) => Promise<Clip> | Clip
 

@@ -1,14 +1,14 @@
 import { ref } from 'fine-jsx'
 
 import type { Schema } from '../../types/core'
-import type { AnyParentNode, NonReadonly, RootNode } from '../../types/internal'
+import type { AnyNode, AnyParentNode, NonReadonly, RootNode } from '../../types/internal'
 
 import { BaseNode } from './base-node.ts'
 
 export abstract class ParentNode<
   T extends Schema.AnyNodeSchema,
   TParent extends AnyParentNode = AnyParentNode,
-  TChild extends BaseNode = any,
+  TChild extends AnyNode = any,
 > extends BaseNode<T, TParent> {
   readonly #head = ref<TChild>()
   readonly #tail = ref<TChild>()
@@ -32,8 +32,8 @@ export abstract class ParentNode<
     return (this.#tail.value?.index ?? -1) + 1
   }
 
-  constructor(id: string, root?: RootNode) {
-    super(id, root)
+  constructor(init: T, root?: RootNode) {
+    super(init, root)
 
     this.onDispose(() => {
       while (this.tail) this.tail.dispose()
@@ -45,27 +45,17 @@ export abstract class ParentNode<
     ;(child as NonReadonly<typeof child>).parent = this as unknown as TParent
   }
 
-  positionChildAt(node: TChild, index: number): void {
+  _positionChildAt(node: TChild, index: number): void {
     if (node.index === index && node.parent === (this as unknown as TParent)) return
 
     let other = this.head
     for (; !!other && other.index < index; other = other.next);
 
-    this._insertBefore(node, other)
-  }
-
-  _forEachChild(fn: (node: TChild, index: number) => unknown): void {
-    let index = 0
-    for (let current = this.#head.value; current; current = current.next) fn(current, index++)
-  }
-  _mapChildren<U>(fn: (node: TChild, index: number) => U): U[] {
-    const array: U[] = []
-    this._forEachChild((node, index) => array.push(fn(node, index)))
-    return array
+    this.#insertBefore(node, other)
   }
 
   #pushChild(node: TChild): void {
-    this.unlinkChild(node)
+    this._unlinkChild(node)
     this.#setChildparent(node)
 
     const tail = this.#tail.value
@@ -80,7 +70,7 @@ export abstract class ParentNode<
     node.next = undefined
   }
 
-  unlinkChild(node: TChild): void {
+  _unlinkChild(node: TChild): void {
     const { head, tail } = this
     const { prev, next } = node
 
@@ -92,10 +82,10 @@ export abstract class ParentNode<
     node.prev = node.next = undefined
   }
 
-  protected _insertBefore(node: TChild, before: TChild | undefined): void {
+  #insertBefore(node: TChild, before: TChild | undefined): void {
     if (node === before) return
 
-    this.unlinkChild(node)
+    this._unlinkChild(node)
     this.#setChildparent(node)
 
     node.next = before

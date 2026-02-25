@@ -1,5 +1,6 @@
 @import url('./common.module.css');
 @import url('./clip.module.css');
+@import url('./viewport.module.css');
 @import url('./timeline.module.css');
 @import url('./filter-menu.module.css');
 
@@ -28,6 +29,11 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
+  pointer-events: none;
+
+  > * {
+    pointer-events: all;
+  }
 }
 
 .secondaryToolbar {

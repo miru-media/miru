@@ -15,6 +15,7 @@ export default {
     'scss/load-partial-extension': null,
     'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global'] }],
     'property-no-unknown': [true, { ignoreProperties: ['composes'] }],
+    'value-keyword-case': ['lower', { ignoreProperties: ['composes'] }],
   },
   ignorePath: ['.gitignore'],
 }
