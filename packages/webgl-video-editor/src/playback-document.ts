@@ -2,35 +2,26 @@ import { createEffectScope, effect, ref, watch } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 import Stats from 'stats.js'
 
-import type { Size } from 'shared/types'
 import { getWebgl2Context, useDocumentVisibility } from 'shared/utils'
 
-import type { AnyNode, NodesByType } from '../../types/internal'
-import type { AvMediaAsset } from '../../types/schema'
-import { MediaAsset, VideoEffectAsset } from '../assets.ts'
-import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../constants.ts'
-import { CanvasEvent, PlaybackUpdateEvent } from '../events.ts'
+import type { AnyNode, NodesByType } from '../types/internal'
+import type { AvMediaAsset } from '../types/schema'
 
-import { AudioClip } from './audio-clip.ts'
-import { BaseMovie } from './base-movie.ts'
-import { Gap, type Schema } from './index.ts'
-import { Timeline } from './timeline.ts'
-import { Track } from './track.ts'
-import { VisualClip } from './visual-clip.ts'
-
-export namespace Movie {
-  export interface Init {
-    children: Schema.Track
-    resolution: Size
-    frameRate: number
-  }
-}
+import { MediaAsset, VideoEffectAsset } from './assets.ts'
+import { ASSET_URL_REFRESH_TIMEOUT_MS } from './constants.ts'
+import { Document } from './document.ts'
+import { CanvasEvent, PlaybackUpdateEvent } from './events.ts'
+import { AudioClip } from './nodes/audio-clip.ts'
+import { Gap, type Schema } from './nodes/index.ts'
+import { Timeline } from './nodes/timeline.ts'
+import { Track } from './nodes/track.ts'
+import { VisualClip } from './nodes/visual-clip.ts'
 
 const CLIP_STALLED_DELAY_MS = 100
 
 const UPDATE_EVENT = new PlaybackUpdateEvent()
 
-export class Movie extends BaseMovie {
+export class PlaybackDocument extends Document {
   readonly #scope = createEffectScope()
 
   readonly #noRender = ref(0)
@@ -105,11 +96,6 @@ export class Movie extends BaseMovie {
     this.stage.on('pointermove', () => this._emit(new CanvasEvent('pointermove', undefined)))
     this.stage.on('pointerup', () => this._emit(new CanvasEvent('pointerup', undefined)))
     this.stage.on('pointerupoutside', () => this._emit(new CanvasEvent('pointerup', undefined)))
-
-    this.onDispose(() => {
-      this.#scope.stop()
-      this.ticker.destroy()
-    })
   }
 
   createNode<T extends Schema.AnyNodeSchema>(init: T): NodesByType[T['type']] {
@@ -117,7 +103,7 @@ export class Movie extends BaseMovie {
 
     switch (init.type) {
       case 'timeline':
-        node = new Timeline(init, this)
+        node = new Timeline(this)
         break
       case 'track':
         node = new Track(init, this)
@@ -135,8 +121,9 @@ export class Movie extends BaseMovie {
       case 'gap':
         node = new Gap(init, this)
         break
+      // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- in case of invalid input
       default:
-        throw new Error(`[webgl-video-editor] Unexpected init of type "${init.type}".`)
+        throw new Error(`[webgl-video-editor] Unexpected init of type "${(init as { type: string }).type}".`)
     }
 
     return node as NodesByType[T['type']]
@@ -189,7 +176,7 @@ export class Movie extends BaseMovie {
     await fn().finally(() => this.#noRender.value--)
   }
 
-  importFromJson(content: Schema.SerializedMovie): void {
+  importFromJson(content: Schema.SerializedDocument): void {
     this.resolution = content.resolution
     this.frameRate = content.frameRate
 
@@ -204,5 +191,11 @@ export class Movie extends BaseMovie {
     }
 
     createChildren(this.timeline, content.tracks)
+  }
+
+  dispose(): void {
+    this.#scope.stop()
+    this.ticker.destroy()
+    super.dispose()
   }
 }

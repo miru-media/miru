@@ -2,10 +2,10 @@ import { computed, ref } from 'fine-jsx'
 import type * as Pixi from 'pixi.js'
 
 import type { ChildNodePosition } from '../../types/core'
-import type { AnyParentNode, NodeSnapshot, NonReadonly, RootNode } from '../../types/internal'
+import type { AnyNode, AnyParentNode, NodeSnapshot, NonReadonly, RootNode } from '../../types/internal'
 import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
 
-import type { AudioClip, BaseClip, BaseMovie, Gap, Schema, Timeline, Track, VisualClip } from './index.ts'
+import type { AudioClip, BaseClip, Gap, Schema, Timeline, Track, VisualClip } from './index.ts'
 
 export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyParentNode = AnyParentNode> {
   readonly type: T['type']
@@ -24,8 +24,8 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     this.#parent.value = node
   }
 
-  readonly #prev = ref<NonNullable<TParent['children']>[number]>()
-  readonly #next = ref<NonNullable<TParent['children']>[number]>()
+  readonly #prev = ref<unknown>()
+  readonly #next = ref<unknown>()
 
   declare prev: TParent['children'][number] | undefined
   declare next: TParent['children'][number] | undefined
@@ -49,7 +49,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   readonly #index = computed((): number => {
     const prev = this.prev as BaseNode | undefined
     if (prev) return prev.index + 1
-    if (this.parent?.head === this) return 0
+    if (this.parent?.head === (this as unknown as AnyNode)) return 0
     return -1
   })
 
@@ -78,16 +78,6 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     }
   }
 
-  patch(updates: Partial<T>): void {
-    type AnyRecord = Record<string, any>
-
-    for (const key in updates) {
-      if (Object.hasOwn(updates, key) && key in this) {
-        ;(this as AnyRecord)[key] = (updates as AnyRecord)[key]
-      }
-    }
-  }
-
   treePosition(position: ChildNodePosition | undefined) {
     const parentId = position?.parentId
     if (parentId === this.parent?.id && (!position || position.index === this.index)) return
@@ -96,16 +86,16 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     const fromIndex = this.index
     const newParent = parentId ? (this.root.nodes.get(parentId) as unknown as TParent) : undefined
 
-    if (fromParent && fromParent.id !== parentId) fromParent._unlinkChild(this)
+    if (fromParent && fromParent.id !== parentId) fromParent._unlinkChild(this as any)
 
-    if (position) newParent?._positionChildAt(this, position.index)
+    if (position) newParent?._positionChildAt(this as any, position.index)
     else (this as NonReadonly<typeof this>).parent = undefined
 
     const { container } = this
     if (container) {
       if (!newParent) container.removeFromParent()
       else if (this.isVisual()) {
-        if (newParent.id !== fromParent?.id) newParent.container?.addChild(container)
+        if (newParent.id !== fromParent?.id) newParent.container.addChild(container)
         container.zIndex = this.index
       }
     }
@@ -118,9 +108,6 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isMovie(): this is BaseMovie {
-    return false
-  }
   isTimeline(): this is Timeline {
     return false
   }
@@ -187,10 +174,11 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
 
     this.#cleanups.forEach((fn) => fn())
 
-    this.parent?._unlinkChild(this)
+    this.parent?._unlinkChild(this as any)
+    this.container?.destroy()
     this.root._emit(new NodeDeleteEvent(this))
     this.isDisposed = true
-    ;(this as unknown as NonReadonly<typeof this.root>).root = undefined as never
+    ;(this as unknown as NonReadonly<typeof this>).root = undefined as never
   }
 
   onDispose(fn: () => void) {

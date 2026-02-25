@@ -6,8 +6,7 @@ interface Base {
   name?: string
 }
 
-export interface Movie extends Base {
-  type: 'movie'
+interface DocumentSettings {
   resolution: {
     width: number
     height: number
@@ -16,6 +15,7 @@ export interface Movie extends Base {
 }
 
 export interface Timeline extends Base {
+  id: 'timeline'
   type: 'timeline'
 }
 
@@ -90,26 +90,21 @@ export interface Gap extends TrackChild {
   type: 'gap'
 }
 
-export interface SerializedTrack extends Track {
-  children: (SerializedClip | SerializedGap)[]
-}
-
-export interface SerializedMovie extends Movie {
-  assets: (AvMediaAsset | VideoEffectAsset)[]
-  tracks: SerializedTrack[]
-}
-
 export interface SerializedTimeline extends Timeline {
   children: SerializedTrack[]
+}
+
+export interface SerializedTrack extends Track {
+  children: (SerializedClip | SerializedGap)[]
 }
 
 export type SerializedClip = VisualClip | AudioClip
 export type SerializedGap = Gap
 
-export type AnyNodeSchema = Movie | Timeline | Track | AnyClip | Gap
-export type AnyNodeSerializedSchema =
-  | SerializedMovie
-  | SerializedTimeline
-  | SerializedTrack
-  | SerializedClip
-  | SerializedGap
+export type AnyNodeSchema = Timeline | Track | AnyClip | Gap
+export type AnyNodeSerializedSchema = SerializedTimeline | SerializedTrack | SerializedClip | SerializedGap
+
+export interface SerializedDocument extends DocumentSettings {
+  assets: (AvMediaAsset | VideoEffectAsset)[]
+  tracks: SerializedTrack[]
+}

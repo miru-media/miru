@@ -9,7 +9,13 @@ import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
 
 const { ydoc } = defineProps<{ ydoc: Y.Doc }>()
 
-const store = markRaw(new VideoEditorYjsStore(ydoc.getMap(YTREE_YMAP_KEY), ydoc.getMap('assets')))
+const store = markRaw(
+  new VideoEditorYjsStore({
+    tree: ydoc.getMap(YTREE_YMAP_KEY),
+    settings: ydoc.getMap('settings'),
+    assets: ydoc.getMap('assets'),
+  }),
+)
 
 await setupProviders(ydoc.guid, ydoc)
 </script>

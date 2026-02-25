@@ -17,7 +17,7 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
   const size = useElementSize(root)
 
-  const timeParts = computed(() => splitTime(editor._movie.currentTime))
+  const timeParts = computed(() => splitTime(editor._doc.currentTime))
 
   return (
     <>
@@ -57,7 +57,7 @@ export const Timeline = ({
   const { t } = useI18n()
   const root = ref<HTMLElement>()
   const scrollContainer = ref<HTMLElement>()
-  const { _movie: movie } = editor
+  const doc = editor._doc
 
   const rootSize = useElementSize(root)
 
@@ -71,7 +71,7 @@ export const Timeline = ({
 
   effect(() => {
     const scrollEl = scrollContainer.value
-    const newScroll = editor.secondsToPixels(movie.currentTime)
+    const newScroll = editor.secondsToPixels(doc.currentTime)
     if (!scrollEl || lastScroll === newScroll) return
 
     scrollEl.scrollLeft = newScroll
@@ -85,7 +85,7 @@ export const Timeline = ({
     editor.seekTo(editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
   }
 
-  const hasAnyClips = computed(() => movie.timeline.children.some((track) => !!track.firstClip))
+  const hasAnyClips = computed(() => doc.timeline.children.some((track) => !!track.firstClip))
 
   const onInputClipFile = async (event: InputEvent, track: Track | undefined) => {
     const file = event.target.files?.[0]
@@ -109,9 +109,9 @@ export const Timeline = ({
       ref={root}
       class={styles.timeline}
       style={() => `
-          --timeline-width: ${rootSize.value.width}px;
-          --timeline-height: ${rootSize.value.height}px;
-          --movie-width:${editor.secondsToPixels(Math.max(editor._resize.value?.movieDuration ?? 0, movie.duration))}px`}
+          --editor-width: ${rootSize.value.width}px;
+          --editor-height: ${rootSize.value.height}px;
+          --timeline-width:${editor.secondsToPixels(Math.max(editor._resize.value?.docDuration ?? 0, doc.duration))}px`}
     >
       <Playhead editor={editor} />
 
@@ -125,7 +125,7 @@ export const Timeline = ({
 
         <div class={styles.trackList}>
           {() =>
-            movie.isEmpty ? (
+            doc.isEmpty ? (
               <>
                 <div class={styles.track}>
                   <label class={[styles.button, styles.trackButton]}>
@@ -133,7 +133,7 @@ export const Timeline = ({
                       type="file"
                       hidden
                       accept={ACCEPT_VIDEO_FILE_TYPES}
-                      onInput={(event: InputEvent) => onInputClipFile(event, movie.timeline.head)}
+                      onInput={(event: InputEvent) => onInputClipFile(event, doc.timeline.head)}
                     />
                     <span class={styles.textBody}>{t('click_add_clip')}</span>
                   </label>
@@ -143,7 +143,7 @@ export const Timeline = ({
                 </div>
               </>
             ) : (
-              movie.timeline.children.map((track, trackIndex) => (
+              doc.timeline.children.map((track, trackIndex) => (
                 <div
                   class={styles.track}
                   style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}

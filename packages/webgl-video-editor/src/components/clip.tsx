@@ -131,7 +131,7 @@ export const Clip = ({
           interact.modifiers.restrictRect({
             restriction: () => ({
               left: 0,
-              right: editor.secondsToPixels(editor._movie.duration),
+              right: editor.secondsToPixels(editor._doc.duration),
               top: 0,
               bottom: 0,
             }),

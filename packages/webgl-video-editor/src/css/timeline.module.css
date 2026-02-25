@@ -17,15 +17,15 @@
   box-sizing: content-box;
   display: flex;
   flex-direction: column;
-  width: var(--movie-width);
+  width: var(--timeline-width);
   height: 100%;
-  padding: 0 calc(var(--timeline-width) / 2);
+  padding: 0 calc(var(--editor-width) / 2);
 }
 
 .timelinePlayhead {
   position: absolute;
   top: calc(var(--ruler-spacing-top) + var(--ruler-height) + 0.5rem);
-  left: calc(var(--timeline-width) / 2);
+  left: calc(var(--editor-width) / 2);
   z-index: 10;
   display: flex;
   user-select: none;
@@ -62,7 +62,7 @@
   position: absolute;
   top: calc(var(--ruler-spacing-bottom));
   bottom: 0;
-  left: calc(var(--timeline-width) / 2 - 0.0625rem);
+  left: calc(var(--editor-width) / 2 - 0.0625rem);
   z-index: 10;
   width: 0.125rem;
   pointer-events: none;
@@ -76,10 +76,10 @@
   flex-shrink: 1;
   flex-direction: column;
   gap: 0.625rem;
-  width: calc(var(--movie-width) + var(--timeline-width));
+  width: calc(var(--timeline-width) + var(--editor-width));
   min-height: calc(var(--clip-height) * 2.5);
   padding-bottom: 1rem;
-  padding-left: calc(var(--timeline-width) / 2);
+  padding-left: calc(var(--editor-width) / 2);
   overflow: hidden auto;
 }
 
@@ -110,7 +110,7 @@
   position: relative;
   flex-shrink: 0;
   width: 100%;
-  width: calc(var(--timeline-width) + var(--movie-width));
+  width: calc(var(--editor-width) + var(--timeline-width));
   height: var(--ruler-height);
   margin-top: var(--ruler-spacing-top);
   margin-bottom: var(--ruler-spacing-bottom);

@@ -14,8 +14,8 @@ import { useI18n } from 'vue-i18n-lite'
 import * as Y from 'yjs'
 import { IndexeddbPersistence } from 'y-indexeddb'
 
-import { demoMovie } from '../../packages/app-video-editor/src/demo-movie'
-import type { SerializedMovie } from '../../packages/webgl-video-editor/types/schema'
+import { demoDoc } from '../../packages/app-video-editor/src/demo-document'
+import type { SerializedDocument } from '../../packages/webgl-video-editor/types/schema'
 import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
 import { INITIAL_DOC_UPDATE_BASE64 } from './video-editor-demo-store'
 import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
@@ -25,14 +25,18 @@ const { t } = useI18n()
 
 const projects = import.meta.env.SSR ? [] as never: useLocalStorage<{ name: string; id: string, createdAt: string }[]>('video-editor-docs', [])
 
-const createDoc = async (name = 'Untitled', content?: SerializedMovie) => {
+const createDoc = async (name = 'Untitled', content?: SerializedDocument) => {
   const id = uid()
   
   if (content) {
     const ydoc = new Y.Doc()
     Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
 
-    VideoEditorYjsStore.initYmapsFromJson(ydoc.getMap(YTREE_YMAP_KEY),ydoc.getMap('assets'), content)
+    VideoEditorYjsStore.initYmapsFromJson({
+      tree: ydoc.getMap(YTREE_YMAP_KEY),
+      settings: ydoc.getMap('settings'),
+      assets: ydoc.getMap('assets')
+    }, content)
 
     const idb = new IndexeddbPersistence(id, ydoc)
     try {
@@ -85,7 +89,7 @@ const getDocUrl = (id: string) => `/video-editor/project?id=${id}`
           <div class="i-tabler:plus" />
           {{ $t('create_empty_project') }}
         </button>
-        <button @click="() => createDoc('Example', demoMovie)" class="create-button">
+        <button @click="() => createDoc('Example', demoDoc)" class="create-button">
           <div class="i-tabler:plus" />
           {{ $t('create_example_project') }}
         </button>

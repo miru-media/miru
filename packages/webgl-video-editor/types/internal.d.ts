@@ -1,15 +1,8 @@
-import type { Ref } from 'fine-jsx'
-import type { Renderer } from 'webgl-effects'
-
-import type { Size } from 'shared/types'
-
 import type {
   AudioClip,
-  BaseMovie,
-  BaseNode,
+  Document,
   Gap,
   MediaAsset,
-  Movie,
   Timeline,
   Track,
   VideoEffectAsset,
@@ -18,24 +11,6 @@ import type {
 import type { VideoEditor as VideoEditor_ } from '../src/video-editor.ts'
 
 import type { ChildNodePosition, Schema } from './core.ts'
-
-export interface CustomSourceNodeOptions {
-  videoEffect?: Ref<VideoEffectAsset | undefined>
-  videoEffectIntensity?: Ref<number>
-  source: Schema.AvMediaAsset
-  renderer: Renderer
-  movieIsPaused: Ref<boolean>
-  movieIsStalled: Ref<boolean>
-  movieResolution: Ref<Size>
-  getClipTime: () => ClipTime
-  getPresentationTime: () => ClipTime
-  getPlayableTime: () => ClipTime
-}
-
-export type TrackMovie = Pick<
-  Movie,
-  'id' | 'nodes' | 'pixi' | 'resolution' | 'frameRate' | 'isPaused' | 'isStalled'
->
 
 export interface SchemaTypes {
   track: Schema.Track
@@ -57,26 +32,25 @@ export interface MediaElementInfo {
 }
 
 export interface NodesByType {
-  movie: BaseMovie
   timeline: Timeline
   track: Track
   clip: VisualClip | AudioClip
   gap: Gap
 }
 
-export type AnyParentNode = BaseMovie | Timeline | Track
+export type AnyParentNode = Timeline | Track
 export type AnyNode = NodesByType[keyof NodesByType]
 export type AnyClip = NodesByType['clip']
 export type AnyTrackChild = AnyClip | Gap
 
 export interface NodeMap {
-  map: Map<string, AnyNode | BaseNode>
+  map: Map<string, AnyNode>
   byType: {
     [Type in keyof NodesByType]: Set<NodesByType[Type]>
   }
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get: <T extends AnyNode>(id: string) => T
-  set: (node: AnyNode | BaseNode) => void
+  set: (node: AnyNode) => void
   has: (id: string) => boolean
   delete: (id: string) => void
 }
@@ -90,7 +64,7 @@ declare module './core' {
   }
 }
 
-export type RootNode = BaseMovie
+export type RootNode = Document
 
 export type AnyAsset = MediaAsset | VideoEffectAsset
 

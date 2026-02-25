@@ -30,7 +30,7 @@
   "change_audio": "Change audio",
   "change_video": "Change video",
   "info": "Info",
-  "error_cannot_set_content": "Couldn't set movie content",
+  "error_cannot_set_content": "Couldn't set document content",
   "error_no_webcodecs": "Your browser doesn't have the WebCodec APIs needed to export videos!",
   "error_cannot_export": "Your browser can't export videos in the formats that we use.",
   "error_cannot_play_type": "Your browser can't play this file type",

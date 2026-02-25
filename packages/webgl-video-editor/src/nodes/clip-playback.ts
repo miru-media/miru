@@ -21,12 +21,12 @@ export class ClipPlayback {
 
   isInPresentationTime = computed(() => {
     const { presentationTime, root } = this.clip
-    const movieTime = root.currentTime
+    const docTime = root.currentTime
 
     return (
-      rangeContainsTime(presentationTime, movieTime) ||
-      // display final frame of clip at the end of the movie
-      (movieTime > presentationTime.start && presentationTime.end === root.duration)
+      rangeContainsTime(presentationTime, docTime) ||
+      // display final frame of clip at the end of the timeline
+      (docTime > presentationTime.start && presentationTime.end === root.duration)
     )
   })
   isInPlayableTime = computed(() => rangeContainsTime(this.clip.playableTime, this.clip.root.currentTime))
@@ -52,16 +52,16 @@ export class ClipPlayback {
 
   constructor(clip: Clip) {
     this.clip = clip
-    const movie = clip.root
+    const doc = clip.root
 
     this.mediaState = new ClipMediaElementState(clip)
     this.everHadEnoughData = this.mediaState.wasEverPlayable
 
     const listenerOptions = { signal: this.#disposeAbort.signal }
-    movie.on('playback:play', this.#onPlay.bind(this), listenerOptions)
-    movie.on('playback:pause', this.#onPause.bind(this), listenerOptions)
-    movie.on('playback:update', this.#onUpdate.bind(this), listenerOptions)
-    movie.on('playback:seek', this.#onSeek.bind(this), listenerOptions)
+    doc.on('playback:play', this.#onPlay.bind(this), listenerOptions)
+    doc.on('playback:pause', this.#onPause.bind(this), listenerOptions)
+    doc.on('playback:update', this.#onUpdate.bind(this), listenerOptions)
+    doc.on('playback:seek', this.#onSeek.bind(this), listenerOptions)
 
     clip.scope.run(() => {
       useInterval(

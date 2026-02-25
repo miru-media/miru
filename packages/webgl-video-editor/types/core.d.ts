@@ -19,7 +19,6 @@ export interface ClipTime {
 }
 
 export interface Base {
-  isMovie: () => this is Movie
   isTimeline: () => this is Timeline
   isTrack: () => this is Track
   isClip: () => this is Clip
@@ -29,11 +28,11 @@ export interface Base {
   dispose: () => void
 }
 
-export interface Movie extends Schema.Movie, Base {
+export interface Document extends Schema.DocumentSettings {
   timeline: Timeline
 }
 
-export interface Timeline extends Schema.Timeline, Base {}
+export interface Timeline extends Schema.Timeline {}
 
 interface TrackChild extends Base {
   readonly start: number
@@ -103,7 +102,7 @@ export interface VideoEditor {
   tracks: Track[]
 
   /** The current editor content */
-  state: Schema.Movie
+  state: Schema.SerializedDocument
 
   /** The webgl-effects Renderer instance */
   effectRenderer: Renderer
@@ -161,7 +160,7 @@ export interface VideoEditor {
   isPaused: boolean
 
   /** Adds assets and tracks from the provided JSON object */
-  importJson: (newContent: Schema.SerializedMovie) => void
+  importJson: (newContent: Schema.SerializedDocument) => void
 
   /**
    * Render and encode the video composition.
@@ -171,13 +170,13 @@ export interface VideoEditor {
   /** The most recent export result. */
   exportResult: { blob: Blob; url: string } | undefined
 
-  toObject: () => Schema.Movie
+  toObject: () => Schema.SerializedDocument
 
   /** Release resources of the video editor and allow it to be garbage collected. */
   dispose: () => void
 }
 
-export type VideoEditorChangeEvent = CustomEvent<Schema.Movie>
+export type VideoEditorChangeEvent = CustomEvent<Schema.SerializedDocument>
 export type VideoEditorChangeLoadingEvent = CustomEvent<boolean>
 
 export interface VideoEditorStore {

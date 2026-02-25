@@ -74,7 +74,6 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
         )
 
       const getTypePredicateMethods = (node: nodes.BaseNode) => ({
-        isMovie: node.isMovie.bind(node),
         isTimeline: node.isTimeline.bind(node),
         isTrack: node.isTrack.bind(node),
         isClip: node.isClip.bind(node),
@@ -180,15 +179,15 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       canvas: editor.canvas,
       effectRenderer: Vue.markRaw(editor.effectRenderer),
       resolution: toVue(
-        () => editor._movie.resolution,
-        (value) => (editor._movie.resolution = value),
+        () => editor._doc.resolution,
+        (value) => (editor._doc.resolution = value),
       ),
       frameRate: toVue(
-        () => editor._movie.frameRate,
-        (value) => (editor._movie.frameRate = value),
+        () => editor._doc.frameRate,
+        (value) => (editor._doc.frameRate = value),
       ),
-      isEmpty: toVue(() => editor._movie.isEmpty),
-      isPaused: toVue(() => editor._movie.isPaused.value),
+      isEmpty: toVue(() => editor._doc.isEmpty),
+      isPaused: toVue(() => editor._doc.isPaused.value),
       currentTime: toVue(() => editor.currentTime),
       tracks: toVue(() => editor.tracks.map(getVueNode)),
       selection: toVue(() => editor.selection && getVueNode(editor.selection)),
@@ -200,7 +199,7 @@ export const editorToVue = (editor: VideoEditor): pub.VideoEditor => {
       pause: editor.pause.bind(editor),
       seekTo: editor.seekTo.bind(editor),
       addClip: (track: pub.Track, source: string | Blob | pub.Schema.BaseClip) =>
-        editor.addClip(editor._movie.nodes.get(track.id), source as any),
+        editor.addClip(editor._doc.nodes.get(track.id), source as any),
       select: (clip: pub.Clip | pub.Gap | undefined) => editor.select(clip?.id),
       async createMediaAsset(source: string | Blob) {
         return getVueNode(await editor.createMediaAsset(source))

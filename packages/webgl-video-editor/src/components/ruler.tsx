@@ -51,7 +51,7 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
       const labelIntervalS = intervalS.value * labelSpacing
       const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
 
-      let fromS = editor._movie.currentTime - timelineRangeS / 2
+      let fromS = editor._doc.currentTime - timelineRangeS / 2
       fromS = fromS - (fromS % labelIntervalS)
 
       for (let i = 0; i < nLabels; i++) {

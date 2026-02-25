@@ -3,7 +3,7 @@ import * as Mb from 'mediabunny'
 import { setObjectSize } from 'shared/utils'
 import { setVideoEncoderConfigCodec } from 'shared/video/utils'
 
-import { BaseMovie, Gap, type MediaAsset, type Movie } from '../nodes/index.ts'
+import { Document, Gap, type MediaAsset, type PlaybackDocument } from '../nodes/index.ts'
 import { Track } from '../nodes/track.ts'
 
 import { AVEncoder } from './av-encoder.ts'
@@ -23,7 +23,7 @@ interface AvAssetEntry {
 
 let decoderAudioContext: OfflineAudioContext | undefined
 
-export class ExporterMovie extends BaseMovie {
+export class ExporterDocument extends Document {
   clips: ExporterClip[] = []
   sources = new Map<string, AvAssetEntry>()
   avEncoder!: AVEncoder
@@ -48,12 +48,12 @@ export class ExporterMovie extends BaseMovie {
     return !this.activeClipIsStalled.value
   }
 
-  constructor(movie: Movie) {
-    super(movie)
+  constructor(doc: PlaybackDocument) {
+    super(doc)
 
     this.isPaused.value = false
 
-    movie.timeline.children.forEach((track_, trackIndex) => {
+    doc.timeline.children.forEach((track_, trackIndex) => {
       const track = new Track(track_.toObject(), this)
       track.treePosition({ parentId: this.timeline.id, index: trackIndex })
 
@@ -69,11 +69,6 @@ export class ExporterMovie extends BaseMovie {
 
         child.treePosition({ parentId: track.id, index })
       })
-    })
-
-    this.onDispose(() => {
-      this.sources.forEach((entry) => entry.input.dispose())
-      this.sources.clear()
     })
   }
 
@@ -265,5 +260,11 @@ export class ExporterMovie extends BaseMovie {
       }),
     )
     await writer.close()
+  }
+
+  dispose(): void {
+    this.sources.forEach((entry) => entry.input.dispose())
+    this.sources.clear()
+    super.dispose()
   }
 }

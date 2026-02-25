@@ -45,22 +45,22 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     return this._editor.canvas
   }
   get resolution() {
-    return this._editor._movie.resolution
+    return this._editor._doc.resolution
   }
   set resolution(value) {
-    this._editor._movie.resolution = value
+    this._editor._doc.resolution = value
   }
   get frameRate() {
-    return this._editor._movie.frameRate
+    return this._editor._doc.frameRate
   }
   set frameRate(value) {
-    this._editor._movie.frameRate = value
+    this._editor._doc.frameRate = value
   }
   get isEmpty() {
-    return this._editor._movie.isEmpty
+    return this._editor._doc.isEmpty
   }
   get isPaused() {
-    return this._editor._movie.isEmpty
+    return this._editor._doc.isEmpty
   }
   get currentTime() {
     return this._editor.currentTime
@@ -154,7 +154,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   deleteSelection() {
     this._editor.deleteSelection()
   }
-  importJson(newContent: pub.Schema.SerializedMovie) {
+  importJson(newContent: pub.Schema.SerializedDocument) {
     this._editor.importJson(newContent)
   }
   toObject() {

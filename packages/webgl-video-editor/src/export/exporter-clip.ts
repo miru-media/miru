@@ -11,7 +11,7 @@ import type { AudioClip, Schema, Track, VisualClip } from '../nodes/index.ts'
 import { MiruFilter } from '../pixi/pixi-miru-filter.ts'
 import { updateSpriteTransform } from '../utils.ts'
 
-import type { ExporterMovie } from './exporter-movie.ts'
+import type { ExporterDocument } from './exporter-document.ts'
 
 export namespace ExporterClip {
   export interface InitOptions {
@@ -75,7 +75,7 @@ export class ExporterClip
     return this.isReady
   }
 
-  constructor(init: Schema.AnyClip, root: ExporterMovie) {
+  constructor(init: Schema.AnyClip, root: ExporterDocument) {
     super(init, root)
 
     this.source = init.source

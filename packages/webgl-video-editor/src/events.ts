@@ -6,6 +6,16 @@ import type { BaseAsset, MediaAsset } from './assets.ts'
 import type { BaseNode } from './nodes/base-node.ts'
 import type { VisualClip } from './nodes/visual-clip.ts'
 
+export class SettingsUpdateEvent extends Event {
+  declare readonly type: 'settings:update'
+  readonly from: Partial<Schema.DocumentSettings>
+
+  constructor(from: Partial<Schema.DocumentSettings>) {
+    super('settings:update')
+    this.from = from
+  }
+}
+
 export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
   declare readonly type: 'node:create'
   readonly node: AnyNode

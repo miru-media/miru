@@ -1,37 +1,29 @@
-import { computed, effect, ref } from 'fine-jsx'
+import { computed, effect, ref, type Ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
-import { setObjectSize } from 'shared/utils'
+import type { Size } from 'shared/types.ts'
 import { clamp } from 'shared/utils/math'
 
-import type * as pub from '../../types/core.d.ts'
-import type { VideoEditorEvents } from '../../types/events'
-import type { AnyAsset, AnyClip, AnyNode, NodeMap as INodeMap } from '../../types/internal'
-import { VideoEffectAsset } from '../assets.ts'
-import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, ROOT_NODE_ID } from '../constants.ts'
+import type * as pub from '../types/core'
+import type { VideoEditorEvents } from '../types/events'
+import type { AnyAsset, AnyClip, AnyNode, NodeMap as INodeMap, NodesByType } from '../types/internal'
+
+import { VideoEffectAsset } from './assets.ts'
+import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from './constants.ts'
 import {
   type AssetCreateEvent,
   type AssetDeleteEvent,
   type NodeCreateEvent,
   type NodeDeleteEvent,
   PlaybackSeekEvent,
-} from '../events.ts'
-import { PlaybackPauseEvent, PlaybackPlayEvent } from '../events.ts'
-import { LutUploaderSystem } from '../pixi/pixi-lut-source.ts'
-
-import type { BaseNode, Gap, Schema } from './index.ts'
-import { ParentNode } from './parent-node.ts'
-import { Timeline } from './timeline.ts'
-import type { Track } from './track.ts'
-
-export const enum PlaybackState {
-  ERROR = -1,
-  PLAYING = 0,
-  PAUSED = 1,
-  STALLED = 2,
-  ENDED = 3,
-}
+  SettingsUpdateEvent,
+} from './events.ts'
+import { PlaybackPauseEvent, PlaybackPlayEvent } from './events.ts'
+import type { Gap, Schema } from './nodes/index.ts'
+import { Timeline } from './nodes/timeline.ts'
+import type { Track } from './nodes/track.ts'
+import { LutUploaderSystem } from './pixi/pixi-lut-source.ts'
 
 const PLAY_EVENT = new PlaybackPlayEvent()
 const PAUSE_EVENT = new PlaybackPauseEvent()
@@ -40,21 +32,20 @@ const SEEK_EVENT = new PlaybackSeekEvent()
 Pixi.extensions.add(LutUploaderSystem)
 
 class NodeMap implements INodeMap {
-  map = new Map<string, AnyNode | BaseNode>()
+  map = new Map<string, AnyNode>()
   byType = {
-    movie: new Set<BaseMovie>(),
     timeline: new Set<Timeline>(),
     track: new Set<Track>(),
     clip: new Set<AnyClip>(),
     gap: new Set<Gap>(),
   }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
-  get<T extends AnyNode>(id: string): T {
+  get<T extends AnyNode>(id: T['id']): T {
     return this.map.get(id) as T
   }
-  set(node: AnyNode | BaseNode): void {
+  set(node: AnyNode): void {
     this.map.set(node.id, node)
-    ;(this.byType as Record<string, Set<BaseNode>>)[node.type].add(node)
+    const typeSet: Set<NodesByType[typeof node.type]> = this.byType[node.type]
+    typeSet.add(node)
   }
   has(id: string): boolean {
     return this.map.has(id)
@@ -62,12 +53,15 @@ class NodeMap implements INodeMap {
   delete(id: string): boolean {
     const node = this.map.get(id)
     if (!node) return true
-    ;(this.byType as Record<string, Set<BaseNode>>)[node.type].delete(node)
+
+    const typeSet: Set<NodesByType[typeof node.type]> = this.byType[node.type]
+    typeSet.delete(node)
+
     return this.map.delete(id)
   }
 }
 
-const createInitialAssets = (movie: BaseMovie) =>
+const createInitialAssets = (doc: Document) =>
   getDefaultFilterDefinitions().forEach(
     (def, index): VideoEffectAsset =>
       new VideoEffectAsset(
@@ -76,14 +70,12 @@ const createInitialAssets = (movie: BaseMovie) =>
           id: def.id ?? index.toString(),
           type: 'asset:effect:video',
         },
-        movie,
+        doc,
       ),
   )
 
-export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> implements pub.Movie {
-  type = 'movie' as const
+export abstract class Document implements pub.Document {
   declare parent?: undefined
-  declare root: this
   declare container: undefined
 
   nodes = new NodeMap()
@@ -108,8 +100,29 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
   isPaused = ref(true)
   isStalled = computed(() => !this.isPaused.value && !this.isReady)
 
-  declare resolution: Schema.Movie['resolution']
-  declare frameRate: Schema.Movie['frameRate']
+  readonly #resolution: Ref<Size>
+  readonly #frameRate: Ref<number>
+
+  get resolution(): Size {
+    return this.#resolution.value
+  }
+  set resolution(value) {
+    this.#resolution.value = value
+    const prev = this.resolution
+
+    const { width, height } = value
+    const { renderer } = this
+    if ((renderer as Partial<typeof renderer> | undefined)?.view) renderer.resize(width, height)
+    this._emit(new SettingsUpdateEvent({ resolution: prev }))
+  }
+  get frameRate(): number {
+    return this.#frameRate.value
+  }
+  set frameRate(value) {
+    const prev = this.frameRate
+    this.#frameRate.value = value
+    this._emit(new SettingsUpdateEvent({ frameRate: prev }))
+  }
 
   readonly #eventTarget = new EventTarget()
   readonly #disposeAbort = new AbortController()
@@ -130,16 +143,14 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
     return this._currentTime.value
   }
 
-  timeline!: Timeline
+  timeline: Timeline
 
-  constructor(options: Partial<Pick<BaseMovie, 'gl' | 'renderer' | 'assets' | 'resolution' | 'frameRate'>>) {
-    super({
-      resolution: options.resolution ?? DEFAULT_RESOLUTION,
-      frameRate: options.frameRate ?? DEFAULT_FRAMERATE,
-      id: ROOT_NODE_ID,
-      type: 'movie',
-    })
-
+  constructor(
+    options: Partial<
+      Pick<Document, 'gl' | 'renderer' | 'assets'> &
+        Pick<Schema.SerializedDocument, 'resolution' | 'frameRate'>
+    >,
+  ) {
     if (options.renderer) {
       this.renderer = options.renderer
       this.gl = options.renderer.gl
@@ -160,9 +171,11 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
     this.on('asset:create', ({ asset }: AssetCreateEvent) => this.assets.set(asset.id, asset))
     this.on('asset:delete', ({ asset }: AssetDeleteEvent) => this.assets.delete(asset.id))
 
-    this.timeline = new Timeline({ id: Timeline.TIMELINE, type: Timeline.TIMELINE }, this)
+    this.#resolution = ref(options.resolution ?? DEFAULT_RESOLUTION)
+    this.#frameRate = ref(options.frameRate ?? DEFAULT_FRAMERATE)
 
-    setObjectSize(this.canvas, this.resolution)
+    this.timeline = new Timeline(this)
+
     this.whenRendererIsReady = this.#createdOwnRenderer ? this.#initPixi() : Promise.resolve()
 
     if (options.assets) this.assets = options.assets
@@ -170,26 +183,6 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
       this.assets = new Map<string, AnyAsset>()
       createInitialAssets(this)
     }
-
-    this.onDispose(() => {
-      if (this.#createdOwnRenderer) this.renderer.destroy()
-      this.stage.destroy()
-      this.#disposeAbort.abort()
-    })
-  }
-
-  protected _init(init: pub.Schema.Movie): void {
-    this.root = this
-
-    this._defineReactive('resolution', init.resolution, {
-      onChange: this._onChangeResolution.bind(this),
-    })
-    this._defineReactive('frameRate', init.frameRate)
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
-  isMovie(): this is BaseMovie {
-    return true
   }
 
   async #initPixi(): Promise<void> {
@@ -202,12 +195,6 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
     } catch (error) {
       this._emit(new ErrorEvent('error', { error }))
     }
-  }
-
-  protected _onChangeResolution() {
-    const { renderer, resolution } = this
-    if ((renderer as Partial<typeof renderer> | undefined)?.view)
-      renderer.resize(resolution.width, resolution.height)
   }
 
   play(): void {
@@ -247,15 +234,6 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
     return this.timeline.children.every((track) => track.count === 0)
   }
 
-  toObject(): Schema.Movie {
-    return {
-      id: this.id,
-      type: this.type,
-      resolution: this.resolution,
-      frameRate: this.frameRate,
-    }
-  }
-
   on<T extends Extract<keyof VideoEditorEvents, string>>(
     type: T,
     listener: (event: VideoEditorEvents[T]) => void,
@@ -273,5 +251,17 @@ export abstract class BaseMovie extends ParentNode<Schema.Movie, Timeline> imple
   /** @internal @hidden */
   _emit(event: VideoEditorEvents[keyof VideoEditorEvents]): void {
     this.#eventTarget.dispatchEvent(event)
+  }
+
+  toObject(): Schema.DocumentSettings {
+    return {
+      resolution: this.resolution,
+      frameRate: this.frameRate,
+    }
+  }
+
+  dispose(): void {
+    if (this.#createdOwnRenderer) this.renderer.destroy()
+    this.#disposeAbort.abort()
   }
 }

@@ -42,20 +42,20 @@ export const VideoEditorUI = (props: {
       })
       .catch(() => undefined)
 
-  const movie = editor._movie
+  const doc = editor._doc
 
   return (
     <div class={styles.videoEditor}>
-      {() => editor._showStats.value && movie.stats.dom}
+      {() => editor._showStats.value && doc.stats.dom}
       <div
         class={styles.viewport}
         style={() =>
           `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
         }
       >
-        {h(movie.canvas, { class: styles.viewportCanvas })}
+        {h(doc.canvas, { class: styles.viewportCanvas })}
         <TransformControls editor={editor} />
-        <LoadingOverlay loading={() => !movie.isReady} />
+        <LoadingOverlay loading={() => !doc.isReady} />
         <PlaybackControls editor={editor} />
       </div>
 
@@ -80,7 +80,7 @@ export const VideoEditorUI = (props: {
           >
             <p style="display:flex;gap:0.25rem">
               {() =>
-                movie.timeline.children.map((track) =>
+                doc.timeline.children.map((track) =>
                   track.children.map((clip) => {
                     if (!clip.isClip()) return null
 

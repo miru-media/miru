@@ -3,6 +3,7 @@ import { uid } from 'uid'
 
 import type * as core from '../../types/core'
 import type { Schema } from '../../types/core'
+import type { DocumentSettings } from '../../types/schema'
 import type {
   AssetCreateEvent,
   AssetDeleteEvent,
@@ -10,13 +11,15 @@ import type {
   NodeDeleteEvent,
   NodeMoveEvent,
   NodeUpdateEvent,
+  SettingsUpdateEvent,
 } from '../events.ts'
-import type { Movie } from '../nodes/movie.ts'
+import type { PlaybackDocument } from '../playback-document.ts'
 import { storage, type StorageFileWriteOptions } from '../storage/storage.ts'
 
-import { createInitialMovie } from './utils.ts'
+import { createInitialDocument } from './utils.ts'
 
 type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> =
+  | { type: 'settings:update'; from: Partial<DocumentSettings>; to: Partial<DocumentSettings> }
   // TODO: remove group???!!!
   | { type: 'node:create'; group?: string; nodeId: string; init: core.Schema.AnyNodeSchema }
   | {
@@ -37,8 +40,12 @@ type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> 
 
 const LOCAL_STORAGE_PREFIX = 'video-editor:'
 
+const patchObj = <T extends object>(obj: T, updates: Partial<T>): void => {
+  for (const key in updates) if (Object.hasOwn(updates, key) && key in obj) obj[key] = updates[key]!
+}
+
 export class VideoEditorLocalStore implements core.VideoEditorStore {
-  #movie!: Movie
+  #doc!: PlaybackDocument
   readonly #actions: HistoryOp[][] = []
   #index = -1
   #pending?: HistoryOp[]
@@ -46,7 +53,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   readonly #canUndo = ref(false)
   readonly #canRedo = ref(false)
 
-  readonly #MOVIE_CONTENT_KEY = `${LOCAL_STORAGE_PREFIX}content`
+  readonly #DOC_CONTENT_KEY = `${LOCAL_STORAGE_PREFIX}content`
   readonly #ASSETS_KEY = `${LOCAL_STORAGE_PREFIX}assets`
 
   generateId = uid
@@ -62,37 +69,38 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   readonly storage = storage
 
   init(editor: core.VideoEditor) {
-    const movie = (this.#movie = editor._editor._movie)
+    const doc = (this.#doc = editor._editor._doc)
     this.#restoreFromLocalStorage()
 
     // Persist to localStorage
     watch([() => editor.state], ([state]) =>
-      localStorage.setItem(this.#MOVIE_CONTENT_KEY, JSON.stringify(state)),
+      localStorage.setItem(this.#DOC_CONTENT_KEY, JSON.stringify(state)),
     )
 
     const options: AddEventListenerOptions = { signal: this.#abort.signal }
 
-    movie.on('asset:create', this.#onAssetCreate.bind(this), options)
-    movie.on('asset:delete', this.#onAssetDelete.bind(this), options)
-    movie.on('node:create', this.#onNodeCreate.bind(this), options)
-    movie.on('node:move', this.#onMove.bind(this), options)
-    movie.on('node:update', this.#onUpdate.bind(this), options)
-    movie.on('node:delete', this.#onDelete.bind(this), options)
+    doc.on('settings:update', this.#onSettingsUpdate.bind(this), options)
+    doc.on('asset:create', this.#onAssetCreate.bind(this), options)
+    doc.on('asset:delete', this.#onAssetDelete.bind(this), options)
+    doc.on('node:create', this.#onNodeCreate.bind(this), options)
+    doc.on('node:move', this.#onMove.bind(this), options)
+    doc.on('node:update', this.#onUpdate.bind(this), options)
+    doc.on('node:delete', this.#onDelete.bind(this), options)
 
     this.#abort.signal.addEventListener('abort', this.reset.bind(this))
   }
 
   #restoreFromLocalStorage(): void {
     if (import.meta.env.SSR) return
-    // restore movie from localStorage
-    const savedJson = localStorage.getItem(this.#MOVIE_CONTENT_KEY)
+    // restore document from localStorage
+    const savedJson = localStorage.getItem(this.#DOC_CONTENT_KEY)
     let isRestored = false
 
     if (savedJson) {
       try {
-        const parsed = JSON.parse(savedJson) as core.Schema.SerializedMovie
+        const parsed = JSON.parse(savedJson) as core.Schema.SerializedDocument
 
-        this.#movie.importFromJson(parsed)
+        this.#doc.importFromJson(parsed)
         isRestored = true
       } catch (error: unknown) {
         localStorage.setItem(`${LOCAL_STORAGE_PREFIX}backup`, savedJson)
@@ -107,7 +115,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     }
 
     if (!isRestored) {
-      this.#movie.importFromJson(createInitialMovie())
+      this.#doc.importFromJson(createInitialDocument())
     }
   }
 
@@ -147,16 +155,15 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
 
     if (ops.length === 1 && this.#canUndo.value) {
       const op = ops[0]
-      const { nodeId, group, type } = op
       const prevAction = actions[actions.length - 1]
       const prevOp = prevAction[prevAction.length - 1]
 
       if (
-        nodeId === prevOp.nodeId &&
-        type === 'node:update' &&
-        type === prevOp.type &&
-        group &&
-        group === prevOp.group
+        op.type === 'node:update' &&
+        op.type === prevOp.type &&
+        op.nodeId === prevOp.nodeId &&
+        op.group &&
+        op.group === prevOp.group
       ) {
         Object.keys(op.to).forEach((key) => ((prevOp.to as any)[key] = op.to[key as keyof typeof op.to]))
         return
@@ -182,63 +189,65 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     const ops = actions[redo ? newIndex : currentIndex]
     this.#index = newIndex
 
-    const movie = this.#movie
-    const { nodes } = movie
+    const doc = this.#doc
+    const { nodes } = doc
 
     this.untracked(() => {
       const orderedOps = redo ? ops : ops.slice().reverse()
 
       orderedOps.forEach((op) => {
-        const { nodeId } = op
-
         if (redo) {
           switch (op.type) {
+            // update settings
+            case 'settings:update':
+              patchObj(this.#doc, op.to as any)
+              break
             // create
             case 'node:create':
-              movie.createNode(op.init)
+              doc.createNode(op.init)
               break
             // move
             case 'node:move': {
-              const node = nodes.get(nodeId)
+              const node = nodes.get(op.nodeId)
               const { to } = op
               if (node.parent?.id !== to?.parentId) node.remove()
               if (to) node.treePosition(to)
               break
             }
             // udpate
-            case 'node:update': {
-              const node = nodes.get(nodeId)
-              node.patch(op.to as any)
+            case 'node:update':
+              patchObj(nodes.get(op.nodeId), op.to as any)
               break
-            }
             // delete
             case 'node:delete':
-              nodes.get(nodeId).dispose()
+              nodes.get(op.nodeId).dispose()
               break
           }
         } else {
           switch (op.type) {
+            // revert settings udpate
+            case 'settings:update':
+              patchObj(this.#doc, op.from as any)
+              break
             // delete created
             case 'node:create':
-              nodes.get(nodeId).dispose()
+              nodes.get(op.nodeId).dispose()
               break
             // move back
             case 'node:move': {
-              const node = nodes.get(nodeId)
+              const node = nodes.get(op.nodeId)
               const { from } = op
               if (node.parent?.id !== from?.parentId) node.remove()
               if (from) node.treePosition(from)
               break
             }
             // revert udpate
-            case 'node:update': {
-              const node = nodes.get(nodeId)
-              node.patch(op.from as any)
+            case 'node:update':
+              patchObj(nodes.get(op.nodeId), op.from as any)
               break
-            }
             // recreate deleted
             case 'node:delete':
-              movie.createNode(op.from)
+              doc.createNode(op.from)
               break
           }
         }
@@ -254,6 +263,14 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   }
   redo(): void {
     this.#undoRedo(true)
+  }
+
+  #onSettingsUpdate({ from }: SettingsUpdateEvent): void {
+    const to: Record<string, unknown> = {}
+
+    for (const key in from) if (Object.hasOwn(from, key)) to[key] = this.#doc[key as keyof DocumentSettings]
+
+    this.#add([{ type: 'settings:update', from, to }])
   }
 
   #onAssetCreate({ asset, source }: AssetCreateEvent) {

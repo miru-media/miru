@@ -10,9 +10,9 @@ const MIN_PPS = 0.005
 const MIN_MAX_PPS = 0.2
 
 export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
-  const { _movie: movie, store } = editor
+  const { _doc: doc, store } = editor
   const { tr } = useI18n()
-  const maxPps = () => Math.max(MIN_MAX_PPS, (movie.duration / editor._timelineSize.value.width) * 2)
+  const maxPps = () => Math.max(MIN_MAX_PPS, (doc.duration / editor._timelineSize.value.width) * 2)
 
   return (
     <div class={[styles.secondaryToolbar, styles.safePaddingX]}>

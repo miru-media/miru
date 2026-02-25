@@ -8,8 +8,8 @@ import type * as pub from '../types/core'
 import type { Schema } from '../types/core'
 import type { RootNode } from '../types/internal'
 
+import type { Document } from './document.ts'
 import { AssetCreateEvent, AssetDeleteEvent, AssetRefreshEvent } from './events.ts'
-import type { BaseMovie } from './nodes/base-movie.ts'
 import { storage } from './storage/index.ts'
 
 export abstract class BaseAsset<T extends Schema.AnyAsset = any> {
@@ -73,7 +73,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
     return this.#error.value
   }
 
-  constructor(init: Schema.AvMediaAsset, options: { source?: Blob | string; root: BaseMovie }) {
+  constructor(init: Schema.AvMediaAsset, options: { source?: Blob | string; root: Document }) {
     const { root, source } = options
     super(init, root)
 
@@ -206,7 +206,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
 
   static fromInit(
     init: Schema.AvMediaAsset,
-    root: BaseMovie,
+    root: Document,
     source: string | (Blob & { name?: string }) | undefined = init.url,
   ): MediaAsset {
     const asset = new MediaAsset(init, { source, root })

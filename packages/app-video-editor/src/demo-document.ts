@@ -7,7 +7,7 @@ import wavesRocks from 'https://github.com/miru-media/static-assets/raw/main/dis
 import { uid } from 'uid'
 import type { Schema } from 'webgl-video-editor'
 
-import { createInitialMovie } from 'webgl-video-editor/store/utils.js'
+import { createInitialDocument } from 'webgl-video-editor/store/utils.js'
 
 const transform1080p = {
   position: { x: -420, y: 420 },
@@ -127,12 +127,12 @@ const assets = {
   },
 } satisfies Record<string, Schema.AvMediaAsset>
 
-export const demoMovie = createInitialMovie()
+export const demoDoc = createInitialDocument()
 
-demoMovie.resolution = { width: 1080, height: 1920 }
-demoMovie.frameRate = 24
-demoMovie.assets = Object.values(assets)
-demoMovie.tracks.push(
+demoDoc.resolution = { width: 1080, height: 1920 }
+demoDoc.frameRate = 24
+demoDoc.assets = Object.values(assets)
+demoDoc.tracks.push(
   {
     id: uid(),
     type: 'track',

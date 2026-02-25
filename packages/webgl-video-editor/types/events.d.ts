@@ -1,9 +1,10 @@
 import type { ChildNodePosition } from './core'
 import type * as pub from './core'
 
-type AnyNode = Movie
 export interface VideoEditorEvents {
   error: ErrorEvent
+
+  'settings:update': SettingsUpdateEvent
 
   'node:create': NodeCreateEvent
   'node:move': NodeMoveEvent
@@ -25,6 +26,13 @@ export interface VideoEditorEvents {
   'canvas:pointerup': CanvasEvent<'pointerup'>
 }
 
+export class SettingsUpdateEvent extends Event {
+  readonly type: 'settings:update'
+  readonly from: Partial<pub.Schema.DocumentSettings>
+
+  constructor(from: Partial<pub.Schema.AnyNodeSchema>)
+}
+
 export class NodeCreateEvent extends Event {
   readonly type: 'node:create'
   readonly node: BaseNode
@@ -41,7 +49,7 @@ export class NodeUpdateEvent extends Event {
   readonly parentId?: string
   readonly index?: number
 
-  constructor(node: pub.Base, from: Partial<AnySchemaNode>, group?: string)
+  constructor(node: pub.Base, from: Partial<pub.Schema.AnyNodeSchema>, group?: string)
 }
 
 export class NodeDeleteEvent extends Event {

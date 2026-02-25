@@ -23,7 +23,7 @@ npm install webgl-video-editor
 
   async function restoreFromLocalStorage() {
     try {
-      const savedJson = localStorage.getItem(movieContentKey)
+      const savedJson = localStorage.getItem(docContentKey)
 
       if (savedJson) {
         const parsed = JSON.parse(savedJson)
@@ -38,7 +38,7 @@ npm install webgl-video-editor
 
   // save to localStorage when the content changes
   editor.addEventListener('change', function (event) {
-    localStorage.setItem(movieContentKey, JSON.stringify(event.detail))
+    localStorage.setItem(docContentKey, JSON.stringify(event.detail))
   })
 </script>
 ```

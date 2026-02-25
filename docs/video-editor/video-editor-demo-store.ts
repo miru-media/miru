@@ -41,7 +41,13 @@ export const useVideoEditorStore = (
 
       void idb.whenSynced.then(() => {
         if (isStale) return
-        store.value = markRaw(new VideoEditorYjsStore(ydoc.getMap(YTREE_YMAP_KEY), ydoc.getMap('assets')))
+        store.value = markRaw(
+          new VideoEditorYjsStore({
+            tree: ydoc.getMap(YTREE_YMAP_KEY),
+            settings: ydoc.getMap('settings'),
+            assets: ydoc.getMap('assets'),
+          }),
+        )
         webrtc.value = new WebrtcProvider(id, ydoc)
       })
     },
