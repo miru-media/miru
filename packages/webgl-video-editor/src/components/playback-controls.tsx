@@ -5,9 +5,9 @@ import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
-  const doc = editor._doc
+  const { playback } = editor
   const { t } = useI18n()
-  const playOrPause = () => (doc.isPaused.value ? t('play') : t('pause'))
+  const playOrPause = () => (playback.isPaused ? t('play') : t('pause'))
 
   return (
     <div class={[styles.playbackControls, styles.safePaddingX]}>
@@ -15,11 +15,11 @@ export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
         class={[styles.square, styles.overlay]}
         label={playOrPause}
         onClick={() => {
-          if (doc.isPaused.value) doc.play()
-          else doc.pause()
+          if (playback.isPaused) playback.play()
+          else playback.pause()
         }}
       >
-        {() => (doc.isPaused.value ? <IconTablerPlayerPlay /> : <IconTablerPlayerPause />)}
+        {() => (playback.isPaused ? <IconTablerPlayerPlay /> : <IconTablerPlayerPause />)}
       </Button>
     </div>
   )

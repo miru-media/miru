@@ -1,15 +1,19 @@
 import { ref } from 'fine-jsx'
 
-import type { Schema } from '../../types/core'
-import type { AnyNode, AnyParentNode, NonReadonly, RootNode } from '../../types/internal'
+import type { AnyNode, AnyParentNode, Schema } from '../../types/core.d.ts'
+import type * as pub from '../../types/core.d.ts'
+import type { NonReadonly } from '../../types/internal.d.ts'
 
 import { BaseNode } from './base-node.ts'
 
 export abstract class ParentNode<
-  T extends Schema.AnyNodeSchema,
-  TParent extends AnyParentNode = AnyParentNode,
-  TChild extends AnyNode = AnyNode,
-> extends BaseNode<T, TParent> {
+    T extends Schema.AnyNodeSchema,
+    TParent extends AnyParentNode = AnyParentNode,
+    TChild extends AnyNode = AnyNode,
+  >
+  extends BaseNode<T, TParent>
+  implements pub.ParentNode<TChild>
+{
   readonly #head = ref<TChild>()
   readonly #tail = ref<TChild>()
 
@@ -28,12 +32,13 @@ export abstract class ParentNode<
     return array
   }
 
-  get count(): number {
-    return (this.#tail.value?.index ?? -1) + 1
+  protected _count(): number {
+    const { tail } = this
+    return tail ? tail.index + 1 : 0
   }
 
-  constructor(init: T, root?: RootNode) {
-    super(init, root)
+  constructor(doc: pub.Document, init: T) {
+    super(doc, init)
 
     this.onDispose(() => {
       while (this.tail) this.tail.dispose()
@@ -41,12 +46,12 @@ export abstract class ParentNode<
     })
   }
 
-  #setChildparent(child: this['children'][number]): void {
-    ;(child as NonReadonly<typeof child>).parent = this as unknown as TParent
+  #setChildparent(child: TChild): void {
+    ;(child as NonReadonly<TChild>).parent = this as unknown as TParent
   }
 
   _positionChildAt(node: TChild, index: number): void {
-    if (node.index === index && node.parent === (this as unknown as TParent)) return
+    if (node.index === index && node.parent === (this as unknown as AnyParentNode)) return
 
     let other = this.head
     for (; !!other && other.index < index; other = other.next as TChild);
@@ -62,15 +67,15 @@ export abstract class ParentNode<
 
     if (!tail) this.#head.value = node
     else {
-      ;(tail.next as TChild) = node
-      ;(node.prev as TChild) = tail
+      tail.next = node
+      node.prev = tail
     }
 
     this.#tail.value = node
     node.next = undefined
   }
 
-  _unlinkChild(node: this['children'][number]): void {
+  _unlinkChild(node: TChild): void {
     const { head, tail } = this
     const { prev, next } = node
 
@@ -87,7 +92,7 @@ export abstract class ParentNode<
 
     this._unlinkChild(node)
     this.#setChildparent(node)
-    ;(node.next as TChild | undefined) = before
+    node.next = before
 
     if (!before) {
       this.#pushChild(node)
@@ -99,7 +104,7 @@ export abstract class ParentNode<
     const { head } = this
     const { prev } = before
     if (before === head) this.#head.value = node
-    if (prev != null) (prev.next as TChild) = node
-    ;(before.prev as TChild) = node
+    if (prev != null) prev.next = node
+    before.prev = node
   }
 }

@@ -212,7 +212,7 @@ const loadImageUrlOrBlob = async (source: string | Blob, crossOrigin?: CrossOrig
 
 export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
   type: T,
-  url: string,
+  url?: string,
   crossOrigin?: CrossOrigin,
 ) => {
   const media = document.createElement(type) as T extends 'audio' ? HTMLAudioElement : HTMLVideoElement
@@ -222,8 +222,11 @@ export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
   media.muted = true
   media.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
   document.body.appendChild(media)
-  setMediaSrc(media, url, crossOrigin)
-  media.load()
+
+  if (url) {
+    setMediaSrc(media, url, crossOrigin)
+    media.load()
+  }
 
   return media
 }
@@ -236,21 +239,21 @@ const loadVideoUrl = async (
   if (!url) throw new Error('Empty video source URL')
   const video = createHiddenMediaElement('video', url, crossOrigin)
   try {
-    await Promise.race([signal?.aborted, whenLoadedMetadata(video)])
+    await Promise.race([signal?.aborted, whenCanPlay(video)])
   } catch {
     video.removeAttribute('src')
   }
   return video
 }
 
-export const whenLoadedMetadata = (media: HTMLMediaElement): Promise<void> =>
+export const whenCanPlay = (media: HTMLMediaElement): Promise<void> =>
   new Promise((resolve, reject) => {
     if (media.readyState >= ReadyState.HAVE_METADATA) {
       resolve()
       return
     }
 
-    const onLoadedMetadata = () => {
+    const onCanPlay = () => {
       resolve()
       removeListeners()
     }
@@ -264,12 +267,12 @@ export const whenLoadedMetadata = (media: HTMLMediaElement): Promise<void> =>
     }
 
     const removeListeners = () => {
-      media.removeEventListener('loadedmetadata', onLoadedMetadata)
+      media.removeEventListener('canplay', onCanPlay)
       media.removeEventListener('abort', onAbort)
       media.removeEventListener('error', onAbort)
     }
 
-    media.addEventListener('loadedmetadata', onLoadedMetadata)
+    media.addEventListener('canplay', onCanPlay)
     media.addEventListener('abort', onAbort)
     media.addEventListener('error', onError)
   })

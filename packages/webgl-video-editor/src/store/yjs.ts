@@ -12,15 +12,13 @@ import type {
   Schema,
   SettingsUpdateEvent,
   VideoEditor,
-  VideoEditorStore,
 } from 'webgl-video-editor'
 
-import type { AnyNode, AnyParentNode } from '../../types/internal'
-import type { DocumentSettings } from '../../types/schema'
+import type * as pub from '../../types/core.d.ts'
+import type { AnyNode, AnyParentNode, VideoEditorStore } from '../../types/core.d.ts'
+import type { DocumentSettings } from '../../types/schema.d.ts'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
 import { AssetCreateEvent, NodeCreateEvent } from '../events.ts'
-import type { BaseNode } from '../nodes/base-node.ts'
-import type { PlaybackDocument } from '../playback-document.ts'
 import { storage } from '../storage/index.ts'
 import type { StorageFileWriteOptions } from '../storage/storage.ts'
 
@@ -44,7 +42,7 @@ const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): voi
 const OBSERVED = new WeakSet<Y.Map<unknown>>()
 
 export class VideoEditorYjsStore implements VideoEditorStore {
-  #doc!: PlaybackDocument
+  #doc!: pub.Document
 
   readonly ydoc: Y.Doc
   readonly assetsYmap: Y.Map<Schema.AnyAsset>
@@ -69,6 +67,8 @@ export class VideoEditorYjsStore implements VideoEditorStore {
   get #shouldSkipNodeEvent(): boolean {
     return this.#yundo.undoing || this.#yundo.redoing || this.#isSyncingYdocToVideoDoc
   }
+
+  isDisposed = false
 
   constructor(ymaps: { tree: Y.Map<unknown>; assets: Y.Map<Schema.AnyAsset>; settings: Y.Map<unknown> }) {
     const ydoc = ymaps.tree.doc!
@@ -97,12 +97,12 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       isNewDoc = false
     } catch {}
 
-    const doc = (this.#doc = _editor._doc)
+    const doc = (this.#doc = _editor.doc)
 
     this.#ytree.observe(this.#onYtreeChange)
 
     doc.assets.forEach((asset) =>
-      this.#onAssetCreate(new AssetCreateEvent(asset, 'url' in asset.raw ? asset.raw.url : undefined)),
+      this.#onAssetCreate(new AssetCreateEvent(asset, 'url' in asset ? asset.url : undefined)),
     )
     doc.nodes.map.forEach((node) => this.#onNodeCreate(new NodeCreateEvent(node)))
 
@@ -115,16 +115,17 @@ export class VideoEditorYjsStore implements VideoEditorStore {
       }
     }
 
-    const options: AddEventListenerOptions = { signal: this.#abort.signal }
+    const listenerOptions: AddEventListenerOptions = { signal: this.#abort.signal }
+    doc.on('doc:dispose', this.dispose.bind(this), listenerOptions)
     /* eslint-disable @typescript-eslint/unbound-method -- false positive */
-    doc.on('settings:update', bindNodeListener(this.#onSettingsUpdate), options)
-    doc.on('node:create', bindNodeListener(this.#onNodeCreate), options)
-    doc.on('node:move', bindNodeListener(this.#onMove), options)
-    doc.on('node:update', bindNodeListener(this.#onUpdate), options)
-    doc.on('node:delete', bindNodeListener(this.#onDelete), options)
-    doc.on('asset:create', bindNodeListener(this.#onAssetCreate), options)
-    doc.on('asset:delete', bindNodeListener(this.#onAssetDelete), options)
-    doc.on('asset:refresh', bindNodeListener(this.#onAssetRefresh), options)
+    doc.on('settings:update', bindNodeListener(this.#onSettingsUpdate), listenerOptions)
+    doc.on('node:create', bindNodeListener(this.#onNodeCreate), listenerOptions)
+    doc.on('node:move', bindNodeListener(this.#onMove), listenerOptions)
+    doc.on('node:update', bindNodeListener(this.#onUpdate), listenerOptions)
+    doc.on('node:delete', bindNodeListener(this.#onDelete), listenerOptions)
+    doc.on('asset:create', bindNodeListener(this.#onAssetCreate), listenerOptions)
+    doc.on('asset:delete', bindNodeListener(this.#onAssetDelete), listenerOptions)
+    doc.on('asset:refresh', bindNodeListener(this.#onAssetRefresh), listenerOptions)
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (isNewDoc) {
@@ -201,7 +202,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     }
   }
 
-  #getOrCreateFromYnode(ynode: Y.Map<unknown>): BaseNode {
+  #getOrCreateFromYnode(ynode: Y.Map<unknown>): AnyNode {
     return (
       this.#doc.nodes.map.get(ynode.get('id') as string) ??
       this.#doc.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
@@ -248,7 +249,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
         (node.parent?.id ?? YTREE_ROOT_KEY) !== parentKey ||
         (parentKey !== YTREE_ROOT_KEY && node.index !== index)
       )
-        node.treePosition(parentKey === YTREE_ROOT_KEY ? undefined : { parentId: parentKey, index })
+        node.move(parentKey === YTREE_ROOT_KEY ? undefined : { parentId: parentKey, index })
 
       this.#onYtreeChange_(nodeId)
     })
@@ -263,7 +264,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     updateYmap(this.settingsYmap, udpates)
   }
 
-  #onNodeCreate({ node }: NodeCreateEvent): void {
+  #onNodeCreate({ node }: pub.NodeCreateEvent): void {
     const ytree = this.#ytree
     let ynode: Y.Map<unknown>
 
@@ -369,6 +370,7 @@ export class VideoEditorYjsStore implements VideoEditorStore {
   }
 
   dispose(): void {
+    this.isDisposed = true
     this.#abort.abort()
   }
 

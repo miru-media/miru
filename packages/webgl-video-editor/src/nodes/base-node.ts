@@ -1,18 +1,17 @@
 import { computed, ref } from 'fine-jsx'
-import type * as Pixi from 'pixi.js'
 
-import type { ChildNodePosition } from '../../types/core'
-import type { AnyNode, AnyParentNode, NodeSnapshot, NonReadonly, RootNode } from '../../types/internal'
+import type { AnyNode, AnyParentNode, ChildNodePosition } from '../../types/core.d.ts'
+import type * as pub from '../../types/core.d.ts'
+import type { NodeSnapshot, NonReadonly } from '../../types/internal.d.ts'
 import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
 
-import type { AudioClip, BaseClip, Gap, Schema, Timeline, Track, VisualClip } from './index.ts'
+import type { Schema } from './index.ts'
 
 export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyParentNode = AnyParentNode> {
   readonly type: T['type']
   readonly id: string
-  declare readonly root: RootNode
+  declare readonly doc: pub.Document
   abstract readonly children?: unknown
-  abstract container?: Pixi.Container
 
   readonly #parent = ref<TParent>()
 
@@ -47,7 +46,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   readonly #cleanups: (() => void)[] = []
 
   readonly #index = computed((): number => {
-    const prev = this.prev as BaseNode | undefined
+    const { prev } = this
     if (prev) return prev.index + 1
     if (this.parent?.head === (this as unknown as AnyNode)) return 0
     return -1
@@ -57,14 +56,14 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     return this.#index.value
   }
 
-  constructor(init: T, root?: RootNode) {
+  constructor(doc: pub.Document, init: T) {
     this.id = init.id
     this.type = init.type
 
-    if (root) this.root = root
-
+    this.doc = doc
     this._init(init)
-    root?._emit(new NodeCreateEvent(this))
+
+    doc.emit(new NodeCreateEvent(this as unknown as AnyNode))
   }
 
   protected abstract _init(init: T): void
@@ -78,59 +77,55 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     }
   }
 
-  treePosition(position: ChildNodePosition | undefined) {
+  move(position: ChildNodePosition | undefined) {
     const parentId = position?.parentId
     if (parentId === this.parent?.id && (!position || position.index === this.index)) return
 
     const fromParent = this.parent
     const fromIndex = this.index
-    const newParent = parentId ? (this.root.nodes.get(parentId) as unknown as TParent) : undefined
+    const newParent = parentId ? (this.doc.nodes.get(parentId) as unknown as TParent) : undefined
 
     if (fromParent && fromParent.id !== parentId) fromParent._unlinkChild(this as any)
 
     if (position) newParent?._positionChildAt(this as any, position.index)
     else (this as NonReadonly<typeof this>).parent = undefined
 
-    const { container } = this
-    if (container) {
-      if (!newParent) container.removeFromParent()
-      else if (this.isVisual()) {
-        if (newParent.id !== fromParent?.id) newParent.container.addChild(container)
-        container.zIndex = this.index
-      }
-    }
-
-    this.root._emit(new NodeMoveEvent(this, fromParent && { parentId: fromParent.id, index: fromIndex }))
+    this.doc.emit(
+      new NodeMoveEvent(
+        this as unknown as AnyNode,
+        fromParent && { parentId: fromParent.id, index: fromIndex },
+      ),
+    )
   }
 
   remove(): void {
-    this.treePosition(undefined)
+    this.move(undefined)
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isTimeline(): this is Timeline {
+  isTimeline(): this is pub.Timeline {
     return false
   }
-  isTrack(): this is Track {
+  isTrack(): this is pub.Track {
     return false
   }
-  isClip(): this is BaseClip {
+  isClip(): this is pub.AnyClip {
     return false
   }
-  isGap(): this is Gap {
+  isGap(): this is pub.Gap {
     return false
   }
-  isVisual(): this is VisualClip | Track {
+  isVisual(): this is pub.AnyVisualNode {
     return false
   }
-  isAudio(): this is AudioClip | Track {
+  isAudio(): this is pub.AnyAudioNode {
     return false
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   #emitUpdate<Key extends keyof T>(key: Exclude<Key, 'id' | 'type'>, oldValue: T[Key]): void {
-    const event = new NodeUpdateEvent(this, { [key]: oldValue })
-    this.root._emit(event)
+    const event = new NodeUpdateEvent(this as unknown as AnyNode, { [key]: oldValue })
+    this.doc.emit(event)
   }
 
   protected _defineReactive<Key extends keyof T>(
@@ -171,14 +166,14 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
 
   dispose() {
     if (this.isDisposed) return
+    this.isDisposed = true
 
     this.#cleanups.forEach((fn) => fn())
 
     this.parent?._unlinkChild(this as any)
-    this.container?.destroy()
-    this.root._emit(new NodeDeleteEvent(this))
-    this.isDisposed = true
-    ;(this as unknown as NonReadonly<typeof this>).root = undefined as never
+    this.doc.emit(new NodeDeleteEvent(this as unknown as AnyNode))
+    ;(this as unknown as NonReadonly<typeof this>).doc = undefined as never
+    ;(this as NonReadonly<typeof this>).doc = undefined as never
   }
 
   onDispose(fn: () => void) {

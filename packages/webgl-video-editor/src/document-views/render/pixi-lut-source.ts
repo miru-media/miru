@@ -5,7 +5,7 @@ import { type EffectOp, LUT_TEX_OPTIONS } from 'webgl-effects'
 import type { SyncImageSource } from 'shared/types'
 import { get2dContext, getImageData, isSyncSource, loadAsyncImageSource, loadLut } from 'shared/utils'
 
-import { PIXI_HALD_LUT_UPLOADER_ID, PIXI_LUT_UPLOADER_ID } from '../constants.ts'
+import { PIXI_HALD_LUT_UPLOADER_ID, PIXI_LUT_UPLOADER_ID } from '../../constants.ts'
 
 export class LutUploaderSystem {
   scratchPad2d = get2dContext(undefined, { willReadFrequently: true })

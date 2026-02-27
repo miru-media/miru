@@ -1,11 +1,10 @@
-import type { Schema } from '../../types/core'
+import type { Schema } from '../../types/core.d.ts'
 import type * as pub from '../../types/core.d.ts'
 
 import { Clip } from './clip.ts'
 
 export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
   declare clipType: 'audio'
-  declare container: undefined
 
   declare volume: number
   declare mute: boolean
@@ -24,7 +23,7 @@ export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
 
   toObject(): Schema.AudioClip {
     const { volume, mute } = this
-    const obj: Schema.AudioClip = super.toObject()
+    const obj: Schema.AudioClip = super.toObject() as Schema.BaseClip & { clipType: 'audio' }
 
     if (volume !== 1) obj.volume = volume
     if (mute) obj.mute = mute

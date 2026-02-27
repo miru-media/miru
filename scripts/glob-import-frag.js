@@ -7,7 +7,10 @@ export const globImportFrag = () =>
     format: 'default',
     include: [
       resolve(import.meta.dirname, '../packages/webgl-effects/src/all-fragment-shaders.ts'),
-      resolve(import.meta.dirname, '../packages/webgl-video-editor/src/pixi/pixi-miru-filter.ts'),
+      resolve(
+        import.meta.dirname,
+        '../packages/webgl-video-editor/src/document-views/render/pixi-miru-filter.ts',
+      ),
     ],
     rename: (name, id) => {
       if (name) throw new Error('Unexpected named import.')

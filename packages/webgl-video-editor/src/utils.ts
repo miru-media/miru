@@ -1,19 +1,14 @@
 import * as Pixi from 'pixi.js'
 
-import type { VisualClip } from './nodes'
+import type * as pub from '../types/core.d.ts'
 
-export const updateSpriteTransform = (clip: VisualClip): void => {
-  clip.sprite.setFromMatrix(getClipTransformMatrix(clip, true))
-}
-
-export const getClipTransformMatrix = (clip: VisualClip, withVideoRotation: boolean): Pixi.Matrix => {
-  const { scale, videoRotation } = clip
+export const getClipTransformMatrix = (clip: pub.VisualClip, withVideoRotation: boolean): Pixi.Matrix => {
+  const { scale } = clip
+  const { width, height, rotation: videoRotation } = clip.sourceAsset.video!
 
   const matrix = new Pixi.Matrix()
 
   if (withVideoRotation && videoRotation !== 0) {
-    const { width, height } = clip.mediaSize
-
     const rads = (videoRotation * Math.PI) / 180
     matrix.rotate(rads)
 
@@ -23,9 +18,9 @@ export const getClipTransformMatrix = (clip: VisualClip, withVideoRotation: bool
     )
   }
 
-  const { mediaSize, position } = clip
-  const halfWidth = mediaSize.width / 2
-  const halfHeight = mediaSize.height / 2
+  const { position } = clip
+  const halfWidth = width / 2
+  const halfHeight = height / 2
 
   if (clip.rotation !== 0 || scale.x !== 1 || scale.y !== 1) {
     matrix

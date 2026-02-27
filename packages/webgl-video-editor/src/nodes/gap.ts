@@ -1,6 +1,6 @@
 import { computed } from 'fine-jsx'
 
-import type { ClipTime, Schema } from '../../types/core'
+import type { ClipTime, Schema } from '../../types/core.d.ts'
 import type * as pub from '../../types/core.d.ts'
 
 import { TrackChild } from './track-child.ts'
@@ -8,7 +8,6 @@ import { TrackChild } from './track-child.ts'
 export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
   type = 'gap' as const
   declare children: undefined
-  declare container: undefined
 
   readonly #time = computed((): ClipTime => {
     const prevTime = this.prev?.time
@@ -21,10 +20,6 @@ export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
 
   get time(): ClipTime {
     return this.#time.value
-  }
-
-  get start(): number {
-    return this.time.start
   }
 
   declare readonly transition: undefined

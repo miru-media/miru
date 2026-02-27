@@ -7,8 +7,8 @@ import interact from '@interactjs/interact'
 import { computed, effect, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
+import type { VisualClip } from '../../types/core'
 import styles from '../css/index.module.css'
-import type { VisualClip } from '../nodes/visual-clip.ts'
 import { getClipTransformMatrix } from '../utils.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
@@ -16,21 +16,19 @@ const ROTATE_LINE_LENGTH = 50
 
 export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
   const container = ref<SVGElement>()
-  const clipProps = computed((): Pick<VisualClip, 'position' | 'rotation' | 'scale' | 'mediaSize'> => {
-    const clip = editor.selection
-    if (!clip?.isVisual())
-      return {
-        position: { x: 0, y: 0 },
-        rotation: 0,
-        scale: { x: 1, y: 1 },
-        mediaSize: { width: 0, height: 0 },
-      }
 
-    return clip
+  const clipMediaSize = computed(() =>
+    editor.selection?.isVisual() ? editor.selection.sourceAsset.video! : { width: 0, height: 0 },
+  )
+  const clipProps = computed((): Pick<VisualClip, 'position' | 'rotation' | 'scale'> => {
+    const clip = editor.selection
+    return clip?.isVisual() ? clip : { position: { x: 0, y: 0 }, rotation: 0, scale: { x: 1, y: 1 } }
   })
+
   const rotateZoomMatrix = computed(() => {
     const { zoom } = editor
-    const { mediaSize, rotation } = clipProps.value
+    const { rotation } = clipProps.value
+    const mediaSize = clipMediaSize.value
     const halfWidth = mediaSize.width / 2
     const halfHeight = mediaSize.height / 2
 
@@ -50,7 +48,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
         const clip = clipProps.value
 
         const { x, y } = clip.position
-        const { width, height } = clip.mediaSize
+        const { width, height } = clipMediaSize.value
         return { left: x, top: y, right: x + width, bottom: y + height }
       },
     }).draggable({
@@ -81,7 +79,8 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
           if (!clip?.isVisual()) return
           resizeStart.pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
           resizeStart.position = clip.position
-          const { scale, mediaSize } = clip
+          const { scale } = clip
+          const mediaSize = clipMediaSize.value
           resizeStart.size = { width: mediaSize.width * scale.x, height: mediaSize.height * scale.y }
           edges = Object.fromEntries(
             (event.target.dataset.edges ?? '').split(' ').map((edge) => [edge, true]),
@@ -90,7 +89,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
         move(event: ResizeEvent) {
           const clip = clipProps.value
 
-          const { mediaSize } = clip
+          const mediaSize = clipMediaSize.value
           const startSize = resizeStart.size
           const pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
           const dx = (pointer.x - resizeStart.pointer.x) * (edges.left ? -1 : edges.right ? 1 : 0)
@@ -123,7 +122,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
   )
 
   const boxPoints = computed(() => {
-    const { width, height } = clipProps.value.mediaSize
+    const { width, height } = clipMediaSize.value
 
     const matrix = clipMatrix.value
     return (
@@ -137,7 +136,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
   })
 
   const rotateLine = computed(() => {
-    const halfWidth = clipProps.value.mediaSize.width / 2
+    const halfWidth = clipMediaSize.value.width / 2
     const matrix = clipMatrix.value
     const clipScale = editor.selection?.isVisual() ? editor.selection.scale : { x: 1, y: 1 }
     const { zoom } = editor

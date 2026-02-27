@@ -37,8 +37,8 @@ const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: nu
 
   clip.filter = newFilter
 
-  const start = clip.start
-  const end = clip.start + clip.duration
+  const start = clip.time.start
+  const end = start + clip.duration
   const { currentTime } = editor
 
   if (currentTime < start || currentTime >= end) editor.seekTo(start)

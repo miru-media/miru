@@ -3,9 +3,9 @@ import * as Pixi from 'pixi.js'
 import type { EffectOp } from 'webgl-effects'
 
 // eslint-disable-next-line import/no-unresolved -- glob
-import * as _frags from '../glsl/*.frag'
-import ADJUST_COLOR from '../glsl/adjust-color.frag'
-import VERTEX_SHADER from '../glsl/default.vert'
+import * as _frags from '../../glsl/*.frag'
+import ADJUST_COLOR from '../../glsl/adjust-color.frag'
+import VERTEX_SHADER from '../../glsl/default.vert'
 
 import { LutSource } from './pixi-lut-source.ts'
 

@@ -47,10 +47,10 @@ export const initYmapsFromJson = (
     // create the timeline node if it's missing
     try {
       ytree.getNodeValueFromKey('timeline')
-      content.tracks.forEach((track) => addNodeAndChildren('timeline', track))
+      content.tracks.forEach((track) => addNodeAndChildren(TIMELINE_ID, track))
     } catch {
-      addNodeAndChildren(TIMELINE_ID, {
-        id: 'timeline',
+      addNodeAndChildren(YTREE_NULL_PARENT_KEY, {
+        id: TIMELINE_ID,
         type: 'timeline',
         children: content.tracks,
       } as const)

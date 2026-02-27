@@ -1,50 +1,38 @@
-import { computed, effect, ref, type Ref } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import type { Size } from 'shared/types.ts'
-import { clamp } from 'shared/utils/math'
+import { clamp } from 'shared/utils/math.ts'
 
-import type * as pub from '../types/core'
-import type { VideoEditorEvents } from '../types/events'
-import type { AnyAsset, AnyClip, AnyNode, NodeMap as INodeMap, NodesByType } from '../types/internal'
+import type * as pub from '../types/core.d.ts'
 
-import { VideoEffectAsset } from './assets.ts'
+import { MediaAsset, VideoEffectAsset } from './assets.ts'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from './constants.ts'
-import {
-  type AssetCreateEvent,
-  type AssetDeleteEvent,
-  type NodeCreateEvent,
-  type NodeDeleteEvent,
-  PlaybackSeekEvent,
-  SettingsUpdateEvent,
-} from './events.ts'
-import { PlaybackPauseEvent, PlaybackPlayEvent } from './events.ts'
-import type { Gap, Schema } from './nodes/index.ts'
+import { LutUploaderSystem } from './document-views/render/pixi-lut-source.ts'
+import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
+import { AudioClip, Gap, type Schema, VisualClip } from './nodes/index.ts'
 import { Timeline } from './nodes/timeline.ts'
-import type { Track } from './nodes/track.ts'
-import { LutUploaderSystem } from './pixi/pixi-lut-source.ts'
+import { Track } from './nodes/track.ts'
 
-const PLAY_EVENT = new PlaybackPlayEvent()
-const PAUSE_EVENT = new PlaybackPauseEvent()
 const SEEK_EVENT = new PlaybackSeekEvent()
 
 Pixi.extensions.add(LutUploaderSystem)
 
-class NodeMap implements INodeMap {
-  map = new Map<string, AnyNode>()
-  byType = {
-    timeline: new Set<Timeline>(),
-    track: new Set<Track>(),
-    clip: new Set<AnyClip>(),
-    gap: new Set<Gap>(),
+class NodeMap implements pub.NodeMap {
+  map: pub.NodeMap['map'] = new Map()
+  byType: pub.NodeMap['byType'] = {
+    timeline: new Set(),
+    track: new Set(),
+    clip: new Set(),
+    gap: new Set(),
   }
-  get<T extends AnyNode>(id: T['id']): T {
+  get<T extends pub.AnyNode>(id: T['id']): T {
     return this.map.get(id) as T
   }
-  set(node: AnyNode): void {
+  set(node: pub.AnyNode): void {
     this.map.set(node.id, node)
-    const typeSet: Set<NodesByType[typeof node.type]> = this.byType[node.type]
+    const typeSet: Set<pub.NodesByType[typeof node.type]> = this.byType[node.type]
     typeSet.add(node)
   }
   has(id: string): boolean {
@@ -54,7 +42,7 @@ class NodeMap implements INodeMap {
     const node = this.map.get(id)
     if (!node) return true
 
-    const typeSet: Set<NodesByType[typeof node.type]> = this.byType[node.type]
+    const typeSet: Set<pub.NodesByType[typeof node.type]> = this.byType[node.type]
     typeSet.delete(node)
 
     return this.map.delete(id)
@@ -74,31 +62,16 @@ const createInitialAssets = (doc: Document) =>
       ),
   )
 
-export abstract class Document implements pub.Document {
+export class Document implements pub.Document {
   declare parent?: undefined
-  declare container: undefined
 
   nodes = new NodeMap()
-  declare assets: Map<string, AnyAsset>
+  declare assets: Map<string, pub.AnyAsset>
 
-  declare canvas: HTMLCanvasElement | OffscreenCanvas
-  declare gl: WebGL2RenderingContext
-  declare renderer: Pixi.WebGLRenderer
-  declare whenRendererIsReady: Promise<void>
-  readonly #createdOwnRenderer: boolean
-
-  get stage(): Pixi.Container {
-    return this.timeline.container
-  }
-
-  protected readonly _currentTime = ref(0)
+  readonly _currentTime = ref(0)
   readonly #duration = computed(() =>
     this.timeline.children.reduce((end, track) => Math.max(track.duration, end), 0),
   )
-
-  isEnded = computed(() => this.currentTime >= this.duration)
-  isPaused = ref(true)
-  isStalled = computed(() => !this.isPaused.value && !this.isReady)
 
   readonly #resolution: Ref<Size>
   readonly #frameRate: Ref<number>
@@ -109,11 +82,7 @@ export abstract class Document implements pub.Document {
   set resolution(value) {
     this.#resolution.value = value
     const prev = this.resolution
-
-    const { width, height } = value
-    const { renderer } = this
-    if ((renderer as Partial<typeof renderer> | undefined)?.view) renderer.resize(width, height)
-    this._emit(new SettingsUpdateEvent({ resolution: prev }))
+    this.emit(new SettingsUpdateEvent({ resolution: prev }))
   }
   get frameRate(): number {
     return this.#frameRate.value
@@ -121,7 +90,7 @@ export abstract class Document implements pub.Document {
   set frameRate(value) {
     const prev = this.frameRate
     this.#frameRate.value = value
-    this._emit(new SettingsUpdateEvent({ frameRate: prev }))
+    this.emit(new SettingsUpdateEvent({ frameRate: prev }))
   }
 
   readonly #eventTarget = new EventTarget()
@@ -133,7 +102,6 @@ export abstract class Document implements pub.Document {
         if (!clip.isReady && clip.isInClipTime) return true
     return false
   })
-  abstract get isReady(): boolean
 
   get duration(): number {
     return this.#duration.value
@@ -143,113 +111,97 @@ export abstract class Document implements pub.Document {
     return this._currentTime.value
   }
 
-  timeline: Timeline
+  readonly timeline: Timeline
+  isDisposed = false
 
-  constructor(
-    options: Partial<
-      Pick<Document, 'gl' | 'renderer' | 'assets'> &
-        Pick<Schema.SerializedDocument, 'resolution' | 'frameRate'>
-    >,
-  ) {
-    if (options.renderer) {
-      this.renderer = options.renderer
-      this.gl = options.renderer.gl
-      this.#createdOwnRenderer = false
-    } else {
-      const { gl } = options
-      if (!gl) throw new Error('[webgl-video-editor] options.gl or options.renderer must be provided.')
-
-      this.gl = gl
-      this.renderer = new Pixi.WebGLRenderer()
-      this.#createdOwnRenderer = true
-    }
-
-    this.canvas = this.gl.canvas
-
-    this.on('node:create', ({ node }: NodeCreateEvent) => this.nodes.set(node))
-    this.on('node:delete', ({ node }: NodeDeleteEvent) => this.nodes.delete(node.id))
-    this.on('asset:create', ({ asset }: AssetCreateEvent) => this.assets.set(asset.id, asset))
-    this.on('asset:delete', ({ asset }: AssetDeleteEvent) => this.assets.delete(asset.id))
+  constructor(options: Partial<Pick<Document, 'assets'> & Schema.DocumentSettings>) {
+    this.on('node:create', ({ node }) => this.nodes.set(node))
+    this.on('node:delete', ({ node }) => this.nodes.delete(node.id))
+    this.on('asset:create', ({ asset }) => this.assets.set(asset.id, asset))
+    this.on('asset:delete', ({ asset }) => this.assets.delete(asset.id))
 
     this.#resolution = ref(options.resolution ?? DEFAULT_RESOLUTION)
     this.#frameRate = ref(options.frameRate ?? DEFAULT_FRAMERATE)
 
     this.timeline = new Timeline(this)
 
-    this.whenRendererIsReady = this.#createdOwnRenderer ? this.#initPixi() : Promise.resolve()
-
     if (options.assets) this.assets = options.assets
     else {
-      this.assets = new Map<string, AnyAsset>()
+      this.assets = new Map<string, pub.AnyAsset>()
       createInitialAssets(this)
     }
   }
 
-  async #initPixi(): Promise<void> {
-    try {
-      const { renderer, gl, canvas } = this
-      await renderer.init({ context: gl, canvas })
+  createAsset<T extends Schema.AnyAsset>(
+    init: T,
+    source?: Blob | string,
+  ): T extends Schema.VideoEffectAsset ? VideoEffectAsset : MediaAsset {
+    const asset =
+      init.type === 'asset:effect:video'
+        ? new VideoEffectAsset(init, this)
+        : new MediaAsset(init, { doc: this, source: source ?? init.url })
 
-      const { width, height } = this.resolution
-      renderer.resize(width, height)
-    } catch (error) {
-      this._emit(new ErrorEvent('error', { error }))
-    }
+    return asset as T extends Schema.VideoEffectAsset ? VideoEffectAsset : MediaAsset
   }
 
-  play(): void {
-    if (this.isEnded.value) this.seekTo(0)
-    if (this.isPaused.value) {
-      this._emit(PLAY_EVENT)
-      this.isPaused.value = false
-    }
-  }
+  createNode<T extends Schema.AnyNodeSchema>(init: T): pub.NodesByType[T['type']] {
+    let node: pub.AnyNode
 
-  pause(): void {
-    if (!this.isPaused.value) {
-      this._emit(PAUSE_EVENT)
-      this.isPaused.value = true
+    switch (init.type) {
+      case 'timeline':
+        node = new Timeline(this)
+        break
+      case 'track':
+        node = new Track(this, init)
+        break
+      case 'clip':
+        switch (init.clipType) {
+          case 'video':
+            node = new VisualClip(this, init)
+            break
+          case 'audio':
+            node = new AudioClip(this, init)
+            break
+        }
+        break
+      case 'gap':
+        node = new Gap(this, init)
+        break
+      // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- in case of invalid input
+      default:
+        throw new Error(`[webgl-video-editor] Unexpected init of type "${(init as { type: string }).type}".`)
     }
+
+    return node as pub.NodesByType[T['type']]
   }
 
   seekTo(time: number): void {
-    const { duration } = this
-    this._currentTime.value = clamp(time, 0, duration)
-    this._emit(SEEK_EVENT)
+    this._setCurrentTime(time)
+    this.emit(SEEK_EVENT)
   }
 
-  async whenReady(): Promise<void> {
-    if (this.isReady) return
-
-    await new Promise<void>((resolve) => {
-      const stop = effect(() => {
-        if (!this.isReady) return
-        stop()
-        resolve()
-      })
-    })
+  _setCurrentTime(time: number): void {
+    const { duration } = this
+    this._currentTime.value = clamp(time, 0, duration)
   }
 
   get isEmpty(): boolean {
-    return this.timeline.children.every((track) => track.count === 0)
+    return this.timeline.children.every((track) => !track.firstClip)
   }
 
-  on<T extends Extract<keyof VideoEditorEvents, string>>(
+  on<T extends Extract<keyof pub.VideoEditorEvents, string>>(
     type: T,
-    listener: (event: VideoEditorEvents[T]) => void,
+    listener: (event: pub.VideoEditorEvents[T]) => void,
     options?: AddEventListenerOptions,
   ): () => void {
+    options = { signal: this.#disposeAbort.signal, ...options }
     this.#eventTarget.addEventListener(type, listener as any, options)
-    const remove = () =>
-      this.#eventTarget.removeEventListener(type, listener as any, {
-        signal: this.#disposeAbort.signal,
-        ...options,
-      })
+    const remove = () => this.#eventTarget.removeEventListener(type, listener as any, options)
     return remove
   }
 
   /** @internal @hidden */
-  _emit(event: VideoEditorEvents[keyof VideoEditorEvents]): void {
+  emit(event: pub.VideoEditorEvents[keyof pub.VideoEditorEvents]): void {
     this.#eventTarget.dispatchEvent(event)
   }
 
@@ -260,8 +212,29 @@ export abstract class Document implements pub.Document {
     }
   }
 
+  importFromJson(content: Schema.SerializedDocument): void {
+    this.resolution = content.resolution
+    this.frameRate = content.frameRate
+
+    content.assets.forEach((init) => this.createAsset(init))
+
+    const createChildren = (parent: pub.AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
+      childrenInit.forEach((childInit, index) => {
+        const childNode = this.createNode(childInit)
+        childNode.move({ parentId: parent.id, index })
+        if ('children' in childInit) createChildren(childNode, childInit.children)
+      })
+    }
+
+    createChildren(this.timeline, content.tracks)
+  }
+
   dispose(): void {
-    if (this.#createdOwnRenderer) this.renderer.destroy()
+    if (this.isDisposed) return
+    this.isDisposed = true
+
+    this.emit(new DocDisposeEvent(this))
     this.#disposeAbort.abort()
+    this.nodes.map.forEach((node) => node.dispose())
   }
 }

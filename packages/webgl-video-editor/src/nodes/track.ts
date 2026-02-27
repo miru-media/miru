@@ -1,36 +1,33 @@
-import { computed, createEffectScope } from 'fine-jsx'
-import * as Pixi from 'pixi.js'
+import { computed } from 'fine-jsx'
 
-import type { AnyTrackChild, RootNode } from '../../types/internal'
+import type { AnyClip, AnyTrackChild } from '../../types/core.d.ts'
+import type * as pub from '../../types/core.d.ts'
 
-import type { BaseClip, Schema, Timeline } from './index.ts'
+import type { Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 
-export namespace Track {
-  export type TrackType = 'video' | 'audio'
-}
-
-export class Track extends ParentNode<Schema.Track, Timeline, AnyTrackChild> {
+export class Track extends ParentNode<Schema.Track, pub.Timeline, AnyTrackChild> implements pub.Track {
   type = 'track' as const
 
-  trackType!: Track.TrackType
-  container = new Pixi.Container({ sortableChildren: true })
+  trackType!: 'video' | 'audio'
 
-  readonly #scope = createEffectScope()
-
-  get firstClip(): BaseClip | undefined {
+  get firstClip(): AnyClip | undefined {
     const { head } = this
     if (head) return head.isClip() ? head : head.nextClip
   }
-  get lastClip(): BaseClip | undefined {
+  get lastClip(): AnyClip | undefined {
     const { tail } = this
     if (tail) return tail.isClip() ? tail : tail.prevClip
   }
 
-  get clips(): BaseClip[] {
-    const clips: BaseClip[] = []
+  get clips(): AnyClip[] {
+    const clips: AnyClip[] = []
     for (let clip = this.firstClip; clip; clip = clip.nextClip) clips.push(clip)
     return clips
+  }
+
+  get clipCount(): number {
+    return this.clips.length
   }
 
   readonly #duration = computed(() => {
@@ -44,15 +41,6 @@ export class Track extends ParentNode<Schema.Track, Timeline, AnyTrackChild> {
     return this.#duration.value
   }
 
-  constructor(init: Schema.Track, root: RootNode) {
-    super(init, root)
-
-    this.onDispose(() => {
-      this.#scope.stop()
-      this.container.removeFromParent()
-    })
-  }
-
   protected _init(init: Schema.Track): void {
     this.trackType = init.trackType
   }
@@ -61,11 +49,11 @@ export class Track extends ParentNode<Schema.Track, Timeline, AnyTrackChild> {
   isTrack(): this is Track {
     return true
   }
-  isVisual(): this is Track & { trackType: 'video' } {
-    return true
+  isVisual(): this is Track {
+    return this.trackType === 'video'
   }
-  isAudio(): this is Track & { trackType: 'audio' } {
-    return false
+  isAudio(): this is Track {
+    return this.trackType === 'audio'
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 

@@ -6,10 +6,10 @@ import { renderComponentTo } from 'shared/video/render-to'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
+import { fromVue, toVue } from '../document-views/vue/utils.ts'
+import { editorToVue } from '../document-views/vue/vue-document.ts'
 import { VideoEditorLocalStore as VideoEditorLocalStore_ } from '../store/local.ts'
 import { VideoEditor as VideoEditor_ } from '../video-editor.ts'
-
-import { editorToVue, fromVue, toVue } from './utils.ts'
 
 export type { VideoEditor } from '../../types/webgl-video-editor.ts'
 
@@ -60,6 +60,8 @@ export default Vue.defineComponent({
     })
 
     ctx.expose(vueEditor)
+
+    Vue.onScopeDispose(() => vueEditor.dispose())
 
     const { h } = Vue
     const { slots } = ctx

@@ -42,20 +42,20 @@ export const VideoEditorUI = (props: {
       })
       .catch(() => undefined)
 
-  const doc = editor._doc
+  const { doc } = editor
 
   return (
     <div class={styles.videoEditor}>
-      {() => editor._showStats.value && doc.stats.dom}
+      {() => editor._showStats.value && editor.playback.stats.dom}
       <div
         class={styles.viewport}
         style={() =>
           `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
         }
       >
-        {h(doc.canvas, { class: styles.viewportCanvas })}
+        {h(editor.canvas, { class: styles.viewportCanvas })}
         <TransformControls editor={editor} />
-        <LoadingOverlay loading={() => !doc.isReady} />
+        <LoadingOverlay loading={() => !editor.playback.isReady} />
         <PlaybackControls editor={editor} />
       </div>
 
@@ -84,16 +84,17 @@ export const VideoEditorUI = (props: {
                   track.children.map((clip) => {
                     if (!clip.isClip()) return null
 
-                    const { playback } = clip
-                    const { mediaState } = playback
+                    const playbackClip = editor.playback._getNode(clip)
+                    const { mediaState } = playbackClip
 
                     return (
                       <div style="font-family:monospace">
                         <div>
                           {() =>
-                            [playback.mediaTime.value.toFixed(2), mediaState.latestEvent.value?.type].join(
-                              ' ',
-                            )
+                            [
+                              playbackClip.mediaTime.value.toFixed(2),
+                              mediaState.latestEvent.value?.type,
+                            ].join(' ')
                           }
                         </div>
                         <div>
@@ -103,7 +104,7 @@ export const VideoEditorUI = (props: {
                                 (key) =>
                                   ReadyState[key as keyof typeof ReadyState] === mediaState.readyState.value,
                               )}{' '}
-                              | | {clip.error.value?.code}
+                              | {playbackClip.mediaState.error.value?.code}
                             </>
                           )}
                         </div>

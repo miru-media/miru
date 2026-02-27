@@ -1,18 +1,18 @@
-import * as Pixi from 'pixi.js'
-
 import type * as pub from '../../types/core.d.ts'
 
-import type { Document, Schema, Track } from './index.ts'
+import type { Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 
-export class Timeline extends ParentNode<Schema.Timeline, never, Track> implements pub.Timeline {
+export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> implements pub.Timeline {
+  declare readonly parent: undefined
   declare readonly id: 'timeline'
   declare readonly type: 'timeline'
 
-  container = new Pixi.Container()
-
-  constructor(doc: Document) {
-    super({ id: 'timeline', type: 'timeline' }, doc)
+  constructor(doc: pub.Document) {
+    super(doc, { id: 'timeline', type: 'timeline' })
+  }
+  get trackCount(): number {
+    return this._count()
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
@@ -20,6 +20,12 @@ export class Timeline extends ParentNode<Schema.Timeline, never, Track> implemen
     // noop
   }
   isTimeline(): this is Timeline {
+    return true
+  }
+  isVisual(): this is Timeline {
+    return true
+  }
+  isAudio(): this is Timeline {
     return true
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */

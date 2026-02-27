@@ -10,7 +10,7 @@ import { computed, effect, ref } from 'fine-jsx'
 import { Button } from 'shared/components/button.tsx'
 import { stringHashCode, useI18n } from 'shared/utils'
 
-import type { AnyClip } from '../../types/internal'
+import type { AnyClip } from '../../types/core.d.ts'
 import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
@@ -25,6 +25,14 @@ const CLIP_COLORS = [
   'var(--green-light)',
 ]
 
+const ensureDurationIsPlayable = (clip: AnyClip): void => {
+  const sourceDuration = clip.sourceAsset.duration
+  const clipTime = clip.time
+  const durationOutsideClip = sourceDuration - (clipTime.source + clipTime.duration)
+  clip.sourceStart += Math.min(0, durationOutsideClip)
+  clip.duration = Math.min(clipTime.duration, sourceDuration)
+}
+
 export const Clip = ({
   clip,
   editor,
@@ -37,7 +45,7 @@ export const Clip = ({
   const { t, tr } = useI18n()
   const mainContainer = ref<HTMLElement>()
   const clipColor = computed(() => {
-    if (!clip.everHadEnoughData) return 'var(--white-2)'
+    if (!editor.playback._getNode(clip).everHadEnoughData) return 'var(--white-2)'
 
     const hash = stringHashCode(clip.sourceAsset.id)
     return CLIP_COLORS[Math.abs(hash) % CLIP_COLORS.length]
@@ -116,7 +124,7 @@ export const Clip = ({
 
               clip.duration = newDuration
 
-              if (edges?.right === true) clip._ensureDurationIsPlayable()
+              if (edges?.right === true) ensureDurationIsPlayable(clip)
 
               if (prev) prev.duration = newStart - prev.time.start
             })
@@ -131,7 +139,7 @@ export const Clip = ({
           interact.modifiers.restrictRect({
             restriction: () => ({
               left: 0,
-              right: editor.secondsToPixels(editor._doc.duration),
+              right: editor.secondsToPixels(editor.doc.duration),
               top: 0,
               bottom: 0,
             }),
@@ -159,13 +167,12 @@ export const Clip = ({
               let insertBefore: AnyClip | undefined
               for (let { prevClip } = clip; prevClip; { prevClip } = prevClip) {
                 const { start, duration } = prevClip.time
-                if (start >= newStartTime || start + duration / 2 >= newCenterTime)
-                  insertBefore = prevClip as AnyClip
+                if (start >= newStartTime || start + duration / 2 >= newCenterTime) insertBefore = prevClip
                 else break
               }
 
               if (insertBefore) {
-                clip.treePosition({ parentId: parent.id, index: insertBefore.index })
+                clip.move({ parentId: parent.id, index: insertBefore.index })
                 return
               }
 
@@ -174,12 +181,11 @@ export const Clip = ({
               let insertAfter: AnyClip | undefined
               for (let { nextClip } = clip; nextClip; { nextClip } = nextClip) {
                 const { end, duration } = nextClip.time
-                if (end <= newEndTime || end - duration / 2 <= newCenterTime)
-                  insertAfter = nextClip as AnyClip
+                if (end <= newEndTime || end - duration / 2 <= newCenterTime) insertAfter = nextClip
                 else break
               }
               if (insertAfter) {
-                clip.treePosition({ parentId: parent.id, index: insertAfter.index + 1 })
+                clip.move({ parentId: parent.id, index: insertAfter.index + 1 })
               }
             })
           },
@@ -211,7 +217,7 @@ export const Clip = ({
       `}
     >
       <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.select(clip.id, false)}>
-        <span class={styles.clipName}>{clip.displayName}</span>
+        <span class={styles.clipName}>{clip.name ?? clip.sourceAsset.name ?? ''}</span>
         <div class={styles.clipControls}>
           <div class={styles.clipResizeLeft}>
             <IconTablerChevronLeft />

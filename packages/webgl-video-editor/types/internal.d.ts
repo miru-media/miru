@@ -1,6 +1,5 @@
 import type {
   AudioClip,
-  Document,
   Gap,
   MediaAsset,
   Timeline,
@@ -38,23 +37,6 @@ export interface NodesByType {
   gap: Gap
 }
 
-export type AnyParentNode = Timeline | Track
-export type AnyNode = NodesByType[keyof NodesByType]
-export type AnyClip = NodesByType['clip']
-export type AnyTrackChild = AnyClip | Gap
-
-export interface NodeMap {
-  map: Map<string, AnyNode>
-  byType: {
-    [Type in keyof NodesByType]: Set<NodesByType[Type]>
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
-  get: <T extends AnyNode>(id: string) => T
-  set: (node: AnyNode) => void
-  has: (id: string) => boolean
-  delete: (id: string) => void
-}
-
 declare module './core' {
   export interface VideoEditor {
     /** @internal @hidden */
@@ -63,8 +45,6 @@ declare module './core' {
     _showStats?: boolean
   }
 }
-
-export type RootNode = Document
 
 export type AnyAsset = MediaAsset | VideoEffectAsset
 

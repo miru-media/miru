@@ -1,29 +1,14 @@
 import type { ChildNodePosition } from './core'
 import type * as pub from './core'
 
-export interface VideoEditorEvents {
-  error: ErrorEvent
+export class DocDisposeEvent extends Event {
+  declare readonly type: 'doc:dispose'
+  readonly doc: pub.Document
 
-  'settings:update': SettingsUpdateEvent
-
-  'node:create': NodeCreateEvent
-  'node:move': NodeMoveEvent
-  'node:update': NodeUpdateEvent
-  'node:delete': NodeDeleteEvent
-
-  'asset:create': AssetCreateEvent
-  'asset:refresh': AssetRefreshEvent
-  'asset:delete': AssetDeleteEvent
-
-  'playback:play': PlaybackPlayEvent
-  'playback:pause': PlaybackPauseEvent
-  'playback:update': PlaybackUpdateEvent
-  'playback:seek': PlaybackSeekEvent
-
-  'canvas:click': CanvasEvent<'click'>
-  'canvas:pointerdown': CanvasEvent<'pointerdown'>
-  'canvas:pointermove': CanvasEvent<'pointermove'>
-  'canvas:pointerup': CanvasEvent<'pointerup'>
+  constructor(doc: pub.Document) {
+    super('doc:dispose')
+    this.doc = doc
+  }
 }
 
 export class SettingsUpdateEvent extends Event {
@@ -35,38 +20,37 @@ export class SettingsUpdateEvent extends Event {
 
 export class NodeCreateEvent extends Event {
   readonly type: 'node:create'
-  readonly node: BaseNode
+  readonly node: pub.AnyNode
   readonly group?: string
 
-  constructor(node: pub.Base, group?: string)
+  constructor(node: pub.AnyNode, group?: string)
 }
 
 export class NodeUpdateEvent extends Event {
   readonly type: 'node:update'
-  readonly node: BaseNode
+  readonly node: pub.AnyNode
   readonly from: Partial<AnySchemaNode>
   readonly group?: string
   readonly parentId?: string
-  readonly index?: number
 
-  constructor(node: pub.Base, from: Partial<pub.Schema.AnyNodeSchema>, group?: string)
+  constructor(node: pub.AnyNode, from: Partial<pub.Schema.AnyNodeSchema>, group?: string)
 }
 
 export class NodeDeleteEvent extends Event {
   readonly type: 'node:delete'
-  readonly node: BaseNode
+  readonly node: pub.AnyNode
   readonly group?: string
 
-  constructor(node: pub.Base, group?: string)
+  constructor(node: pub.AnyNode, group?: string)
 }
 
 export class NodeMoveEvent extends Event {
   readonly type: 'node:move'
-  readonly node: BaseNode
+  readonly node: pub.AnyNode
   readonly from?: ChildNodePosition
   readonly group?: string
 
-  constructor(node: pub.Base, from: ChildNodePosition | undefined, group?: string)
+  constructor(node: pub.AnyNode, from: ChildNodePosition | undefined, group?: string)
 }
 
 export class AssetCreateEvent extends Event {
@@ -106,7 +90,7 @@ export class PlaybackSeekEvent extends Event {
   readonly type: 'playback:seek'
 }
 
-export class CanvasEvent<T extends string> extends Event {
+export declare class CanvasEvent<T extends string> extends Event {
   readonly type: `canvas:${T}`
   readonly node?: pub.VisualClip
   constructor(type: T, node: pub.VisualClip | undefined)

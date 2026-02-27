@@ -3,11 +3,15 @@ import * as Mb from 'mediabunny'
 import { setObjectSize } from 'shared/utils'
 import { setVideoEncoderConfigCodec } from 'shared/video/utils'
 
-import { Document, Gap, type MediaAsset, type PlaybackDocument } from '../nodes/index.ts'
-import { Track } from '../nodes/track.ts'
+import type { MediaAsset } from '../../../types/core.d.ts'
+import type * as pub from '../../../types/core.d.ts'
+import { Document } from '../../document.ts'
+import { Track } from '../../nodes/index.ts'
+import { DocumentView, type ViewType } from '../document-view.ts'
+import { RenderDocument, type RenderDocumentOptions } from '../render/render-document.ts'
 
 import { AVEncoder } from './av-encoder.ts'
-import { ExporterClip } from './exporter-clip.ts'
+import { ExportClip } from './export-clip.ts'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -21,10 +25,15 @@ interface AvAssetEntry {
   consumers: number
 }
 
+interface ViewTypeMap {
+  clip: ExportClip
+}
+
 let decoderAudioContext: OfflineAudioContext | undefined
 
-export class ExporterDocument extends Document {
-  clips: ExporterClip[] = []
+export class ExportDocumentView extends DocumentView<ViewTypeMap> {
+  renderView: RenderDocument
+  clips: ExportClip[] = []
   sources = new Map<string, AvAssetEntry>()
   avEncoder!: AVEncoder
   hasAudio = false
@@ -37,44 +46,48 @@ export class ExporterDocument extends Document {
   } as const
   videoEncoderConfig!: VideoEncoderConfig
 
-  get currentTime(): number {
-    return super.currentTime
-  }
-  set currentTime(timeS: number) {
-    this._currentTime.value = timeS
-  }
-
   get isReady(): boolean {
-    return !this.activeClipIsStalled.value
+    return !this.doc.activeClipIsStalled.value
   }
 
-  constructor(doc: PlaybackDocument) {
-    super(doc)
+  constructor(options: { doc: pub.Document; renderOptions: RenderDocumentOptions }) {
+    const originalDoc = options.doc
+    const { gl, renderer } = options.renderOptions
+    const doc = new Document(originalDoc)
+    const renderView = new RenderDocument({ doc, gl, renderer, applyVideoRotation: true })
 
-    this.isPaused.value = false
+    super({ ...options, doc })
 
-    doc.timeline.children.forEach((track_, trackIndex) => {
-      const track = new Track(track_.toObject(), this)
-      track.treePosition({ parentId: this.timeline.id, index: trackIndex })
+    this.renderView = renderView
 
-      track_.children.forEach((trackChild, index) => {
-        let child
+    this._init()
 
-        if (trackChild.isClip()) {
-          child = new ExporterClip(trackChild.toObject(), this)
+    originalDoc.timeline.children.forEach((track_, trackIndex) => {
+      const track = new Track(doc, track_.toObject())
+      track.move({ parentId: doc.timeline.id, index: trackIndex })
 
-          this.clips.push(child)
-          this.#prepareClip(child, track.trackType)
-        } else child = new Gap(trackChild, this)
-
-        child.treePosition({ parentId: track.id, index })
-      })
+      track_.children.forEach((trackChild, index) =>
+        doc.createNode(trackChild).move({ parentId: track.id, index }),
+      )
     })
+
+    if (import.meta.env.DEV) this.renderView._debug()
   }
 
-  #prepareClip(clip: ExporterClip, trackType: Track.TrackType) {
-    const { sourceAsset: source } = clip
-    const { source: sourceStart, duration } = clip.time
+  protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
+    let view
+
+    if (original.isClip()) {
+      view = new ExportClip(this, original)
+      this.#prepareClip(view)
+    } else view = undefined
+
+    return view as ViewType<ViewTypeMap, T>
+  }
+
+  #prepareClip(exportClip: ExportClip): void {
+    const { sourceAsset: source, clipType, time: clipTime } = exportClip.original
+    const { source: sourceStart, duration } = clipTime
     const sourceEnd = sourceStart + duration
     let sourceEntry = this.sources.get(source.objectUrl)
 
@@ -84,26 +97,27 @@ export class ExporterDocument extends Document {
         source: new Mb.BlobSource(source.blob),
       })
       sourceEntry = {
-        asset: clip.sourceAsset,
+        asset: exportClip.original.sourceAsset,
         start: sourceStart,
         end: sourceEnd,
         input,
         video: null,
         audio: null,
-        isAudioOnly: trackType === 'audio',
+        isAudioOnly: clipType === 'audio',
         consumers: 0,
       }
       this.sources.set(source.objectUrl, sourceEntry)
     } else {
-      sourceEntry.isAudioOnly &&= trackType === 'audio'
+      sourceEntry.isAudioOnly &&= clipType === 'audio'
     }
 
     sourceEntry.consumers++
     sourceEntry.start = Math.min(sourceEntry.start, sourceStart)
     sourceEntry.end = Math.max(sourceEntry.end, sourceEnd)
+    this.clips.push(exportClip)
   }
 
-  async #prepareSource(entry: AvAssetEntry) {
+  async #prepareSource(entry: AvAssetEntry): Promise<void> {
     await entry.asset._refreshObjectUrl()
 
     const { input, isAudioOnly } = entry
@@ -125,8 +139,14 @@ export class ExporterDocument extends Document {
     this.hasAudio ||= !!audio
   }
 
-  async start({ onProgress, signal }: { onProgress?: (value: number) => void; signal?: AbortSignal }) {
-    const { duration, resolution, frameRate } = this
+  async start({
+    onProgress,
+    signal,
+  }: {
+    onProgress?: (value: number) => void
+    signal?: AbortSignal
+  }): Promise<Blob> {
+    const { duration, resolution, frameRate } = this.doc
 
     const videoEncoderConfig = (this.videoEncoderConfig = {
       codec: '',
@@ -138,7 +158,7 @@ export class ExporterDocument extends Document {
 
     await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
 
-    this.clips.forEach((clip) => clip.init(this.sources.get(clip.sourceAsset.objectUrl)!))
+    this.clips.forEach((clip) => clip.init(this.sources.get(clip.original.sourceAsset.objectUrl)!))
 
     const durationUs = duration * 1e6
 
@@ -163,36 +183,40 @@ export class ExporterDocument extends Document {
   }
 
   async #renderVideo({ signal }: { signal?: AbortSignal }): Promise<void> {
-    const { duration, resolution, frameRate, canvas } = this
+    const { renderView, doc } = this
+    const { canvas } = renderView
+    const { duration, resolution, frameRate } = doc
     const writer = this.avEncoder.video?.getWriter()
     if (!writer) return
 
     const totalFrames = duration * frameRate
     const frameDurationUs = 1e6 / frameRate
 
-    setObjectSize(this.gl.canvas, resolution)
-    const renderOptions = { container: this.stage }
+    setObjectSize(this.renderView.canvas, resolution)
 
-    await this.whenRendererIsReady
+    await renderView.whenRendererIsReady
 
     for (let i = 0; i < totalFrames && !signal?.aborted; i++) {
-      this.currentTime = duration * (i / totalFrames)
+      this.doc._setCurrentTime(duration * (i / totalFrames))
+
       await Promise.all(
-        this.clips.map(async (clip) => {
-          await clip.seekVideo()
-          // make sure effects etc. are loaded
-          if (!clip.isReady) await clip.whenReady()
+        this.clips.map(async (exportClip) => {
+          if (!exportClip.original.isVisual()) return
+          await exportClip.seekVideo()
+          if (!exportClip.isReady) await exportClip.whenReady(this._abort.signal)
         }),
       )
 
-      this.renderer.render(renderOptions)
+      if (signal?.aborted) return
+      renderView.render()
 
       const frame = new VideoFrame(canvas, {
-        timestamp: this.currentTime * 1e6,
+        timestamp: this.doc.currentTime * 1e6,
         duration: frameDurationUs,
       })
 
       await writer.write(frame)
+
       frame.close()
     }
 
@@ -205,15 +229,19 @@ export class ExporterDocument extends Document {
     if (!writer) return
 
     const { numberOfChannels, sampleRate } = this.audioEncoderConfig
-    const ctx = new OfflineAudioContext({ numberOfChannels, sampleRate, length: sampleRate * this.duration })
+    const ctx = new OfflineAudioContext({
+      numberOfChannels,
+      sampleRate,
+      length: sampleRate * this.doc.duration,
+    })
 
     await Promise.all(
-      this.clips.map(async (clip) => {
-        const { time: clipTime } = clip
-        await clip.seekAudio(clipTime.start)
+      this.clips.map(async (exportClip) => {
+        const { time: clipTime } = exportClip.original
+        await exportClip.seekAudio(clipTime.start)
 
-        while (clip.currentAudioData && !signal?.aborted) {
-          const { buffer, timestamp, duration } = clip.currentAudioData
+        while (exportClip.currentAudioData && !signal?.aborted) {
+          const { buffer, timestamp, duration } = exportClip.currentAudioData
           const bufferOffsetS = timestamp / 1e6 - clipTime.source
           const trimStartS = -Math.min(bufferOffsetS, 0)
           const durationS = duration / 1e6
@@ -229,7 +257,7 @@ export class ExporterDocument extends Document {
             bufferSource.connect(ctx.destination)
           }
 
-          await clip.readNextAudio()
+          await exportClip.readNextAudio()
         }
       }),
     )
@@ -263,8 +291,10 @@ export class ExporterDocument extends Document {
   }
 
   dispose(): void {
+    super.dispose()
+
     this.sources.forEach((entry) => entry.input.dispose())
     this.sources.clear()
-    super.dispose()
+    this.doc.dispose()
   }
 }

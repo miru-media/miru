@@ -4,10 +4,9 @@ import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
-import type { AnyClip } from '../../types/internal'
+import type * as pub from '../../types/core.d.ts'
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { Track } from '../nodes/index.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
 import { Clip } from './clip.jsx'
@@ -17,7 +16,7 @@ const Playhead = ({ editor }: { editor: VideoEditor }) => {
   const root = ref<HTMLElement>()
   const size = useElementSize(root)
 
-  const timeParts = computed(() => splitTime(editor._doc.currentTime))
+  const timeParts = computed(() => splitTime(editor.doc.currentTime))
 
   return (
     <>
@@ -57,7 +56,7 @@ export const Timeline = ({
   const { t } = useI18n()
   const root = ref<HTMLElement>()
   const scrollContainer = ref<HTMLElement>()
-  const doc = editor._doc
+  const { doc } = editor
 
   const rootSize = useElementSize(root)
 
@@ -87,7 +86,7 @@ export const Timeline = ({
 
   const hasAnyClips = computed(() => doc.timeline.children.some((track) => !!track.firstClip))
 
-  const onInputClipFile = async (event: InputEvent, track: Track | undefined) => {
+  const onInputClipFile = async (event: InputEvent, track: pub.Track | undefined) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -149,18 +148,14 @@ export const Timeline = ({
                   style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
                 >
                   {track.clips.map((clip) => (
-                    <Clip
-                      editor={editor}
-                      clip={clip as AnyClip}
-                      isSelected={() => editor.selection?.id === clip.id}
-                    />
+                    <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
                   ))}
                   <label
-                    class={() => [styles.trackButton, track.count > 0 && styles.square]}
+                    class={() => [styles.trackButton, track.clipCount > 0 && styles.square]}
                     hidden={() => !hasAnyClips.value && trackIndex !== 0}
                   >
                     {() =>
-                      track.count ? (
+                      track.clipCount ? (
                         <>
                           <IconTablerPlus />
                           <span class={styles.srOnly}>

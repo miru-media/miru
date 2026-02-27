@@ -1,16 +1,20 @@
-import type { ChildNodePosition, Schema } from '../types/core'
-import type * as pub from '../types/events.d.ts'
-import type { AnyAsset, AnyNode } from '../types/internal'
+import type * as pub from '../types/core.d.ts'
 
-import type { BaseAsset, MediaAsset } from './assets.ts'
-import type { BaseNode } from './nodes/base-node.ts'
-import type { VisualClip } from './nodes/visual-clip.ts'
+export class DocDisposeEvent extends Event implements pub.DocDisposeEvent {
+  declare readonly type: 'doc:dispose'
+  readonly doc: pub.Document
 
-export class SettingsUpdateEvent extends Event {
+  constructor(doc: pub.Document) {
+    super('doc:dispose')
+    this.doc = doc
+  }
+}
+
+export class SettingsUpdateEvent extends Event implements pub.SettingsUpdateEvent {
   declare readonly type: 'settings:update'
-  readonly from: Partial<Schema.DocumentSettings>
+  readonly from: Partial<pub.Schema.DocumentSettings>
 
-  constructor(from: Partial<Schema.DocumentSettings>) {
+  constructor(from: Partial<pub.Schema.DocumentSettings>) {
     super('settings:update')
     this.from = from
   }
@@ -18,27 +22,26 @@ export class SettingsUpdateEvent extends Event {
 
 export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
   declare readonly type: 'node:create'
-  readonly node: AnyNode
+  readonly node: pub.AnyNode
   readonly group?: string
 
-  constructor(node: BaseNode, group?: string) {
+  constructor(node: pub.AnyNode, group?: string) {
     super('node:create')
-    this.node = node as AnyNode
+    this.node = node
     this.group = group
   }
 }
 
 export class NodeUpdateEvent extends Event implements pub.NodeUpdateEvent {
   declare readonly type: 'node:update'
-  readonly node: AnyNode
-  readonly from: Partial<Schema.AnyNodeSchema>
+  readonly node: pub.AnyNode
+  readonly from: Partial<pub.Schema.AnyNodeSchema>
   readonly group?: string
   readonly parentId?: string
-  readonly index?: number
 
-  constructor(node: BaseNode, from: Partial<Schema.AnyNodeSchema>, group?: string) {
+  constructor(node: pub.AnyNode, from: Partial<pub.Schema.AnyNodeSchema>, group?: string) {
     super('node:update')
-    this.node = node as AnyNode
+    this.node = node
     this.from = from
     this.group = group
   }
@@ -46,13 +49,13 @@ export class NodeUpdateEvent extends Event implements pub.NodeUpdateEvent {
 
 export class NodeMoveEvent extends Event implements pub.NodeMoveEvent {
   declare readonly type: 'node:move'
-  readonly node: AnyNode
-  readonly from?: ChildNodePosition
+  readonly node: pub.AnyNode
+  readonly from?: pub.ChildNodePosition
   readonly group?: string
 
-  constructor(node: BaseNode, from: ChildNodePosition | undefined, group?: string) {
+  constructor(node: pub.AnyNode, from: pub.ChildNodePosition | undefined, group?: string) {
     super('node:move')
-    this.node = node as AnyNode
+    this.node = node
     this.from = from
     this.group = group
   }
@@ -60,34 +63,34 @@ export class NodeMoveEvent extends Event implements pub.NodeMoveEvent {
 
 export class NodeDeleteEvent extends Event implements pub.NodeDeleteEvent {
   declare readonly type: 'node:delete'
-  readonly node: AnyNode
+  readonly node: pub.AnyNode
   readonly group?: string
 
-  constructor(node: BaseNode, group?: string) {
+  constructor(node: pub.AnyNode, group?: string) {
     super('node:delete')
-    this.node = node as AnyNode
+    this.node = node
     this.group = group
   }
 }
 
 export class AssetCreateEvent extends Event implements pub.AssetCreateEvent {
   declare readonly type: 'asset:create'
-  readonly asset: AnyAsset
+  readonly asset: pub.AnyAsset
   readonly source?: Blob | string
 
-  constructor(asset: BaseAsset, source?: Blob | string) {
+  constructor(asset: pub.AnyAsset, source?: Blob | string) {
     super('asset:create')
-    this.asset = asset as AnyAsset
+    this.asset = asset
     this.source = source
   }
 }
 
 export class AssetRefreshEvent extends Event implements pub.AssetRefreshEvent {
   declare readonly type: 'asset:refresh'
-  readonly asset: MediaAsset
+  readonly asset: pub.MediaAsset
   readonly source?: Blob | string
 
-  constructor(asset: MediaAsset) {
+  constructor(asset: pub.MediaAsset) {
     super('asset:refresh')
     this.asset = asset
   }
@@ -95,11 +98,11 @@ export class AssetRefreshEvent extends Event implements pub.AssetRefreshEvent {
 
 export class AssetDeleteEvent extends Event implements pub.AssetDeleteEvent {
   declare readonly type: 'asset:delete'
-  readonly asset: AnyAsset
+  readonly asset: pub.AnyAsset
 
-  constructor(asset: BaseAsset) {
+  constructor(asset: pub.AnyAsset) {
     super('asset:delete')
-    this.asset = asset as AnyAsset
+    this.asset = asset
   }
 }
 
@@ -137,9 +140,9 @@ export class PlaybackSeekEvent extends Event implements pub.PlaybackSeekEvent {
 
 export class CanvasEvent<T extends string> extends Event implements pub.CanvasEvent<T> {
   declare readonly type: `canvas:${T}`
-  readonly node?: VisualClip
+  readonly node?: pub.VisualClip
 
-  constructor(type: T, node: VisualClip | undefined) {
+  constructor(type: T, node: pub.VisualClip | undefined) {
     super(`canvas:${type}`)
     this.node = node
   }

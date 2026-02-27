@@ -45,22 +45,22 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     return this._editor.canvas
   }
   get resolution() {
-    return this._editor._doc.resolution
+    return this._editor.doc.resolution
   }
   set resolution(value) {
-    this._editor._doc.resolution = value
+    this._editor.doc.resolution = value
   }
   get frameRate() {
-    return this._editor._doc.frameRate
+    return this._editor.doc.frameRate
   }
   set frameRate(value) {
-    this._editor._doc.frameRate = value
+    this._editor.doc.frameRate = value
   }
   get isEmpty() {
-    return this._editor._doc.isEmpty
+    return this._editor.doc.isEmpty
   }
   get isPaused() {
-    return this._editor._doc.isEmpty
+    return this._editor.doc.isEmpty
   }
   get currentTime() {
     return this._editor.currentTime
@@ -72,7 +72,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   get tracks(): pub.Track[] {
     return this._editor.tracks
   }
-  get selection(): pub.Clip | pub.Gap | undefined {
+  get selection(): pub.AnyTrackChild | undefined {
     return this._editor.selection
   }
   get exportResult() {
@@ -136,16 +136,16 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   seekTo(time: number) {
     this._editor.seekTo(time)
   }
-  async addClip(track: pub.Track, source: string | Blob | pub.Schema.BaseClip): Promise<pub.Clip> {
+  async addClip(track: pub.Track, source: string | Blob | pub.Schema.AnyClip): Promise<pub.AnyClip> {
     return await this._editor.addClip(track as nodes.Track, source)
   }
-  select(clip: pub.Clip | pub.Gap | undefined) {
+  select(clip: pub.AnyTrackChild | undefined) {
     this._editor.select(clip?.id)
   }
   async createMediaAsset(source: string | Blob) {
     return await this._editor.createMediaAsset(source)
   }
-  splitClipAtCurrentTime(): pub.Clip | undefined {
+  splitClipAtCurrentTime(): [pub.AnyClip, pub.AnyClip] | undefined {
     return this._editor.splitClipAtCurrentTime()
   }
   async replaceClipSource(source: Blob | string) {

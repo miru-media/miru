@@ -76,7 +76,6 @@ export interface VisualClip extends BaseClip<'video'> {
   rotation?: number
   scale?: { x: number; y: number }
   filter?: { assetId: string; intensity: number }
-  videoRotation?: number
 }
 
 export interface AudioClip extends BaseClip<'audio'> {

@@ -3,31 +3,30 @@ import { uid } from 'uid'
 import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
 import type { Size } from 'shared/types'
+import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { useElementSize } from 'shared/utils/composables.ts'
+import { getWebgl2Context } from 'shared/utils/images.ts'
 import { remap0 } from 'shared/utils/math'
 
-import type { AnyClip, AnyNode, AnyTrackChild, NodeSnapshot } from '../types/internal'
-import type { AnyNodeSerializedSchema } from '../types/schema'
+import type { AnyClip, AnyNode, AnyTrackChild } from '../types/core.d.ts'
+import type { NodeSnapshot } from '../types/internal.d.ts'
+import type { AnyNodeSerializedSchema } from '../types/schema.d.ts'
+import type * as Schema from '../types/schema.d.ts'
 import type * as pub from '../types/webgl-video-editor'
 
+import { MediaAsset } from './assets.ts'
 import { MIN_CLIP_DURATION_S } from './constants.ts'
+import { ExportDocumentView } from './document-views/export/exporter-document.ts'
+import { PlaybackDocument } from './document-views/playback/playback-document.ts'
+import { RenderDocument } from './document-views/render/render-document.ts'
+import { Document } from './document.ts'
 import { type NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from './events.ts'
-import { ExporterDocument } from './export/exporter-document.ts'
-import {
-  type BaseClip,
-  type BaseNode,
-  MediaAsset,
-  PlaybackDocument,
-  type Schema,
-  type Track,
-  type VideoEffectAsset,
-} from './nodes/index.ts'
 
-const getClipAtTime = (track: Track, time: number): AnyClip | undefined => {
+const getClipAtTime = (track: pub.Track, time: number): AnyClip | undefined => {
   for (let clip = track.firstClip; clip; clip = clip.nextClip) {
     const clipTime = clip.time
 
-    if (clipTime.start <= time && time < clipTime.end) return clip as AnyClip
+    if (clipTime.start <= time && time < clipTime.end) return clip
   }
 }
 
@@ -42,14 +41,14 @@ type DragResizeInitialState = [
 export class VideoEditor {
   readonly _editor = this
 
-  _doc!: PlaybackDocument
+  doc!: pub.Document
   readonly store?: pub.VideoEditorStore
 
   readonly #selection = ref<AnyTrackChild>()
   _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
   _timelineSize = ref<Size>({ width: 1, height: 1 })
   _viewportSize: Ref<Size>
-  _zoom = computed(() => this.viewportSize.width / this._doc.resolution.width)
+  _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
 
   _resize = ref<{
     docDuration: number
@@ -62,12 +61,11 @@ export class VideoEditor {
   }
 
   effectRenderer: EffectRenderer
+  playback: PlaybackDocument
 
-  get canvas(): HTMLCanvasElement {
-    return this._doc.canvas
-  }
+  canvas = document.createElement('canvas')
   get currentTime(): number {
-    return this._doc.currentTime
+    return this.doc.currentTime
   }
 
   get state(): Schema.SerializedDocument {
@@ -77,12 +75,12 @@ export class VideoEditor {
   readonly #effects = computed(
     () =>
       new Map(
-        Array.from(this._doc.assets.values())
+        Array.from(this.doc.assets.values())
           .filter((asset) => asset.type === 'asset:effect:video')
           .map((effect) => [effect.id, effect]),
       ),
   )
-  get effects(): Map<string, VideoEffectAsset> {
+  get effects(): Map<string, pub.VideoEffectAsset> {
     return this.#effects.value
   }
 
@@ -102,8 +100,8 @@ export class VideoEditor {
     return this.#selection.value
   }
 
-  get tracks(): Track[] {
-    return this._doc.timeline.children
+  get tracks(): pub.Track[] {
+    return this.doc.timeline.children
   }
 
   get viewportSize(): Size {
@@ -117,18 +115,25 @@ export class VideoEditor {
   constructor(options: { store?: pub.VideoEditorStore }) {
     const { store } = options
 
-    this._doc = new PlaybackDocument()
+    const doc = (this.doc = new Document({}))
     this.store = store
+
+    const renderView = new RenderDocument({
+      doc,
+      applyVideoRotation: IS_FIREFOX,
+      gl: getWebgl2Context(this.canvas, { stencil: true }),
+    })
+    this.playback = new PlaybackDocument({ renderView })
 
     this.effectRenderer = new EffectRenderer()
 
     if (store) store.init(this as unknown as pub.VideoEditor)
 
-    this._doc.on('node:delete', ({ node }: NodeDeleteEvent) => {
+    this.doc.on('node:delete', ({ node }: NodeDeleteEvent) => {
       if (node.id === this.selection?.id) this.select(undefined)
     })
 
-    this._doc.on('canvas:pointerdown', ({ node }) => this.select(node?.id))
+    this.doc.on('canvas:pointerdown', ({ node }) => this.select(node?.id))
 
     this._viewportSize = useElementSize(this.canvas)
   }
@@ -139,16 +144,16 @@ export class VideoEditor {
   }
 
   importJson(content: Schema.SerializedDocument): void {
-    this._doc.importFromJson(content)
+    this.doc.importFromJson(content)
   }
 
   async createMediaAsset(source: string | Blob): Promise<MediaAsset> {
     const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
-    return new MediaAsset(init, { root: this._doc, source })
+    return new MediaAsset(init, { doc: this.doc, source })
   }
 
-  async addClip(track: Track, source: string | Blob | Schema.AnyClip): Promise<AnyClip> {
-    let init: Schema.BaseClip
+  async addClip(track: pub.Track, source: string | Blob | Schema.AnyClip): Promise<AnyClip> {
+    let init: Schema.AnyClip
     let newAssetData: { init: Schema.AvMediaAsset; source: string | Blob } | undefined
 
     if (typeof source === 'string' || source instanceof Blob) {
@@ -174,12 +179,11 @@ export class VideoEditor {
     }
 
     return this._transact(() => {
-      if (newAssetData)
-        void new MediaAsset(newAssetData.init, { root: this._doc, source: newAssetData.source })
+      if (newAssetData) void new MediaAsset(newAssetData.init, { doc: this.doc, source: newAssetData.source })
 
-      const clip = this._doc.createNode(init)
+      const clip = this.doc.createNode(init)
 
-      clip.treePosition({ parentId: track.id, index: track.count })
+      clip.move({ parentId: track.id, index: track.clipCount })
 
       return clip
     })
@@ -192,15 +196,15 @@ export class VideoEditor {
     const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
 
     this._transact(() => {
-      const asset = new MediaAsset(init, { root: this._doc, source })
+      const asset = new MediaAsset(init, { doc: this.doc, source })
 
       clip.duration = Math.min(asset.duration, clip.duration)
-      clip.sourceAsset = asset
+      clip.source = { assetId: asset.id }
     })
   }
 
-  splitClipAtCurrentTime(): AnyClip | undefined {
-    const { currentTime } = this._doc
+  splitClipAtCurrentTime(): [AnyClip, AnyClip] | undefined {
+    const { currentTime } = this.doc
     const trackOfSelectedClip = this.#selection.value?.parent
 
     // first search the track that contains a selected clip
@@ -208,7 +212,7 @@ export class VideoEditor {
 
     if (!clip) {
       // then search all tracks for a clip at the current time
-      for (const track of this._doc.timeline.children) {
+      for (const track of this.doc.timeline.children) {
         clip = getClipAtTime(track, currentTime)
         if (clip) break
       }
@@ -222,36 +226,36 @@ export class VideoEditor {
 
     if (delta < MIN_CLIP_DURATION_S) return
 
-    return this._transact((): AnyClip => {
-      const startClip = this._doc.createNode({
+    return this._transact(() => {
+      const startClip = this.doc.createNode({
         ...clip.toObject(),
         id: this.generateId(),
         transition: undefined,
         duration: delta,
       })
-      const endClip = this._doc.createNode({
+      const endClip = this.doc.createNode({
         ...clip.toObject(),
         id: this.generateId(),
         sourceStart: prevClipTime.source + delta,
         duration: prevClipTime.duration - delta,
       })
 
-      startClip.treePosition({ parentId: parent.id, index: clip.index })
-      endClip.treePosition({ parentId: parent.id, index: clip.index + 1 })
+      startClip.move({ parentId: parent.id, index: clip.index })
+      endClip.move({ parentId: parent.id, index: clip.index + 1 })
 
       this.#select(startClip, false)
       clip.dispose()
 
-      return endClip
+      return [startClip, endClip]
     })
   }
 
-  addTrack(trackType: 'video' | 'audio'): Track {
-    const doc = this._doc
+  addTrack(trackType: 'video' | 'audio'): pub.Track {
+    const { doc } = this
 
     return this._transact(() => {
       const track = doc.createNode({ id: this.generateId(), trackType, type: 'track' })
-      track.treePosition({ parentId: doc.timeline.id, index: doc.timeline.count })
+      track.move({ parentId: doc.timeline.id, index: doc.timeline.trackCount })
       return track
     })
   }
@@ -266,24 +270,24 @@ export class VideoEditor {
   }
 
   play(): void {
-    this._doc.play()
+    this.playback.play()
   }
   pause(): void {
-    this._doc.pause()
+    this.playback.pause()
   }
   seekTo(time: number): void {
-    this._doc.seekTo(time)
+    this.doc.seekTo(time)
   }
 
   select(id: string | undefined, seek = true): void {
-    this.#select(id ? this._doc.nodes.get<AnyTrackChild>(id) : undefined, seek)
+    this.#select(id ? this.doc.nodes.get<AnyTrackChild>(id) : undefined, seek)
   }
   #select(clip: AnyTrackChild | undefined, seek: boolean): void {
     this.#selection.value = clip
 
     if (clip && seek) {
       const { start, end } = clip.time
-      const { _doc: doc } = this
+      const { doc } = this
 
       if (doc.currentTime < start) doc.seekTo(start)
       else if (doc.currentTime >= end) doc.seekTo(end - 1 / doc.frameRate)
@@ -303,12 +307,11 @@ export class VideoEditor {
     x.value = 0
   }
 
-  _startClipResize(clip: BaseClip): void {
-    const doc = this._doc
-    doc.pause()
+  _startClipResize(clip: pub.AnyClip): void {
+    this.playback.pause()
 
     this._resize.value = {
-      docDuration: doc.duration,
+      docDuration: this.doc.duration,
       from: [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()],
     }
   }
@@ -322,16 +325,16 @@ export class VideoEditor {
   }
 
   emitDragResizeChange(states: DragResizeInitialState) {
-    const root = this._doc
+    const { doc } = this
 
     this._transact(() => {
       for (const from of states) {
         if (!from) continue
-        const node = root.nodes.get(from.node.id)
+        const node = doc.nodes.get(from.node.id)
 
-        root._emit(new NodeUpdateEvent(node, from.node))
+        doc.emit(new NodeUpdateEvent(node, from.node))
 
-        if (node.parent?.id !== from.position?.parentId) root._emit(new NodeMoveEvent(node, from.position))
+        if (node.parent?.id !== from.position?.parentId) doc.emit(new NodeMoveEvent(node, from.position))
       }
     })
   }
@@ -355,9 +358,9 @@ export class VideoEditor {
 
   toObject(): Schema.SerializedDocument {
     const serialize = <T extends Schema.AnyNodeSchema | Schema.AnyAsset>(
-      node: Extract<AnyNode, BaseNode<T>>,
-    ): Extract<AnyNodeSerializedSchema, { type: T['type'] }> => {
-      if ('children' in node && node.children != null) {
+      node: Extract<AnyNode | pub.AnyAsset, T>,
+    ): Extract<AnyNodeSerializedSchema | Schema.AnyAsset, { type: T['type'] }> => {
+      if ('children' in node) {
         const serialized = {
           ...node.toObject(),
           children: node.children.map(serialize as any),
@@ -365,13 +368,14 @@ export class VideoEditor {
         return serialized as any
       }
 
-      return node.toObject() as any
+      return node.toObject()
     }
 
-    const { assets: _assets, timeline } = this._doc
+    const { assets: _assets, timeline, resolution, frameRate } = this.doc
 
     return {
-      ...this._doc.toObject(),
+      resolution,
+      frameRate,
       assets: Array.from(_assets.values()).map(serialize as any),
       tracks: timeline.children.map(serialize),
     }
@@ -382,13 +386,13 @@ export class VideoEditor {
 
     const onProgress = (value: number): void => void (this.#exportProgress.value = value)
 
-    this._doc.pause()
+    this.playback.pause()
     onProgress(0)
 
     try {
-      const exporter = new ExporterDocument(this._doc)
+      const exporter = new ExportDocumentView({ doc: this.doc, renderOptions: this.playback.renderView })
 
-      await this._doc
+      await this.playback
         .withoutRendering(async () => {
           const blob = await exporter.start({ onProgress })
           this.#exportResult.value = { blob, url: URL.createObjectURL(blob) }
@@ -405,6 +409,8 @@ export class VideoEditor {
   }
 
   dispose(): void {
-    this._doc.dispose()
+    this.playback.renderView.dispose()
+    this.playback.dispose()
+    this.doc.dispose()
   }
 }

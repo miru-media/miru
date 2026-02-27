@@ -4,28 +4,26 @@ import type { EffectOp } from 'webgl-effects'
 
 import { Janitor } from 'shared/utils/general.ts'
 
-import type * as pub from '../types/core'
-import type { Schema } from '../types/core'
-import type { RootNode } from '../types/internal'
+import type * as pub from '../types/core.d.ts'
+import type { Schema } from '../types/core.d.ts'
 
-import type { Document } from './document.ts'
 import { AssetCreateEvent, AssetDeleteEvent, AssetRefreshEvent } from './events.ts'
 import { storage } from './storage/index.ts'
 
 export abstract class BaseAsset<T extends Schema.AnyAsset = any> {
   id: string
   type: T['type']
-  root: RootNode
+  doc: pub.Document
   raw: T
   abstract isLoading: boolean
   readonly #janitor = new Janitor()
 
-  constructor(init: T, root: RootNode) {
+  constructor(init: T, doc: pub.Document) {
     this.id = init.id
     this.type = init.type
-    this.root = root
+    this.doc = doc
     this.raw = init
-    root._emit(new AssetDeleteEvent(this))
+    doc.emit(new AssetDeleteEvent(this as unknown as pub.AnyAsset))
   }
 
   toObject(): T {
@@ -73,9 +71,9 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
     return this.#error.value
   }
 
-  constructor(init: Schema.AvMediaAsset, options: { source?: Blob | string; root: Document }) {
-    const { root, source } = options
-    super(init, root)
+  constructor(init: Schema.AvMediaAsset, options: { source?: Blob | string; doc: pub.Document }) {
+    const { doc, source } = options
+    super(init, doc)
 
     this.setBlob(source == null || typeof source === 'string' ? null : source)
     const { mimeType, duration, audio, video } = init
@@ -90,7 +88,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
       storage.delete(this.id).catch(() => undefined)
     })
 
-    root._emit(new AssetCreateEvent(this, source))
+    doc.emit(new AssetCreateEvent(this, source))
   }
 
   setBlob(blob: Blob | null) {
@@ -122,7 +120,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
     } catch (error) {
       // eslint-disable-next-line no-console -- dev error message
       if (import.meta.env.DEV) console.error(error)
-      this.root._emit(new AssetRefreshEvent(this))
+      this.doc.emit(new AssetRefreshEvent(this))
     }
   }
 
@@ -206,10 +204,10 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
 
   static fromInit(
     init: Schema.AvMediaAsset,
-    root: Document,
+    doc: pub.Document,
     source: string | (Blob & { name?: string }) | undefined = init.url,
   ): MediaAsset {
-    const asset = new MediaAsset(init, { source, root })
+    const asset = new MediaAsset(init, { source, doc })
 
     return asset
   }
@@ -238,11 +236,11 @@ export class VideoEffectAsset extends BaseAsset<Schema.VideoEffectAsset> impleme
     return this.#isLoading.value
   }
 
-  constructor(init: Schema.VideoEffectAsset, root: RootNode) {
-    super(init, root)
+  constructor(init: Schema.VideoEffectAsset, doc: pub.Document) {
+    super(init, doc)
     this.id = init.id
-    root.assets.set(this.id, this)
-    root._emit(new AssetCreateEvent(this))
+    doc.assets.set(this.id, this)
+    doc.emit(new AssetCreateEvent(this))
   }
 
   dispose(): void {

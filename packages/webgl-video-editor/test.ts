@@ -4,7 +4,7 @@ import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize } from 'shared/utils'
 
-import { AVEncoder } from './src/export/av-encoder.ts'
+import { AVEncoder } from './src/document-views/export/av-encoder.ts'
 
 const test = async () => {
   document.body.appendChild(document.createElement('br'))

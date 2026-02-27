@@ -1,25 +1,25 @@
 import { ref, watch } from 'fine-jsx'
 import { uid } from 'uid'
 
-import type * as core from '../../types/core'
-import type { Schema } from '../../types/core'
-import type { DocumentSettings } from '../../types/schema'
+import type * as core from '../../types/core.d.ts'
+import type { Schema } from '../../types/core.d.ts'
+import type * as pub from '../../types/core.d.ts'
 import type {
   AssetCreateEvent,
   AssetDeleteEvent,
+  AssetRefreshEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
   NodeMoveEvent,
   NodeUpdateEvent,
   SettingsUpdateEvent,
 } from '../events.ts'
-import type { PlaybackDocument } from '../playback-document.ts'
 import { storage, type StorageFileWriteOptions } from '../storage/storage.ts'
 
 import { createInitialDocument } from './utils.ts'
 
 type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> =
-  | { type: 'settings:update'; from: Partial<DocumentSettings>; to: Partial<DocumentSettings> }
+  | { type: 'settings:update'; from: Partial<Schema.DocumentSettings>; to: Partial<Schema.DocumentSettings> }
   // TODO: remove group???!!!
   | { type: 'node:create'; group?: string; nodeId: string; init: core.Schema.AnyNodeSchema }
   | {
@@ -45,7 +45,7 @@ const patchObj = <T extends object>(obj: T, updates: Partial<T>): void => {
 }
 
 export class VideoEditorLocalStore implements core.VideoEditorStore {
-  #doc!: PlaybackDocument
+  #doc!: pub.Document
   readonly #actions: HistoryOp[][] = []
   #index = -1
   #pending?: HistoryOp[]
@@ -69,7 +69,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   readonly storage = storage
 
   init(editor: core.VideoEditor) {
-    const doc = (this.#doc = editor._editor._doc)
+    const doc = (this.#doc = editor._editor.doc)
     this.#restoreFromLocalStorage()
 
     // Persist to localStorage
@@ -86,8 +86,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     doc.on('node:move', this.#onMove.bind(this), options)
     doc.on('node:update', this.#onUpdate.bind(this), options)
     doc.on('node:delete', this.#onDelete.bind(this), options)
-
-    this.#abort.signal.addEventListener('abort', this.reset.bind(this))
+    doc.on('asset:refresh', this.#onAssetRefresh.bind(this), options)
   }
 
   #restoreFromLocalStorage(): void {
@@ -211,7 +210,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
               const node = nodes.get(op.nodeId)
               const { to } = op
               if (node.parent?.id !== to?.parentId) node.remove()
-              if (to) node.treePosition(to)
+              if (to) node.move(to)
               break
             }
             // udpate
@@ -238,7 +237,7 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
               const node = nodes.get(op.nodeId)
               const { from } = op
               if (node.parent?.id !== from?.parentId) node.remove()
-              if (from) node.treePosition(from)
+              if (from) node.move(from)
               break
             }
             // revert udpate
@@ -268,7 +267,8 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   #onSettingsUpdate({ from }: SettingsUpdateEvent): void {
     const to: Record<string, unknown> = {}
 
-    for (const key in from) if (Object.hasOwn(from, key)) to[key] = this.#doc[key as keyof DocumentSettings]
+    for (const key in from)
+      if (Object.hasOwn(from, key)) to[key] = this.#doc[key as keyof Schema.DocumentSettings]
 
     this.#add([{ type: 'settings:update', from, to }])
   }
@@ -318,8 +318,18 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
 
     this.#add([
       { type: 'node:move', nodeId, from: parent && { parentId: parent.id, index: node.index } },
-      { type: 'node:delete', nodeId, from: node.toObject() },
+      { type: 'node:delete', nodeId, from: node.toObject() as Schema.AnyNodeSchema },
     ])
+  }
+
+  #onAssetRefresh({ asset }: AssetRefreshEvent): void {
+    void (async () => {
+      if (!(await this.storage.hasCompleteFile(asset.id)))
+        throw new Error(`[webgl-video-editor] couldn't get asset data from storage (${asset.id})`)
+
+      const blob = await storage.getFile(asset.id)
+      asset.setBlob(blob)
+    })()
   }
 
   #getAssetMap(): Record<string, Schema.AnyAsset> {
