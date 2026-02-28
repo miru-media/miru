@@ -45,7 +45,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
   audio?: Schema.AvMediaAsset['audio']
   video?: Schema.AvMediaAsset['video']
 
-  blob!: Blob
+  blob?: Blob
   readonly #objectUrl = ref('')
   #isRefreshing = false
   readonly #isLoading = ref(true)
@@ -91,7 +91,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
     doc.emit(new AssetCreateEvent(this, source))
   }
 
-  setBlob(blob: Blob | null) {
+  setBlob(blob: Blob | null | undefined): void {
     URL.revokeObjectURL(this.objectUrl)
 
     if (blob) {
@@ -99,7 +99,7 @@ export class MediaAsset extends BaseAsset<Schema.AvMediaAsset> implements pub.Me
       this.#objectUrl.value = URL.createObjectURL(blob)
       this.#isRefreshing = this.#isLoading.value = false
     } else {
-      this.blob = new Blob()
+      this.blob = undefined
       this.#isLoading.value = true
     }
   }

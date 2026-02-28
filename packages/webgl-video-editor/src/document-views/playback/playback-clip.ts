@@ -85,12 +85,15 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
     this.#scope.run(() => {
       // keep media element src updated
       watch(
-        [() => original.sourceAsset.objectUrl, () => original.sourceAsset.isLoading],
+        [() => original.sourceAsset?.objectUrl, () => original.sourceAsset?.isLoading === true],
         ([url, loading], _prev) => {
           if (loading) return
 
-          this.mediaElement.setAttribute('src', url)
-          this.mediaElement.load()
+          const { mediaElement } = this
+          if (url) {
+            mediaElement.setAttribute('src', url)
+            mediaElement.load()
+          } else mediaElement.removeAttribute('src')
         },
       )
 
@@ -161,7 +164,7 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
       const { sourceAsset } = this.original
       const { sprite } = renderClip
 
-      if (this.isInPresentationTime.value) {
+      if (this.isInPresentationTime.value && sourceAsset) {
         sprite.visible ||= this.mediaState.wasEverPlayable.value
 
         if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {

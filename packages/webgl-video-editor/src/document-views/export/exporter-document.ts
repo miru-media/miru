@@ -86,18 +86,22 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
   }
 
   #prepareClip(exportClip: ExportClip): void {
-    const { sourceAsset: source, clipType, time: clipTime } = exportClip.original
+    const { sourceAsset, clipType, time: clipTime } = exportClip.original
     const { source: sourceStart, duration } = clipTime
     const sourceEnd = sourceStart + duration
-    let sourceEntry = this.sources.get(source.objectUrl)
+
+    if (!sourceAsset?.blob)
+      throw new Error(`[webgl-video-editor]: missing asset "${exportClip.original.source.assetId}"`)
+
+    let sourceEntry = this.sources.get(sourceAsset.id)
 
     if (!sourceEntry) {
       const input = new Mb.Input({
         formats: Mb.ALL_FORMATS,
-        source: new Mb.BlobSource(source.blob),
+        source: new Mb.BlobSource(sourceAsset.blob),
       })
       sourceEntry = {
-        asset: exportClip.original.sourceAsset,
+        asset: sourceAsset,
         start: sourceStart,
         end: sourceEnd,
         input,
@@ -106,7 +110,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
         isAudioOnly: clipType === 'audio',
         consumers: 0,
       }
-      this.sources.set(source.objectUrl, sourceEntry)
+      this.sources.set(sourceAsset.id, sourceEntry)
     } else {
       sourceEntry.isAudioOnly &&= clipType === 'audio'
     }
@@ -125,7 +129,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
     const audio = (entry.audio = await input.getPrimaryAudioTrack())
 
     if (audio && !(await audio.canDecode())) {
-      const encodedFileData = await entry.asset.blob.arrayBuffer()
+      const encodedFileData = await entry.asset.blob!.arrayBuffer()
       decoderAudioContext ??= new OfflineAudioContext({ ...this.audioEncoderConfig, length: 1 })
       entry.audioBuffer = await decoderAudioContext.decodeAudioData(encodedFileData)
     }
@@ -158,7 +162,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
 
     await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
 
-    this.clips.forEach((clip) => clip.init(this.sources.get(clip.original.sourceAsset.objectUrl)!))
+    this.clips.forEach((clip) => clip.init(this.sources.get(clip.original.sourceAsset!.id)!))
 
     const durationUs = duration * 1e6
 

@@ -22,7 +22,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   declare name: string
 
   declare sourceStart: Schema.AnyClip['sourceStart']
-  declare private _source: Ref<MediaAsset>
+  declare private _source: Ref<MediaAsset | undefined>
   declare source: Schema.AnyClip['source']
   declare error: Ref<MediaError | undefined>
 
@@ -38,12 +38,12 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   readonly #isInClipTime = computed(() => rangeContainsTime(this.presentationTime, this.doc.currentTime))
 
   declare private _mediaSize: Ref<Size>
-  get sourceAsset(): MediaAsset {
+  get sourceAsset(): MediaAsset | undefined {
     return this._source.value
   }
 
   get isReady(): boolean {
-    return !this.sourceAsset.isLoading
+    return this.sourceAsset?.isLoading === false
   }
 
   get time(): ClipTime {
@@ -121,8 +121,8 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     })
 
     this._mediaSize = computed((): Size => {
-      const { video } = this.sourceAsset
-      if (!video) return { width: 0, height: 0 }
+      const video = this.sourceAsset?.video
+      if (!video) return { width: 1, height: 1 }
 
       const { width, height } = video
       return video.rotation % 180 ? { width: height, height: width } : { width, height }

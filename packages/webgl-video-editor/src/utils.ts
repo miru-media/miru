@@ -3,8 +3,10 @@ import * as Pixi from 'pixi.js'
 import type * as pub from '../types/core.d.ts'
 
 export const getClipTransformMatrix = (clip: pub.VisualClip, withVideoRotation: boolean): Pixi.Matrix => {
-  const { scale } = clip
-  const { width, height, rotation: videoRotation } = clip.sourceAsset.video!
+  const { scale, sourceAsset } = clip
+  if (!sourceAsset) return new Pixi.Matrix()
+
+  const { width, height, rotation: videoRotation } = sourceAsset.video!
 
   const matrix = new Pixi.Matrix()
 

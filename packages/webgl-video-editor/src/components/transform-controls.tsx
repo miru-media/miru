@@ -17,9 +17,10 @@ const ROTATE_LINE_LENGTH = 50
 export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
   const container = ref<SVGElement>()
 
-  const clipMediaSize = computed(() =>
-    editor.selection?.isVisual() ? editor.selection.sourceAsset.video! : { width: 0, height: 0 },
-  )
+  const clipMediaSize = computed(() => {
+    const clip = editor.selection
+    return clip?.isVisual() && clip.sourceAsset ? clip.sourceAsset.video! : { width: 0, height: 0 }
+  })
   const clipProps = computed((): Pick<VisualClip, 'position' | 'rotation' | 'scale'> => {
     const clip = editor.selection
     return clip?.isVisual() ? clip : { position: { x: 0, y: 0 }, rotation: 0, scale: { x: 1, y: 1 } }
@@ -151,7 +152,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
     <svg class={styles.transformControls}>
       {() => {
         const clip = editor.selection
-        if (!clip?.isVisual() || !clip.isInClipTime) return
+        if (!clip?.isVisual() || !clip.isInClipTime || !clip.sourceAsset) return
 
         return (
           <g ref={container}>

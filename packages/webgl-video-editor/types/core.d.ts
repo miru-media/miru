@@ -164,7 +164,7 @@ export interface TrackChild extends BaseNode {
 
 export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip<T['clipType']> {
   readonly isReady: boolean
-  readonly sourceAsset: MediaAsset
+  readonly sourceAsset: MediaAsset | undefined
   readonly playableTime: ClipTime
   readonly presentationTime: ClipTime
   readonly expectedMediaTime: number
@@ -200,10 +200,10 @@ export type AnyVisualNode = Timeline | Track | VisualClip
 export type AnyAudioNode = Timeline | Track | AudioClip
 
 export interface MediaAsset extends Schema.AvMediaAsset {
-  readonly blob: Blob
+  readonly blob?: Blob
   readonly objectUrl: string
   readonly isLoading: boolean
-  setBlob: (blob: Blob) => void
+  setBlob: (blob: Blob | null | undefined) => void
   setError: (error: unknown) => void
   toObject: () => Schema.AvMediaAsset
   dispose: () => void
