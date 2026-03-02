@@ -25,13 +25,13 @@
 
   /* BACKGROUND-COLOR */
   --color-bg-preview: hsl(var(--theme-hue) 40% 80%);
-  --color-bg-button: hsl(var(--theme-hue) 40% 94%);
-  --color-bg-button-hover: hsl(var(--theme-hue) 90% 97%);
-  --color-bg-acc: hsl(var(--theme-hue) 90% 99%);
+  --color-bg-button: hsl(var(--theme-hue) 40% 99%);
+  --color-bg-button-hover: hsl(var(--theme-hue) 5% 57%);
+  --color-bg-acc: hsl(var(--theme-hue) 60% 35%);
 
   /* COLOR */
-  --color-fnt-default: hsl(var(--theme-hue) 5% 30%);
-  --color-fnt-acc: hsl(var(--theme-hue-acc) 60% 50%);
+  --color-fnt-default: hsl(var(--theme-hue) 5% 8%);
+  --color-fnt-acc: hsl(var(--theme-hue-acc) 60% 100%);
 
   /* SCROLLBAR COLOR */
   --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
@@ -56,12 +56,12 @@
   /* BACKGROUND-COLOR */
   --color-bg-preview: hsl(var(--theme-hue) 20% 10%);
   --color-bg-button: hsl(var(--theme-hue) 100% 3%);
-  --color-bg-button-hover: hsl(var(--theme-hue) 10% 17%);
-  --color-bg-acc: hsl(var(--theme-hue) 10% 12%);
+  --color-bg-button-hover: hsl(var(--theme-hue) 8% 37%);
+  --color-bg-acc: hsl(var(--theme-hue) 60% 68%);
 
   /* COLOR */
-  --color-fnt-default: hsl(var(--theme-hue) 5% 60%);
-  --color-fnt-acc: hsl(var(--theme-hue-acc) 80% 40%);
+  --color-fnt-default: hsl(var(--theme-hue) 5% 85%);
+  --color-fnt-acc: hsl(var(--theme-hue-acc) 100% 3%);
 
   /* SCROLLBAR COLOR */
   --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
