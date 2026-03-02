@@ -32,6 +32,7 @@
 
   /* BUTTON ACTIVE */
   .miru--button.miru--acc {
+    color: var(--color-fnt-acc);
     background-color: var(--color-bg-acc);
     border-color: var(--color-fnt-acc);
   }
