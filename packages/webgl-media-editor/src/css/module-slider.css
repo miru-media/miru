@@ -10,6 +10,8 @@
 /* SLIDER */
 .miru--slider {
   flex-grow: 1;
+  justify-self: center;
+  width: calc(100% - 2 * var(--gap-default));
   height: calc(100% - 2 * var(--gap-default));
   background-clip: padding-box;
   border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
@@ -18,6 +20,7 @@
   border-bottom: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
     transparent;
   border-left: var(--gap-default) solid transparent;
+  border-radius: 0.1em;
 
   &::-moz-range-thumb {
     width: var(--width-slider-thumb);
@@ -25,6 +28,10 @@
 
   &[value_current='0'] {
     opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: solid currentcolor !important;
   }
 }
 
