@@ -8,7 +8,6 @@ import { setupProviders } from './providers'
 import { INITIAL_DOC_UPDATE } from './constants'
 import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
 import { NextGraphVideoEditor } from './nextgraph-video-editor'
-import { NextGraphAssetLoader } from './nextgraph-asset-loader'
 
 const { nuri } = defineProps<{ nuri: string }>()
 const ydoc = new Y.Doc()
@@ -21,8 +20,6 @@ const { session } = ngProvider
 
 const store = markRaw(new VideoEditorYjsStore(ngMap.get(YTREE_YMAP_KEY)!))
 const editor = new NextGraphVideoEditor({ store, session, nuri })
-
-editor.doc.assets.loaders.push(new NextGraphAssetLoader(session, nuri))
 
 const onCloseProject = () => (location.hash = '')
 

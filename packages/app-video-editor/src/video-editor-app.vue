@@ -11,8 +11,13 @@ import Settings from './video-editor-settings.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
 
-const { store = new VideoEditorLocalStore(), onCloseProject } = defineProps<{
+const {
+  store,
+  onCloseProject,
+  editor: editorProp,
+} = defineProps<{
   store?: VideoEditorStore
+  editor?: VideoEditor
   onCloseProject?: () => unknown
 }>()
 
@@ -94,6 +99,7 @@ if (!import.meta.env.SSR) {
       ref="editorRef"
       :store="store"
       :messages="{ en, de }"
+      :editor="editorProp"
       class="video-editor"
       data-theme="dark"
     >
