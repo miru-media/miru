@@ -14,9 +14,10 @@
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
-    "@ng-org/web": "0.1.2-alpha.6",
+    "@ng-org/web": "0.1.2-alpha.10",
     "@types/base64-js": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
+    "@vueuse/core": "catalog:",
     "app-video-editor": "workspace:^",
     "base64-js": "catalog:",
     "fine-jsx": "catalog:",

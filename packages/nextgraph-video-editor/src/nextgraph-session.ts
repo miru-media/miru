@@ -1,19 +1,17 @@
 import { init as initNgWeb, ng } from '@ng-org/web'
-import type { NG } from '@ng-org/web'
+import type { Session } from '@ng-org/web'
 
 import { promiseWithResolvers } from 'shared/utils'
 
-const initSession = async (): Promise<NextGraphSession | undefined> => {
-  const promise = promiseWithResolvers<NextGraphSession | undefined>()
+const initSession = async (): Promise<Session | undefined> => {
+  const promise = promiseWithResolvers<Session | undefined>()
 
   await initNgWeb(
-    (event: any) => {
+    (event: { session: Session; status: string }) => {
       const { session } = event
 
-      session!.ng ??= ng
+      ;(session as Partial<Session>).ng ??= ng
       promise.resolve(session)
-
-      // initNgSignals(ng, session!)
     },
     true,
     [],
@@ -23,13 +21,4 @@ const initSession = async (): Promise<NextGraphSession | undefined> => {
 }
 
 const sessionPromise = initSession()
-export const getSession = async () => await sessionPromise
-
-export interface NextGraphSession {
-  ng: typeof NG
-  session_id: string
-  protected_store_id: string
-  private_store_id: string
-  public_store_id: string
-  [key: string]: unknown
-}
+export const getSession = (): Promise<Session | undefined> => sessionPromise

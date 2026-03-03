@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call -- missing types */
+import type { Session } from '@ng-org/web'
 import * as base64 from 'base64-js'
 import * as Y from 'yjs'
 
@@ -14,7 +15,7 @@ export const digestToString = (digest: { Blake3Digest32: Uint8Array }): string =
 export class NextGraphProvider {
   readonly nuri: string
   doc: Y.Doc
-  session: any
+  session: Session
   heads: string[] = []
   shouldConnect = false
   isConnected = false
@@ -27,19 +28,19 @@ export class NextGraphProvider {
     return this.#connectedPromise.promise.then(() => this)
   }
 
-  constructor(nuri: string, doc: Y.Doc, session: any) {
-    // if (!session.ng) return
+  constructor(nuri: string, doc: Y.Doc, session: Session) {
     this.nuri = nuri
     this.doc = doc
     this.session = session
 
     this.doc.on('update', this.#updateHandler)
     this.doc.on('destroy', this.#destroy)
-    this.connect()
+    this.connect().catch(logError)
   }
 
-  sendUpdate(update: Uint8Array): void {
-    this.session.ng.discrete_update(this.session.session_id, update, this.heads, 'YMap', this.nuri)
+  async sendUpdate(update: Uint8Array): Promise<void> {
+    const { ng, session_id: sessionId } = this.session
+    await ng.discrete_update(sessionId, update, this.heads, 'YMap', this.nuri)
   }
 
   /**
@@ -50,17 +51,11 @@ export class NextGraphProvider {
   _updateHandler(update: Uint8Array, origin: any): void {
     if (!this.isConnected || origin?.local === true) return
 
-    try {
-      log(this.heads)
-      this.sendUpdate(update)
-    } catch (error) {
-      logError(error)
-    }
+    this.sendUpdate(update).catch(logError)
   }
 
   destroy(): void {
     this.disconnect()
-    //this.awareness.off('update', this._awarenessUpdateHandler)
     this.doc.off('update', this.#updateHandler)
   }
 
@@ -69,7 +64,7 @@ export class NextGraphProvider {
     // TODO unsub
   }
 
-  connect(): void {
+  async connect(): Promise<void> {
     const docIdLength = 53
     const docId = this.nuri.slice(0, docIdLength)
 
@@ -78,7 +73,7 @@ export class NextGraphProvider {
 
     this.shouldConnect = true
 
-    this.session.ng.doc_subscribe(docId, this.session.session_id, this.onResponse.bind(this))
+    await this.session.ng.doc_subscribe(docId, this.session.session_id, this.onResponse.bind(this))
     // TODO .then keep unsub
   }
 
@@ -105,9 +100,11 @@ export class NextGraphProvider {
           incomingStateAsUpdate && Y.encodeStateVectorFromUpdate(incomingStateAsUpdate),
         ),
       )
-
-      this.#connectedPromise.resolve()
-      this.isConnected = true
+        .then(() => {
+          this.#connectedPromise.resolve()
+          this.isConnected = true
+        })
+        .catch(logError)
     } else if (response.V0.Patch) {
       const patchUpdate = response.V0.Patch.discrete?.YMap as Uint8Array | undefined
       if (patchUpdate) Y.applyUpdate(this.doc, patchUpdate, { local: true })
