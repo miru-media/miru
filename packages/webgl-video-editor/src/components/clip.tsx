@@ -26,10 +26,10 @@ const CLIP_COLORS = [
 ]
 
 const ensureDurationIsPlayable = (clip: AnyClip): void => {
-  const { sourceAsset } = clip
-  if (!sourceAsset) return
+  const { asset } = clip
+  if (!asset) return
 
-  const sourceDuration = sourceAsset.duration
+  const sourceDuration = asset.duration
   const clipTime = clip.time
   const durationOutsideClip = sourceDuration - (clipTime.source + clipTime.duration)
   clip.sourceStart += Math.min(0, durationOutsideClip)
@@ -48,10 +48,10 @@ export const Clip = ({
   const { t, tr } = useI18n()
   const mainContainer = ref<HTMLElement>()
   const clipColor = computed(() => {
-    const { sourceAsset } = clip
-    if (!sourceAsset || !editor.playback._getNode(clip).everHadEnoughData) return 'var(--white-2)'
+    const { asset } = clip
+    if (!asset || !editor.playback._getNode(clip).everHadEnoughData) return 'var(--white-2)'
 
-    const hash = stringHashCode(sourceAsset.id)
+    const hash = stringHashCode(asset.id)
     return CLIP_COLORS[Math.abs(hash) % CLIP_COLORS.length]
   })
 
@@ -84,7 +84,7 @@ export const Clip = ({
           interact.modifiers.restrictEdges({
             outer: () => {
               const { time, prev } = clip
-              const mediaDuration = clip.sourceAsset?.duration ?? 0
+              const mediaDuration = clip.asset?.duration ?? 0
               const minStartTime = Math.max(
                 time.end - mediaDuration,
                 Math.max(0, prev ? prev.time.start + MIN_CLIP_DURATION_S : 0),
@@ -113,7 +113,7 @@ export const Clip = ({
         ],
         listeners: {
           start(event: ResizeEvent) {
-            if (!clip.sourceAsset) event.interaction.stop()
+            if (!clip.asset) event.interaction.stop()
             else editor._startClipResize(clip)
           },
           move({ rect, edges }: ResizeEvent) {
@@ -221,8 +221,8 @@ export const Clip = ({
         --clip-color: ${clipColor.value};
       `}
     >
-      <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.select(clip.id, false)}>
-        <span class={styles.clipName}>{clip.name ?? clip.sourceAsset?.name ?? ''}</span>
+      <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.select(clip, false)}>
+        <span class={styles.clipName}>{clip.name ?? clip.asset?.name ?? ''}</span>
         <div class={styles.clipControls}>
           <div class={styles.clipResizeLeft}>
             <IconTablerChevronLeft />

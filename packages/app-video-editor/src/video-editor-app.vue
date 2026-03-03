@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
 import { ref } from 'vue'
-import { useI18n } from 'vue-i18n-lite'
 
 import type { VideoEditor, VideoEditorStore } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
@@ -20,8 +19,6 @@ const { store = new VideoEditorLocalStore(), onCloseProject } = defineProps<{
 const name = defineModel<string>('name')
 
 const editorRef = ref<VideoEditor>()
-
-const { t } = useI18n()
 
 if (!import.meta.env.SSR) {
   // Keyboard shortcuts
@@ -58,8 +55,8 @@ if (!import.meta.env.SSR) {
       case 'Space':
       case 'MediaPlayPause':
         if (event.repeat) break
-        if (editor.isPaused) editor.play()
-        else editor.pause()
+        if (editor.playback.isPaused) editor.playback.play()
+        else editor.playback.pause()
         event.preventDefault()
         break
 

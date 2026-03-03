@@ -1,11 +1,12 @@
 import { VideoEditorElement } from './elements/video-editor-element.ts'
 
-export type * from './events.ts'
-export type * as Schema from '../types/schema.d.ts'
+export type * as Schema from '#schema'
 
 export * from './elements/index.ts'
-export type { VideoEditor, VideoEditorStore } from '../types/core.d.ts'
+export * from '#core'
 
 if (typeof customElements !== 'undefined' && 'define' in customElements) {
   customElements.define('video-editor', VideoEditorElement)
 }
+
+export { VideoEditor } from './video-editor.ts'

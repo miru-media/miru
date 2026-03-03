@@ -34,7 +34,7 @@
     "shared": "workspace:^",
     "uid": "catalog:",
     "unplugin-vue-markdown": "^29.2.0",
-    "vitest": "^3.2.4",
+    "vitest": "^4.0.18",
     "vue": "catalog:",
     "vue-i18n-lite": "catalog:",
     "webgl-video-editor": "workspace:^"

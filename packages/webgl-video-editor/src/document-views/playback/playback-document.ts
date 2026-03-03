@@ -22,9 +22,10 @@ interface ViewTypeMap {
 }
 
 export class PlaybackDocument extends DocumentView<ViewTypeMap> {
-  renderView: RenderDocument
+  readonly renderView: RenderDocument
   readonly stats = new Stats()
   readonly ticker = new Pixi.Ticker()
+
   readonly #scope = createEffectScope()
   readonly #noRender = ref(0)
   readonly #delayedActiveClipIsStalled = ref(false)
@@ -32,6 +33,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   readonly #isEnded = computed(() => this.currentTime >= this.doc.duration)
   readonly #isPaused = ref(true)
   readonly #isStalled = computed(() => !this.#isPaused.value && !this.isReady)
+
+  readonly assetFiles = new Map<string, { blob: Blob; url: string }>()
 
   get currentTime(): number {
     return this.doc.currentTime
@@ -53,7 +56,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   constructor(options: { renderView: RenderDocument }) {
     const { renderView } = options
-    super({ doc: renderView.doc })
+    const { doc } = renderView
+    super({ doc })
 
     this.renderView = renderView
 
@@ -63,14 +67,10 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
       watch([() => this.isStalled], ([stalled], _prev, onCleanup) => {
         if (!stalled) return
 
-        const refreshAssetUrl = (asset: pub.MediaAsset | pub.VideoEffectAsset) => {
-          if (asset.type === 'asset:media:av') void asset._refreshObjectUrl()
-        }
-
-        const timeoutId = setTimeout(
-          () => this.doc.assets.forEach(refreshAssetUrl),
-          ASSET_URL_REFRESH_TIMEOUT_MS,
-        )
+        const timeoutId = setTimeout(() => {
+          for (const asset of this.doc.assets.values())
+            if (asset.type === 'asset:media:av') void asset._refreshObjectUrl()
+        }, ASSET_URL_REFRESH_TIMEOUT_MS)
         onCleanup(() => clearTimeout(timeoutId))
       })
     })

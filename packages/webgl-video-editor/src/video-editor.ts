@@ -2,19 +2,17 @@ import { computed, ref, type Ref } from 'fine-jsx'
 import { uid } from 'uid'
 import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
+import type { NodeSnapshot } from '#internal'
+import type * as Schema from '#schema'
 import type { Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { useElementSize } from 'shared/utils/composables.ts'
 import { getWebgl2Context } from 'shared/utils/images.ts'
 import { remap0 } from 'shared/utils/math'
 
-import type { AnyClip, AnyNode, AnyTrackChild } from '../types/core.d.ts'
-import type { NodeSnapshot } from '../types/internal.d.ts'
-import type { AnyNodeSerializedSchema } from '../types/schema.d.ts'
-import type * as Schema from '../types/schema.d.ts'
 import type * as pub from '../types/webgl-video-editor'
 
-import { MediaAsset } from './assets.ts'
+import { getMediaAssetInfo } from './assets/index.ts'
 import { MIN_CLIP_DURATION_S } from './constants.ts'
 import { ExportDocumentView } from './document-views/export/exporter-document.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
@@ -22,7 +20,7 @@ import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
 import { type NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from './events.ts'
 
-const getClipAtTime = (track: pub.Track, time: number): AnyClip | undefined => {
+const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined => {
   for (let clip = track.firstClip; clip; clip = clip.nextClip) {
     const clipTime = clip.time
 
@@ -38,13 +36,11 @@ type DragResizeInitialState = [
   next: NodeSnapshot<Schema.AnyClip> | undefined,
 ]
 
-export class VideoEditor {
-  readonly _editor = this
-
+export class VideoEditor implements pub.VideoEditor {
   doc!: pub.Document
   readonly store?: pub.VideoEditorStore
 
-  readonly #selection = ref<AnyTrackChild>()
+  readonly #selection = ref<pub.AnyTrackChild>()
   _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
   _timelineSize = ref<Size>({ width: 1, height: 1 })
   _viewportSize: Ref<Size>
@@ -64,6 +60,11 @@ export class VideoEditor {
   playback: PlaybackDocument
 
   canvas = document.createElement('canvas')
+
+  get isPaused(): boolean {
+    return this.playback.isPaused
+  }
+
   get currentTime(): number {
     return this.doc.currentTime
   }
@@ -84,7 +85,13 @@ export class VideoEditor {
     return this.#effects.value
   }
 
-  _showStats = ref(false)
+  readonly #showStats = ref(false)
+  get _showStats(): boolean {
+    return this.#showStats.value
+  }
+  set _showStats(value) {
+    this.#showStats.value = value
+  }
 
   readonly #exportResult = ref<ExportResult>()
   get exportResult(): ExportResult | undefined {
@@ -96,7 +103,7 @@ export class VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): AnyTrackChild | undefined {
+  get selection(): pub.AnyTrackChild | undefined {
     return this.#selection.value
   }
 
@@ -127,13 +134,13 @@ export class VideoEditor {
 
     this.effectRenderer = new EffectRenderer()
 
-    if (store) store.init(this as unknown as pub.VideoEditor)
+    if (store) store.init(this)
 
     this.doc.on('node:delete', ({ node }: NodeDeleteEvent) => {
       if (node.id === this.selection?.id) this.select(undefined)
     })
 
-    this.doc.on('canvas:pointerdown', ({ node }) => this.select(node?.id))
+    this.doc.on('canvas:pointerdown', ({ node }) => this.select(node))
 
     this._viewportSize = useElementSize(this.canvas)
   }
@@ -147,39 +154,27 @@ export class VideoEditor {
     this.doc.importFromJson(content)
   }
 
-  async createMediaAsset(source: string | Blob): Promise<MediaAsset> {
-    const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
-    return new MediaAsset(init, { doc: this.doc, source })
+  async createMediaAsset(source: string | Blob): Promise<pub.MediaAsset> {
+    const init = await getMediaAssetInfo(this.generateId(), source)
+    return this.doc.assets.create(init, { source })
   }
 
-  async addClip(track: pub.Track, source: string | Blob | Schema.AnyClip): Promise<AnyClip> {
-    let init: Schema.AnyClip
-    let newAssetData: { init: Schema.AvMediaAsset; source: string | Blob } | undefined
+  addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {
+    let newAssetData: { init: Schema.MediaAsset; source: string | Blob } | undefined
 
-    if (typeof source === 'string' || source instanceof Blob) {
-      const assetId = this.generateId()
-      const assetInit = await MediaAsset.getAvMediaAssetInfo(assetId, source)
-      const { duration } = assetInit
+    const { duration } = asset
 
-      newAssetData = {
-        init: assetInit,
-        source,
-      }
-
-      init = {
-        id: this.generateId(),
-        type: 'clip',
-        clipType: track.trackType,
-        source: { assetId },
-        sourceStart: 0,
-        duration,
-      }
-    } else {
-      init = source
+    const init: Schema.AnyClip = {
+      id: this.generateId(),
+      type: 'clip',
+      clipType: track.trackType,
+      sourceRef: { assetId: asset.id },
+      sourceStart: 0,
+      duration,
     }
 
     return this._transact(() => {
-      if (newAssetData) void new MediaAsset(newAssetData.init, { doc: this.doc, source: newAssetData.source })
+      if (newAssetData) this.doc.assets.create(newAssetData.init, { source: newAssetData.source })
 
       const clip = this.doc.createNode(init)
 
@@ -189,21 +184,17 @@ export class VideoEditor {
     })
   }
 
-  async replaceClipSource(source: string | Blob): Promise<void> {
+  replaceClipAsset(asset: pub.MediaAsset): void {
     const clip = this.#selection.value
     if (!clip?.isClip()) return
 
-    const init = await MediaAsset.getAvMediaAssetInfo(this.generateId(), source)
-
     this._transact(() => {
-      const asset = new MediaAsset(init, { doc: this.doc, source })
-
       clip.duration = Math.min(asset.duration, clip.duration)
-      clip.source = { assetId: asset.id }
+      clip.sourceRef = { assetId: asset.id }
     })
   }
 
-  splitClipAtCurrentTime(): [AnyClip, AnyClip] | undefined {
+  splitClipAtCurrentTime(): [pub.AnyClip, pub.AnyClip] | undefined {
     const { currentTime } = this.doc
     const trackOfSelectedClip = this.#selection.value?.parent
 
@@ -279,10 +270,10 @@ export class VideoEditor {
     this.doc.seekTo(time)
   }
 
-  select(id: string | undefined, seek = true): void {
-    this.#select(id ? this.doc.nodes.get<AnyTrackChild>(id) : undefined, seek)
+  select(clip: pub.AnyTrackChild | undefined, seek = true): void {
+    this.#select(clip, seek)
   }
-  #select(clip: AnyTrackChild | undefined, seek: boolean): void {
+  #select(clip: pub.AnyTrackChild | undefined, seek: boolean): void {
     this.#selection.value = clip
 
     if (clip && seek) {
@@ -294,7 +285,7 @@ export class VideoEditor {
     }
   }
 
-  _startClipDrag(clip: AnyClip): void {
+  _startClipDrag(clip: pub.AnyClip): void {
     this._drag.isDragging.value = true
     this._drag.from = [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()]
   }
@@ -357,9 +348,9 @@ export class VideoEditor {
   }
 
   toObject(): Schema.SerializedDocument {
-    const serialize = <T extends Schema.AnyNodeSchema | Schema.AnyAsset>(
-      node: Extract<AnyNode | pub.AnyAsset, T>,
-    ): Extract<AnyNodeSerializedSchema | Schema.AnyAsset, { type: T['type'] }> => {
+    const serialize = <T extends (Schema.AnyNodeSchema | Schema.AnyAssetSchema)['type']>(
+      node: Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
+    ): Extract<Schema.AnyNodeSerializedSchema | Schema.AnyAssetSchema, T> => {
       if ('children' in node) {
         const serialized = {
           ...node.toObject(),
@@ -376,7 +367,7 @@ export class VideoEditor {
     return {
       resolution,
       frameRate,
-      assets: Array.from(_assets.values()).map(serialize as any),
+      assets: Array.from(_assets.values()).map(serialize),
       tracks: timeline.children.map(serialize),
     }
   }

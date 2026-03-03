@@ -21,4 +21,8 @@ export abstract class NodeView<TDocView, T extends pub.AnyNode> {
     this.isDisposed = true
     this.original = undefined as never
   }
+
+  [Symbol.dispose](): void {
+    this.dispose()
+  }
 }

@@ -67,9 +67,9 @@ const onBlur = (event: FocusEvent) => {
                   <select
                     @input="
                       (event) =>
-                        (editor.resolution = JSON.parse((event.target as HTMLInputElement).value) as Size)
+                        (editor.doc.resolution = JSON.parse((event.target as HTMLInputElement).value) as Size)
                     "
-                    :value="JSON.stringify(editor.resolution)"
+                    :value="JSON.stringify(editor.doc.resolution)"
                   >
                     <option v-for="{ value, label } of resolutionOptions" :value="JSON.stringify(value)">
                       {{ label }}
@@ -82,9 +82,10 @@ const onBlur = (event: FocusEvent) => {
                 <div class="bulma-select">
                   <select
                     @input="
-                      (event) => (editor.frameRate = parseInt((event.target as HTMLInputElement).value, 10))
+                      (event) =>
+                        (editor.doc.frameRate = parseInt((event.target as HTMLInputElement).value, 10))
                     "
-                    :value="JSON.stringify(editor.frameRate)"
+                    :value="JSON.stringify(editor.doc.frameRate)"
                   >
                     <option v-for="value of [24, 25, 30, 48, 50, 60]" :value="value">{{ value }}</option>
                   </select>

@@ -1,15 +1,4 @@
-import type {
-  AudioClip,
-  Gap,
-  MediaAsset,
-  Timeline,
-  Track,
-  VideoEffectAsset,
-  VisualClip,
-} from '../src/nodes/index.ts'
-import type { VideoEditor as VideoEditor_ } from '../src/video-editor.ts'
-
-import type { ChildNodePosition, Schema } from './core.ts'
+import type { AudioClip, ChildNodePosition, Gap, Schema, Timeline, Track, VisualClip } from '#core'
 
 export interface SchemaTypes {
   track: Schema.Track
@@ -40,12 +29,8 @@ export interface NodesByType {
 declare module './core' {
   export interface VideoEditor {
     /** @internal @hidden */
-    _editor: VideoEditor_
-    /** @internal @hidden */
     _showStats?: boolean
   }
 }
-
-export type AnyAsset = MediaAsset | VideoEffectAsset
 
 export type NonReadonly<T> = { -readonly [P in keyof T]: T[P] }

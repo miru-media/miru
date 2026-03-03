@@ -1,12 +1,12 @@
 import * as Mb from 'mediabunny'
 
+import type { MediaAsset } from '#core'
+import type * as pub from '#core'
+import { Track } from '#nodes'
 import { setObjectSize } from 'shared/utils'
 import { setVideoEncoderConfigCodec } from 'shared/video/utils'
 
-import type { MediaAsset } from '../../../types/core.d.ts'
-import type * as pub from '../../../types/core.d.ts'
 import { Document } from '../../document.ts'
-import { Track } from '../../nodes/index.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
 import { RenderDocument, type RenderDocumentOptions } from '../render/render-document.ts'
 
@@ -86,22 +86,22 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
   }
 
   #prepareClip(exportClip: ExportClip): void {
-    const { sourceAsset, clipType, time: clipTime } = exportClip.original
+    const { asset, clipType, time: clipTime } = exportClip.original
     const { source: sourceStart, duration } = clipTime
     const sourceEnd = sourceStart + duration
 
-    if (!sourceAsset?.blob)
-      throw new Error(`[webgl-video-editor]: missing asset "${exportClip.original.source.assetId}"`)
+    if (!asset?.blob)
+      throw new Error(`[webgl-video-editor]: missing asset "${exportClip.original.sourceRef.assetId}"`)
 
-    let sourceEntry = this.sources.get(sourceAsset.id)
+    let sourceEntry = this.sources.get(asset.id)
 
     if (!sourceEntry) {
       const input = new Mb.Input({
         formats: Mb.ALL_FORMATS,
-        source: new Mb.BlobSource(sourceAsset.blob),
+        source: new Mb.BlobSource(asset.blob),
       })
       sourceEntry = {
-        asset: sourceAsset,
+        asset,
         start: sourceStart,
         end: sourceEnd,
         input,
@@ -110,7 +110,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
         isAudioOnly: clipType === 'audio',
         consumers: 0,
       }
-      this.sources.set(sourceAsset.id, sourceEntry)
+      this.sources.set(asset.id, sourceEntry)
     } else {
       sourceEntry.isAudioOnly &&= clipType === 'audio'
     }
@@ -162,7 +162,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
 
     await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
 
-    this.clips.forEach((clip) => clip.init(this.sources.get(clip.original.sourceAsset!.id)!))
+    this.clips.forEach((clip) => clip.init(this.sources.get(clip.original.asset!.id)!))
 
     const durationUs = duration * 1e6
 

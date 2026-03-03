@@ -2,6 +2,7 @@
 import type { Ref } from 'fine-jsx'
 import { h } from 'fine-jsx/jsx-runtime'
 
+import type { VideoEditor } from '#core'
 import { LoadingOverlay } from 'shared/components/loading-overlay'
 import type { I18nOptions, InputEvent } from 'shared/types'
 import { provideI18n } from 'shared/utils'
@@ -10,7 +11,7 @@ import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/ut
 
 import { EXPORT_VIDEO_CODECS } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { VideoEditor as VideoEditor_ } from '../video-editor.ts'
+import type { PlaybackDocument } from '../document-views/playback/playback-document.ts'
 
 import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
@@ -18,7 +19,7 @@ import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 
 export const VideoEditorUI = (props: {
-  editor: VideoEditor_
+  editor: VideoEditor
   children?: Record<string, Ref>
   i18n?: I18nOptions
 }) => {
@@ -43,10 +44,11 @@ export const VideoEditorUI = (props: {
       .catch(() => undefined)
 
   const { doc } = editor
+  const playback = editor.playback as unknown as PlaybackDocument
 
   return (
     <div class={styles.videoEditor}>
-      {() => editor._showStats.value && editor.playback.stats.dom}
+      {() => editor._showStats && playback.stats.dom}
       <div
         class={styles.viewport}
         style={() =>
@@ -55,7 +57,7 @@ export const VideoEditorUI = (props: {
       >
         {h(editor.canvas, { class: styles.viewportCanvas })}
         <TransformControls editor={editor} />
-        <LoadingOverlay loading={() => !editor.playback.isReady} />
+        <LoadingOverlay loading={() => !playback.isReady} />
         <PlaybackControls editor={editor} />
       </div>
 
@@ -69,7 +71,7 @@ export const VideoEditorUI = (props: {
       ></progress>
 
       {() =>
-        editor._showStats.value && (
+        editor._showStats && (
           <div
             class={styles.textBodySmall}
             style={() =>
@@ -84,7 +86,7 @@ export const VideoEditorUI = (props: {
                   track.children.map((clip) => {
                     if (!clip.isClip()) return null
 
-                    const playbackClip = editor.playback._getNode(clip)
+                    const playbackClip = playback._getNode(clip)
                     const { mediaState } = playbackClip
 
                     return (

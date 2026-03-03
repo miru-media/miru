@@ -6,7 +6,6 @@ import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import type { ClipTime } from '../../types/core.d.ts'
 import type * as pub from '../../types/core.d.ts'
-import type { MediaAsset } from '../assets.ts'
 import { TRANSITION_DURATION_S, VIDEO_PREPLAY_TIME_S } from '../constants.ts'
 
 import type { Schema } from './index.ts'
@@ -22,8 +21,8 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   declare name: string
 
   declare sourceStart: Schema.AnyClip['sourceStart']
-  declare private _source: Ref<MediaAsset | undefined>
-  declare source: Schema.AnyClip['source']
+  declare private _asset: Ref<pub.MediaAsset | undefined>
+  declare sourceRef: Schema.AnyClip['sourceRef']
   declare error: Ref<MediaError | undefined>
 
   declare transition: Schema.AnyClip['transition']
@@ -38,12 +37,12 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   readonly #isInClipTime = computed(() => rangeContainsTime(this.presentationTime, this.doc.currentTime))
 
   declare private _mediaSize: Ref<Size>
-  get sourceAsset(): MediaAsset | undefined {
-    return this._source.value
+  get asset(): pub.MediaAsset | undefined {
+    return this._asset.value
   }
 
   get isReady(): boolean {
-    return this.sourceAsset?.isLoading === false
+    return this.asset?.isLoading === false
   }
 
   get time(): ClipTime {
@@ -74,10 +73,10 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
   protected _init(init: T): void {
     super._init(init)
-    this._source = ref<MediaAsset>(undefined as never)
+    this._asset = ref<pub.MediaAsset>(undefined as never)
 
-    this._defineReactive('source', init.source, {
-      onChange: (value) => (this._source.value = this.doc.assets.get(value.assetId) as MediaAsset),
+    this._defineReactive('sourceRef', init.sourceRef, {
+      onChange: (value) => (this._asset.value = this.doc.assets.getAsset(value.assetId)),
       equal: (a, b) => a.assetId === b.assetId,
     })
     this._defineReactive('name', init.name)
@@ -121,7 +120,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     })
 
     this._mediaSize = computed((): Size => {
-      const video = this.sourceAsset?.video
+      const video = this.asset?.video
       if (!video) return { width: 1, height: 1 }
 
       const { width, height } = video
@@ -141,7 +140,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
       type: 'clip',
       clipType: this.clipType,
       sourceStart: this.sourceStart,
-      source: this.source,
+      sourceRef: this.sourceRef,
       duration: this.duration,
       transition: this.transition,
     }

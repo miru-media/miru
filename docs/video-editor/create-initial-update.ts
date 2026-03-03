@@ -7,10 +7,7 @@ const ydoc = new Y.Doc()
 
 ydoc.clientID = 0
 
-const base64 = createInitialUpdate({
-  tree: ydoc.getMap(YTREE_YMAP_KEY),
-  settings: ydoc.getMap('settings'),
-})
+const base64 = createInitialUpdate(ydoc.getMap(YTREE_YMAP_KEY))
 
 process.stdout.write(base64)
 process.stdout.write('\n')

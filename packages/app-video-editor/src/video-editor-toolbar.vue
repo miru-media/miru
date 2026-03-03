@@ -20,7 +20,7 @@ const onInputVideoFile = async (event: Event) => {
   if (!file) return
 
   target.value = ''
-  await editor.replaceClipSource(file)
+  editor.replaceClipAsset(await editor.createMediaAsset(file))
 }
 
 const showFilterMenu = ref(false)

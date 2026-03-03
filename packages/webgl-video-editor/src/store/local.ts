@@ -7,14 +7,12 @@ import type * as pub from '../../types/core.d.ts'
 import type {
   AssetCreateEvent,
   AssetDeleteEvent,
-  AssetRefreshEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
   NodeMoveEvent,
   NodeUpdateEvent,
   SettingsUpdateEvent,
 } from '../events.ts'
-import { storage, type StorageFileWriteOptions } from '../storage/storage.ts'
 
 import { createInitialDocument } from './utils.ts'
 
@@ -66,10 +64,9 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
   }
 
   readonly #abort = new AbortController()
-  readonly storage = storage
 
   init(editor: core.VideoEditor) {
-    const doc = (this.#doc = editor._editor.doc)
+    const doc = (this.#doc = editor.doc)
     this.#restoreFromLocalStorage()
 
     // Persist to localStorage
@@ -86,7 +83,6 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     doc.on('node:move', this.#onMove.bind(this), options)
     doc.on('node:update', this.#onUpdate.bind(this), options)
     doc.on('node:delete', this.#onDelete.bind(this), options)
-    doc.on('asset:refresh', this.#onAssetRefresh.bind(this), options)
   }
 
   #restoreFromLocalStorage(): void {
@@ -273,14 +269,8 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     this.#add([{ type: 'settings:update', from, to }])
   }
 
-  #onAssetCreate({ asset, source }: AssetCreateEvent) {
+  #onAssetCreate({ asset }: AssetCreateEvent) {
     const map = this.#getAssetMap()
-
-    if (source != null && asset.type === 'asset:media:av')
-      this.storage
-        .getOrCreateFile(asset.id, source)
-        .then(asset.setBlob.bind(asset))
-        .catch(asset.setError.bind(asset))
 
     map[asset.id] = asset.toObject()
     localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(map))
@@ -322,49 +312,8 @@ export class VideoEditorLocalStore implements core.VideoEditorStore {
     ])
   }
 
-  #onAssetRefresh({ asset }: AssetRefreshEvent): void {
-    void (async () => {
-      if (!(await this.storage.hasCompleteFile(asset.id)))
-        throw new Error(`[webgl-video-editor] couldn't get asset data from storage (${asset.id})`)
-
-      const blob = await storage.getFile(asset.id)
-      asset.setBlob(blob)
-    })()
-  }
-
-  #getAssetMap(): Record<string, Schema.AnyAsset> {
+  #getAssetMap(): Record<string, Schema.AnyAssetSchema> {
     return JSON.parse(localStorage.getItem(this.#ASSETS_KEY) ?? '[]')
-  }
-
-  listFiles(): Array<Schema.AnyAsset> {
-    try {
-      return Object.values(this.#getAssetMap())
-    } catch {
-      return []
-    }
-  }
-
-  async hasCompleteFile(key: string): Promise<boolean> {
-    return await this.storage.hasCompleteFile(key)
-  }
-
-  async createFile(
-    asset: Schema.AnyAsset,
-    stream: ReadableStream<Uint8Array>,
-    options: StorageFileWriteOptions,
-  ): Promise<void> {
-    const key = asset.id
-    await this.storage.fromStream(key, stream, options)
-    localStorage.setItem(this.#ASSETS_KEY, JSON.stringify({ ...this.#getAssetMap(), [asset.id]: asset }))
-  }
-
-  async getFile(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
-    return await this.storage.getFile(key, name, options)
-  }
-
-  async deleteFile(key: string): Promise<void> {
-    await this.storage.delete(key)
-    localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(this.listFiles().filter((a) => a.id !== key)))
   }
 
   reset(): void {

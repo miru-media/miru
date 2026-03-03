@@ -1,8 +1,8 @@
+import type { VideoEditor } from '#core'
 import { Button } from 'shared/components/button.tsx'
 import { useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'
-import type { VideoEditor } from '../video-editor.ts'
 
 export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
   const { playback } = editor

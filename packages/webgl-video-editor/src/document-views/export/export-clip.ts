@@ -4,7 +4,7 @@ import * as Mb from 'mediabunny'
 import type { AudioBufferData } from 'shared/video/coder-transforms'
 
 import type * as pub from '../../../types/core.d.ts'
-import type { VideoEffectAsset } from '../../assets.ts'
+import type { VideoEffectAsset } from '../../assets/video-effect-asset.ts'
 import { NodeView } from '../node-view.ts'
 
 import type { ExportDocumentView } from './exporter-document.ts'
@@ -42,10 +42,7 @@ export class ExportClip extends NodeView<ExportDocumentView, pub.AnyClip> {
 
   get isReady(): boolean {
     return (
-      this.original.isReady &&
-      this.videoIsReady &&
-      !this.videoEffect?.isLoading &&
-      !this.renderClip?._pixiFilters.some((f) => f.isLoading)
+      this.original.isReady && this.videoIsReady && !this.renderClip?._pixiFilters.some((f) => f.isLoading)
     )
   }
 

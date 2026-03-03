@@ -80,4 +80,8 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
     viewMap.clear()
     this._abort.abort()
   }
+
+  [Symbol.dispose](): void {
+    this.dispose()
+  }
 }

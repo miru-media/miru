@@ -1,10 +1,10 @@
 import { computed, watch } from 'fine-jsx'
 
+import type { VideoEditor } from '#core'
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
 
 import styles from '../css/index.module.css'
-import type { VideoEditor } from '../video-editor.ts'
 
 const RULER_INTERVAL_MULTIPLIER = 32
 

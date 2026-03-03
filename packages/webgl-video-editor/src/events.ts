@@ -85,17 +85,6 @@ export class AssetCreateEvent extends Event implements pub.AssetCreateEvent {
   }
 }
 
-export class AssetRefreshEvent extends Event implements pub.AssetRefreshEvent {
-  declare readonly type: 'asset:refresh'
-  readonly asset: pub.MediaAsset
-  readonly source?: Blob | string
-
-  constructor(asset: pub.MediaAsset) {
-    super('asset:refresh')
-    this.asset = asset
-  }
-}
-
 export class AssetDeleteEvent extends Event implements pub.AssetDeleteEvent {
   declare readonly type: 'asset:delete'
   readonly asset: pub.AnyAsset

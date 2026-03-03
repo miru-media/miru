@@ -8,19 +8,10 @@ import {
   WRITE_QUEUING_STRATEGY,
   WRITTEN_SIZE_UPDATE_INTERVAL_MS,
 } from './constants.ts'
-import type { FileStorage, StorageWorkerFileInfo } from './storage-worker.ts'
+import type { FileStorageWorker, StorageWorkerFileInfo } from './storage-worker.ts'
 import { getFileHandle } from './utils.ts'
 
 let hasRequestedPersistence = false
-let storage_: Comlink.Remote<FileStorage>
-
-if (!import.meta.env.SSR) {
-  const worker = new Worker(new URL('./storage-worker.ts', import.meta.url), {
-    name: 'webgl-video-editor-storage',
-    type: 'module',
-  })
-  storage_ = Comlink.wrap<FileStorage>(worker)
-}
 
 const shouldRequestPersistence = async (): Promise<boolean> => {
   if (!SUPPORTS_STORAGE) return false
@@ -68,31 +59,46 @@ const setProgressInterval = (key: string, options: StorageFileWriteOptions): (()
   }
 }
 
-const getSink = async (
-  key: string,
-  options: StorageFileWriteOptions = {},
-): Promise<UnderlyingSink<Uint8Array>> => {
-  if (!hasRequestedPersistence) await requestPersistence()
+export class FileSystemStorage {
+  worker!: Comlink.Remote<FileStorageWorker>
+  #workerInstance!: Worker
 
-  const sink = await storage_.getSink(key, { size: options.size })
+  constructor() {
+    if (import.meta.env.SSR || import.meta.env.TEST === 'true') return
 
-  return {
-    async write(chunk) {
-      await sink.write(Comlink.transfer(chunk, [chunk.buffer]))
-    },
-    async close() {
-      await sink.close()
-      sink[Comlink.releaseProxy]()
-    },
-    async abort() {
-      await sink.abort()
-      sink[Comlink.releaseProxy]()
-    },
+    const worker = new Worker(new URL('./storage-worker.ts', import.meta.url), {
+      name: 'webgl-video-editor-storage',
+      type: 'module',
+    })
+    this.#workerInstance = worker
+    this.worker = Comlink.wrap<FileStorageWorker>(worker)
   }
-}
 
-export const storage = {
-  async fromStream(key: string, stream: ReadableStream<Uint8Array>, options: StorageFileWriteOptions) {
+  async getSink(key: string, options: StorageFileWriteOptions = {}): Promise<UnderlyingSink<Uint8Array>> {
+    if (!hasRequestedPersistence) await requestPersistence()
+
+    const sink = await this.worker.getSink(key, { size: options.size })
+
+    return {
+      async write(chunk) {
+        await sink.write(Comlink.transfer(chunk, [chunk.buffer]))
+      },
+      async close() {
+        await sink.close()
+        sink[Comlink.releaseProxy]()
+      },
+      async abort() {
+        await sink.abort()
+        sink[Comlink.releaseProxy]()
+      },
+    }
+  }
+
+  async fromStream(
+    key: string,
+    stream: ReadableStream<Uint8Array>,
+    options: StorageFileWriteOptions,
+  ): Promise<void> {
     if (!hasRequestedPersistence) await requestPersistence()
 
     const { signal } = options
@@ -100,7 +106,7 @@ export const storage = {
 
     try {
       if (SUPPORTS_TRANSFERABLE_STREAM) {
-        const { promise, abort } = await storage_.fromStream(key, Comlink.transfer(stream, [stream]), {
+        const { promise, abort } = await this.worker.fromStream(key, Comlink.transfer(stream, [stream]), {
           size: options.size,
         })
 
@@ -108,7 +114,7 @@ export const storage = {
         await promise
         signal?.removeEventListener('abort', abort)
       } else {
-        const writable = new WritableStream(await getSink(key, options), WRITE_QUEUING_STRATEGY)
+        const writable = new WritableStream(await this.getSink(key, options), WRITE_QUEUING_STRATEGY)
         await stream.pipeTo(writable, signal ? { signal } : undefined)
       }
 
@@ -116,58 +122,49 @@ export const storage = {
     } finally {
       stopProgressInterval?.()
     }
-  },
+  }
 
-  async getFile(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- TODO: per-instance directory?
+  async get(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
     const file = await (await getFileHandle(key)).getFile()
     return new File([file], name ?? file.name, options)
-  },
-
-  async getOrCreateFile(
-    key: string,
-    source: Blob | string | undefined,
-    requestInit?: RequestInit,
-  ): Promise<File> {
-    const storageHasFile = await storage.hasCompleteFile(key)
-
-    if (!storageHasFile) {
-      if (source == null) throw new Error('[webgl-video-editor] Missing media source')
-
-      let stream
-      let size: number | undefined
-
-      if (typeof source === 'string') {
-        const res = await fetch(source, requestInit)
-        const { body } = res
-        if (!res.ok || !body) throw new Error('Fetch failed')
-        const contentLength = res.headers.get('content-length')
-
-        if (contentLength) {
-          const parsed = parseInt(contentLength, 10)
-          size = isNaN(parsed) ? undefined : parsed
-        }
-
-        stream = body
-      } else {
-        stream = source.stream()
-        ;({ size } = source)
-      }
-
-      await storage.fromStream(key, stream, { size, signal: requestInit?.signal })
-    }
-
-    return await storage.getFile(key)
-  },
+  }
 
   async hasCompleteFile(key: string): Promise<boolean> {
-    return await storage_.hasCompleteFile(key)
-  },
+    return await this.worker.hasComplete(key)
+  }
+
+  async create(
+    key: string,
+    source: Blob | ReadableStream<Uint8Array>,
+    options?: { signal?: AbortSignal | null; size?: number },
+  ): Promise<void> {
+    let stream
+    let size = options?.size
+
+    if ('size' in source && 'type' in source) {
+      stream = source.stream()
+      size ??= source.size
+    } else stream = source
+
+    await this.fromStream(key, stream, { size, signal: options?.signal })
+  }
 
   async delete(key: string): Promise<void> {
-    await storage_.delete(key)
-  },
+    await this.worker.delete(key)
+  }
 
   async deleteAll(): Promise<void> {
-    await storage_.deleteAll()
-  },
+    await this.worker.deleteAll()
+  }
+
+  dispose(): void {
+    this.worker[Comlink.releaseProxy]()
+    this.#workerInstance.terminate()
+    this.worker = this.#workerInstance = undefined as never
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
+  }
 }

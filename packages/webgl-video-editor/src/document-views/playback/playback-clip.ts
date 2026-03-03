@@ -85,7 +85,7 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
     this.#scope.run(() => {
       // keep media element src updated
       watch(
-        [() => original.sourceAsset?.objectUrl, () => original.sourceAsset?.isLoading === true],
+        [() => original.asset?.blobUrl, () => original.asset?.isLoading === true],
         ([url, loading], _prev) => {
           if (loading) return
 
@@ -161,14 +161,14 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
     if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
 
     if (renderClip) {
-      const { sourceAsset } = this.original
+      const { asset } = this.original
       const { sprite } = renderClip
 
-      if (this.isInPresentationTime.value && sourceAsset) {
+      if (this.isInPresentationTime.value && asset) {
         sprite.visible ||= this.mediaState.wasEverPlayable.value
 
         if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
-          const rotation = sourceAsset.video?.rotation ?? 0
+          const rotation = asset.video?.rotation ?? 0
           try {
             if (IS_FIREFOX && rotation % 180 && this.mediaElement instanceof HTMLVideoElement) {
               const { source } = sprite.texture

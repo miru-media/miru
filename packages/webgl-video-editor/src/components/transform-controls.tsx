@@ -7,10 +7,10 @@ import interact from '@interactjs/interact'
 import { computed, effect, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
-import type { VisualClip } from '../../types/core'
+import type { VideoEditor, VisualClip } from '#core'
+
 import styles from '../css/index.module.css'
 import { getClipTransformMatrix } from '../utils.ts'
-import type { VideoEditor } from '../video-editor.ts'
 
 const ROTATE_LINE_LENGTH = 50
 
@@ -19,7 +19,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
 
   const clipMediaSize = computed(() => {
     const clip = editor.selection
-    return clip?.isVisual() && clip.sourceAsset ? clip.sourceAsset.video! : { width: 0, height: 0 }
+    return clip?.isVisual() && clip.asset ? clip.asset.video! : { width: 0, height: 0 }
   })
   const clipProps = computed((): Pick<VisualClip, 'position' | 'rotation' | 'scale'> => {
     const clip = editor.selection
@@ -152,7 +152,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
     <svg class={styles.transformControls}>
       {() => {
         const clip = editor.selection
-        if (!clip?.isVisual() || !clip.isInClipTime || !clip.sourceAsset) return
+        if (!clip?.isVisual() || !clip.isInClipTime || !clip.asset) return
 
         return (
           <g ref={container}>

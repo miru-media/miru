@@ -14,11 +14,11 @@ import { useI18n } from 'vue-i18n-lite'
 import * as Y from 'yjs'
 import { IndexeddbPersistence } from 'y-indexeddb'
 
-import { demoDoc } from '../../packages/app-video-editor/src/demo-document'
 import type { SerializedDocument } from '../../packages/webgl-video-editor/types/schema'
 import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
 import { INITIAL_DOC_UPDATE_BASE64 } from './video-editor-demo-store'
 import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
+import { VideoEditorDocList } from 'app-video-editor'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -32,11 +32,7 @@ const createDoc = async (name = 'Untitled', content?: SerializedDocument) => {
     const ydoc = new Y.Doc()
     Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
 
-    VideoEditorYjsStore.initYmapsFromJson({
-      tree: ydoc.getMap(YTREE_YMAP_KEY),
-      settings: ydoc.getMap('settings'),
-      assets: ydoc.getMap('assets')
-    }, content)
+    VideoEditorYjsStore.initTreeYmapFromJson(ydoc.getMap(YTREE_YMAP_KEY), content)
 
     const idb = new IndexeddbPersistence(id, ydoc)
     try {
@@ -51,7 +47,7 @@ const createDoc = async (name = 'Untitled', content?: SerializedDocument) => {
   await router.go(getDocUrl(id))
 }
 
-const onClickDelete = async (id: string) => {
+const onDelete = async (id: string) => {
   if (!window.confirm(t('confirm_delete_project'))) return
 
   await new IndexeddbPersistence(id, new Y.Doc()).clearData()
@@ -61,42 +57,7 @@ const onClickDelete = async (id: string) => {
 const getDocUrl = (id: string) => `/video-editor/project?id=${id}`
 </script>
 
-<div class="root bulma-container">
-  <div class="bulma-columns columns-container">
-    <div class="bulma-column">
-      <div class="bulma-content">
-        <h1 class="text-center mb-4">Projects</h1>
-      </div>
-      <ClientOnly>
-        <ul class="project-list">
-          <li v-for="{ id, name, createdAt } of projects" :key="id" class="project-list-item">
-            <a :href="getDocUrl(id)" class="project-card">
-              <div>{{ name }}</div>
-              <div class="text-[0.75em]">{{ new Date(createdAt).toLocaleString() }}</div>
-            </a>
-            <button class="project-delete" @click="() => onClickDelete(id)">
-              <div class="i-tabler:trash" />
-              <div class="sr-only">{{ $t('delete') }}</div>
-            </button>
-          </li>
-        </ul>
-      </ClientOnly>
-    </div>
-    <div class="bulma-column">
-      <div class="flex gap-1rem flex-col">
-        <img alt="Video editing illustration" src="../branding/illustrations/2.svg" class="bulma-is-hidden-mobile max-w-20rem m-auto">
-        <button @click="() => createDoc()" class="create-button">
-          <div class="i-tabler:plus" />
-          {{ $t('create_empty_project') }}
-        </button>
-        <button @click="() => createDoc('Example', demoDoc)" class="create-button">
-          <div class="i-tabler:plus" />
-          {{ $t('create_example_project') }}
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<VideoEditorDocList :docs="projects.map(p => ({ ...p, url: getDocUrl(p.id)}))" @create="createDoc" @delete="onDelete"/>
 
 <style scoped>
 .root {

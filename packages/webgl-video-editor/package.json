@@ -7,6 +7,14 @@
   "files": [
     "dist"
   ],
+  "imports": {
+    "#constants": "./src/constants.ts",
+    "#assets": "./src/assets/index.ts",
+    "#nodes": "./src/nodes/index.ts",
+    "#core": "./types/core.d.ts",
+    "#schema": "./types/schema.d.ts",
+    "#internal": "./types/internal.d.ts"
+  },
   "exports": {
     ".": {
       "import": "./src/index.ts"

@@ -2,7 +2,7 @@ import { type Ref, ref } from 'fine-jsx'
 
 import type { Schema } from '../../types/core.d.ts'
 import type * as pub from '../../types/core.d.ts'
-import type { VideoEffectAsset } from '../assets.ts'
+import type { VideoEffectAsset } from '../assets/video-effect-asset.ts'
 
 import { Clip } from './clip.ts'
 
@@ -25,10 +25,6 @@ export class VisualClip extends Clip<Schema.VisualClip> implements pub.VisualCli
   declare _filter: Ref<VideoEffectAsset | undefined>
   declare _filterIntensity: Ref<number>
 
-  get isReady(): boolean {
-    return super.isReady && !this._filter.value?.isLoading
-  }
-
   protected _init(init: Schema.VisualClip): void {
     super._init(init)
 
@@ -48,7 +44,7 @@ export class VisualClip extends Clip<Schema.VisualClip> implements pub.VisualCli
 
         if (value?.assetId === this._filter.value?.id) return
 
-        this._filter.value = value ? (this.doc.assets.get(value.assetId) as VideoEffectAsset) : undefined
+        this._filter.value = value ? this.doc.assets.getAsset(value.assetId) : undefined
       },
       equal: (a, b) => (!a && !b) || (!!a && !!b && a.assetId === b.assetId && a.intensity === b.intensity),
     })

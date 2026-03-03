@@ -176,6 +176,10 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     ;(this as NonReadonly<typeof this>).doc = undefined as never
   }
 
+  [Symbol.dispose](): void {
+    this.dispose()
+  }
+
   onDispose(fn: () => void) {
     this.#cleanups.push(fn)
   }

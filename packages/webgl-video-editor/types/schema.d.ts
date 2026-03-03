@@ -7,10 +7,12 @@ interface Base {
 }
 
 interface DocumentSettings {
+  /** The width and height of the video */
   resolution: {
     width: number
     height: number
   }
+  /** The frames per second of the video */
   frameRate: number
 }
 
@@ -25,9 +27,8 @@ export interface BaseAsset<T extends string> {
   name?: string
 }
 
-export interface AvMediaAsset extends BaseAsset<'media:av'> {
+export interface MediaAsset extends BaseAsset<'media:av'> {
   mimeType: string
-  url?: string
   duration: number
   size: number
   audio?: {
@@ -46,13 +47,14 @@ export interface AvMediaAsset extends BaseAsset<'media:av'> {
     frameRate: number
     firstTimestamp: number
   }
+  uri?: string
 }
 
 export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {
   name: string
 }
 
-export type AnyAsset = AvMediaAsset | VideoEffectAsset
+export type AnyAssetSchema = MediaAsset | VideoEffectAsset
 
 export interface Track extends Base {
   type: 'track'
@@ -67,7 +69,7 @@ export interface BaseClip<T extends 'audio' | 'video' = 'audio' | 'video'> exten
   type: 'clip'
   clipType: T
   sourceStart: number
-  source: { assetId: string }
+  sourceRef: { assetId: string }
   transition?: { type: string }
 }
 
@@ -104,6 +106,6 @@ export type AnyNodeSchema = Timeline | Track | AnyClip | Gap
 export type AnyNodeSerializedSchema = SerializedTimeline | SerializedTrack | SerializedClip | SerializedGap
 
 export interface SerializedDocument extends DocumentSettings {
-  assets: (AvMediaAsset | VideoEffectAsset)[]
+  assets: (MediaAsset | VideoEffectAsset)[]
   tracks: SerializedTrack[]
 }

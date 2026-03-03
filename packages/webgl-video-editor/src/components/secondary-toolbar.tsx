@@ -1,10 +1,10 @@
+import type { VideoEditor } from '#core'
 import { Button } from 'shared/components/button.tsx'
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 import { remap } from 'shared/utils/math'
 
 import styles from '../css/index.module.css'
-import type { VideoEditor } from '../video-editor.ts'
 
 const MIN_PPS = 0.005
 const MIN_MAX_PPS = 0.2

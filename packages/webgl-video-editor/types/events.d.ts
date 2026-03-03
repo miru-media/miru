@@ -62,9 +62,9 @@ export class AssetCreateEvent extends Event {
 
 export class AssetRefreshEvent extends Event {
   readonly type: 'asset:refresh'
-  readonly asset: pub.AvMediaAsset
+  readonly asset: pub.MediaAsset
 
-  constructor(asset: pub.AvMediaAsset)
+  constructor(asset: pub.MediaAsset)
 }
 
 export class AssetDeleteEvent extends Event {

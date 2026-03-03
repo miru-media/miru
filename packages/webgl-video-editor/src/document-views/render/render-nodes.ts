@@ -66,7 +66,7 @@ export class RenderVisualClip extends RenderNodeView<pub.VisualClip> {
     const { source } = this.sprite.texture
     source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
 
-    this._update('source', undefined as never)
+    this._update('sourceRef', undefined as never)
     this._update('filter', undefined)
   }
 
@@ -76,7 +76,7 @@ export class RenderVisualClip extends RenderNodeView<pub.VisualClip> {
       case 'position':
       case 'rotation':
       case 'scale':
-      case 'source':
+      case 'sourceRef':
         updateSpriteTransform(this, this.docView.applyVideoRotation)
         break
       case 'filter':
@@ -89,7 +89,7 @@ export class RenderVisualClip extends RenderNodeView<pub.VisualClip> {
           this._pixiFilters.forEach((filter) => filter.destroy())
           this._pixiFilters.length = 0
           const filterAsset =
-            newFilter && (original.doc.assets.get(newFilter.assetId) as pub.VideoEffectAsset)
+            newFilter && original.doc.assets.getAsset<pub.VideoEffectAsset>(newFilter.assetId)
 
           const intensityRef = toRef(() => original.filter?.intensity ?? 0)
           this.sprite.filters = this._pixiFilters =

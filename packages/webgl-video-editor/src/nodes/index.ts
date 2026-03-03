@@ -1,4 +1,3 @@
-export { type BaseAsset, MediaAsset, VideoEffectAsset } from '../assets.ts'
 export type { BaseNode } from './base-node.ts'
 export { Clip } from './clip.ts'
 export { VisualClip } from './visual-clip.ts'

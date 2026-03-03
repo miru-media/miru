@@ -66,7 +66,7 @@ class StorageWritableSink {
     this.#written += byteLength
   }
 
-  #closeHandle(): void {
+  #dispose(): void {
     if (this.#handle) this.#handle.close()
     else void this.#handlePromise.then((handle) => handle.close())
   }
@@ -85,17 +85,17 @@ class StorageWritableSink {
       kvStore,
     )
 
-    this.#closeHandle()
+    this.#dispose()
   }
 
   async abort(): Promise<void> {
-    this.#closeHandle()
-    await fileStorage.delete(this.#key)
+    this.#dispose()
+    await fileStorageWorker.delete(this.#key)
   }
 }
 
 /* eslint-disable @typescript-eslint/class-methods-use-this -- exposed singleton */
-class FileStorage {
+class FileStorageWorker {
   getSink(key: string, options: StorageWorkerFileInfo): StorageWritableSink & Comlink.ProxyMarked {
     return Comlink.proxy(new StorageWritableSink(key, options))
   }
@@ -139,11 +139,7 @@ class FileStorage {
     return Comlink.proxy({ promise, abort: abort.abort.bind(abort) })
   }
 
-  async deleteFile(key: string): Promise<void> {
-    await deleteFile(key)
-  }
-
-  async hasCompleteFile(key: string): Promise<boolean> {
+  async hasComplete(key: string): Promise<boolean> {
     return await isFileComplete(key)
   }
 
@@ -175,8 +171,8 @@ class FileStorage {
 }
 /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-const fileStorage = new FileStorage()
+const fileStorageWorker = new FileStorageWorker()
 
-Comlink.expose(fileStorage)
+Comlink.expose(fileStorageWorker)
 
-export type { FileStorage }
+export type { FileStorageWorker }

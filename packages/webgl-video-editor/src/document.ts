@@ -1,17 +1,16 @@
 import { computed, ref, type Ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
-import { getDefaultFilterDefinitions } from 'webgl-effects'
 
+import { FileSystemAssetStore, HttpAssetLoader } from '#assets'
+import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
+import type * as pub from '#core'
+import type { Schema } from '#core'
+import { AudioClip, Gap, VisualClip } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp } from 'shared/utils/math.ts'
 
-import type * as pub from '../types/core.d.ts'
-
-import { MediaAsset, VideoEffectAsset } from './assets.ts'
-import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from './constants.ts'
 import { LutUploaderSystem } from './document-views/render/pixi-lut-source.ts'
 import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
-import { AudioClip, Gap, type Schema, VisualClip } from './nodes/index.ts'
 import { Timeline } from './nodes/timeline.ts'
 import { Track } from './nodes/track.ts'
 
@@ -49,24 +48,11 @@ class NodeMap implements pub.NodeMap {
   }
 }
 
-const createInitialAssets = (doc: Document) =>
-  getDefaultFilterDefinitions().forEach(
-    (def, index): VideoEffectAsset =>
-      new VideoEffectAsset(
-        {
-          ...def,
-          id: def.id ?? index.toString(),
-          type: 'asset:effect:video',
-        },
-        doc,
-      ),
-  )
-
 export class Document implements pub.Document {
   declare parent?: undefined
 
   nodes = new NodeMap()
-  declare assets: Map<string, pub.AnyAsset>
+  declare assets: pub.VideoEditorAssetStore
 
   readonly _currentTime = ref(0)
   readonly #duration = computed(() =>
@@ -117,8 +103,6 @@ export class Document implements pub.Document {
   constructor(options: Partial<Pick<Document, 'assets'> & Schema.DocumentSettings>) {
     this.on('node:create', ({ node }) => this.nodes.set(node))
     this.on('node:delete', ({ node }) => this.nodes.delete(node.id))
-    this.on('asset:create', ({ asset }) => this.assets.set(asset.id, asset))
-    this.on('asset:delete', ({ asset }) => this.assets.delete(asset.id))
 
     this.#resolution = ref(options.resolution ?? DEFAULT_RESOLUTION)
     this.#frameRate = ref(options.frameRate ?? DEFAULT_FRAMERATE)
@@ -127,21 +111,10 @@ export class Document implements pub.Document {
 
     if (options.assets) this.assets = options.assets
     else {
-      this.assets = new Map<string, pub.AnyAsset>()
-      createInitialAssets(this)
+      this.assets = new FileSystemAssetStore()
+
+      this.assets.loaders.push(new HttpAssetLoader())
     }
-  }
-
-  createAsset<T extends Schema.AnyAsset>(
-    init: T,
-    source?: Blob | string,
-  ): T extends Schema.VideoEffectAsset ? VideoEffectAsset : MediaAsset {
-    const asset =
-      init.type === 'asset:effect:video'
-        ? new VideoEffectAsset(init, this)
-        : new MediaAsset(init, { doc: this, source: source ?? init.url })
-
-    return asset as T extends Schema.VideoEffectAsset ? VideoEffectAsset : MediaAsset
   }
 
   createNode<T extends Schema.AnyNodeSchema>(init: T): pub.NodesByType[T['type']] {
@@ -216,7 +189,7 @@ export class Document implements pub.Document {
     this.resolution = content.resolution
     this.frameRate = content.frameRate
 
-    content.assets.forEach((init) => this.createAsset(init))
+    content.assets.forEach((init) => this.assets.create(init))
 
     const createChildren = (parent: pub.AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
       childrenInit.forEach((childInit, index) => {
@@ -236,5 +209,9 @@ export class Document implements pub.Document {
     this.emit(new DocDisposeEvent(this))
     this.#disposeAbort.abort()
     this.nodes.map.forEach((node) => node.dispose())
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
   }
 }

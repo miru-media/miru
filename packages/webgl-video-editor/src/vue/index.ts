@@ -7,32 +7,39 @@ import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
 import { fromVue, toVue } from '../document-views/vue/utils.ts'
-import { editorToVue } from '../document-views/vue/vue-document.ts'
 import { VideoEditorLocalStore as VideoEditorLocalStore_ } from '../store/local.ts'
 import { VideoEditor as VideoEditor_ } from '../video-editor.ts'
 
-export type { VideoEditor } from '../../types/webgl-video-editor.ts'
+import { editorToVue } from './vue-video-editor.ts'
+
+export type { VideoEditor } from '#core'
 
 export * from '../constants.ts'
 
 export default Vue.defineComponent({
   name: 'VideoEditor',
   props: {
-    messages: { type: Object as Vue.PropType<Record<string, Record<string, string>>>, required: false },
+    editor: {
+      type: Object as Vue.PropType<pub.VideoEditor>,
+      required: false,
+    },
     store: {
       type: Object as Vue.PropType<pub.VideoEditorStore>,
       required: false,
     },
+    messages: { type: Object as Vue.PropType<Record<string, Record<string, string>>>, required: false },
     languages: { type: Array as Vue.PropType<string[]>, required: false },
   },
   emits: ['error'],
   setup(props, ctx) {
-    const editor = new VideoEditor_({
-      store: props.store,
-    })
+    const editor =
+      props.editor ??
+      new VideoEditor_({
+        store: props.store,
+      })
     const container = Vue.ref<HTMLElement>()
 
-    const vueEditor: pub.VideoEditor = editorToVue(editor)
+    const vueEditor = editorToVue(editor)
     const children = {
       default: ref<unknown>(),
       timelineEmpty: ref<unknown>(),

@@ -150,19 +150,19 @@ abstract class VueTrackChild<T extends pub.AnyTrackChild> extends VueNodeView<T>
 
 abstract class VueClip<T extends pub.AnyClip> extends VueTrackChild<T> implements pub.Clip<T> {
   declare readonly isReady: T['isReady']
-  declare readonly sourceAsset: T['sourceAsset']
+  declare readonly asset: T['asset']
   declare readonly playableTime: T['playableTime']
   declare readonly presentationTime: T['presentationTime']
   declare readonly expectedMediaTime: T['expectedMediaTime']
   declare readonly isInClipTime: T['isInClipTime']
   declare readonly clipType: T['clipType']
   declare readonly sourceStart: T['sourceStart']
-  declare readonly source: T['source']
+  declare readonly sourceRef: T['sourceRef']
 
   constructor(docView: VueDocument, original: T, propKeys: PropKeysOption<T>) {
     const readonly = [
       'isReady',
-      'sourceAsset',
+      'asset',
       'playableTime',
       'presentationTime',
       'expectedMediaTime',
@@ -184,7 +184,7 @@ export class VueVisualClip extends VueClip<pub.VisualClip> implements pub.Visual
 
   constructor(docView: VueDocument, original: pub.VisualClip) {
     super(docView, original, {
-      writable: ['position', 'rotation', 'scale', 'sourceStart', 'source'],
+      writable: ['position', 'rotation', 'scale', 'sourceStart', 'asset'],
       readonly: ['clipType'],
       methods: [],
     })

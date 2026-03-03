@@ -1,10 +1,10 @@
 import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
+import type * as pub from '#core'
 import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
-import type * as pub from '../../types/core.d.ts'
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
@@ -12,7 +12,7 @@ import type { VideoEditor } from '../video-editor.ts'
 import { Clip } from './clip.jsx'
 import { Ruler } from './ruler.jsx'
 
-const Playhead = ({ editor }: { editor: VideoEditor }) => {
+const Playhead = ({ editor }: { editor: pub.VideoEditor }) => {
   const root = ref<HTMLElement>()
   const size = useElementSize(root)
 
@@ -50,7 +50,7 @@ export const Timeline = ({
   editor,
   children,
 }: {
-  editor: VideoEditor
+  editor: pub.VideoEditor
   children?: { empty?: MaybeRefOrGetter<MaybeChild>; tracks?: MaybeRefOrGetter<MaybeChild> }
 }) => {
   const { t } = useI18n()
@@ -92,7 +92,7 @@ export const Timeline = ({
 
     try {
       track ??= editor.addTrack('video')
-      await editor.addClip(track, file)
+      editor.addClip(track, await editor.createMediaAsset(file))
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
@@ -110,7 +110,7 @@ export const Timeline = ({
       style={() => `
           --editor-width: ${rootSize.value.width}px;
           --editor-height: ${rootSize.value.height}px;
-          --timeline-width:${editor.secondsToPixels(Math.max(editor._resize.value?.docDuration ?? 0, doc.duration))}px`}
+          --timeline-width:${editor.secondsToPixels(Math.max((editor as unknown as VideoEditor)._resize.value?.docDuration ?? 0, doc.duration))}px`}
     >
       <Playhead editor={editor} />
 
@@ -148,7 +148,11 @@ export const Timeline = ({
                   style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
                 >
                   {track.clips.map((clip) => (
-                    <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
+                    <Clip
+                      editor={editor as unknown as VideoEditor}
+                      clip={clip}
+                      isSelected={() => editor.selection?.id === clip.id}
+                    />
                   ))}
                   <label
                     class={() => [styles.trackButton, track.clipCount > 0 && styles.square]}

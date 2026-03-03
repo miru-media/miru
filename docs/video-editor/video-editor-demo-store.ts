@@ -8,7 +8,7 @@ import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
 import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
 
 export const INITIAL_DOC_UPDATE_BASE64 =
-  'AAACQAgJAAQABQACAEIIAAsnBCgAJwEoAScAKJkBhAF5dHJlZXJvb3RfcGFyZW50SGlzdG9yeXl0cmVlbnVsbHZhbHVlX3BhcmVudEhpc3Rvcnlyb290eXRyZWV0aW1lbGluZXZhbHVlaWR0eXBlX3BhcmVudEhpc3RvcnludWxsc2V0dGluZ3NyZXNvbHV0aW9uc2V0dGluZ3NmcmFtZVJhdGUFBA4FBAUOBAUIBQIEDgQICggJDQEAAAABAAACAQAABAECQQYCQQQBDgB2Agdjb3VudGVyfQAFb3JkZXJ3BMKABw93CHRpbWVsaW5ldwh0aW1lbGluZXYCB2NvdW50ZXJ9AAVvcmRlcncFwoDCkwh2AgV3aWR0aH2AHgZoZWlnaHR9uBB9GAA='
+  'AAACQA4PAQAEAAYABEoQAgBCCFYCABUnAiEBJwAoACcAKAAnAigBJwAoAKiYAYMBeXRyZWVyb290X3BhcmVudEhpc3Rvcnl2YWx1ZXJlc29sdXRpb25mcmFtZVJhdGV5dHJlZV9udWxsX3ZhbHVlX3BhcmVudEhpc3Rvcnlyb290YXNzZXRzeXRyZWV0aW1lbGluZXZhbHVlaWR0eXBlX3BhcmVudEhpc3RvcnlfbnVsbF8FBA4FCgkFBgUOBAYFCAUCBA4GCwEAAAMBAAADAQAAAkEHAkEHARIAdgB2Agdjb3VudGVyfQAFb3JkZXJ3BMKAYAZ3CHRpbWVsaW5ldwh0aW1lbGluZXYCB2NvdW50ZXJ9AAVvcmRlcncFwoDDgAd2AgV3aWR0aH2AHgZoZWlnaHR9uBB9GAEAAQMB'
 
 export const useVideoEditorStore = (
   id: MaybeRefOrGetter<string>,
@@ -41,13 +41,7 @@ export const useVideoEditorStore = (
 
       void idb.whenSynced.then(() => {
         if (isStale) return
-        store.value = markRaw(
-          new VideoEditorYjsStore({
-            tree: ydoc.getMap(YTREE_YMAP_KEY),
-            settings: ydoc.getMap('settings'),
-            assets: ydoc.getMap('assets'),
-          }),
-        )
+        store.value = markRaw(new VideoEditorYjsStore(ydoc.getMap(YTREE_YMAP_KEY)))
         webrtc.value = new WebrtcProvider(id, ydoc)
       })
     },

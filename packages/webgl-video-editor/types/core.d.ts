@@ -4,7 +4,6 @@ import type { EffectDefinition, Renderer } from 'webgl-effects'
 import type {
   AssetCreateEvent,
   AssetDeleteEvent,
-  AssetRefreshEvent,
   CanvasEvent,
   ErrorEvent,
   NodeCreateEvent,
@@ -16,9 +15,9 @@ import type {
   PlaybackSeekEvent,
   PlaybackUpdateEvent,
   SettingsUpdateEvent,
-} from './events'
-import type * as Schema from './schema.ts'
-export * from './events'
+} from './events.d.ts'
+import type * as Schema from './schema.d.ts'
+export * from './events.d.ts'
 
 export { Schema }
 
@@ -46,7 +45,6 @@ export interface VideoEditorEvents {
   'node:delete': NodeDeleteEvent
 
   'asset:create': AssetCreateEvent
-  'asset:refresh': AssetRefreshEvent
   'asset:delete': AssetDeleteEvent
 
   'playback:play': PlaybackPlayEvent
@@ -60,12 +58,15 @@ export interface VideoEditorEvents {
   'canvas:pointerup': CanvasEvent<'pointerup'>
 }
 
+export type AssetEventType = Extract<keyof VideoEditorEvents, `asset:${string}`>
+
 export interface Document extends Schema.DocumentSettings {
   readonly currentTime: number
   readonly duration: number
   readonly timeline: Timeline
-  readonly assets: Map<string, AnyAsset>
+  readonly assets: VideoEditorAssetStore
   readonly nodes: NodeMap
+  /** True if the video has no clips */
   readonly isEmpty: boolean
 
   isDisposed: boolean
@@ -74,10 +75,6 @@ export interface Document extends Schema.DocumentSettings {
   activeClipIsStalled: Ref<boolean>
 
   createNode: <T extends Schema.AnyNodeSchema>(init: T) => NodesByType[T['type']]
-  createAsset: <T extends Schema.AnyAsset>(
-    init: T,
-    source?: Blob | string,
-  ) => T extends Schema.VideoEffectAsset ? VideoEffectAsset : MediaAsset
   seekTo: (time: number) => void
   _setCurrentTime: (time: number) => void
   importFromJson: (content: Schema.SerializedDocument) => void
@@ -164,7 +161,7 @@ export interface TrackChild extends BaseNode {
 
 export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip<T['clipType']> {
   readonly isReady: boolean
-  readonly sourceAsset: MediaAsset | undefined
+  readonly asset: MediaAsset | undefined
   readonly playableTime: ClipTime
   readonly presentationTime: ClipTime
   readonly expectedMediaTime: number
@@ -199,43 +196,44 @@ export type AnyParentNode = Timeline | Track
 export type AnyVisualNode = Timeline | Track | VisualClip
 export type AnyAudioNode = Timeline | Track | AudioClip
 
-export interface MediaAsset extends Schema.AvMediaAsset {
+export interface MediaAsset extends Readonly<Schema.MediaAsset> {
   readonly blob?: Blob
-  readonly objectUrl: string
+  readonly blobUrl?: string
   readonly isLoading: boolean
-  setBlob: (blob: Blob | null | undefined) => void
+  uri?: string
+  setBlob: (blob: Blob | undefined) => void
   setError: (error: unknown) => void
-  toObject: () => Schema.AvMediaAsset
+  toObject: () => Schema.MediaAsset
   dispose: () => void
   /** @internal */
   _refreshObjectUrl: () => Promise<void>
 }
 
-export interface VideoEffectAsset extends Schema.VideoEffectAsset {
+export interface VideoEffectAsset extends Readonly<Schema.VideoEffectAsset> {
   readonly raw: EffectDefinition
   toObject: () => Schema.VideoEffectAsset
   dispose: () => void
 }
 
-export type AnyAsset = MediaAsset | VideoEffectAsset
+export interface AssetsByType {
+  'asset:media:av': MediaAsset
+  'asset:effect:video': VideoEffectAsset
+}
 
+export type AnyAsset = AssetsByType[keyof AssetsByType]
+
+export type { AssetOrigin } from './schema.d.ts'
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging, @typescript-eslint/no-extraneous-class -- false positive
+export class VideoEditor {}
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- false positive
 export interface VideoEditor {
+  doc: Document
   store?: VideoEditorStore
 
   /** The canvas that the video is rendered to */
   canvas: HTMLCanvasElement
-
-  /** The width and height of the video */
-  resolution: {
-    width: number
-    height: number
-  }
-
-  /** The frames per second of the video */
-  frameRate: number
-
-  /** True if the video has no clips */
-  isEmpty: boolean
 
   /** The current playback time of the video timeline */
   currentTime: number
@@ -253,35 +251,67 @@ export interface VideoEditor {
   state: Schema.SerializedDocument
 
   /** The webgl-effects Renderer instance */
-  effectRenderer: Renderer
+  readonly effectRenderer: Renderer
+
+  /** Progress from 0 to 1 while exporting */
+  readonly exportProgress: number
+
+  readonly viewportSize: { width: number; height: number }
+
+  readonly zoom: number
+
+  playback: {
+    /** Playback is paused */
+    readonly isPaused: boolean
+
+    readonly isReady: boolean
+
+    /** Play the video at the current time or from the start if the video is ended. */
+    play: () => void
+
+    /** Play the video. */
+    pause: () => void
+
+    /**
+     * Seek to the given time of the video.
+     * @param time The time of the video to seek to in seconds.
+     */
+
+    /** @internal @hidden */
+    stats: any
+  }
+
+  /** @internal */
+  readonly _timelineSize: { value: { width: number; height: number } }
+  /** @internal */
+  readonly _secondsPerPixel: { value: number }
+
+  secondsToPixels: (seconds: number) => number
+  pixelsToSeconds: (pixels: number) => number
 
   /** Select the given track item */
   select: (clip: AnyTrackChild | undefined) => void
 
-  /** Play the video at the current time or from the start if the video is ended. */
-  play: () => void
-  /** Play the video. */
-  pause: () => void
-  /**
-   * Seek to the given time of the video.
-   * @param time The time of the video to seek to in seconds.
-   */
   seekTo: (time: number) => void
+
+  /**
+   * Add a new track to the timeline.
+   *
+   * @param track The track the clip will be added to.
+   * @param asset The media asset attached to the clip.
+   */
+  addTrack: (trackType: Track['trackType']) => Track
 
   /**
    * Add a new clip at the end of the specified track.
    *
    * @param track The track the clip will be added to.
-   * @param source A Blog or url string of the clip media.
+   * @param asset The media asset attached to the clip.
    */
-  addClip: (
-    track: Track,
-    source: string | Blob | Schema.AnyClip,
-    options?: AddNodeOptions,
-  ) => Promise<AnyClip> | AnyClip
+  addClip: (track: Track, asset: MediaAsset) => AnyClip
 
   /** Change the media of the selected clip */
-  replaceClipSource: (source: string | Blob) => Promise<void>
+  replaceClipAsset: (asset: MediaAsset) => void
 
   /**
    * Add a new clip at the end of the specified track.
@@ -303,9 +333,6 @@ export interface VideoEditor {
 
   /** Delete the selected clip */
   deleteSelection: () => void
-
-  /** Playback is paused */
-  isPaused: boolean
 
   /** Adds assets and tracks from the provided JSON object */
   importJson: (newContent: Schema.SerializedDocument) => void
@@ -349,16 +376,23 @@ export interface VideoEditorStore {
 
   /** Clear undo hsitory */
   reset: () => void
+}
 
-  /** Get an Iterable of all media asset files that are available to the project */
-  listFiles: () => Iterable<Schema.AnyAsset>
+export interface VideoEditorAssetStore {
+  values: () => Iterable<AnyAsset>
+  has: (id: string) => boolean
 
-  /** The entire file has been stored and can be retrieved */
-  hasCompleteFile: (key: string) => Promise<boolean>
+  create: <T extends Schema.AnyAssetSchema['type']>(
+    init: Extract<Schema.AnyAssetSchema, { type: T }>,
+    options?: { source?: Blob | string },
+  ) => AssetsByType[T]
 
-  /** Save a new file from a source stream */
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
+  getAsset: <T extends AnyAsset | undefined>(id: string) => T
+
+  /** Save a new file from an asset source stream */
   createFile: (
-    asset: Asset,
+    asset: MediaAsset,
     stream: ReadableStream<Uint8Array>,
     options: {
       size?: number
@@ -366,11 +400,26 @@ export interface VideoEditorStore {
       signal?: AbortSignal | null
     },
   ) => Promise<void>
-  /** Get a media asset as a File instance */
-  getFile: (key: string, name?: string, options?: FilePropertyBag) => Promise<File>
-  /** Delete a media asset form the store */
-  deleteFile: (key: string) => Promise<void>
 
-  /** Dispose this history object */
-  dispose: () => void
+  /** Get an asset as a File instance */
+  getFile: (key: string, name?: string, options?: FilePropertyBag) => Promise<File>
+
+  getOrCreateFile: (
+    asset: MediaAsset,
+    source: Blob | string | undefined,
+    requestInit?: { signal?: AbortSignal | null },
+  ) => Promise<File>
+
+  /** Delete an asset form the store */
+  delete: (key: string) => Promise<void>
+
+  loaders: AssetLoader[]
+}
+
+export interface AssetLoader {
+  canLoad: (asset: Schema.MediaAsset) => boolean
+  load: (
+    asset: Schema.MediaAsset,
+    options?: { signal?: AbortSignal | null },
+  ) => Promise<{ stream: ReadableStream<Uint8Array>; size?: number }>
 }

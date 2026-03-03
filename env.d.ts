@@ -87,6 +87,7 @@ declare module 'yjs-orderedtree' {
   )
 
   export class YTree extends m.YTree {}
+  export const { checkForYTree } = m
 }
 declare module 'y-webxdc' {
   const val: any

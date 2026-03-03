@@ -6,7 +6,6 @@ import { renderComponentTo } from 'shared/video/render-to'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
-import type * as nodes from '../nodes/index.ts'
 import { VideoEditorLocalStore } from '../store/local.ts'
 import { VideoEditor } from '../video-editor.ts'
 
@@ -17,6 +16,9 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
 
   /** @internal @hidden */
   _editor!: VideoEditor
+  get doc(): pub.Document {
+    return this._editor.doc
+  }
 
   readonly #scope = createEffectScope()
   #unmount?: () => void
@@ -38,50 +40,35 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this.#languages.value = value
   }
 
-  get effectRenderer() {
-    return this._editor.effectRenderer
-  }
-  get canvas() {
-    return this._editor.canvas
-  }
-  get resolution() {
-    return this._editor.doc.resolution
-  }
-  set resolution(value) {
-    this._editor.doc.resolution = value
-  }
-  get frameRate() {
-    return this._editor.doc.frameRate
-  }
-  set frameRate(value) {
-    this._editor.doc.frameRate = value
-  }
-  get isEmpty() {
-    return this._editor.doc.isEmpty
-  }
-  get isPaused() {
-    return this._editor.doc.isEmpty
-  }
-  get currentTime() {
-    return this._editor.currentTime
-  }
-  get effects(): Map<string, pub.VideoEffectAsset> {
-    return this._editor.effects as any
-  }
-
-  get tracks(): pub.Track[] {
-    return this._editor.tracks
-  }
-  get selection(): pub.AnyTrackChild | undefined {
-    return this._editor.selection
-  }
-  get exportResult() {
-    return this._editor.exportResult
-  }
-
-  get state() {
-    return this.toObject()
-  }
+  declare _secondsPerPixel: VideoEditor['_secondsPerPixel']
+  declare _showStats: VideoEditor['_showStats']
+  declare _timelineSize: VideoEditor['_timelineSize']
+  declare canvas: VideoEditor['canvas']
+  declare currentTime: VideoEditor['currentTime']
+  declare effectRenderer: VideoEditor['effectRenderer']
+  declare effects: VideoEditor['effects']
+  declare exportProgress: VideoEditor['exportProgress']
+  declare exportResult: VideoEditor['exportResult']
+  declare playback: VideoEditor['playback']
+  declare selection: VideoEditor['selection']
+  declare state: VideoEditor['state']
+  declare store: VideoEditor['store']
+  declare tracks: VideoEditor['tracks']
+  declare viewportSize: VideoEditor['viewportSize']
+  declare zoom: VideoEditor['zoom']
+  declare secondsToPixels: VideoEditor['secondsToPixels']
+  declare pixelsToSeconds: VideoEditor['pixelsToSeconds']
+  declare select: VideoEditor['select']
+  declare seekTo: VideoEditor['seekTo']
+  declare addTrack: VideoEditor['addTrack']
+  declare addClip: VideoEditor['addClip']
+  declare replaceClipAsset: VideoEditor['replaceClipAsset']
+  declare createMediaAsset: VideoEditor['createMediaAsset']
+  declare splitClipAtCurrentTime: VideoEditor['splitClipAtCurrentTime']
+  declare deleteSelection: VideoEditor['deleteSelection']
+  declare importJson: VideoEditor['importJson']
+  declare export: VideoEditor['export']
+  declare toObject: VideoEditor['toObject']
 
   constructor() {
     super()
@@ -127,43 +114,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this[name] = JSON.parse(newValue)
   }
 
-  play() {
-    this._editor.play()
-  }
-  pause() {
-    this._editor.pause()
-  }
-  seekTo(time: number) {
-    this._editor.seekTo(time)
-  }
-  async addClip(track: pub.Track, source: string | Blob | pub.Schema.AnyClip): Promise<pub.AnyClip> {
-    return await this._editor.addClip(track as nodes.Track, source)
-  }
-  select(clip: pub.AnyTrackChild | undefined) {
-    this._editor.select(clip?.id)
-  }
-  async createMediaAsset(source: string | Blob) {
-    return await this._editor.createMediaAsset(source)
-  }
-  splitClipAtCurrentTime(): [pub.AnyClip, pub.AnyClip] | undefined {
-    return this._editor.splitClipAtCurrentTime()
-  }
-  async replaceClipSource(source: Blob | string) {
-    await this._editor.replaceClipSource(source)
-  }
-  deleteSelection() {
-    this._editor.deleteSelection()
-  }
-  importJson(newContent: pub.Schema.SerializedDocument) {
-    this._editor.importJson(newContent)
-  }
-  toObject() {
-    return this._editor.toObject()
-  }
-  async export() {
-    return await this._editor.export()
-  }
-
   slotContent(name: 'default' | 'timelineEmpty', nodes: Node[] | undefined) {
     this.#slots[name].value = nodes
   }
@@ -177,3 +127,51 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this.#scope.stop()
   }
 }
+
+for (const key of [
+  '_secondsPerPixel',
+  '_showStats',
+  '_timelineSize',
+  'canvas',
+  'currentTime',
+  'effectRenderer',
+  'effects',
+  'exportProgress',
+  'exportResult',
+  'playback',
+  'selection',
+  'state',
+  'store',
+  'tracks',
+  'viewportSize',
+  'zoom',
+] satisfies (keyof pub.VideoEditor)[])
+  Object.defineProperty(VideoEditorElement.prototype, key, {
+    get(this: VideoEditorElement) {
+      return this._editor[key]
+    },
+    enumerable: true,
+  })
+
+for (const key of [
+  'secondsToPixels',
+  'pixelsToSeconds',
+  'select',
+  'seekTo',
+  'addTrack',
+  'addClip',
+  'replaceClipAsset',
+  'createMediaAsset',
+  'splitClipAtCurrentTime',
+  'deleteSelection',
+  'importJson',
+  'export',
+  'toObject',
+] satisfies (keyof pub.VideoEditor)[])
+  VideoEditorElement.prototype[key] = function (...args: any[]): any {
+    const editor = this._editor
+    return editor[key](
+      // @ts-expect-error -- ts(2556)
+      ...args,
+    )
+  }

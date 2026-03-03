@@ -121,10 +121,14 @@ export default tseslint.config(
     files: ['**/*.test.{ts,tsx,js,jsx}'],
     ignores: ['**/*.md/*'],
     rules: {
-      'import/no-extraneous-dependencies': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      'import/no-extraneous-dependencies': 'off',
     },
   },
 
