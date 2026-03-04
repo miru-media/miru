@@ -3,13 +3,50 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 ex:MiruVideoShape {
   a [ex:MiruVideo] ;
-  ex:title xsd:string ;             # Required string
-  ex:description xsd:string ? ;     # Optional string
-  ex:createdAt xsd:date ;           # Date as ISO string
-  ex:assets @ex:MediaAssetShape * ;  # Set of nested objects
+
+  ex:title xsd:string ;
+  ex:description xsd:string ? ;
+  ex:createdAt xsd:date ;
+  # ex:assets @ex:MiruMediaAssetShape OR @ex:MiruVideoEffectAssetShape *;
+  ex:assets @ex:MiruMediaAssetShape *;
 }
 
-ex:MediaAssetShape EXTRA a {
-  a [ex:MediaAsset] ;
-  ex:file IRI ;
+ex:MiruVideoEffectAssetShape {
+  a [ex:MiruVideoEffectAsset] ;
+
+  ex:id xsd:string ;
+  ex:type [ "asset:effect:video" ] ;
+  ex:name xsd:string ;
+
+  ex:ops xsd:string ; # ops array as JSON string
+}
+
+ex:MiruMediaAssetShape {
+  a [ex:MiruMediaAsset] ;
+
+  ex:id xsd:string ;
+  ex:type [ "asset:media:av" ] ;
+  ex:name xsd:string ? ;
+  
+  ex:mimeType xsd:string ;
+  ex:duration xsd:float ;
+  ex:size xsd:integer ;
+  ex:audio {
+    ex:codec xsd:string ;
+    ex:duration xsd:float ;
+    ex:numberOfChannels xsd:integer ;
+    ex:sampleRate xsd:integer ;
+    ex:firstTimestamp xsd:float ;
+  } ? ;
+  ex:video {
+    ex:codec xsd:string ;
+    ex:duration xsd:float ;
+    ex:rotation xsd:integer ;
+    ex:width xsd:integer ;
+    ex:height xsd:integer ;
+    ex:frameRate xsd:float ;
+    ex:firstTimestamp xsd:float ;
+  } ? ;
+
+  ex:uri xsd:string ;
 }

@@ -1,9 +1,12 @@
+import { uid } from 'uid'
+
 import type * as pub from '../../types/core.d.ts'
 import type { Schema } from '../../types/core.d.ts'
 import { AssetCreateEvent } from '../events.ts'
 import { FileSystemStorage } from '../storage/file-system-storage.ts'
 
 import { MediaAsset } from './media-asset.ts'
+import { getMediaAssetInfo } from './utils.ts'
 import { VideoEffectAsset } from './video-effect-asset.ts'
 
 export class FileSystemAssetStore extends EventTarget implements pub.VideoEditorAssetStore {
@@ -12,6 +15,13 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   isDisposed = false
   fileStorage = new FileSystemStorage()
   loaders: pub.AssetLoader[] = []
+  protected generateId: () => string
+  protected getMediaAssetInfo = getMediaAssetInfo
+
+  constructor(generateId: () => string = uid) {
+    super()
+    this.generateId = generateId
+  }
 
   values(): MapIterator<pub.AnyAsset> {
     return this.#map.values()
@@ -91,7 +101,12 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     this.#map.delete(key)
   }
 
-  #emit(event: pub.VideoEditorEvents[pub.AssetEventType]) {
+  async createMediaAsset(source: Blob | string): Promise<pub.MediaAsset> {
+    const init = await getMediaAssetInfo(this.generateId(), source)
+    return this.create(init, { source })
+  }
+
+  #emit(event: pub.VideoEditorEvents[pub.AssetEventType]): void {
     this.dispatchEvent(event)
   }
 

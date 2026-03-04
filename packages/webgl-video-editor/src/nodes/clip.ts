@@ -65,10 +65,16 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     return this._mediaSize.value
   }
 
+  readonly #abort = new AbortController()
+
   constructor(doc: pub.Document, init: T) {
     super(doc, init)
 
     this.transition = init.transition
+
+    doc.assets.on('asset:create', ({ asset }) => {
+      if (asset.id === this.sourceRef.assetId && asset.type === 'asset:media:av') this._asset.value = asset
+    }, { signal: this.#abort.signal })
   }
 
   protected _init(init: T): void {

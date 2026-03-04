@@ -17,7 +17,6 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import type { SerializedDocument } from '../../packages/webgl-video-editor/types/schema'
 import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
 import { INITIAL_DOC_UPDATE_BASE64 } from './video-editor-demo-store'
-import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
 import { VideoEditorDocList } from 'app-video-editor'
 
 const router = useRouter()
@@ -32,7 +31,7 @@ const createDoc = async (name = 'Untitled', content?: SerializedDocument) => {
     const ydoc = new Y.Doc()
     Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
 
-    VideoEditorYjsStore.initTreeYmapFromJson(ydoc.getMap(YTREE_YMAP_KEY), content)
+    VideoEditorYjsStore.initYmapFromJson({ root: ydoc, content })
 
     const idb = new IndexeddbPersistence(id, ydoc)
     try {

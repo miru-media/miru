@@ -12,7 +12,6 @@ import { remap0 } from 'shared/utils/math'
 
 import type * as pub from '../types/webgl-video-editor'
 
-import { getMediaAssetInfo } from './assets/index.ts'
 import { MIN_CLIP_DURATION_S } from './constants.ts'
 import { ExportDocumentView } from './document-views/export/exporter-document.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
@@ -119,10 +118,10 @@ export class VideoEditor implements pub.VideoEditor {
     return this._zoom.value
   }
 
-  constructor(options: { store?: pub.VideoEditorStore }) {
-    const { store } = options
+  constructor(options: { store?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore } = {}) {
+    const { store, assets } = options
+    const doc = (this.doc = new Document({ assets }))
 
-    const doc = (this.doc = new Document({}))
     this.store = store
 
     const renderView = new RenderDocument({
@@ -155,8 +154,7 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   async createMediaAsset(source: string | Blob): Promise<pub.MediaAsset> {
-    const init = await getMediaAssetInfo(this.generateId(), source)
-    return this.doc.assets.create(init, { source })
+    return await this.doc.assets.createMediaAsset(source)
   }
 
   addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {

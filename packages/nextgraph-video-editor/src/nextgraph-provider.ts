@@ -5,6 +5,8 @@ import * as Y from 'yjs'
 
 import { promiseWithResolvers } from 'shared/utils'
 
+import { OBJECT_ID_LENGTH } from './constants.ts'
+
 const { log, error: logError } = console
 
 export const digestToString = (digest: { Blake3Digest32: Uint8Array }): string => {
@@ -65,8 +67,7 @@ export class NextGraphProvider {
   }
 
   async connect(): Promise<void> {
-    const docIdLength = 53
-    const docId = this.nuri.slice(0, docIdLength)
+    const docId = this.nuri.slice(0, OBJECT_ID_LENGTH)
 
     log('connecting to doc', docId)
     if (this.shouldConnect) return

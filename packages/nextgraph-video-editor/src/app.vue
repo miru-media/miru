@@ -1,101 +1,109 @@
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import * as Y from 'yjs'
+
 import VideoEditorDoc from './video-editor-doc.vue'
-import { useAsyncState, useBrowserLocation } from '@vueuse/core'
+import { useBrowserLocation } from '@vueuse/core'
 import { getSession } from './nextgraph-session'
-// import { APPLICATION_CLASS_IRI } from './constants'
-import { VideoEditorDocList } from 'app-video-editor'
+import { useI18n, VideoEditorDocList } from 'app-video-editor'
 import { useShape } from '@ng-org/orm/vue'
 import { MiruVideoShapeType } from './shapes/orm/video.shapeTypes'
 import type { MiruVideo } from './shapes/orm/video.typings'
+import { INITIAL_DOC_UPDATE, OBJECT_ID_LENGTH } from './constants'
+import { digestToString } from './nextgraph-provider'
+import { initYmapFromJson } from 'webgl-video-editor/store/utils.js'
+import type { Schema } from 'webgl-video-editor'
 
 const location = useBrowserLocation()
+const { t } = useI18n()
 
-const asyncDocs = useAsyncState(async () => {
-  const { private_store_id } = (await getSession())!
-  const docs = useShape<MiruVideo>(MiruVideoShapeType, '')
-
-  return docs
-}, new Set() as never)
+const docs = useShape<MiruVideo>(MiruVideoShapeType, '')
 
 const docList = computed(() =>
-  [...asyncDocs.state.value]
+  [...docs]
     .map((entry) => {
       console.log(entry)
       const id: string = entry['@id']
 
-      return { id, name: entry.title, url: `${import.meta.env.BASE_URL}#${id}`, createdAt: entry.createdAt }
+      return { id, name: entry.title, url: getDocUrl(id), createdAt: entry.createdAt }
     })
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
 )
 
 const currentDoc = toRef(() => {
   const docId = location.value.hash?.slice(1)
-  if (docId) return asyncDocs.state.value.getById(docId)
-  if (docId) return [...asyncDocs.state.value].find((d) => d['@id'] === docId)
+  if (docId) return [...docs].find((d) => d['@id'] === docId)
 })
 
-const createDoc = async (title = 'Untitled', content = undefined) => {
-  const { ng, session_id, private_store_id } = (await getSession())!
-  const nuri = await ng.doc_create(session_id, 'YMap', 'data:map' || 'video:miru', 'store', undefined)
-  const docsSet = asyncDocs.state.value
+const getDocUrl = (id: string) => `${import.meta.env.BASE_URL}#${id}`
 
-  docsSet.add({
-    '@graph': nuri || `did:ng:${private_store_id}`,
-    '@id': nuri.slice(0, 53),
+const createDoc = async (title = 'Untitled', content: Schema.SerializedDocument | undefined = undefined) => {
+  const { ng, session_id: sessionId, private_store_id: privateStoreId } = (await getSession())!
+  const nuri = await ng.doc_create(
+    sessionId,
+    'YMap',
+    import.meta.env.DEV ? 'data:map' : 'video:miru',
+    'store',
+    undefined,
+  )
+  const objectId = nuri.slice(0, OBJECT_ID_LENGTH)
+
+  if (content) {
+    const heads: string[] = []
+
+    await new Promise<void>((resolve, reject) =>
+      ng
+        .doc_subscribe(
+          objectId,
+          sessionId,
+          (response: {
+            V0: {
+              TabInfo?: Record<string, unknown>
+              State?: Record<string, any>
+              Patch?: Record<string, any>
+            }
+          }) => {
+            if (response.V0.State) {
+              for (const head of response.V0.State.heads) {
+                const commitId = digestToString(head)
+                heads.push(commitId)
+              }
+              resolve()
+            }
+          },
+        )
+        .catch(reject),
+    )
+
+    const ydoc = new Y.Doc()
+    Y.applyUpdate(ydoc, INITIAL_DOC_UPDATE)
+    initYmapFromJson({ root: ydoc.getMap('ng'), content })
+
+    await ng.discrete_update(sessionId, Y.encodeStateAsUpdate(ydoc), heads, 'YMap', nuri)
+  }
+
+  docs.add({
+    '@graph': nuri || `did:ng:${privateStoreId}`,
+    '@id': objectId,
     '@type': 'did:ng:z:MiruVideo',
     title: title,
     createdAt: new Date().toISOString(),
   })
 
-  // location.value.hash = nuri
+  location.value.hash = getDocUrl(nuri)
 }
 
-const deleteDoc = async (id: string) => {
-  const docSet = (await asyncDocs).state.value
-  const entry = docSet.getById(id)
-  if (entry) docSet.delete(entry)
+const deleteDoc = async (docId: string) => {
+  if (!window.confirm(t('confirm_delete_project'))) return
+
+  const entry = [...docs].find((d) => d['@id'] === docId)
+  if (entry) docs.delete(entry)
 }
-
-/*
-const createDoc_ = async (name = 'Untitled', content = undefined) => {
-  const { ng, session_id } = (await getSession())!
-  const nuri = await ng.doc_create(session_id, 'YMap', 'video:miru', 'store', undefined)
-
-  console.log('new doc created', nuri)
-
-  await ng.sparql_update(
-    session_id,
-    `INSERT DATA { GRAPH <${nuri}> {<${nuri}> a <${APPLICATION_CLASS_IRI}> } }`,
-    nuri,
-  )
-
-  void docs.execute()
-  location.value.hash = nuri
-}
-
-const docs = useAsyncState(async () => {
-  const { ng, session_id } = (await getSession())!
-  const ret = await ng.sparql_query(
-    session_id,
-    `SELECT ?storeId ?createdAt ?title WHERE { GRAPH ?storeId { ?s a <${APPLICATION_CLASS_IRI}> } }`,
-    undefined,
-    undefined,
-  )
-
-  const docs = (ret?.results.bindings as any[])?.map((binding: any) => {
-    const id: string = binding.storeId?.value
-    return { id, name: id, url: `/#${id}`, createdAt: '' }
-  })
-
-  return docs
-}, [])
-*/
 </script>
 
 <template>
   <div class="root">
-    <Suspense v-if="asyncDocs.isReady.value && currentDoc">
+    <Suspense v-if="docs && currentDoc">
       <video-editor-doc :key="currentDoc?.['@id']" :graphObject="currentDoc" />
     </Suspense>
     <VideoEditorDocList v-else :docs="docList" @create="createDoc" @delete="deleteDoc" />
