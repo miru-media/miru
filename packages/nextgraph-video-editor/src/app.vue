@@ -13,7 +13,7 @@ const location = useBrowserLocation()
 
 const asyncDocs = useAsyncState(async () => {
   const { private_store_id } = (await getSession())!
-  const docs = useShape<MiruVideo>(MiruVideoShapeType, `did:ng:${private_store_id}`)
+  const docs = useShape<MiruVideo>(MiruVideoShapeType, '')
 
   return docs
 }, new Set() as never)
@@ -31,18 +31,19 @@ const docList = computed(() =>
 
 const currentDoc = toRef(() => {
   const docId = location.value.hash?.slice(1)
+  if (docId) return asyncDocs.state.value.getById(docId)
   if (docId) return [...asyncDocs.state.value].find((d) => d['@id'] === docId)
 })
 
 const createDoc = async (title = 'Untitled', content = undefined) => {
-  const { ng, session_id } = (await getSession())!
-  const nuri = await ng.doc_create(session_id, 'YMap', 'video:miru', 'store', undefined)
+  const { ng, session_id, private_store_id } = (await getSession())!
+  const nuri = await ng.doc_create(session_id, 'YMap', 'data:map' || 'video:miru', 'store', undefined)
   const docsSet = asyncDocs.state.value
 
   docsSet.add({
-    '@graph': nuri,
+    '@graph': nuri || `did:ng:${private_store_id}`,
+    '@id': nuri.slice(0, 53),
     '@type': 'did:ng:z:MiruVideo',
-    '@id': nuri,
     title: title,
     createdAt: new Date().toISOString(),
   })
