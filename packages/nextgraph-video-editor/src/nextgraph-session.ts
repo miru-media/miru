@@ -1,3 +1,4 @@
+import { initNg } from '@ng-org/orm'
 import { init as initNgWeb, ng } from '@ng-org/web'
 import type { Session } from '@ng-org/web'
 
@@ -10,6 +11,7 @@ const initSession = async (): Promise<Session | undefined> => {
     (event: { session: Session; status: string }) => {
       const { session } = event
 
+      initNg(ng, session)
       ;(session as Partial<Session>).ng ??= ng
       promise.resolve(session)
     },

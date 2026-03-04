@@ -4,9 +4,13 @@
   "private": true,
   "description": "",
   "type": "module",
+  "imports": {
+    "#orm": "./src/shapes/orm"
+  },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build --mode=production",
+    "dev": "pnpm run orm:build && vite dev",
+    "build": "pnpm run orm:build && vite build --mode=production",
+    "orm:build": "rdf-orm build --input ./src/shapes/shex --output ./src/shapes/orm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,6 +18,7 @@
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
+    "@ng-org/orm": "0.1.2-alpha.14",
     "@ng-org/web": "0.1.2-alpha.10",
     "@types/base64-js": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
@@ -29,5 +34,8 @@
     "webgl-video-editor": "workspace:^",
     "y-indexeddb": "catalog:",
     "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@ng-org/shex-orm": "0.1.2-alpha.7"
   }
 }

@@ -1,0 +1,15 @@
+PREFIX ex: <did:ng:z:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+ex:MiruVideoShape {
+  a [ex:MiruVideo] ;
+  ex:title xsd:string ;             # Required string
+  ex:description xsd:string ? ;     # Optional string
+  ex:createdAt xsd:date ;           # Date as ISO string
+  ex:assets @ex:MediaAssetShape * ;  # Set of nested objects
+}
+
+ex:MediaAssetShape EXTRA a {
+  a [ex:MediaAsset] ;
+  ex:file IRI ;
+}

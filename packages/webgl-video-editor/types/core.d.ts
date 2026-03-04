@@ -314,12 +314,11 @@ export interface VideoEditor {
   replaceClipAsset: (asset: MediaAsset) => void
 
   /**
-   * Add a new clip at the end of the specified track.
+   * Create a new media asset with the given source File or URI
    *
-   * @param track The track the clip will be added to.
    * @param source A Blog or url string of the clip media.
    */
-  createMediaAsset: (source: string | Blob) => Promise<MediaAsset>
+  createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
 
   /**
    * Split a clip that intersects with the current video time.

@@ -1,33 +1,63 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import { computed, toRef } from 'vue'
 import VideoEditorDoc from './video-editor-doc.vue'
 import { useAsyncState, useBrowserLocation } from '@vueuse/core'
 import { getSession } from './nextgraph-session'
-import { APPLICATION_CLASS_IRI } from './constants'
+// import { APPLICATION_CLASS_IRI } from './constants'
 import { VideoEditorDocList } from 'app-video-editor'
+import { useShape } from '@ng-org/orm/vue'
+import { MiruVideoShapeType } from './shapes/orm/video.shapeTypes'
+import type { MiruVideo } from './shapes/orm/video.typings'
 
 const location = useBrowserLocation()
 
-const docs = useAsyncState(async () => {
-  const { ng, session_id } = (await getSession())!
-  const ret = await ng.sparql_query(
-    session_id,
-    `SELECT ?storeId WHERE { GRAPH ?storeId { ?s a <${APPLICATION_CLASS_IRI}> } }`,
-    undefined,
-    undefined,
-  )
-
-  const docs = (ret?.results.bindings as any[])?.map((binding: any) => {
-    const id: string = binding.storeId?.value
-    return { id, name: id, url: `/#${id}`, createdAt: '' }
-  })
+const asyncDocs = useAsyncState(async () => {
+  const { private_store_id } = (await getSession())!
+  const docs = useShape<MiruVideo>(MiruVideoShapeType, `did:ng:${private_store_id}`)
 
   return docs
-}, [])
+}, new Set() as never)
 
-const currentDocId = toRef(() => location.value.hash?.slice(1))
+const docList = computed(() =>
+  [...asyncDocs.state.value]
+    .map((entry) => {
+      console.log(entry)
+      const id: string = entry['@id']
 
-const createDoc = async (name = 'Untitled', content = undefined) => {
+      return { id, name: entry.title, url: `${import.meta.env.BASE_URL}#${id}`, createdAt: entry.createdAt }
+    })
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+)
+
+const currentDoc = toRef(() => {
+  const docId = location.value.hash?.slice(1)
+  if (docId) return [...asyncDocs.state.value].find((d) => d['@id'] === docId)
+})
+
+const createDoc = async (title = 'Untitled', content = undefined) => {
+  const { ng, session_id } = (await getSession())!
+  const nuri = await ng.doc_create(session_id, 'YMap', 'video:miru', 'store', undefined)
+  const docsSet = asyncDocs.state.value
+
+  docsSet.add({
+    '@graph': nuri,
+    '@type': 'did:ng:z:MiruVideo',
+    '@id': nuri,
+    title: title,
+    createdAt: new Date().toISOString(),
+  })
+
+  // location.value.hash = nuri
+}
+
+const deleteDoc = async (id: string) => {
+  const docSet = (await asyncDocs).state.value
+  const entry = docSet.getById(id)
+  if (entry) docSet.delete(entry)
+}
+
+/*
+const createDoc_ = async (name = 'Untitled', content = undefined) => {
   const { ng, session_id } = (await getSession())!
   const nuri = await ng.doc_create(session_id, 'YMap', 'video:miru', 'store', undefined)
 
@@ -43,27 +73,31 @@ const createDoc = async (name = 'Untitled', content = undefined) => {
   location.value.hash = nuri
 }
 
-const deleteDoc = async (id: string) => {
+const docs = useAsyncState(async () => {
   const { ng, session_id } = (await getSession())!
-  throw new Error('TODO')
-  docs.execute()
-}
+  const ret = await ng.sparql_query(
+    session_id,
+    `SELECT ?storeId ?createdAt ?title WHERE { GRAPH ?storeId { ?s a <${APPLICATION_CLASS_IRI}> } }`,
+    undefined,
+    undefined,
+  )
 
-void Promise.resolve().then(async () => {
-  return
-  const session = (await getSession())!
-  const { ng } = session
-  const p = await ng.doc_fetch_private_subscribe()
-  console.log(p)
-})
+  const docs = (ret?.results.bindings as any[])?.map((binding: any) => {
+    const id: string = binding.storeId?.value
+    return { id, name: id, url: `/#${id}`, createdAt: '' }
+  })
+
+  return docs
+}, [])
+*/
 </script>
 
 <template>
   <div class="root">
-    <Suspense v-if="currentDocId">
-      <video-editor-doc :key="currentDocId" :nuri="currentDocId" />
+    <Suspense v-if="asyncDocs.isReady.value && currentDoc">
+      <video-editor-doc :key="currentDoc?.['@id']" :graphObject="currentDoc" />
     </Suspense>
-    <VideoEditorDocList v-else :docs="docs.state.value" @create="createDoc" @delete="deleteDoc" />
+    <VideoEditorDocList v-else :docs="docList" @create="createDoc" @delete="deleteDoc" />
   </div>
 </template>
 

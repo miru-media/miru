@@ -9,17 +9,7 @@ export default mergeConfig(
   config,
   defineConfig({
     root: import.meta.dirname,
-    plugins: [
-      vue({
-        include: [/\.vue$/, /\.md$/],
-        template: {
-          compilerOptions: {
-            isCustomElement: (tag) =>
-              tag === 'media-trimmer' || tag.startsWith('media-editor') || tag.startsWith('webgl-effects-'),
-          },
-        },
-      }),
-      markdown({}),
-    ],
+    base: '/nextgraph',
+    plugins: [vue({ include: [/\.vue$/, /\.md$/] }), markdown({})],
   }),
 )

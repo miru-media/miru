@@ -5,4 +5,4 @@ const INITIAL_DOC_UPDATE_BASE64 =
 
 export const INITIAL_DOC_UPDATE = base64.toByteArray(INITIAL_DOC_UPDATE_BASE64)
 
-export const APPLICATION_CLASS_IRI = `did:ng:z:Miru`
+export const APPLICATION_CLASS_IRI = `did:ng:z:MiruVideo`

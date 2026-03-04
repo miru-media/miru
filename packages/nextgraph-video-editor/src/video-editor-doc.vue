@@ -8,22 +8,23 @@ import { setupProviders } from './providers'
 import { INITIAL_DOC_UPDATE } from './constants'
 import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
 import { NextGraphVideoEditor } from './nextgraph-video-editor'
+import type { MiruVideo } from './shapes/orm/video.typings'
 
-const { nuri } = defineProps<{ nuri: string }>()
+const { graphObject } = defineProps<{ graphObject: MiruVideo }>()
 const ydoc = new Y.Doc()
 
 Y.applyUpdateV2(ydoc, INITIAL_DOC_UPDATE)
 const ngMap = ydoc.getMap<Y.Map<any>>('ng')
 
-const [ngProvider] = await setupProviders(nuri, ydoc)
+const [ngProvider] = await setupProviders(graphObject['@id'], ydoc)
 const { session } = ngProvider
 
 const store = markRaw(new VideoEditorYjsStore(ngMap.get(YTREE_YMAP_KEY)!))
-const editor = new NextGraphVideoEditor({ store, session, nuri })
+const editor = new NextGraphVideoEditor({ store, session, graphObject })
 
 const onCloseProject = () => (location.hash = '')
 
-console.log(location.origin + import.meta.env.BASE_URL + '#' + nuri)
+console.log(location.origin + import.meta.env.BASE_URL + '#' + graphObject['@id'])
 </script>
 
 <template>
