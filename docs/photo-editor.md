@@ -2,6 +2,7 @@
 layout: page
 title: Photo editor
 navbar: false
+sidebar: false
 pageClass: demo-page
 ---
 
