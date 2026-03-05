@@ -5,7 +5,7 @@ import * as Y from 'yjs'
 
 import { promiseWithResolvers } from 'shared/utils'
 
-import { OBJECT_ID_LENGTH } from './constants.ts'
+import { nuriToObjectId } from './utils.ts'
 
 const { log, error: logError } = console
 
@@ -16,6 +16,7 @@ export const digestToString = (digest: { Blake3Digest32: Uint8Array }): string =
 
 export class NextGraphProvider {
   readonly nuri: string
+  readonly objectId: string
   doc: Y.Doc
   session: Session
   heads: string[] = []
@@ -32,6 +33,7 @@ export class NextGraphProvider {
 
   constructor(nuri: string, doc: Y.Doc, session: Session) {
     this.nuri = nuri
+    this.objectId = nuriToObjectId(nuri)
     this.doc = doc
     this.session = session
 
@@ -67,7 +69,7 @@ export class NextGraphProvider {
   }
 
   async connect(): Promise<void> {
-    const docId = this.nuri.slice(0, OBJECT_ID_LENGTH)
+    const docId = this.objectId
 
     log('connecting to doc', docId)
     if (this.shouldConnect) return

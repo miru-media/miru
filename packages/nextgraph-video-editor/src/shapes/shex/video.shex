@@ -33,15 +33,14 @@ ex:MiruMediaAssetShape EXTRA a {
 
   ex:id xsd:string ;
   ex:type [ "asset:media:av" ] ;
-  ex:name xsd:string ? ;
+  ex:name xsd:string ;
   
   ex:mimeType xsd:string ;
   ex:duration xsd:float ;
   ex:size xsd:integer ;
   ex:audio @ex:MiruMediaAssetAudioShape ? ;
   ex:video @ex:MiruMediaAssetVideoShape ? ;
-
-  ex:uri xsd:string ;
+  ex:uri xsd:string OR IRI;
 }
 
 ex:MiruMediaAssetAudioShape EXTRA a {

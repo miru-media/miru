@@ -1,6 +1,12 @@
 import { effect } from '@ng-org/orm'
 import type { Session } from '@ng-org/web'
-import { type AssetsByType, FileSystemAssetStore, type MediaAsset, type Schema } from 'webgl-video-editor'
+import {
+  type AssetsByType,
+  FileSystemAssetStore,
+  HttpAssetLoader,
+  type MediaAsset,
+  type Schema,
+} from 'webgl-video-editor'
 
 import { NextGraphAssetLoader } from './nextgraph-asset-loader.ts'
 import type { MiruMediaAsset, MiruVideoDocument, MiruVideoEffectAsset } from './shapes/orm/video.typings.ts'
@@ -47,7 +53,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
       throw new Error('TODO: delete assets')
     })
 
-    this.loaders.push(new NextGraphAssetLoader({ ...options, nuri: this.docNuri }))
+    this.loaders.push(new NextGraphAssetLoader({ ...options, nuri: this.docNuri }), new HttpAssetLoader())
   }
 
   create<T extends Schema.AnyAssetSchema>(
@@ -89,7 +95,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     asset: Schema.AnyAssetSchema,
     docNuri: string,
   ): MiruMediaAsset | MiruVideoEffectAsset {
-    const { id, type, name } = asset
+    const { id, type, name = '' } = asset
     switch (type) {
       case 'asset:effect:video': {
         const { ops } = asset

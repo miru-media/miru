@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
-import * as Y from 'yjs'
 
 import VideoEditorDoc from './video-editor-doc.vue'
 import { useAsyncState, useBrowserLocation } from '@vueuse/core'
@@ -9,12 +8,8 @@ import { useI18n, VideoEditorDocList } from 'app-video-editor'
 import { useShape } from '@ng-org/orm/vue'
 import { MiruVideoDocumentShapeType } from './shapes/orm/video.shapeTypes'
 import type { MiruVideoDocument } from './shapes/orm/video.typings'
-import { INITIAL_DOC_UPDATE, OBJECT_ID_LENGTH } from './constants'
-import { digestToString } from './nextgraph-provider'
-import { initYmapFromJson } from 'webgl-video-editor/store/utils.js'
 import type { Schema } from 'webgl-video-editor'
-import { NextGraphAssetStore } from './nextgraph-asset-store'
-import { createNextGraphDoc } from './utils'
+import { createNextGraphDoc, nuriToObjectId } from './utils'
 
 const location = useBrowserLocation()
 const { t } = useI18n()
@@ -42,7 +37,7 @@ const asyncSession = useAsyncState(getSession, undefined)
 
 const createDoc = async (name = 'Untitled', content: Schema.SerializedDocument | undefined = undefined) => {
   const nuri = await createNextGraphDoc({ name, content, session: (await getSession())! })
-  location.value.hash = getDocUrl(nuri)
+  location.value.hash = getDocUrl(nuriToObjectId(nuri))
 }
 
 const deleteDoc = async (docId: string) => {
