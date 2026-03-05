@@ -55,7 +55,7 @@ if (!import.meta.env.SSR) {
             class="flex flex-grow-0 justify-center items-center mx-auto px-2 py-1 cursor-pointer border-solid border-2 rounded-lg">
             Change image
             <div class="i-tabler:photo text-2rem"></div>
-            <input type="file" accept="image/*" @input="onInputFile" class="max-w-0" hidden />
+            <input type="file" accept="image/*" @input="onInputFile" class="max-w-0" />
           </label>
           <button v-if="inputFile"
             class="flex flex-grow-0 justify-center items-center mx-auto px-2 py-1 cursor-pointer border-solid border-2 rounded-lg font-size-inherit"
@@ -67,3 +67,9 @@ if (!import.meta.env.SSR) {
     </div>
   </div>
 </div>
+
+<style scoped>
+  label:has(input:focus){
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+</style>
