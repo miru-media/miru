@@ -126,6 +126,10 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this._editor.dispose()
     this.#scope.stop()
   }
+
+  [Symbol.dispose](): void {
+    this.dispose()
+  }
 }
 
 for (const key of [

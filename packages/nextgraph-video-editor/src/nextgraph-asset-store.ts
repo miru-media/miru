@@ -127,13 +127,13 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
             ...audio,
             '@graph': docNuri,
             '@id': '',
-            '@type': 'did:ng:z:MiruMediaAssetAudioShape',
+            '@type': 'did:ng:z:MiruMediaAssetAudio',
           },
           video: video && {
             ...video,
             '@graph': docNuri,
             '@id': '',
-            '@type': 'did:ng:z:MiruMediaAssetVideoShape',
+            '@type': 'did:ng:z:MiruMediaAssetVideo',
           },
           uri: asset.uri ?? '',
         } satisfies MiruMediaAsset

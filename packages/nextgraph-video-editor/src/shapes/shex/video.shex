@@ -44,7 +44,7 @@ ex:MiruMediaAssetShape EXTRA a {
 }
 
 ex:MiruMediaAssetAudioShape EXTRA a {
-  a [ex:MiruMediaAssetAudioShape] ;
+  a [ex:MiruMediaAssetAudio] ;
   ex:codec xsd:string ;
   ex:duration xsd:float ;
   ex:numberOfChannels xsd:integer ;
@@ -53,7 +53,7 @@ ex:MiruMediaAssetAudioShape EXTRA a {
 }
 
 ex:MiruMediaAssetVideoShape EXTRA a {
-  a [ex:MiruMediaAssetVideoShape] ;
+  a [ex:MiruMediaAssetVideo] ;
   ex:codec xsd:string ;
   ex:duration xsd:float ;
   ex:rotation xsd:integer ;

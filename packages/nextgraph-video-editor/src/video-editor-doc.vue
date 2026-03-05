@@ -46,5 +46,5 @@ console.log(location.origin + import.meta.env.BASE_URL + '#' + graphObject['@id'
 </script>
 
 <template>
-  <video-editor-app v-if="editor" :store :onCloseProject :editor />
+  <video-editor-app v-if="editor" :store :onCloseProject :editor v-model:name="graphObject.name" />
 </template>
