@@ -1,4 +1,4 @@
-@import './bulma-config.scss';
+@import url('./bulma-config.scss');
 
 :root {
   --vp-c-brand-1: #1d6be4;
@@ -46,4 +46,9 @@
 
 .video-editor-demo-page {
   --vp-layout-max-width: 100vw;
+}
+
+/* disable "Skip to Content" button when hidden */
+.demo-page .VPSkipLink.visually-hidden {
+  display: none;
 }
