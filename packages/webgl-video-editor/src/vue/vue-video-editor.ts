@@ -65,13 +65,17 @@ export const editorToVue = (editor: pub.VideoEditor): pub.VideoEditor => {
       importJson: editor.importJson.bind(editor),
       toObject: editor.toObject.bind(editor),
       export: editor.export.bind(editor),
+      secondsToPixels: editor.secondsToPixels.bind(editor),
+      pixelsToSeconds: editor.pixelsToSeconds.bind(editor),
+      addTrack: editor.addTrack.bind(editor),
+
       dispose(): void {
         fineJsxScope.stop()
         editor.dispose()
       },
-      secondsToPixels: editor.secondsToPixels.bind(editor),
-      pixelsToSeconds: editor.pixelsToSeconds.bind(editor),
-      addTrack: editor.addTrack.bind(editor),
+      [Symbol.dispose](): void {
+        this.dispose()
+      },
     }),
   )
 }

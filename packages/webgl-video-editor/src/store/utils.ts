@@ -16,7 +16,9 @@ export const getOrCreateYmap = (root: Y.Doc | Y.Map<Y.Map<any>>, key: string) =>
   return subMap
 }
 
-export const initYjsRoot = (root: Y.Doc | Y.Map<any>): { ytree: YTree; settings: Y.Map<any> } => {
+export const initYjsRoot = (
+  root: Y.Doc | Y.Map<any>,
+): { ytree: YTree; settings: Y.Map<any>; ydoc: Y.Doc } => {
   const ytree = new YTree(getOrCreateYmap(root, YTREE_YMAP_KEY))
   const settignsYmap = getOrCreateYmap(root, 'settings')
 
@@ -36,7 +38,7 @@ export const initYjsRoot = (root: Y.Doc | Y.Map<any>): { ytree: YTree; settings:
 
   ytree.recomputeParentsAndChildren()
 
-  return { ytree, settings: settignsYmap }
+  return { ytree, settings: settignsYmap, ydoc: settignsYmap.doc! }
 }
 
 export const createInitialDocument = (): Schema.SerializedDocument =>

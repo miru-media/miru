@@ -81,8 +81,6 @@ export class NextGraphProvider {
   onResponse(response: {
     V0: { TabInfo?: Record<string, unknown>; State?: Record<string, any>; Patch?: Record<string, any> }
   }): void {
-    log('GOT APP RESPONSE', response)
-
     if (response.V0.TabInfo) {
       // noop
     } else if (response.V0.State) {

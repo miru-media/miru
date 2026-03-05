@@ -167,6 +167,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   }
 
   dispose(): void {
+    if (this.isDisposed) return
+
     super.dispose()
     this.#scope.stop()
     this.ticker.destroy()

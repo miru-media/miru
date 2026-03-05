@@ -17,8 +17,8 @@ import type { DocumentSettings } from '../../types/schema.d.ts'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
 import { NodeCreateEvent } from '../events.ts'
 
-import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
-import { createInitialDocument, getOrCreateYmap, initYjsRoot, initYmapFromJson } from './utils.ts'
+import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY } from './constants.ts'
+import { createInitialDocument, initYjsRoot, initYmapFromJson } from './utils.ts'
 
 const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
   if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
@@ -63,19 +63,14 @@ export class VideoEditorYjsStore implements VideoEditorStore {
 
   isDisposed = false
 
-  constructor(ymap: Y.Map<any>) {
-    const treeYmap = getOrCreateYmap(ymap, YTREE_YMAP_KEY)
-    const ydoc = treeYmap.doc!
-    this.ydoc = ydoc
-
+  constructor(ydocOrMap: Y.Doc | Y.Map<any>) {
+    const { ytree, settings, ydoc } = initYjsRoot(ydocOrMap)
     ydoc.on('destroy', this.dispose.bind(this))
 
-    {
-      const { ytree, settings } = initYjsRoot(treeYmap)
-      this.#ytree = ytree
-      this.#yundo = new Y.UndoManager(treeYmap)
-      this.settingsYmap = settings
-    }
+    this.ydoc = ydoc
+    this.#ytree = ytree
+    this.#yundo = new Y.UndoManager([ytree._ymap, settings])
+    this.settingsYmap = settings
   }
 
   init(editor: pub.VideoEditor): void {
@@ -88,7 +83,6 @@ export class VideoEditorYjsStore implements VideoEditorStore {
     const doc = (this.#doc = editor.doc)
 
     this.#ytree.observe(this.#onYtreeChange)
-
 
     doc.nodes.map.forEach((node) => this.#onNodeCreate(new NodeCreateEvent(node)))
 

@@ -3,24 +3,24 @@ import type { Session } from '@ng-org/web'
 import { type AssetsByType, FileSystemAssetStore, type MediaAsset, type Schema } from 'webgl-video-editor'
 
 import { NextGraphAssetLoader } from './nextgraph-asset-loader.ts'
-import type { MiruMediaAsset, MiruVideo, MiruVideoEffectAsset } from './shapes/orm/video.typings.ts'
+import type { MiruMediaAsset, MiruVideoDocument, MiruVideoEffectAsset } from './shapes/orm/video.typings.ts'
 
 export class NextGraphAssetStore extends FileSystemAssetStore {
   session: Session
-  graphObject: MiruVideo
+  graphObject: MiruVideoDocument
   readonly #stopEffect: () => void
 
   get docNuri(): string {
     return this.graphObject['@graph']
   }
 
-  constructor(options: { session: Session; graphObject: MiruVideo }) {
+  constructor(options: { session: Session; graphObject: MiruVideoDocument }) {
     super()
     this.session = options.session
     this.graphObject = options.graphObject
 
     this.#stopEffect = effect(() => {
-      console.log('ASSETS', ...options.graphObject.assets?.__raw__ ?? [])
+      console.log('ASSETS', ...(options.graphObject.assets?.__raw__ ?? []))
 
       options.graphObject.assets?.forEach((asset) => {
         const { id } = asset
@@ -82,13 +82,20 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
   }
 
   assetToOrmShape(asset: Schema.AnyAssetSchema): MiruMediaAsset | MiruVideoEffectAsset {
+    return NextGraphAssetStore.assetToOrmShape(asset, this.docNuri)
+  }
+
+  static assetToOrmShape(
+    asset: Schema.AnyAssetSchema,
+    docNuri: string,
+  ): MiruMediaAsset | MiruVideoEffectAsset {
     const { id, type, name } = asset
     switch (type) {
       case 'asset:effect:video': {
         const { ops } = asset
 
         return {
-          '@graph': this.docNuri,
+          '@graph': docNuri,
           '@id': '',
           '@type': 'did:ng:z:MiruVideoEffectAsset',
           id,
@@ -101,7 +108,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
         const { audio, video } = asset
 
         return {
-          '@graph': this.docNuri,
+          '@graph': docNuri,
           '@id': '',
           '@type': 'did:ng:z:MiruMediaAsset',
           id,
@@ -110,8 +117,18 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
           mimeType: asset.mimeType,
           duration: asset.duration,
           size: asset.size,
-          audio: audio && { ...audio, '@graph': this.docNuri, '@id': '' },
-          video: video && { ...video, '@graph': this.docNuri, '@id': '' },
+          audio: audio && {
+            ...audio,
+            '@graph': docNuri,
+            '@id': '',
+            '@type': 'did:ng:z:MiruMediaAssetAudioShape',
+          },
+          video: video && {
+            ...video,
+            '@graph': docNuri,
+            '@id': '',
+            '@type': 'did:ng:z:MiruMediaAssetVideoShape',
+          },
           uri: asset.uri ?? '',
         } satisfies MiruMediaAsset
       }
@@ -141,6 +158,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
   }
 
   dispose(): void {
+    if (this.isDisposed) return
     super.dispose()
     this.graphObject = undefined as never
     this.#stopEffect()

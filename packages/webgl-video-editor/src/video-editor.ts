@@ -59,6 +59,7 @@ export class VideoEditor implements pub.VideoEditor {
   playback: PlaybackDocument
 
   canvas = document.createElement('canvas')
+  isDisposed = false
 
   get isPaused(): boolean {
     return this.playback.isPaused
@@ -398,8 +399,15 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   dispose(): void {
+    if (this.isDisposed) return
+    this.isDisposed = true
+
     this.playback.renderView.dispose()
     this.playback.dispose()
     this.doc.dispose()
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
   }
 }

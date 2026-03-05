@@ -32,9 +32,11 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
 
   constructor(options: { doc: pub.Document }) {
     super(options)
-    Vue.markRaw(this)
 
     const { doc } = options
+
+    Vue.markRaw(this)
+    Vue.markRaw(doc)
     ;(
       [
         'resolution',

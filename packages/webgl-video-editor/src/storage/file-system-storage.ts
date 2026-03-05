@@ -62,6 +62,7 @@ const setProgressInterval = (key: string, options: StorageFileWriteOptions): (()
 export class FileSystemStorage {
   worker!: Comlink.Remote<FileStorageWorker>
   #workerInstance!: Worker
+  isDisposed = false
 
   constructor() {
     if (import.meta.env.SSR || import.meta.env.TEST === 'true') return
@@ -159,6 +160,9 @@ export class FileSystemStorage {
   }
 
   dispose(): void {
+    if (this.isDisposed) return
+    this.isDisposed = true
+
     this.worker[Comlink.releaseProxy]()
     this.#workerInstance.terminate()
     this.worker = this.#workerInstance = undefined as never

@@ -110,6 +110,8 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   }
 
   dispose() {
+    if (this.isDisposed) return
+
     super.dispose()
     if (this.#createdOwnRenderer) {
       this.renderer.destroy()
