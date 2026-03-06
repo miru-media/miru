@@ -17,13 +17,13 @@
       <li><div class="task-done"></div> Mehrere Videoclips hinzufügen</li>
       <li><div class="task-done"></div> Audio-Dateien hinzufügen</li>
       <li><div class="task-done"></div> Clips schneiden und trimmen</li>
+      <li><div class="task-todo"></div> Clipgröße und -position zu ändern</li>
       <li><div class="task-done"></div> Filtereffekte anwenden</li>
       <li><div class="task-done"></div> Exportieren als MP4 oder Webm</li>
     </ul class="task-list">
     <p><b>Wir arbeiten noch an:</b></p>
     <ul class="task-list">
       <li><div class="task-todo"></div> Overlays von Bildern und Text</li>
-      <li><div class="task-todo"></div> Größenänderung und Positionierung</li>
       <li><div class="task-todo"></div> Asset-Bibliothek</li>
       <li><div class="task-todo"></div> Kollaboratives Editieren</li>
       <li><div class="task-todo"></div> Übergänge und Crossfade-Effekte</li>

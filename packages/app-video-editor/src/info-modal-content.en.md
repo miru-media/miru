@@ -18,13 +18,13 @@
       <li><div class="task-done"></div> Add multiple video clips,</li>
       <li><div class="task-done"></div> Add audio files,</li>
       <li><div class="task-done"></div> Split and trim,</li>
+      <li><div class="task-todo"></div> Resize and position on the canvas,</li>
       <li><div class="task-done"></div> Add filter effects,</li>
       <li><div class="task-done"></div> Export to MP4 or Webm.</li>
     </ul>
     <p><b>We're still working on:</b></p>
     <ul class="task-list">
       <li><div class="task-todo"></div> Image and text overlays,</li>
-      <li><div class="task-todo"></div> Resizing and positioning on the canvas,</li>
       <li><div class="task-todo"></div> Asset library,</li>
       <li><div class="task-todo"></div> Collaborative editing,</li>
       <li><div class="task-todo"></div> Transitions and crossfade effects,</li>

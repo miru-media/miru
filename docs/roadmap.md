@@ -21,34 +21,17 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
   Using MediaPipe and Three.js, create a proof of concept with glTF interactivity and face landmark detection extension implementations and create a collection of sample AR effects.
 
-- ## <span class="task-date">2025-Q4</span> <span class="task-wip" /> Documentation
+  <https://miru.media/ar-effects>
+
+- ## <span class="task-date">2026-Q1</span> <span class="task-done" /> Media trimmer improvements
+
+  Use Mediabunny, a robust WebCodecs-focused library that will give us support for more formats and enable a smoother editing experience.
+
+- ## <span class="task-date">2026-Q2</span> <span class="task-wip" /> Documentation
 
   Make it clear how to get started using Miru's various tools on a web site or app, how to create custom effects, and how to contribute to Miru's development. API reference pages should be generated with TypeDoc or something similar. Write guidelines for contributing translations for Miru's UIs.
 
-- ## <span class="task-date">2026-Q1</span><span class="task-todo" /> Image editing improvements
-
-  Expand what's possible with Miru's effects by supporting more complex DAGs for effects and create built-in filters using these features. Also add image editing features including:
-  - Stripping metadata
-  - Quality settings
-  - Text and image overlays
-
-- ## <span class="task-date">2025-Q4</span> <span class="task-todo" /> Media trimmer improvements
-
-  <!---->
-  - Mediabunny is a robust WebCodecs-focused library that will give us support for more formats and enable a smoother editing experience
-  - Lossless trimming
-  - Bitrate/filesize controls
-  - Preserve color profile
-  - Increase browser and codec support with LibAVJS-WebCodecs-Polyfill
-
-- ## <span class="task-date">2025-H2</span> <span class="task-wip" /> Explore using Miru in social media apps
-
-  Our image filters are currently used in Pixelfed. What other apps might benefit from integration with Miru?
-  - Are the editors and AR effects also a good fit for chat apps like Delta Chat?
-  - Do users of Loops want a built-in video editor in the web client?
-  - Is a React Native or NativeScript implementation feasible and worth implementing?
-
-- ## <span class="task-date">2026-H1</span> <span class="task-todo" /> Video editor improvements
+- ## <span class="task-date">2026-Q2</span> <span class="task-wip" /> Video editor improvements
 
   <!---->
   - Improve the desktop UX
@@ -56,9 +39,23 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Add asset management, Text, Subtitles, Images, and stickers
   - Add keyframe animation
 
-- ## <span class="task-date">2026-H1</span> <span class="task-todo" /> Collaborative video editing
+- ## <span class="task-date">2026-H1</span> <span class="task-wip" /> Collaborative video editing
 
   Add local-first collaborative editing to Miru's video editor using CRDTs. Implement project management, invitations, to run on an existing a self-hostable platform like Nextcloud or NextGraph.
+
+- ## <span class="task-date">2026-H2</span><span class="task-todo" /> Image editing improvements
+
+  Expand what's possible with Miru's effects by supporting more complex DAGs for effects and create built-in filters using these features. Also add image editing features including:
+  - Stripping metadata
+  - Quality settings
+  - Text and image overlays
+
+- ## <span class="task-date">2026-H2</span> <span class="task-todo" /> Explore using Miru in social media apps
+
+  Our image filters are currently used in Pixelfed. What other apps might benefit from integration with Miru?
+  - Are the editors and AR effects also a good fit for chat apps like Delta Chat?
+  - Do users of Loops want a built-in video editor in the web client?
+  - Is a React Native or NativeScript implementation feasible and worth implementing?
 
 - ## <span class="task-date">2026-H2</span> <span class="task-todo" /> Automated video editing tools
 
@@ -67,9 +64,17 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Image segmentation
   - Motion tracking
 
-- ## <span class="task-date">2026-H2</span> <span class="task-todo" /> AR effects editor
+- ## <span class="task-date">2026-H2</span> <span class="task-todo" /> Media trimmer improvements
 
-  An app to create AR effects with landmark tracking, post processing effects and filters, and visual scripting for interactivity. The app will include:
+  <!---->
+  - Lossless trimming
+  - Bitrate/filesize controls
+  - Preserve color profile
+  - Increase browser and codec support with LibAVJS-WebCodecs-Polyfill
+
+- ## <span class="task-date">2027-H1</span> <span class="task-todo" /> AR effects editor
+
+  Create an app to create AR effects with landmark tracking, post processing effects and filters, and visual scripting for interactivity. The app will include:
   - A 3D scene editor for positioning and previewing objects
   - 3D layer editor
   - An outline for ordering 3D and 2D scenes
