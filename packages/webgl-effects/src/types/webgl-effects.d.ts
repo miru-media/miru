@@ -1,5 +1,7 @@
 import type * as twgl from 'twgl.js'
 
+import type { EffectDefinition } from './core.ts'
+
 export { Renderer, Effect } from './classes.ts'
 export type * from './core.ts'
 

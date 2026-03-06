@@ -77,5 +77,6 @@ export const getMediaAssetInfo = async (
         }
       : undefined,
     duration: await input.computeDuration(),
+    uri: isBlobSource ? undefined : source,
   }
 }

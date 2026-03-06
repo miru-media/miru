@@ -5,31 +5,30 @@ import type * as Schema from '#schema'
 
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
 
-import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY } from './constants.ts'
+import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
 
-export const getOrCreateYmap = (ymap: Y.Map<Y.Map<any>>, key: string) => {
-  let subMap = ymap.get(key)
-  if (!subMap) ymap.set(key, (subMap = new Y.Map()))
+export const getOrCreateYmap = (root: Y.Doc | Y.Map<Y.Map<any>>, key: string) => {
+  if ('getMap' in root) return root.getMap<any>(key)
+
+  let subMap = root.get(key)
+  if (!subMap) root.set(key, (subMap = new Y.Map()))
 
   return subMap
 }
 
-export const initYtree = (
-  ymap: Y.Map<unknown>,
-): { ytree: YTree; doc: Y.Map<any>; assets: Y.Map<Schema.AnyAssetSchema> } => {
-  const ytree = new YTree(ymap)
+export const initYjsRoot = (
+  root: Y.Doc | Y.Map<any>,
+): { ytree: YTree; settings: Y.Map<any>; ydoc: Y.Doc } => {
+  const ytree = new YTree(getOrCreateYmap(root, YTREE_YMAP_KEY))
+  const settignsYmap = getOrCreateYmap(root, 'settings')
 
-  let doc = ytree.getNodeValueFromKey(YTREE_ROOT_KEY) as Y.Map<any> | undefined
-  if (!doc) {
-    ytree.setNodeValueFromKey(YTREE_ROOT_KEY, (doc = new Y.Map()))
-
-    const settings: Schema.DocumentSettings = {
-      resolution: DEFAULT_RESOLUTION,
-      frameRate: DEFAULT_FRAMERATE,
-    }
-
-    for (const [key, value] of Object.entries(settings)) doc.set(key, value)
+  const settings: Schema.DocumentSettings = {
+    resolution: DEFAULT_RESOLUTION,
+    frameRate: DEFAULT_FRAMERATE,
   }
+
+  for (const [key, value] of Object.entries(settings))
+    if (JSON.stringify(value) !== JSON.stringify(settignsYmap.get(key))) settignsYmap.set(key, value)
 
   try {
     ytree.getNodeValueFromKey(YTREE_NULL_PARENT_KEY)
@@ -39,9 +38,7 @@ export const initYtree = (
 
   ytree.recomputeParentsAndChildren()
 
-  const assets = getOrCreateYmap(doc, 'assets')
-
-  return { ytree, doc, assets }
+  return { ytree, settings: settignsYmap, ydoc: settignsYmap.doc! }
 }
 
 export const createInitialDocument = (): Schema.SerializedDocument =>
@@ -52,12 +49,21 @@ export const createInitialDocument = (): Schema.SerializedDocument =>
     tracks: [],
   }) satisfies Schema.SerializedDocument
 
-export const initTreeYmapFromJson = (treeYmap: Y.Map<unknown>, content: Schema.SerializedDocument): void => {
-  const ydoc = treeYmap.doc
+export const initYmapFromJson = ({
+  root,
+  content,
+  assetsYmap,
+}: {
+  root: Y.Doc | Y.Map<any>
+  content: Schema.SerializedDocument
+  assetsYmap?: Y.Map<any>
+}): void => {
+  const ydoc = 'doc' in root ? root.doc : root
+
   if (!ydoc) throw new Error('YMap must be bound to a doc!')
 
   ydoc.transact(() => {
-    const { ytree, doc, assets } = initYtree(treeYmap)
+    const { ytree, settings } = initYjsRoot(root)
 
     const addNodeAndChildren = (parentKey: string, init: Schema.AnyNodeSerializedSchema) => {
       ytree.createNode(
@@ -90,15 +96,16 @@ export const initTreeYmapFromJson = (treeYmap: Y.Map<unknown>, content: Schema.S
     // update doc settings
     const { resolution, frameRate } = content
     const docSettings: Schema.DocumentSettings = { resolution, frameRate }
-    for (const [K, v] of Object.entries(docSettings)) doc.set(K, v)
+    for (const [K, v] of Object.entries(docSettings)) settings.set(K, v)
 
     // add assets
-    for (const asset of content.assets) assets.set(asset.id, asset)
+    if (assetsYmap) for (const asset of content.assets) assetsYmap.set(asset.id, asset)
   })
 }
 
-export const createInitialUpdate = (ymap: Y.Map<unknown>): string => {
-  initTreeYmapFromJson(ymap, createInitialDocument())
+export const createInitialUpdate = (root: Y.Doc | Y.Map<unknown>): string => {
+  initYmapFromJson({ root, content: createInitialDocument() })
 
-  return Buffer.from(Y.encodeStateAsUpdateV2(ymap.doc!)).toString('base64')
+  const doc = 'doc' in root ? root.doc! : root
+  return Buffer.from(Y.encodeStateAsUpdateV2(doc)).toString('base64')
 }

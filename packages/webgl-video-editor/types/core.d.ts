@@ -84,7 +84,9 @@ export interface Document extends Schema.DocumentSettings {
     options?: AddEventListenerOptions,
   ) => void
   emit: (event: VideoEditorEvents[keyof VideoEditorEvents]) => void
+
   dispose: () => void
+  [Symbol.dispose]: () => void
 }
 
 export interface NodeMap {
@@ -117,6 +119,7 @@ export interface BaseNode {
   toObject: () => any
   getSnapshot: () => NodeSnapshot<T extends Schema.AnyNodeSchema ? T : any>
   dispose: () => void
+  [Symbol.dispose]: () => void
 }
 
 export interface ParentNode<TChild extends AnyNode> extends BaseNode {
@@ -205,6 +208,7 @@ export interface MediaAsset extends Readonly<Schema.MediaAsset> {
   setError: (error: unknown) => void
   toObject: () => Schema.MediaAsset
   dispose: () => void
+  [Symbol.dispose]: () => void
   /** @internal */
   _refreshObjectUrl: () => Promise<void>
 }
@@ -213,6 +217,7 @@ export interface VideoEffectAsset extends Readonly<Schema.VideoEffectAsset> {
   readonly raw: EffectDefinition
   toObject: () => Schema.VideoEffectAsset
   dispose: () => void
+  [Symbol.dispose]: () => void
 }
 
 export interface AssetsByType {
@@ -225,7 +230,9 @@ export type AnyAsset = AssetsByType[keyof AssetsByType]
 export type { AssetOrigin } from './schema.d.ts'
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging, @typescript-eslint/no-extraneous-class -- false positive
-export class VideoEditor {}
+export class VideoEditor {
+  constructor(options?: { store?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore })
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- false positive
 export interface VideoEditor {
@@ -314,12 +321,11 @@ export interface VideoEditor {
   replaceClipAsset: (asset: MediaAsset) => void
 
   /**
-   * Add a new clip at the end of the specified track.
+   * Create a new media asset with the given source File or URI
    *
-   * @param track The track the clip will be added to.
-   * @param source A Blog or url string of the clip media.
+   * @param source A Blob or URI string of the clip media.
    */
-  createMediaAsset: (source: string | Blob) => Promise<MediaAsset>
+  createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
 
   /**
    * Split a clip that intersects with the current video time.
@@ -349,6 +355,7 @@ export interface VideoEditor {
 
   /** Release resources of the video editor and allow it to be garbage collected. */
   dispose: () => void
+  [Symbol.dispose]: () => void
 }
 
 export type VideoEditorChangeEvent = CustomEvent<Schema.SerializedDocument>
@@ -413,7 +420,18 @@ export interface VideoEditorAssetStore {
   /** Delete an asset form the store */
   delete: (key: string) => Promise<void>
 
+  createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
+
   loaders: AssetLoader[]
+
+  on: <T extends AssetEventType>(
+    type: T,
+    listener: (event: VideoEditorEvents[T]) => void,
+    options?: AddEventListenerOptions,
+  ) => () => void
+
+  dispose: () => void
+  [Symbol.dispose]: () => void
 }
 
 export interface AssetLoader {

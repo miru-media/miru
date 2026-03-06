@@ -53,6 +53,7 @@ export class Document implements pub.Document {
 
   nodes = new NodeMap()
   declare assets: pub.VideoEditorAssetStore
+  readonly #ownsAssetStore: boolean = false
 
   readonly _currentTime = ref(0)
   readonly #duration = computed(() =>
@@ -111,8 +112,8 @@ export class Document implements pub.Document {
 
     if (options.assets) this.assets = options.assets
     else {
+      this.#ownsAssetStore = true
       this.assets = new FileSystemAssetStore()
-
       this.assets.loaders.push(new HttpAssetLoader())
     }
   }
@@ -209,6 +210,8 @@ export class Document implements pub.Document {
     this.emit(new DocDisposeEvent(this))
     this.#disposeAbort.abort()
     this.nodes.map.forEach((node) => node.dispose())
+
+    if (this.#ownsAssetStore) this.assets.dispose()
   }
 
   [Symbol.dispose](): void {

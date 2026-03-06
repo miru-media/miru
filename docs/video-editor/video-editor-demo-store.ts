@@ -4,7 +4,7 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import { WebrtcProvider } from 'y-webrtc'
 import * as Y from 'yjs'
 
-import { YTREE_YMAP_KEY } from 'webgl-video-editor/store/constants.js'
+import { YjsAssetStore } from 'webgl-video-editor/store/yjs-asset-store.js'
 import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
 
 export const INITIAL_DOC_UPDATE_BASE64 =
@@ -14,10 +14,12 @@ export const useVideoEditorStore = (
   id: MaybeRefOrGetter<string>,
 ): {
   store: Ref<VideoEditorYjsStore | undefined>
+  assets: Ref<YjsAssetStore | undefined>
   webrtc: Ref<WebrtcProvider | undefined>
 } => {
   const store = ref<VideoEditorYjsStore>()
   const webrtc = ref<WebrtcProvider>()
+  const assets = ref<YjsAssetStore>()
 
   watch(
     toRef(id),
@@ -28,6 +30,7 @@ export const useVideoEditorStore = (
       const ydoc = new Y.Doc()
       Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
       const idb = new IndexeddbPersistence(id, ydoc)
+      assets.value = new YjsAssetStore(ydoc.getMap('assets'))
 
       let isStale = false
 
@@ -37,16 +40,17 @@ export const useVideoEditorStore = (
         void idb.destroy()
         ydoc.destroy()
         store.value?.dispose()
+        assets.value?.dispose()
       })
 
       void idb.whenSynced.then(() => {
         if (isStale) return
-        store.value = markRaw(new VideoEditorYjsStore(ydoc.getMap(YTREE_YMAP_KEY)))
+        store.value = markRaw(new VideoEditorYjsStore(ydoc))
         webrtc.value = new WebrtcProvider(id, ydoc)
       })
     },
     { immediate: true },
   )
 
-  return { store, webrtc }
+  return { store, assets, webrtc }
 }

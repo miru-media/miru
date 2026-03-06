@@ -26,7 +26,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   readonly stage: Pixi.Container
   declare whenRendererIsReady: Promise<void>
 
-  readonly #createdOwnRenderer: boolean
+  readonly #ownsRenderer: boolean
   readonly applyVideoRotation: boolean
 
   constructor(options: RenderDocumentOptions) {
@@ -37,14 +37,14 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
     if (options.renderer) {
       this.renderer = options.renderer
       this.gl = options.renderer.gl
-      this.#createdOwnRenderer = false
+      this.#ownsRenderer = false
     } else {
       const { gl } = options
       if (!gl) throw new Error('[webgl-video-editor] options.gl or options.renderer must be provided.')
 
       this.gl = gl
       this.renderer = new Pixi.WebGLRenderer()
-      this.#createdOwnRenderer = true
+      this.#ownsRenderer = true
     }
 
     this.canvas = this.gl.canvas
@@ -52,7 +52,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
     this._init()
 
     this.stage = this._getNode(options.doc.timeline).container
-    this.whenRendererIsReady = this.#createdOwnRenderer ? this.#initPixi() : Promise.resolve()
+    this.whenRendererIsReady = this.#ownsRenderer ? this.#initPixi() : Promise.resolve()
   }
 
   async #initPixi(): Promise<void> {
@@ -110,9 +110,13 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   }
 
   dispose() {
+    if (this.isDisposed) return
+
     super.dispose()
-    if (this.#createdOwnRenderer) {
+
+    if (this.#ownsRenderer) {
       this.renderer.destroy()
+      // https://github.com/pixijs/pixijs/pull/11951
       this.renderer.removeAllListeners()
     }
   }

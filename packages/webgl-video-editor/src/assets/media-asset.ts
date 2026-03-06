@@ -11,7 +11,6 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
   readonly mimeType: string
   readonly audio?: Schema.MediaAsset['audio']
   readonly video?: Schema.MediaAsset['video']
-  uri?: string
 
   blob?: Blob
   readonly #blobUrl = ref('')
@@ -33,6 +32,15 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
 
   get error() {
     return this.#error.value
+  }
+
+  readonly #uri = ref<string>()
+  get uri(): string | undefined {
+    return this.#uri.value
+  }
+  set uri(value) {
+    this.#uri.value = value
+    if (!this.isLoading && !this.blob) void this._refreshObjectUrl()
   }
 
   constructor(
@@ -81,7 +89,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
     } catch (error) {
       // eslint-disable-next-line no-console -- dev error message
       if (import.meta.env.DEV) console.error(error)
-      this.setBlob(await this.store.getFile(this.id))
+      this.setBlob(await this.store.getOrCreateFile(this, undefined))
     }
   }
 

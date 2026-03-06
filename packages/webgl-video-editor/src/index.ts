@@ -10,3 +10,4 @@ if (typeof customElements !== 'undefined' && 'define' in customElements) {
 }
 
 export { VideoEditor } from './video-editor.ts'
+export { FileSystemAssetStore, HttpAssetLoader } from '#assets'

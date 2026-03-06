@@ -27,6 +27,10 @@ export default Vue.defineComponent({
       type: Object as Vue.PropType<pub.VideoEditorStore>,
       required: false,
     },
+    assets: {
+      type: Object as Vue.PropType<pub.VideoEditorAssetStore>,
+      required: false,
+    },
     messages: { type: Object as Vue.PropType<Record<string, Record<string, string>>>, required: false },
     languages: { type: Array as Vue.PropType<string[]>, required: false },
   },
@@ -36,6 +40,7 @@ export default Vue.defineComponent({
       props.editor ??
       new VideoEditor_({
         store: props.store,
+        assets: props.assets,
       })
     const container = Vue.ref<HTMLElement>()
 
