@@ -1,4 +1,5 @@
-export { default as VideoEditorApp } from './video-editor-app.vue'
+export { default as VideoEditorDoc } from './video-editor-doc.vue'
 export { default as VideoEditorDocList } from './video-editor-doc-list.vue'
+export { default as VideoEditorDocError } from './video-editor-doc-error.vue'
 export * from './setup-app.ts'
 export { demoDoc } from './demo-document.ts'

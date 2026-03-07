@@ -1,6 +1,6 @@
 {
-  "play": "Play",
-  "pause": "Pause",
+  "Play": "Play",
+  "Pause": "Pause",
   "close": "Schließen",
   "remove_audio": "Audio entfernen",
   "include_audio": "Audio verwenden",

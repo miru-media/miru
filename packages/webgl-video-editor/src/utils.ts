@@ -4,9 +4,9 @@ import type * as pub from '../types/core.d.ts'
 
 export const getClipTransformMatrix = (clip: pub.VisualClip, withVideoRotation: boolean): Pixi.Matrix => {
   const { scale, asset } = clip
-  if (!asset) return new Pixi.Matrix()
+  if (!asset?.video) return new Pixi.Matrix()
 
-  const { width, height, rotation: videoRotation } = asset.video!
+  const { width, height, rotation: videoRotation } = asset.video
 
   const matrix = new Pixi.Matrix()
 

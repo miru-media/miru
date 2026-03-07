@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VideoEditorApp } from 'app-video-editor'
+import { VideoEditorDoc } from 'app-video-editor'
 import { markRaw } from 'vue'
 import * as Y from 'yjs'
 
@@ -14,5 +14,5 @@ await setupProviders(ydoc.guid, ydoc)
 </script>
 
 <template>
-  <video-editor-app :store />
+  <VideoEditorDoc :store />
 </template>

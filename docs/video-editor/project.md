@@ -9,7 +9,7 @@ import { useLocalStorage } from '@vueuse/core'
 import { useRouter } from 'vitepress'
 import { computed, ref } from 'vue'
 
-import { VideoEditorApp } from 'app-video-editor'
+import { VideoEditorDoc, VideoEditorDocError } from 'app-video-editor'
 import { useVideoEditorStore } from './video-editor-demo-store'
 
 const projects = import.meta.env.SSR ? [] as never: useLocalStorage<{ name: string; id: string, createdAt: string }[]>('video-editor-docs', [])
@@ -22,7 +22,7 @@ const name = computed({
 })
 const router = useRouter()
 
-const { store, assets, webrtc } = useVideoEditorStore(id)
+const { store, assets, webrtc, error } = useVideoEditorStore(id, console.error)
 const isConnected = ref(true)
 
 const toggleConnection = () => {
@@ -35,7 +35,8 @@ const showConnectionToggle = import.meta.env.DEV
 </script>
 
 <ClientOnly>
-  <VideoEditorApp v-if="store" :store :assets :onCloseProject="() => router.go('/video-editor')" v-model:name="name"/>
+  <VideoEditorDocError v-if="error" backUrl="/video-editor" />
+  <VideoEditorDoc v-else-if="store" :store :assets :onCloseProject="() => router.go('/video-editor')" v-model:name="name"/>
   <button
     v-if="showConnectionToggle"
     :class="[

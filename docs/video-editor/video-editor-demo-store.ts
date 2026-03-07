@@ -12,14 +12,17 @@ export const INITIAL_DOC_UPDATE_BASE64 =
 
 export const useVideoEditorStore = (
   id: MaybeRefOrGetter<string>,
+  onError: (error: unknown) => unknown,
 ): {
   store: Ref<VideoEditorYjsStore | undefined>
   assets: Ref<YjsAssetStore | undefined>
   webrtc: Ref<WebrtcProvider | undefined>
+  error: Ref<unknown>
 } => {
   const store = ref<VideoEditorYjsStore>()
   const webrtc = ref<WebrtcProvider>()
   const assets = ref<YjsAssetStore>()
+  const error = ref<unknown>()
 
   watch(
     toRef(id),
@@ -27,10 +30,19 @@ export const useVideoEditorStore = (
       if (import.meta.env.SSR) return { store }
       if (!id) return
 
-      const ydoc = new Y.Doc()
-      Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
-      const idb = new IndexeddbPersistence(id, ydoc)
-      assets.value = new YjsAssetStore(ydoc.getMap('assets'))
+      let ydoc
+      let idb
+
+      try {
+        ydoc = new Y.Doc()
+        Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
+        idb = new IndexeddbPersistence(id, ydoc)
+        assets.value = new YjsAssetStore(ydoc.getMap('assets'))
+      } catch (error_: unknown) {
+        error.value = error_
+        onError(error_)
+        return
+      }
 
       let isStale = false
 
@@ -41,16 +53,22 @@ export const useVideoEditorStore = (
         ydoc.destroy()
         store.value?.dispose()
         assets.value?.dispose()
+        error.value = undefined
       })
 
-      void idb.whenSynced.then(() => {
-        if (isStale) return
-        store.value = markRaw(new VideoEditorYjsStore(ydoc))
-        webrtc.value = new WebrtcProvider(id, ydoc)
-      })
+      void idb.whenSynced
+        .then(() => {
+          if (isStale) return
+          store.value = markRaw(new VideoEditorYjsStore(ydoc))
+          webrtc.value = new WebrtcProvider(id, ydoc)
+        })
+        .catch((error_: unknown) => {
+          error.value = error_
+          onError(error_)
+        })
     },
     { immediate: true },
   )
 
-  return { store, assets, webrtc }
+  return { store, assets, webrtc, error }
 }

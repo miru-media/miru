@@ -19,7 +19,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
 
   const clipMediaSize = computed(() => {
     const clip = editor.selection
-    return clip?.isVisual() && clip.asset ? clip.asset.video! : { width: 0, height: 0 }
+    return clip?.isVisual() && clip.asset?.video ? clip.asset.video : { width: 0, height: 0 }
   })
   const clipProps = computed((): Pick<VisualClip, 'position' | 'rotation' | 'scale'> => {
     const clip = editor.selection
@@ -152,7 +152,7 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
     <svg class={styles.transformControls}>
       {() => {
         const clip = editor.selection
-        if (!clip?.isVisual() || !clip.isInClipTime || !clip.asset) return
+        if (!clip?.isVisual() || !clip.isInClipTime || !clip.asset?.video) return
 
         return (
           <g ref={container}>
