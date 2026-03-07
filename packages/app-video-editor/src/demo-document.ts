@@ -8,7 +8,7 @@ import { uid } from 'uid'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 import type { Schema } from 'webgl-video-editor'
 
-import { createInitialDocument } from 'webgl-video-editor/store/utils.js'
+import { createInitialDocument } from 'webgl-video-editor/sync'
 
 const transform1080p = {
   position: { x: -420, y: 420 },

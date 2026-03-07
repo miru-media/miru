@@ -28,8 +28,11 @@
     "./locales/": {
       "import": "./src/locales/"
     },
-    "./store/*": {
-      "import": "./src/store/*"
+    "./sync": {
+      "import": "./src/sync/index.ts"
+    },
+    "./yjs": {
+      "import": "./src/yjs/index.ts"
     }
   },
   "publishConfig": {
@@ -48,8 +51,11 @@
       "./locales/*": {
         "import": "./dist/locales/"
       },
-      "./store/*": {
-        "import": "./dist/store/*"
+      "./sync": {
+        "import": "./dist/sync.js"
+      },
+      "./yjs": {
+        "import": "./src/yjs.js"
       }
     }
   },

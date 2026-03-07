@@ -42,7 +42,7 @@ const patchObj = <T extends object>(obj: T, updates: Partial<T>): void => {
   for (const key in updates) if (Object.hasOwn(updates, key) && key in obj) obj[key] = updates[key]!
 }
 
-export class VideoEditorLocalStore implements core.VideoEditorStore {
+export class LocalSync implements core.VideoEditorDocumentSync {
   #doc!: pub.Document
   readonly #actions: HistoryOp[][] = []
   #index = -1

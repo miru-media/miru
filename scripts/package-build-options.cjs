@@ -51,7 +51,9 @@ const packageOptions = (async () => {
       inputs: {
         'webgl-video-editor': 'src/index.ts',
         elements: 'src/elements/index.ts',
+        sync: 'src/sync/index.ts',
         vue: 'src/vue/index.ts',
+        yjs: 'src/yjs/index.ts',
       },
       copy: (options) => ({
         targets: [

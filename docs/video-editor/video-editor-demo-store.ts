@@ -4,8 +4,7 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import { WebrtcProvider } from 'y-webrtc'
 import * as Y from 'yjs'
 
-import { YjsAssetStore } from 'webgl-video-editor/store/yjs-asset-store.js'
-import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
+import { YjsAssetStore, YjsSync } from 'webgl-video-editor/yjs'
 
 export const INITIAL_DOC_UPDATE_BASE64 =
   'AAACQA4PAQAEAAYABEoQAgBCCFYCABUnAiEBJwAoACcAKAAnAigBJwAoAKiYAYMBeXRyZWVyb290X3BhcmVudEhpc3Rvcnl2YWx1ZXJlc29sdXRpb25mcmFtZVJhdGV5dHJlZV9udWxsX3ZhbHVlX3BhcmVudEhpc3Rvcnlyb290YXNzZXRzeXRyZWV0aW1lbGluZXZhbHVlaWR0eXBlX3BhcmVudEhpc3RvcnlfbnVsbF8FBA4FCgkFBgUOBAYFCAUCBA4GCwEAAAMBAAADAQAAAkEHAkEHARIAdgB2Agdjb3VudGVyfQAFb3JkZXJ3BMKAYAZ3CHRpbWVsaW5ldwh0aW1lbGluZXYCB2NvdW50ZXJ9AAVvcmRlcncFwoDDgAd2AgV3aWR0aH2AHgZoZWlnaHR9uBB9GAEAAQMB'
@@ -14,12 +13,12 @@ export const useVideoEditorStore = (
   id: MaybeRefOrGetter<string>,
   onError: (error: unknown) => unknown,
 ): {
-  store: Ref<VideoEditorYjsStore | undefined>
+  sync: Ref<YjsSync | undefined>
   assets: Ref<YjsAssetStore | undefined>
   webrtc: Ref<WebrtcProvider | undefined>
   error: Ref<unknown>
 } => {
-  const store = ref<VideoEditorYjsStore>()
+  const sync = ref<YjsSync>()
   const webrtc = ref<WebrtcProvider>()
   const assets = ref<YjsAssetStore>()
   const error = ref<unknown>()
@@ -27,7 +26,7 @@ export const useVideoEditorStore = (
   watch(
     toRef(id),
     (id, _prev, onCleanup) => {
-      if (import.meta.env.SSR) return { store }
+      if (import.meta.env.SSR) return { sync: sync }
       if (!id) return
 
       let ydoc
@@ -51,7 +50,7 @@ export const useVideoEditorStore = (
         webrtc.value?.destroy()
         void idb.destroy()
         ydoc.destroy()
-        store.value?.dispose()
+        sync.value?.dispose()
         assets.value?.dispose()
         error.value = undefined
       })
@@ -59,7 +58,7 @@ export const useVideoEditorStore = (
       void idb.whenSynced
         .then(() => {
           if (isStale) return
-          store.value = markRaw(new VideoEditorYjsStore(ydoc))
+          sync.value = markRaw(new YjsSync(ydoc))
           webrtc.value = new WebrtcProvider(id, ydoc)
         })
         .catch((error_: unknown) => {
@@ -70,5 +69,5 @@ export const useVideoEditorStore = (
     { immediate: true },
   )
 
-  return { store, assets, webrtc, error }
+  return { sync: sync, assets, webrtc, error }
 }

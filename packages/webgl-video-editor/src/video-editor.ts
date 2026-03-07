@@ -37,7 +37,7 @@ type DragResizeInitialState = [
 
 export class VideoEditor implements pub.VideoEditor {
   doc!: pub.Document
-  readonly store?: pub.VideoEditorStore
+  readonly sync?: pub.VideoEditorDocumentSync
 
   readonly #selection = ref<pub.AnyTrackChild>()
   _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
@@ -119,11 +119,11 @@ export class VideoEditor implements pub.VideoEditor {
     return this._zoom.value
   }
 
-  constructor(options: { store?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore } = {}) {
-    const { store, assets } = options
+  constructor(options: { sync?: pub.VideoEditorDocumentSync; assets?: pub.VideoEditorAssetStore } = {}) {
+    const { sync, assets } = options
     const doc = (this.doc = new Document({ assets }))
 
-    this.store = store
+    this.sync = sync
 
     const renderView = new RenderDocument({
       doc,
@@ -134,7 +134,7 @@ export class VideoEditor implements pub.VideoEditor {
 
     this.effectRenderer = new EffectRenderer()
 
-    if (store) store.init(this)
+    if (sync) sync.init(this)
 
     this.doc.on('node:delete', ({ node }: NodeDeleteEvent) => {
       if (node.id === this.selection?.id) this.select(undefined)
@@ -146,8 +146,8 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   generateId(): string {
-    const { store } = this
-    return store ? store.generateId() : uid()
+    const { sync } = this
+    return sync ? sync.generateId() : uid()
   }
 
   importJson(content: Schema.SerializedDocument): void {
@@ -330,11 +330,11 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   _untracked<T>(fn: () => T): T {
-    return this.store ? this.store.untracked(fn) : fn()
+    return this.sync ? this.sync.untracked(fn) : fn()
   }
 
   _transact<T>(fn: () => T): T {
-    return this.store ? this.store.transact(fn) : fn()
+    return this.sync ? this.sync.transact(fn) : fn()
   }
 
   secondsToPixels(time: number): number {

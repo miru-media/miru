@@ -3,16 +3,16 @@ import { VideoEditorDoc } from 'app-video-editor'
 import { markRaw } from 'vue'
 import * as Y from 'yjs'
 
-import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
+import { YjsSync } from 'webgl-video-editor/yjs'
 import { setupProviders } from './providers'
 
 const { ydoc } = defineProps<{ ydoc: Y.Doc }>()
 
-const store = markRaw(new VideoEditorYjsStore(ydoc))
+const sync = markRaw(new YjsSync(ydoc))
 
 await setupProviders(ydoc.guid, ydoc)
 </script>
 
 <template>
-  <VideoEditorDoc :store />
+  <VideoEditorDoc :sync />
 </template>

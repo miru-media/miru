@@ -22,7 +22,7 @@ const name = computed({
 })
 const router = useRouter()
 
-const { store, assets, webrtc, error } = useVideoEditorStore(id, console.error)
+const { sync, assets, webrtc, error } = useVideoEditorStore(id, console.error)
 const isConnected = ref(true)
 
 const toggleConnection = () => {
@@ -36,7 +36,7 @@ const showConnectionToggle = import.meta.env.DEV
 
 <ClientOnly>
   <VideoEditorDocError v-if="error" backUrl="/video-editor" />
-  <VideoEditorDoc v-else-if="store" :store :assets :onCloseProject="() => router.go('/video-editor')" v-model:name="name"/>
+  <VideoEditorDoc v-else-if="sync" :sync :assets :onCloseProject="() => router.go('/video-editor')" v-model:name="name"/>
   <button
     v-if="showConnectionToggle"
     :class="[

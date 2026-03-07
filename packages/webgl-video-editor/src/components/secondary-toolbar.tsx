@@ -10,19 +10,19 @@ const MIN_PPS = 0.005
 const MIN_MAX_PPS = 0.2
 
 export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
-  const { doc, store } = editor
+  const { doc, sync } = editor
   const { tr } = useI18n()
   const maxPps = () => Math.max(MIN_MAX_PPS, (doc.duration / editor._timelineSize.value.width) * 2)
 
   return (
     <div class={[styles.secondaryToolbar, styles.safePaddingX]}>
-      {!!store && (
+      {!!sync && (
         <div class={styles.secondaryToolbarGroup}>
           <Button
             class={[styles.square, styles.secondaryToolbarButton]}
             label={tr('undo')}
-            disabled={() => !store.canUndo}
-            onClick={store.undo.bind(store)}
+            disabled={() => !sync.canUndo}
+            onClick={sync.undo.bind(sync)}
           >
             <IconTablerArrowBackUp />
           </Button>
@@ -30,8 +30,8 @@ export const SecondaryToolbar = ({ editor }: { editor: VideoEditor }) => {
           <Button
             class={[styles.square, styles.secondaryToolbarButton]}
             label={tr('redo')}
-            disabled={() => !store.canRedo}
-            onClick={store.redo.bind(store)}
+            disabled={() => !sync.canRedo}
+            onClick={sync.redo.bind(sync)}
           >
             <IconTablerArrowForwardUp />
           </Button>

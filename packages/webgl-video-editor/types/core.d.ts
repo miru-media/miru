@@ -231,13 +231,13 @@ export type { AssetOrigin } from './schema.d.ts'
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging, @typescript-eslint/no-extraneous-class -- false positive
 export class VideoEditor {
-  constructor(options?: { store?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore })
+  constructor(options?: { sync?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- false positive
 export interface VideoEditor {
   doc: Document
-  store?: VideoEditorStore
+  sync?: VideoEditorDocumentSync
 
   /** The canvas that the video is rendered to */
   canvas: HTMLCanvasElement
@@ -361,7 +361,7 @@ export interface VideoEditor {
 export type VideoEditorChangeEvent = CustomEvent<Schema.SerializedDocument>
 export type VideoEditorChangeLoadingEvent = CustomEvent<boolean>
 
-export interface VideoEditorStore {
+export interface VideoEditorDocumentSync {
   init: (editor: VideoEditor) => void
 
   /** The editor has a change that can be undone */

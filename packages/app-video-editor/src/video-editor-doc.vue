@@ -2,7 +2,7 @@
 import { useEventListener } from '@vueuse/core'
 import { ref } from 'vue'
 
-import type { VideoEditor, VideoEditorAssetStore, VideoEditorStore } from 'webgl-video-editor'
+import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'
 import Toolbar from './video-editor-toolbar.vue'
@@ -12,11 +12,11 @@ import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
 
 const {
-  store,
+  sync,
   onCloseProject,
   editor: editorProp,
 } = defineProps<{
-  store?: VideoEditorStore
+  sync?: VideoEditorDocumentSync
   assets?: VideoEditorAssetStore
   editor?: VideoEditor
   onCloseProject?: () => unknown
@@ -38,7 +38,7 @@ if (!import.meta.env.SSR) {
     )
       return
 
-    const { store: sync } = editor
+    const { sync: sync } = editor
 
     if (event.ctrlKey) {
       switch (event.code) {
@@ -98,8 +98,8 @@ if (!import.meta.env.SSR) {
   <div class="video-editor-app">
     <VideoEditorUI
       ref="editorRef"
-      :store="store"
-      :assets="assets"
+      :sync
+      :assets
       :messages="{ en, de }"
       :editor="editorProp"
       class="video-editor"

@@ -7,7 +7,7 @@ import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
 import { fromVue, toVue } from '../document-views/vue/utils.ts'
-import { VideoEditorLocalStore as VideoEditorLocalStore_ } from '../store/local.ts'
+import { LocalSync as VideoEditorLocalStore_ } from '../sync'
 import { VideoEditor as VideoEditor_ } from '../video-editor.ts'
 
 import { editorToVue } from './vue-video-editor.ts'
@@ -23,8 +23,8 @@ export default Vue.defineComponent({
       type: Object as Vue.PropType<pub.VideoEditor>,
       required: false,
     },
-    store: {
-      type: Object as Vue.PropType<pub.VideoEditorStore>,
+    sync: {
+      type: Object as Vue.PropType<pub.VideoEditorDocumentSync>,
       required: false,
     },
     assets: {
@@ -39,7 +39,7 @@ export default Vue.defineComponent({
     const editor =
       props.editor ??
       new VideoEditor_({
-        store: props.store,
+        sync: props.sync,
         assets: props.assets,
       })
     const container = Vue.ref<HTMLElement>()

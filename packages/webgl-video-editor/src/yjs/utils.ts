@@ -1,9 +1,10 @@
 import * as Y from 'yjs'
 import { YTree } from 'yjs-orderedtree'
 
+import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '#constants'
 import type * as Schema from '#schema'
 
-import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
+import { createInitialDocument } from '../sync/utils.ts'
 
 import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
 
@@ -40,14 +41,6 @@ export const initYjsRoot = (
 
   return { ytree, settings: settignsYmap, ydoc: settignsYmap.doc! }
 }
-
-export const createInitialDocument = (): Schema.SerializedDocument =>
-  ({
-    resolution: { width: 1920, height: 1080 },
-    frameRate: 24,
-    assets: [],
-    tracks: [],
-  }) satisfies Schema.SerializedDocument
 
 export const initYmapFromJson = ({
   root,

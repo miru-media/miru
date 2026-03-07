@@ -12,13 +12,14 @@ import type {
 } from 'webgl-video-editor'
 
 import type * as pub from '../../types/core.d.ts'
-import type { AnyNode, AnyParentNode, VideoEditorStore } from '../../types/core.d.ts'
-import type { DocumentSettings } from '../../types/schema.d.ts'
+import type { AnyNode, AnyParentNode, VideoEditorDocumentSync } from '../../types/core.d.ts'
+import type { DocumentSettings } from '../../types/schema'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
 import { NodeCreateEvent } from '../events.ts'
+import { createInitialDocument } from '../sync/utils.ts'
 
 import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY } from './constants.ts'
-import { createInitialDocument, initYjsRoot, initYmapFromJson } from './utils.ts'
+import { initYjsRoot, initYmapFromJson } from './utils.ts'
 
 const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
   if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
@@ -36,7 +37,7 @@ const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): voi
 
 const OBSERVED = new WeakSet<Y.Map<unknown>>()
 
-export class VideoEditorYjsStore implements VideoEditorStore {
+export class YjsSync implements VideoEditorDocumentSync {
   #doc!: pub.Document
 
   readonly ydoc: Y.Doc

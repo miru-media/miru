@@ -6,7 +6,7 @@ import { renderComponentTo } from 'shared/video/render-to'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
-import { VideoEditorLocalStore } from '../store/local.ts'
+import { LocalSync } from '../sync'
 import { VideoEditor } from '../video-editor.ts'
 
 const UNMOUNT_TIMEOUT_MS = 500
@@ -52,7 +52,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare playback: VideoEditor['playback']
   declare selection: VideoEditor['selection']
   declare state: VideoEditor['state']
-  declare store: VideoEditor['store']
+  declare sync: VideoEditor['sync']
   declare tracks: VideoEditor['tracks']
   declare viewportSize: VideoEditor['viewportSize']
   declare zoom: VideoEditor['zoom']
@@ -76,7 +76,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
     this.classList.add(styles.host)
 
     this.#scope.run(() => {
-      this._editor = new VideoEditor({ store: new VideoEditorLocalStore() })
+      this._editor = new VideoEditor({ sync: new LocalSync() })
 
       effect(() => {
         const state = this._editor.toObject()
