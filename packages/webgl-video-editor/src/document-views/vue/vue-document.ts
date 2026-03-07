@@ -5,7 +5,7 @@ import type * as pub from '#core'
 
 import { DocumentView, type ViewType } from '../document-view.ts'
 
-import { _vuePlainReadonly } from './utils.ts'
+import { _vuePlainReadonly, _vueWritable } from './utils.ts'
 import { VueAudioClip, VueGap, VueTimeline, VueTrack, VueVisualClip } from './vue-nodes.ts'
 
 export interface VueTypeMap {
@@ -19,8 +19,8 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   readonly vueScope = Vue.effectScope()
   readonly fineJsxScope = createEffectScope()
 
-  declare readonly resolution: pub.Document['resolution']
-  declare readonly frameRate: pub.Document['frameRate']
+  declare resolution: pub.Document['resolution']
+  declare frameRate: pub.Document['frameRate']
   declare readonly currentTime: pub.Document['currentTime']
   declare readonly duration: pub.Document['duration']
   declare readonly timeline: pub.Document['timeline']
@@ -37,18 +37,9 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
 
     Vue.markRaw(this)
     Vue.markRaw(doc)
+    ;(['resolution', 'frameRate'] as const).forEach((key) => _vueWritable(this, doc, key))
     ;(
-      [
-        'resolution',
-        'frameRate',
-        'currentTime',
-        'duration',
-        'timeline',
-        'assets',
-        'nodes',
-        'isEmpty',
-        'activeClipIsStalled',
-      ] as const
+      ['currentTime', 'duration', 'timeline', 'assets', 'nodes', 'isEmpty', 'activeClipIsStalled'] as const
     ).forEach((key) => _vuePlainReadonly(this, doc, key))
 
     this._init()
@@ -58,6 +49,7 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   seekTo = this.doc.seekTo.bind(this.doc)
   _setCurrentTime = this.doc._setCurrentTime.bind(this.doc)
   importFromJson = this.doc.importFromJson.bind(this.doc)
+  toObject = this.doc.toObject.bind(this.doc)
   on = this.doc.on.bind(this.doc)
   emit = this.doc.emit.bind(this.doc)
 

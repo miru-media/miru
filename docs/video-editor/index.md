@@ -31,7 +31,7 @@ const createDoc = async (name = 'Untitled', content?: SerializedDocument) => {
     const ydoc = new Y.Doc()
     Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
 
-    YjsSync.initYmapFromJson({ root: ydoc, content })
+    YjsSync.initYmapFromJson({ root: ydoc, assetsYmap: ydoc.getMap('assets'), content })
 
     const idb = new IndexeddbPersistence(id, ydoc)
     try {

@@ -72,9 +72,13 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
     this.transition = init.transition
 
-    doc.assets.on('asset:create', ({ asset }) => {
-      if (asset.id === this.sourceRef.assetId && asset.type === 'asset:media:av') this._asset.value = asset
-    }, { signal: this.#abort.signal })
+    doc.assets.on(
+      'asset:create',
+      ({ asset }) => {
+        if (asset.id === this.sourceRef.assetId && asset.type === 'asset:media:av') this._asset.value = asset
+      },
+      { signal: this.#abort.signal },
+    )
   }
 
   protected _init(init: T): void {
@@ -144,6 +148,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     return {
       id: this.id,
       type: 'clip',
+      name: this.name,
       clipType: this.clipType,
       sourceStart: this.sourceStart,
       sourceRef: this.sourceRef,

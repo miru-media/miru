@@ -1,9 +1,12 @@
 import { ref, watch } from 'fine-jsx'
 import { uid } from 'uid'
 
+import { FileSystemAssetStore } from '#assets'
+
 import type * as core from '../../types/core.d.ts'
 import type { Schema } from '../../types/core.d.ts'
 import type * as pub from '../../types/core.d.ts'
+import { Document } from '../document.ts'
 import type {
   AssetCreateEvent,
   AssetDeleteEvent,
@@ -43,7 +46,7 @@ const patchObj = <T extends object>(obj: T, updates: Partial<T>): void => {
 }
 
 export class LocalSync implements core.VideoEditorDocumentSync {
-  #doc!: pub.Document
+  doc!: pub.Document
   readonly #actions: HistoryOp[][] = []
   #index = -1
   #pending?: HistoryOp[]
@@ -55,6 +58,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
   readonly #ASSETS_KEY = `${LOCAL_STORAGE_PREFIX}assets`
 
   generateId = uid
+  isDisposed = false
 
   get canUndo(): boolean {
     return this.#canUndo.value
@@ -65,17 +69,18 @@ export class LocalSync implements core.VideoEditorDocumentSync {
 
   readonly #abort = new AbortController()
 
-  init(editor: core.VideoEditor) {
-    const doc = (this.#doc = editor.doc)
+  constructor(assets = new FileSystemAssetStore()) {
+    const doc = (this.doc = new Document({ assets }))
     this.#restoreFromLocalStorage()
 
     // Persist to localStorage
-    watch([() => editor.state], ([state]) =>
+    watch([() => doc.toObject()], ([state]) =>
       localStorage.setItem(this.#DOC_CONTENT_KEY, JSON.stringify(state)),
     )
 
     const options: AddEventListenerOptions = { signal: this.#abort.signal }
 
+    doc.on('doc:dispose', this.dispose.bind(this), options)
     doc.on('settings:update', this.#onSettingsUpdate.bind(this), options)
     doc.on('asset:create', this.#onAssetCreate.bind(this), options)
     doc.on('asset:delete', this.#onAssetDelete.bind(this), options)
@@ -95,7 +100,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
       try {
         const parsed = JSON.parse(savedJson) as core.Schema.SerializedDocument
 
-        this.#doc.importFromJson(parsed)
+        this.doc.importFromJson(parsed)
         isRestored = true
       } catch (error: unknown) {
         localStorage.setItem(`${LOCAL_STORAGE_PREFIX}backup`, savedJson)
@@ -110,7 +115,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     }
 
     if (!isRestored) {
-      this.#doc.importFromJson(createInitialDocument())
+      this.doc.importFromJson(createInitialDocument())
     }
   }
 
@@ -184,7 +189,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     const ops = actions[redo ? newIndex : currentIndex]
     this.#index = newIndex
 
-    const doc = this.#doc
+    const { doc } = this
     const { nodes } = doc
 
     this.untracked(() => {
@@ -195,7 +200,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
           switch (op.type) {
             // update settings
             case 'settings:update':
-              patchObj(this.#doc, op.to as any)
+              patchObj(this.doc, op.to as any)
               break
             // create
             case 'node:create':
@@ -222,7 +227,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
           switch (op.type) {
             // revert settings udpate
             case 'settings:update':
-              patchObj(this.#doc, op.from as any)
+              patchObj(this.doc, op.from as any)
               break
             // delete created
             case 'node:create':
@@ -264,7 +269,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     const to: Record<string, unknown> = {}
 
     for (const key in from)
-      if (Object.hasOwn(from, key)) to[key] = this.#doc[key as keyof Schema.DocumentSettings]
+      if (Object.hasOwn(from, key)) to[key] = this.doc[key as keyof Schema.DocumentSettings]
 
     this.#add([{ type: 'settings:update', from, to }])
   }
@@ -322,7 +327,11 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     this.#canRedo.value = this.#canUndo.value = false
   }
 
-  dispose() {
+  dispose(): void {
+    if (this.isDisposed) return
+    this.isDisposed = true
+
     this.#abort.abort()
+    this.doc.dispose()
   }
 }

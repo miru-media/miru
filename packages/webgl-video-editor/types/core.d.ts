@@ -78,6 +78,7 @@ export interface Document extends Schema.DocumentSettings {
   seekTo: (time: number) => void
   _setCurrentTime: (time: number) => void
   importFromJson: (content: Schema.SerializedDocument) => void
+  toObject: () => Schema.SerializedDocument
   on: <T extends Extract<keyof VideoEditorEvents, string>>(
     type: T,
     listener: (event: VideoEditorEvents[T]) => void,
@@ -255,9 +256,6 @@ export interface VideoEditor {
   /** The audio and video tracks which contain clips */
   tracks: Track[]
 
-  /** The current editor content */
-  state: Schema.SerializedDocument
-
   /** The webgl-effects Renderer instance */
   readonly effectRenderer: Renderer
 
@@ -352,8 +350,6 @@ export interface VideoEditor {
   /** The most recent export result. */
   exportResult: { blob: Blob; url: string } | undefined
 
-  toObject: () => Schema.SerializedDocument
-
   /** Release resources of the video editor and allow it to be garbage collected. */
   dispose: () => void
   [Symbol.dispose]: () => void
@@ -363,7 +359,7 @@ export type VideoEditorChangeEvent = CustomEvent<Schema.SerializedDocument>
 export type VideoEditorChangeLoadingEvent = CustomEvent<boolean>
 
 export interface VideoEditorDocumentSync {
-  init: (editor: VideoEditor) => void
+  doc: Document
 
   /** The editor has a change that can be undone */
   canUndo: boolean

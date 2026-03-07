@@ -5,6 +5,7 @@ import type { Schema } from '../../types/core.d.ts'
 import { AssetCreateEvent } from '../events.ts'
 import { FileSystemStorage } from '../storage/file-system-storage.ts'
 
+import { HttpAssetLoader } from './http-asset-loader.ts'
 import { MediaAsset } from './media-asset.ts'
 import { getMediaAssetInfo } from './utils.ts'
 import { VideoEffectAsset } from './video-effect-asset.ts'
@@ -14,7 +15,7 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   readonly #abort = new AbortController()
   isDisposed = false
   fileStorage = new FileSystemStorage()
-  loaders: pub.AssetLoader[] = []
+  loaders: pub.AssetLoader[] = [new HttpAssetLoader()]
   protected generateId: () => string
   protected getMediaAssetInfo = getMediaAssetInfo
 
@@ -81,18 +82,26 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     const storageHasFile = await this.fileStorage.hasCompleteFile(asset.id)
 
     if (!storageHasFile) {
+      source ??= asset.uri
       if (source == null) throw new Error('[webgl-video-editor] Missing file blob or uri.')
 
-      const loader = this.loaders.find((l) => l.canLoad(asset))
+      let stream
+      let size
 
-      if (!loader) throw new Error('[webgl-video-editor] Unable to load asset.')
+      if (typeof source === 'string') {
+        const loader = this.loaders.find((l) => l.canLoad(asset))
 
-      const { stream, size } = await loader.load(asset, options)
+        if (!loader) throw new Error('[webgl-video-editor] Unable to load asset.')
+        ;({ stream, size } = await loader.load(asset, options))
+      } else {
+        stream = source.stream()
+        ;({ size } = source)
+      }
 
       await this.fileStorage.create(asset.id, stream, { ...options, size })
     }
 
-    return await this.fileStorage.get(asset.id)
+    return await this.fileStorage.get(asset.id, asset.name, { type: asset.mimeType })
   }
 
   async delete(key: string): Promise<void> {

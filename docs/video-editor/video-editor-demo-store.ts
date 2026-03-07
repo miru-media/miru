@@ -14,13 +14,11 @@ export const useVideoEditorStore = (
   onError: (error: unknown) => unknown,
 ): {
   sync: Ref<YjsSync | undefined>
-  assets: Ref<YjsAssetStore | undefined>
   webrtc: Ref<WebrtcProvider | undefined>
   error: Ref<unknown>
 } => {
   const sync = ref<YjsSync>()
   const webrtc = ref<WebrtcProvider>()
-  const assets = ref<YjsAssetStore>()
   const error = ref<unknown>()
 
   watch(
@@ -36,7 +34,6 @@ export const useVideoEditorStore = (
         ydoc = new Y.Doc()
         Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
         idb = new IndexeddbPersistence(id, ydoc)
-        assets.value = new YjsAssetStore(ydoc.getMap('assets'))
       } catch (error_: unknown) {
         error.value = error_
         onError(error_)
@@ -51,14 +48,14 @@ export const useVideoEditorStore = (
         void idb.destroy()
         ydoc.destroy()
         sync.value?.dispose()
-        assets.value?.dispose()
-        error.value = undefined
+        error.value = sync.value = undefined
       })
 
       void idb.whenSynced
         .then(() => {
           if (isStale) return
-          sync.value = markRaw(new YjsSync(ydoc))
+          sync.value = markRaw(new YjsSync(ydoc, new YjsAssetStore(ydoc.getMap('assets'))))
+
           webrtc.value = new WebrtcProvider(id, ydoc)
         })
         .catch((error_: unknown) => {
@@ -69,5 +66,5 @@ export const useVideoEditorStore = (
     { immediate: true },
   )
 
-  return { sync: sync, assets, webrtc, error }
+  return { sync, webrtc, error }
 }

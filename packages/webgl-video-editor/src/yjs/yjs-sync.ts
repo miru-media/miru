@@ -3,20 +3,21 @@ import type { Size } from 'webgl-effects'
 import * as Y from 'yjs'
 import type { YTree } from 'yjs-orderedtree'
 
-import type {
-  NodeDeleteEvent,
-  NodeMoveEvent,
-  NodeUpdateEvent,
-  Schema,
-  SettingsUpdateEvent,
+import {
+  FileSystemAssetStore,
+  type NodeDeleteEvent,
+  type NodeMoveEvent,
+  type NodeUpdateEvent,
+  type Schema,
+  type SettingsUpdateEvent,
 } from 'webgl-video-editor'
 
 import type * as pub from '../../types/core.d.ts'
 import type { AnyNode, AnyParentNode, VideoEditorDocumentSync } from '../../types/core.d.ts'
 import type { DocumentSettings } from '../../types/schema'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
+import { Document } from '../document.ts'
 import { NodeCreateEvent } from '../events.ts'
-import { createInitialDocument } from '../sync/utils.ts'
 
 import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY } from './constants.ts'
 import { initYjsRoot, initYmapFromJson } from './utils.ts'
@@ -38,7 +39,7 @@ const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): voi
 const OBSERVED = new WeakSet<Y.Map<unknown>>()
 
 export class YjsSync implements VideoEditorDocumentSync {
-  #doc!: pub.Document
+  doc!: pub.Document
 
   readonly ydoc: Y.Doc
   readonly settingsYmap: Y.Map<unknown>
@@ -64,24 +65,20 @@ export class YjsSync implements VideoEditorDocumentSync {
 
   isDisposed = false
 
-  constructor(ydocOrMap: Y.Doc | Y.Map<any>) {
+  constructor(ydocOrMap: Y.Doc | Y.Map<any>, assets = new FileSystemAssetStore()) {
+    const doc = (this.doc = new Document({ assets }))
+
     const { ytree, settings, ydoc } = initYjsRoot(ydocOrMap)
+
     ydoc.on('destroy', this.dispose.bind(this))
 
     this.ydoc = ydoc
     this.#ytree = ytree
     this.#yundo = new Y.UndoManager([ytree._ymap, settings])
     this.settingsYmap = settings
-  }
 
-  init(editor: pub.VideoEditor): void {
-    let isNewDoc = true
-    try {
-      this.#ytree.getNodeValueFromKey(TIMELINE_ID)
-      isNewDoc = false
-    } catch {}
-
-    const doc = (this.#doc = editor.doc)
+    doc.resolution = (settings.get('resolution') as Size | undefined) ?? DEFAULT_RESOLUTION
+    doc.frameRate = (settings.get('frameRate') as number | undefined) ?? DEFAULT_FRAMERATE
 
     this.#ytree.observe(this.#onYtreeChange)
 
@@ -105,14 +102,6 @@ export class YjsSync implements VideoEditorDocumentSync {
     doc.on('node:update', bindNodeListener(this.#onUpdate), listenerOptions)
     doc.on('node:delete', bindNodeListener(this.#onDelete), listenerOptions)
     /* eslint-enable @typescript-eslint/unbound-method */
-
-    if (isNewDoc) {
-      doc.importFromJson(createInitialDocument())
-    } else {
-      const { settingsYmap } = this
-      doc.resolution = (settingsYmap.get('resolution') as Size | undefined) ?? DEFAULT_RESOLUTION
-      doc.frameRate = (settingsYmap.get('frameRate') as number | undefined) ?? DEFAULT_FRAMERATE
-    }
 
     this.#onYtreeChange()
 
@@ -156,7 +145,7 @@ export class YjsSync implements VideoEditorDocumentSync {
     try {
       const ynode = event.target
       const id = ynode.get('id') as string
-      const node = this.#doc.nodes.get(id) as AnyNode | undefined
+      const node = this.doc.nodes.get(id) as AnyNode | undefined
 
       if (!node) return
 
@@ -179,8 +168,8 @@ export class YjsSync implements VideoEditorDocumentSync {
 
   #getOrCreateFromYnode(ynode: Y.Map<unknown>): AnyNode {
     return (
-      this.#doc.nodes.map.get(ynode.get('id') as string) ??
-      this.#doc.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
+      this.doc.nodes.map.get(ynode.get('id') as string) ??
+      this.doc.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
     )
   }
 
@@ -200,7 +189,7 @@ export class YjsSync implements VideoEditorDocumentSync {
     if (parentKey === YTREE_NULL_PARENT_KEY) {
       const unparentedIds: string[] = []
       ytree.getAllDescendants(YTREE_NULL_PARENT_KEY, unparentedIds)
-      unparentedIds.forEach((nodeId) => this.#doc.nodes.map.get(nodeId)?.remove())
+      unparentedIds.forEach((nodeId) => this.doc.nodes.map.get(nodeId)?.remove())
       return
     }
 
@@ -208,7 +197,7 @@ export class YjsSync implements VideoEditorDocumentSync {
     const childIdSet = new Set(childIds)
 
     // remove children that are no longer under the parent in the ytree
-    ;(this.#doc.nodes.get(parentKey) as Partial<AnyParentNode> | undefined)?.children?.forEach(
+    ;(this.doc.nodes.get(parentKey) as Partial<AnyParentNode> | undefined)?.children?.forEach(
       (child: AnyNode) => {
         if (!childIdSet.has(child.id)) child.remove()
       },
@@ -234,7 +223,7 @@ export class YjsSync implements VideoEditorDocumentSync {
     const udpates: Record<string, unknown> = {}
 
     for (const key in from)
-      if (Object.hasOwn(from, key)) udpates[key] = this.#doc[key as keyof DocumentSettings]
+      if (Object.hasOwn(from, key)) udpates[key] = this.doc[key as keyof DocumentSettings]
 
     updateYmap(this.settingsYmap, udpates)
   }
@@ -292,11 +281,6 @@ export class YjsSync implements VideoEditorDocumentSync {
     this.#yundo.clear()
   }
 
-  dispose(): void {
-    this.isDisposed = true
-    this.#abort.abort()
-  }
-
   generateId(): string {
     return this.#ytree.generateNodeKey()
   }
@@ -317,8 +301,20 @@ export class YjsSync implements VideoEditorDocumentSync {
 
     return {
       ...(this.settingsYmap.toJSON() as Schema.DocumentSettings),
-      tracks: serialize<Schema.SerializedTimeline>(this.#doc.timeline.id).children,
+      tracks: serialize<Schema.SerializedTimeline>(this.doc.timeline.id).children,
     }
+  }
+
+  dispose(): void {
+    if (this.isDisposed) return
+    this.isDisposed = true
+
+    this.#abort.abort()
+    this.doc.dispose()
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
   }
 
   static initYmapFromJson = initYmapFromJson

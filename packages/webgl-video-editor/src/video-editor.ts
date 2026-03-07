@@ -69,10 +69,6 @@ export class VideoEditor implements pub.VideoEditor {
     return this.doc.currentTime
   }
 
-  get state(): Schema.SerializedDocument {
-    return this.toObject()
-  }
-
   readonly #effects = computed(
     () =>
       new Map(
@@ -121,7 +117,7 @@ export class VideoEditor implements pub.VideoEditor {
 
   constructor(options: { sync?: pub.VideoEditorDocumentSync; assets?: pub.VideoEditorAssetStore } = {}) {
     const { sync, assets } = options
-    const doc = (this.doc = new Document({ assets }))
+    const doc = (this.doc = sync?.doc ?? new Document({ assets }))
 
     this.sync = sync
 
@@ -133,8 +129,6 @@ export class VideoEditor implements pub.VideoEditor {
     this.playback = new PlaybackDocument({ renderView })
 
     this.effectRenderer = new EffectRenderer()
-
-    if (sync) sync.init(this)
 
     this.doc.on('node:delete', ({ node }: NodeDeleteEvent) => {
       if (node.id === this.selection?.id) this.select(undefined)
@@ -344,31 +338,6 @@ export class VideoEditor implements pub.VideoEditor {
 
   pixelsToSeconds(offset: number): number {
     return offset * this._secondsPerPixel.value
-  }
-
-  toObject(): Schema.SerializedDocument {
-    const serialize = <T extends (Schema.AnyNodeSchema | Schema.AnyAssetSchema)['type']>(
-      node: Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
-    ): Extract<Schema.AnyNodeSerializedSchema | Schema.AnyAssetSchema, T> => {
-      if ('children' in node) {
-        const serialized = {
-          ...node.toObject(),
-          children: node.children.map(serialize as any),
-        }
-        return serialized as any
-      }
-
-      return node.toObject()
-    }
-
-    const { assets: _assets, timeline, resolution, frameRate } = this.doc
-
-    return {
-      resolution,
-      frameRate,
-      assets: Array.from(_assets.values()).map(serialize),
-      tracks: timeline.children.map(serialize),
-    }
   }
 
   async export(): Promise<{ blob: Blob; url: string } | undefined> {

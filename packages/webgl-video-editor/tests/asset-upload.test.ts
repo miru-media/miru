@@ -1,73 +1,24 @@
 import { expect, test, vi } from 'vitest'
 
 import type { FileSystemAssetStore } from '#assets'
-import type { AssetLoader, Schema } from '#core'
+import type { AssetLoader } from '#core'
 
 import { Document } from '../src/document.ts'
 import type { FileSystemStorage } from '../src/storage/file-system-storage.ts'
 
+import { makeAvAsset, makeClip, makeTrack } from './utils.ts'
+
 const resolution = { width: 100, height: 100 }
 const frameRate = 25
-
-const makeTrack = (
-  id: string,
-  trackType: Schema.SerializedTrack['trackType'],
-  children: Schema.SerializedTrack['children'],
-): Schema.SerializedTrack => ({
-  id,
-  type: 'track',
-  trackType,
-  children,
-})
-
-const makeClip = (
-  init: Partial<Omit<Schema.SerializedClip, 'id' | 'type' | 'sourceRef'>> & {
-    id: string
-    sourceRef: Schema.SerializedClip['sourceRef']
-  },
-): Schema.SerializedClip => ({
-  type: 'clip',
-  clipType: 'audio',
-  duration: 1,
-  sourceStart: 0,
-  ...init,
-})
-
-const makeAvAsset = (id: string, duration: number, uri?: string): Schema.MediaAsset => ({
-  id,
-  type: 'asset:media:av',
-  mimeType: 'video/mp4',
-  name: id,
-  size: 1,
-  duration,
-  audio: {
-    codec: 'aac',
-    duration,
-    numberOfChannels: 2,
-    sampleRate: 48000,
-    firstTimestamp: 0,
-  },
-  video: {
-    codec: 'avc',
-    duration,
-    rotation: 0,
-    width: 1920,
-    height: 1080,
-    frameRate: 25,
-    firstTimestamp: 0,
-  },
-  uri,
-})
 
 vi.mock('../src/storage/file-system-storage.ts', () => {
   const FileSystemStorage = vi.fn(
     class implements Pick<FileSystemStorage, 'create' | 'delete' | 'dispose' | 'hasCompleteFile' | 'get'> {
-      get = vi.fn()
-      create = vi.fn()
-      getOrCreate = vi.fn()
-      delete = vi.fn()
+      get = vi.fn(() => Promise.resolve(undefined as any))
+      create = vi.fn(() => Promise.resolve(undefined as any))
+      delete = vi.fn(() => Promise.resolve(undefined as any))
       dispose = vi.fn()
-      hasCompleteFile = vi.fn()
+      hasCompleteFile = vi.fn(() => Promise.resolve(false))
     },
   )
   return { FileSystemStorage }
@@ -78,10 +29,9 @@ test('creating a new media asset from user-selected file saves it to FS storage'
   const fileStorage = vi.mocked((doc.assets as FileSystemAssetStore).fileStorage)
 
   const blob_ = new Blob([new ArrayBuffer(1)])
-  const stream_ = {}
   const mockLoader = vi.mocked<AssetLoader>({
     canLoad: vi.fn(() => true),
-    load: vi.fn(() => ({ stream: stream_ }) as any),
+    load: vi.fn(() => ({ stream: {} }) as any),
   })
   const { loaders } = doc.assets
 
@@ -103,10 +53,10 @@ test('creating a new media asset from user-selected file saves it to FS storage'
   expect(doc.assets.has('asset-0')).toBeTruthy()
 
   expect(fileStorage.hasCompleteFile).toHaveBeenCalledExactlyOnceWith('asset-0')
+  await Promise.all(fileStorage.hasCompleteFile.mock.results)
 
-  await Promise.resolve()
-  await Promise.resolve()
-
-  expect(mockLoader.canLoad).toHaveBeenCalledExactlyOnceWith(doc.assets.getAsset('asset-0'))
-  expect(fileStorage.create).toHaveBeenCalledExactlyOnceWith('asset-0', stream_, { size: undefined })
+  expect(fileStorage.create).toHaveBeenCalledExactlyOnceWith('asset-0', expect.any(ReadableStream), {
+    size: blob_.size,
+  })
+  expect(fileStorage.get).toHaveBeenCalledExactlyOnceWith('asset-0', 'asset-0', { type: 'video/mp4' })
 })

@@ -29,12 +29,18 @@ export const initYjsRoot = (
   }
 
   for (const [key, value] of Object.entries(settings))
-    if (JSON.stringify(value) !== JSON.stringify(settignsYmap.get(key))) settignsYmap.set(key, value)
+    if (settignsYmap.get(key) == null) settignsYmap.set(key, value)
 
   try {
     ytree.getNodeValueFromKey(YTREE_NULL_PARENT_KEY)
   } catch {
     ytree.createNode(YTREE_ROOT_KEY, YTREE_NULL_PARENT_KEY, {})
+  }
+
+  try {
+    ytree.getNodeValueFromKey(TIMELINE_ID)
+  } catch {
+    ytree.createNode(YTREE_ROOT_KEY, TIMELINE_ID, new Y.Map())
   }
 
   ytree.recomputeParentsAndChildren()

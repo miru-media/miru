@@ -1,7 +1,7 @@
 import { computed, ref, type Ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
-import { FileSystemAssetStore, HttpAssetLoader } from '#assets'
+import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
@@ -101,7 +101,7 @@ export class Document implements pub.Document {
   readonly timeline: Timeline
   isDisposed = false
 
-  constructor(options: Partial<Pick<Document, 'assets'> & Schema.DocumentSettings>) {
+  constructor(options: Partial<Schema.DocumentSettings & { assets: pub.VideoEditorAssetStore }>) {
     this.on('node:create', ({ node }) => this.nodes.set(node))
     this.on('node:delete', ({ node }) => this.nodes.delete(node.id))
 
@@ -114,7 +114,6 @@ export class Document implements pub.Document {
     else {
       this.#ownsAssetStore = true
       this.assets = new FileSystemAssetStore()
-      this.assets.loaders.push(new HttpAssetLoader())
     }
   }
 
@@ -179,13 +178,6 @@ export class Document implements pub.Document {
     this.#eventTarget.dispatchEvent(event)
   }
 
-  toObject(): Schema.DocumentSettings {
-    return {
-      resolution: this.resolution,
-      frameRate: this.frameRate,
-    }
-  }
-
   importFromJson(content: Schema.SerializedDocument): void {
     this.resolution = content.resolution
     this.frameRate = content.frameRate
@@ -201,6 +193,31 @@ export class Document implements pub.Document {
     }
 
     createChildren(this.timeline, content.tracks)
+  }
+
+  toObject(): Schema.SerializedDocument {
+    const serialize = <T extends (Schema.AnyNodeSchema | Schema.AnyAssetSchema)['type']>(
+      node: Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
+    ): Extract<Schema.AnyNodeSerializedSchema | Schema.AnyAssetSchema, T> => {
+      if ('children' in node) {
+        const serialized = {
+          ...node.toObject(),
+          children: node.children.map(serialize as any),
+        }
+        return serialized as any
+      }
+
+      return node.toObject()
+    }
+
+    const { assets: _assets, timeline, resolution, frameRate } = this
+
+    return {
+      resolution,
+      frameRate,
+      assets: Array.from(_assets.values()).map(serialize),
+      tracks: timeline.children.map(serialize),
+    }
   }
 
   dispose(): void {
