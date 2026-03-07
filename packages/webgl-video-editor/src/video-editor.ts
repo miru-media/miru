@@ -234,7 +234,7 @@ export class VideoEditor implements pub.VideoEditor {
       endClip.move({ parentId: parent.id, index: clip.index + 1 })
 
       this.#select(startClip, false)
-      clip.dispose()
+      clip.delete()
 
       return [startClip, endClip]
     })
@@ -256,7 +256,7 @@ export class VideoEditor implements pub.VideoEditor {
 
     this.#selection.value = undefined
 
-    this._transact(() => clip.dispose())
+    this._transact(() => clip.delete())
   }
 
   play(): void {

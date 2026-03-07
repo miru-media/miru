@@ -74,6 +74,10 @@ abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, 
     methods.forEach((key) => _bindMethod(this, original, key))
   }
 
+  delete(): void {
+    this.original.delete()
+  }
+
   dispose(): void {
     if (!this.original.isDisposed) this.original.dispose()
     super.dispose()

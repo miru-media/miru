@@ -17,7 +17,7 @@ export abstract class NodeView<TDocView, T extends pub.AnyNode> {
   _update(_key: keyof T, _oldValue: T[typeof _key]): void {}
   /* eslint-enable @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function */
 
-  dispose() {
+  dispose(): void {
     this.isDisposed = true
     this.original = undefined as never
   }

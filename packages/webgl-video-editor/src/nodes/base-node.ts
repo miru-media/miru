@@ -7,7 +7,9 @@ import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from
 
 import type { Schema } from './index.ts'
 
-export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyParentNode = AnyParentNode> {
+export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyParentNode = AnyParentNode>
+  implements pub.BaseNode
+{
   readonly type: T['type']
   readonly id: string
   declare readonly doc: pub.Document
@@ -164,6 +166,12 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     options.onChange?.(initialValue)
   }
 
+  delete(): void {
+    this.parent?._unlinkChild(this as any)
+    this.doc.emit(new NodeDeleteEvent(this as unknown as AnyNode))
+    this.dispose()
+  }
+
   dispose() {
     if (this.isDisposed) return
     this.isDisposed = true
@@ -171,7 +179,6 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     this.#cleanups.forEach((fn) => fn())
 
     this.parent?._unlinkChild(this as any)
-    this.doc.emit(new NodeDeleteEvent(this as unknown as AnyNode))
     ;(this as unknown as NonReadonly<typeof this>).doc = undefined as never
     ;(this as NonReadonly<typeof this>).doc = undefined as never
   }

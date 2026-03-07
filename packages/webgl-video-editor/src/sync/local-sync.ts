@@ -215,7 +215,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
               break
             // delete
             case 'node:delete':
-              nodes.get(op.nodeId).dispose()
+              nodes.get(op.nodeId).delete()
               break
           }
         } else {
@@ -226,7 +226,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
               break
             // delete created
             case 'node:create':
-              nodes.get(op.nodeId).dispose()
+              nodes.get(op.nodeId).delete()
               break
             // move back
             case 'node:move': {

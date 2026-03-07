@@ -118,6 +118,7 @@ export interface BaseNode {
   isAudio: () => this is Timeline | Track | AudioClip
   toObject: () => any
   getSnapshot: () => NodeSnapshot<T extends Schema.AnyNodeSchema ? T : any>
+  delete: () => void
   dispose: () => void
   [Symbol.dispose]: () => void
 }
