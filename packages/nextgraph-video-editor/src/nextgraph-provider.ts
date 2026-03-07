@@ -1,0 +1,121 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call -- missing types */
+import type { Session } from '@ng-org/web'
+import * as base64 from 'base64-js'
+import * as Y from 'yjs'
+
+import { promiseWithResolvers } from 'shared/utils'
+
+import { nuriToObjectId } from './utils.ts'
+
+const { log, error: logError } = console
+
+export const digestToString = (digest: { Blake3Digest32: Uint8Array }): string => {
+  const bytes = Uint8Array.from([0, ...digest.Blake3Digest32].reverse())
+  return base64.fromByteArray(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+export class NextGraphProvider {
+  readonly nuri: string
+  readonly objectId: string
+  doc: Y.Doc
+  session: Session
+  heads: string[] = []
+  shouldConnect = false
+  isConnected = false
+
+  readonly #destroy = this.destroy.bind(this)
+  readonly #updateHandler = this._updateHandler.bind(this)
+  readonly #connectedPromise = promiseWithResolvers()
+
+  get whenConnected(): Promise<this> {
+    return this.#connectedPromise.promise.then(() => this)
+  }
+
+  constructor(nuri: string, doc: Y.Doc, session: Session) {
+    this.nuri = nuri
+    this.objectId = nuriToObjectId(nuri)
+    this.doc = doc
+    this.session = session
+
+    this.doc.on('update', this.#updateHandler)
+    this.doc.on('destroy', this.#destroy)
+    this.connect().catch(logError)
+  }
+
+  async sendUpdate(update: Uint8Array): Promise<void> {
+    const { ng, session_id: sessionId } = this.session
+    await ng.discrete_update(sessionId, update, this.heads, 'YMap', this.nuri)
+  }
+
+  /**
+   * Listens to Yjs updates and sends them to NextGraph
+   * @param {Uint8Array} update
+   * @param {any} origin
+   */
+  _updateHandler(update: Uint8Array, origin: any): void {
+    if (!this.isConnected || origin?.local === true) return
+
+    this.sendUpdate(update).catch(logError)
+  }
+
+  destroy(): void {
+    this.disconnect()
+    this.doc.off('update', this.#updateHandler)
+  }
+
+  disconnect(): void {
+    this.shouldConnect = false
+    // TODO unsub
+  }
+
+  async connect(): Promise<void> {
+    const docId = this.objectId
+
+    log('connecting to doc', docId)
+    if (this.shouldConnect) return
+
+    this.shouldConnect = true
+
+    await this.session.ng.doc_subscribe(docId, this.session.session_id, this.onResponse.bind(this))
+    // TODO .then keep unsub
+  }
+
+  onResponse(response: {
+    V0: { TabInfo?: Record<string, unknown>; State?: Record<string, any>; Patch?: Record<string, any> }
+  }): void {
+    if (response.V0.TabInfo) {
+      // noop
+    } else if (response.V0.State) {
+      for (const head of response.V0.State.heads) {
+        const commitId = digestToString(head)
+        this.heads.push(commitId)
+      }
+
+      const incomingStateAsUpdate = response.V0.State.discrete?.YMap as Uint8Array | undefined
+      if (incomingStateAsUpdate) Y.applyUpdate(this.doc, incomingStateAsUpdate, { local: true })
+
+      // send the difference between the locally saved doc and the incoming state
+      this.sendUpdate(
+        Y.encodeStateAsUpdate(
+          this.doc,
+          incomingStateAsUpdate && Y.encodeStateVectorFromUpdate(incomingStateAsUpdate),
+        ),
+      )
+        .then(() => {
+          this.#connectedPromise.resolve()
+          this.isConnected = true
+        })
+        .catch(logError)
+    } else if (response.V0.Patch) {
+      const patchUpdate = response.V0.Patch.discrete?.YMap as Uint8Array | undefined
+      if (patchUpdate) Y.applyUpdate(this.doc, patchUpdate, { local: true })
+
+      let i = this.heads.length
+      while (i--) {
+        if (response.V0.Patch.commit_info.past.includes(this.heads[i]) === true) this.heads.splice(i, 1)
+      }
+
+      this.heads.push(response.V0.Patch.commit_id)
+    }
+  }
+}
