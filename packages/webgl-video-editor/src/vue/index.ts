@@ -44,7 +44,7 @@ export default Vue.defineComponent({
       })
     const container = Vue.ref<HTMLElement>()
 
-    const vueEditor = editorToVue(editor)
+    const vueEditor = editorToVue(editor, !props.editor)
     const children = {
       default: ref<unknown>(),
       timelineEmpty: ref<unknown>(),

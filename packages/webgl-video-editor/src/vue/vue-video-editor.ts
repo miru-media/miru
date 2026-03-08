@@ -24,7 +24,7 @@ type VueVideoEditorRaw = {
   [P in EditorMethodProps]: pub.VideoEditor[P]
 }
 
-export const editorToVue = (editor: pub.VideoEditor): pub.VideoEditor => {
+export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.VideoEditor => {
   const fineJsxScope = createEffectScope()
   const docView = new VueDocument(editor)
 
@@ -45,7 +45,10 @@ export const editorToVue = (editor: pub.VideoEditor): pub.VideoEditor => {
       playback: toVue(() => editor.playback),
       _timelineSize: toVue(() => editor._timelineSize),
       _secondsPerPixel: toVue(() => editor._secondsPerPixel),
-      _showStats: toVue(editor._showStats),
+      _showStats: toVue(
+        () => editor._showStats,
+        (value) => (editor._showStats = value),
+      ),
 
       seekTo: editor.seekTo.bind(editor),
       addClip: (track: pub.Track, asset: pub.MediaAsset) =>
@@ -69,7 +72,7 @@ export const editorToVue = (editor: pub.VideoEditor): pub.VideoEditor => {
 
       dispose(): void {
         fineJsxScope.stop()
-        editor.dispose()
+        if (ownsEditor) editor.dispose()
       },
       [Symbol.dispose](): void {
         this.dispose()

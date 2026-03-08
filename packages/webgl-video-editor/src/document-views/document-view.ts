@@ -1,4 +1,4 @@
-import type * as pub from '../../types/core.d.ts'
+import type * as pub from '#core'
 
 import type { NodeView } from './node-view.ts'
 
@@ -33,13 +33,25 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
     doc.on('node:update', this.#onUpdate.bind(this), listenerOptions)
     doc.on('node:delete', this.#onDelete.bind(this), listenerOptions)
 
-    doc.nodes.map.forEach((node) => this._createNode(node))
+    const createViewsFrom = (
+      parent: ViewType<TMap, pub.AnyParentNode> | undefined,
+      original: pub.AnyNode,
+    ) => {
+      const view = this.#createAndAddView(original)
+
+      if (parent) view?._move(parent, original.index)
+      if ('children' in original)
+        original.children.forEach((child) =>
+          createViewsFrom(view as ViewType<TMap, pub.AnyParentNode> | undefined, child),
+        )
+    }
+
+    createViewsFrom(undefined, doc.timeline)
   }
 
   protected abstract _createView<T extends pub.AnyNode>(original: T): ViewType<TMap, T>
 
-  /** @internal */
-  _createNode<T extends pub.AnyNode>(original: T): ViewType<TMap, T> {
+  #createAndAddView<T extends pub.AnyNode>(original: T): ViewType<TMap, T> {
     const view = this._createView(original)
     if (view) this.#map.set(original.id, view)
     return view
@@ -53,7 +65,7 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
   }
 
   #onCreate({ node }: pub.NodeCreateEvent): void {
-    this._createNode(node)
+    this.#createAndAddView(node)
   }
   #onMove({ node }: pub.NodeMoveEvent): void {
     const { parent } = node
@@ -73,8 +85,10 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
     this.#map.delete(node.id)
   }
 
-  dispose() {
+  dispose(): void {
+    if (this.isDisposed) return
     this.isDisposed = true
+
     const viewMap = this.#map
     viewMap.forEach((view) => view.dispose())
     viewMap.clear()

@@ -163,8 +163,11 @@ export class FileSystemStorage {
     if (this.isDisposed) return
     this.isDisposed = true
 
-    this.worker[Comlink.releaseProxy]()
-    this.#workerInstance.terminate()
+    if (!import.meta.env.SSR && import.meta.env.TEST !== 'true') {
+      this.worker[Comlink.releaseProxy]()
+      this.#workerInstance.terminate()
+    }
+
     this.worker = this.#workerInstance = undefined as never
   }
 
