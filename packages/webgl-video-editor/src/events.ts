@@ -23,12 +23,10 @@ export class SettingsUpdateEvent extends Event implements pub.SettingsUpdateEven
 export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
   declare readonly type: 'node:create'
   readonly node: pub.AnyNode
-  readonly group?: string
 
-  constructor(node: pub.AnyNode, group?: string) {
+  constructor(node: pub.AnyNode) {
     super('node:create')
     this.node = node
-    this.group = group
   }
 }
 
@@ -36,14 +34,12 @@ export class NodeUpdateEvent extends Event implements pub.NodeUpdateEvent {
   declare readonly type: 'node:update'
   readonly node: pub.AnyNode
   readonly from: Partial<pub.Schema.AnyNodeSchema>
-  readonly group?: string
   readonly parentId?: string
 
-  constructor(node: pub.AnyNode, from: Partial<pub.Schema.AnyNodeSchema>, group?: string) {
+  constructor(node: pub.AnyNode, from: Partial<pub.Schema.AnyNodeSchema>) {
     super('node:update')
     this.node = node
     this.from = from
-    this.group = group
   }
 }
 
@@ -51,25 +47,21 @@ export class NodeMoveEvent extends Event implements pub.NodeMoveEvent {
   declare readonly type: 'node:move'
   readonly node: pub.AnyNode
   readonly from?: pub.ChildNodePosition
-  readonly group?: string
 
-  constructor(node: pub.AnyNode, from: pub.ChildNodePosition | undefined, group?: string) {
+  constructor(node: pub.AnyNode, from: pub.ChildNodePosition | undefined) {
     super('node:move')
     this.node = node
     this.from = from
-    this.group = group
   }
 }
 
 export class NodeDeleteEvent extends Event implements pub.NodeDeleteEvent {
   declare readonly type: 'node:delete'
   readonly node: pub.AnyNode
-  readonly group?: string
 
-  constructor(node: pub.AnyNode, group?: string) {
+  constructor(node: pub.AnyNode) {
     super('node:delete')
     this.node = node
-    this.group = group
   }
 }
 

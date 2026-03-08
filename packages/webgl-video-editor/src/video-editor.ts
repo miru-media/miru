@@ -17,7 +17,7 @@ import { ExportDocumentView } from './document-views/export/exporter-document.ts
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
-import { type NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from './events.ts'
+import type { NodeDeleteEvent } from './events.ts'
 
 const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined => {
   for (let clip = track.firstClip; clip; clip = clip.nextClip) {
@@ -283,10 +283,8 @@ export class VideoEditor implements pub.VideoEditor {
     this._drag.from = [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()]
   }
   _endClipDrag(): void {
-    const { isDragging, x, from } = this._drag
+    const { isDragging, x } = this._drag
     isDragging.value = false
-
-    from && this.emitDragResizeChange(from)
 
     x.value = 0
   }
@@ -303,28 +301,7 @@ export class VideoEditor implements pub.VideoEditor {
     const resize = this._resize.value
     if (!resize) return
 
-    this.emitDragResizeChange(resize.from)
-
     this._resize.value = undefined
-  }
-
-  emitDragResizeChange(states: DragResizeInitialState) {
-    const { doc } = this
-
-    this._transact(() => {
-      for (const from of states) {
-        if (!from) continue
-        const node = doc.nodes.get(from.node.id)
-
-        doc.emit(new NodeUpdateEvent(node, from.node))
-
-        if (node.parent?.id !== from.position?.parentId) doc.emit(new NodeMoveEvent(node, from.position))
-      }
-    })
-  }
-
-  _untracked<T>(fn: () => T): T {
-    return this.sync ? this.sync.untracked(fn) : fn()
   }
 
   _transact<T>(fn: () => T): T {

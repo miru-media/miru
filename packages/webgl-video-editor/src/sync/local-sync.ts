@@ -19,25 +19,28 @@ import type {
 
 import { createInitialDocument } from './utils.ts'
 
-type HistoryOp<T extends core.Schema.AnyNodeSchema = core.Schema.AnyNodeSchema> =
-  | { type: 'settings:update'; from: Partial<Schema.DocumentSettings>; to: Partial<Schema.DocumentSettings> }
-  // TODO: remove group???!!!
-  | { type: 'node:create'; group?: string; nodeId: string; init: core.Schema.AnyNodeSchema }
+const HISTORY_BATCH_MS = 400
+
+type HistoryOp =
+  | {
+      type: 'settings:update'
+      from: Partial<Schema.DocumentSettings>
+      to: Partial<Schema.DocumentSettings>
+    }
+  | { type: 'node:create'; nodeId: string; init: Schema.AnyNodeSchema }
   | {
       type: 'node:move'
-      group?: string
       nodeId: string
       from?: core.ChildNodePosition
       to?: core.ChildNodePosition
     }
   | {
       type: 'node:update'
-      group?: string
       nodeId: string
-      from: Partial<core.Schema.AnyNodeSchema>
-      to: Partial<core.Schema.AnyNodeSchema>
+      from: Partial<Schema.AnyNodeSchema>
+      to: Partial<Schema.AnyNodeSchema>
     }
-  | { type: 'node:delete'; group?: string; nodeId: string; from: T }
+  | { type: 'node:delete'; nodeId: string; from: Schema.AnyNodeSchema }
 
 const LOCAL_STORAGE_PREFIX = 'video-editor:'
 
@@ -45,9 +48,13 @@ const patchObj = <T extends object>(obj: T, updates: Partial<T>): void => {
   for (const key in updates) if (Object.hasOwn(updates, key) && key in obj) obj[key] = updates[key]!
 }
 
+class HistoryAction extends Array<HistoryOp> {
+  timestamp = Date.now()
+}
+
 export class LocalSync implements core.VideoEditorDocumentSync {
   doc!: pub.Document
-  readonly #actions: HistoryOp[][] = []
+  readonly #actions: HistoryAction[] = []
   #index = -1
   #pending?: HistoryOp[]
   #noTrack = 0
@@ -94,32 +101,14 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     if (import.meta.env.SSR) return
     // restore document from localStorage
     const savedJson = localStorage.getItem(this.#DOC_CONTENT_KEY)
-    let isRestored = false
+    const content = savedJson
+      ? (JSON.parse(savedJson) as core.Schema.SerializedDocument)
+      : createInitialDocument()
 
-    if (savedJson) {
-      try {
-        const parsed = JSON.parse(savedJson) as core.Schema.SerializedDocument
-
-        this.doc.importFromJson(parsed)
-        isRestored = true
-      } catch (error: unknown) {
-        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}backup`, savedJson)
-        const message = 'restore_failed'
-
-        /* eslint-disable no-console, no-alert -- WIP */
-        console.error(error)
-        console.warn(message, savedJson)
-        alert(message)
-        /* eslint-enable no-console, no-alert */
-      }
-    }
-
-    if (!isRestored) {
-      this.doc.importFromJson(createInitialDocument())
-    }
+    this.doc.importFromJson(content)
   }
 
-  untracked<T>(fn: () => T): T {
+  #untracked<T>(fn: () => T): T {
     this.#noTrack++
     const res = fn()
 
@@ -152,28 +141,17 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     }
 
     const actions = this.#actions
+    const lastAction = actions[this.#index]
 
-    if (ops.length === 1 && this.#canUndo.value) {
-      const op = ops[0]
-      const prevAction = actions[actions.length - 1]
-      const prevOp = prevAction[prevAction.length - 1]
-
-      if (
-        op.type === 'node:update' &&
-        op.type === prevOp.type &&
-        op.nodeId === prevOp.nodeId &&
-        op.group &&
-        op.group === prevOp.group
-      ) {
-        Object.keys(op.to).forEach((key) => ((prevOp.to as any)[key] = op.to[key as keyof typeof op.to]))
-        return
-      }
+    if (this.canUndo && Date.now() - lastAction.timestamp < HISTORY_BATCH_MS) {
+      lastAction.push(...ops)
+      actions.splice(this.#index + 1, Infinity)
+    } else {
+      actions.splice(this.#index + 1, Infinity, new HistoryAction(...ops))
+      this.#index++
+      this.#canUndo.value = true
+      this.#canRedo.value = false
     }
-    actions.splice(this.#index + 1, Infinity, ops)
-
-    this.#index++
-    this.#canUndo.value = true
-    this.#canRedo.value = false
   }
 
   #undoRedo(redo: boolean) {
@@ -192,7 +170,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     const { doc } = this
     const { nodes } = doc
 
-    this.untracked(() => {
+    this.#untracked(() => {
       const orderedOps = redo ? ops : ops.slice().reverse()
 
       orderedOps.forEach((op) => {
@@ -210,7 +188,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
             case 'node:move': {
               const node = nodes.get(op.nodeId)
               const { to } = op
-              if (node.parent?.id !== to?.parentId) node.remove()
+              node.remove()
               if (to) node.move(to)
               break
             }
@@ -237,8 +215,9 @@ export class LocalSync implements core.VideoEditorDocumentSync {
             case 'node:move': {
               const node = nodes.get(op.nodeId)
               const { from } = op
-              if (node.parent?.id !== from?.parentId) node.remove()
+              node.remove()
               if (from) node.move(from)
+
               break
             }
             // revert udpate

@@ -117,7 +117,7 @@ export const Clip = ({
             else editor._startClipResize(clip)
           },
           move({ rect, edges }: ResizeEvent) {
-            editor._untracked(() => {
+            editor._transact(() => {
               const { prev } = clip
               const newStart = editor.pixelsToSeconds(rect.left)
               const newDuration = editor.pixelsToSeconds(rect.width)
@@ -162,7 +162,7 @@ export const Clip = ({
             editor._drag.x.value = rect.left
           },
           move({ rect }: DragEvent) {
-            editor._untracked(() => {
+            editor._transact(() => {
               editor._drag.x.value = rect.left
 
               const parent = clip.parent!

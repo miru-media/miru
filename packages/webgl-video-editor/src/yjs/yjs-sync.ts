@@ -45,7 +45,6 @@ export class YjsSync implements VideoEditorDocumentSync {
   readonly settingsYmap: Y.Map<unknown>
   readonly #ytree!: YTree
   readonly #yundo!: Y.UndoManager
-  readonly #ignoreOrigin = Symbol('ignore-undo')
 
   readonly #canUndo = ref(false)
   readonly #canRedo = ref(false)
@@ -117,11 +116,6 @@ export class YjsSync implements VideoEditorDocumentSync {
     yundo.on('stack-item-added', onStackChange)
     yundo.on('stack-item-popped', onStackChange)
     yundo.clear()
-  }
-
-  // TODO: shouldn't be needed
-  untracked<T>(fn: () => T): T {
-    return this.ydoc.transact(fn, this.#ignoreOrigin)
   }
 
   transact<T>(fn: () => T): T {

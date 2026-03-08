@@ -375,8 +375,6 @@ export interface VideoEditorDocumentSync {
   redo: () => void
 
   transact: <T>(fn: () => T) => T
-  /** @internal @hidden */
-  untracked: <T>(fn: () => T) => T
 
   /** Clear undo hsitory */
   reset: () => void
