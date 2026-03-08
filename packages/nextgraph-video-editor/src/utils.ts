@@ -3,7 +3,7 @@ import type { Session } from '@ng-org/web'
 import type { Schema } from 'webgl-video-editor'
 import * as Y from 'yjs'
 
-import { initYmapFromJson } from 'webgl-video-editor/store/utils.js'
+import { initYmapFromJson } from 'webgl-video-editor/yjs'
 
 import { INITIAL_DOC_UPDATE, OBJECT_ID_LENGTH } from './constants.ts'
 import { NextGraphAssetStore } from './nextgraph-asset-store.ts'

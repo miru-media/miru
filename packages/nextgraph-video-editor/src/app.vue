@@ -35,12 +35,12 @@ const currentDoc = toRef(() => {
   }
 })
 
-const getDocUrl = (id: string) => `${import.meta.env.BASE_URL}#${id}`
+const getDocUrl = (id: string) => `${import.meta.env.BASE_URL}#${nuriToObjectId(id)}`
 const asyncSession = useAsyncState(getSession, undefined)
 
 const createDoc = async (name = 'Untitled', content: Schema.SerializedDocument | undefined = undefined) => {
   const nuri = await createNextGraphDoc({ name, content, session: (await getSession())! })
-  location.value.hash = getDocUrl(nuriToObjectId(nuri))
+  location.value.href = getDocUrl(nuri)
 }
 
 const deleteDoc = async (docId: string) => {
@@ -56,7 +56,7 @@ const deleteDoc = async (docId: string) => {
     <Suspense v-if="docs && currentDoc && asyncSession.state.value">
       <video-editor-doc
         :key="currentDoc?.['@id']"
-        :graphObject="currentDoc"
+        :nuri="currentDoc?.['@id']"
         :session="asyncSession.state.value"
       />
     </Suspense>

@@ -1,6 +1,6 @@
 import * as Y from 'yjs'
 
-import { createInitialUpdate } from 'webgl-video-editor/store/utils.ts'
+import { createInitialUpdate } from 'webgl-video-editor/yjs'
 
 const ydoc = new Y.Doc()
 

@@ -3,7 +3,6 @@ import type { Session } from '@ng-org/web'
 import {
   type AssetsByType,
   FileSystemAssetStore,
-  HttpAssetLoader,
   type MediaAsset,
   type Schema,
 } from 'webgl-video-editor'
@@ -53,7 +52,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
       throw new Error('TODO: delete assets')
     })
 
-    this.loaders.push(new NextGraphAssetLoader({ ...options, nuri: this.docNuri }), new HttpAssetLoader())
+    this.loaders.push(new NextGraphAssetLoader({ ...options, nuri: this.docNuri }))
   }
 
   create<T extends Schema.AnyAssetSchema>(

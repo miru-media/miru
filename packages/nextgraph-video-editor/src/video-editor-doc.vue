@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { VideoEditorDoc, VideoEditorDocError } from 'app-video-editor'
-import { markRaw, ref, watch } from 'vue'
+import { markRaw, ref, toRef, watch } from 'vue'
 import * as Y from 'yjs'
 
-import { VideoEditorYjsStore } from 'webgl-video-editor/store/yjs.js'
+import { YjsSync } from 'webgl-video-editor/yjs'
 import { setupProviders } from './providers'
 import { INITIAL_DOC_UPDATE } from './constants'
 import { NextGraphVideoEditor } from './nextgraph-video-editor'
@@ -11,21 +11,23 @@ import type { MiruVideoDocument } from './shapes/orm/video.typings'
 import type { Session } from '@ng-org/web'
 import { useShape } from '@ng-org/orm/vue'
 import { MiruVideoDocumentShapeType } from './shapes/orm/video.shapeTypes'
+import { nuriToObjectId } from './utils'
 
-const { graphObject, session } = defineProps<{ graphObject: MiruVideoDocument; session: Session }>()
+const { nuri, session } = defineProps<{ nuri: string; session: Session }>()
 const ydoc = new Y.Doc()
 
 Y.applyUpdateV2(ydoc, INITIAL_DOC_UPDATE)
 const ngMap = ydoc.getMap<Y.Map<any>>('ng')
-const docSet = useShape<MiruVideoDocument>(MiruVideoDocumentShapeType, '')
+const docSet = useShape<MiruVideoDocument>(MiruVideoDocumentShapeType, { graphs:[], subjects: [nuriToObjectId(nuri)]})
 
-await setupProviders(graphObject['@id'], ydoc)
+await setupProviders(nuriToObjectId(nuri), ydoc)
 
 const editor = ref<NextGraphVideoEditor>()
 const error = ref<unknown>()
+const doc = toRef(docSet.first())
 
 watch(
-  () => docSet.first(),
+  doc,
   (doc, _prev, onCleanup) => {
     if (!doc) {
       editor.value = undefined
@@ -34,11 +36,11 @@ watch(
 
     console.log(doc.__raw__)
 
-    let store: VideoEditorYjsStore | undefined
+    let sync: YjsSync | undefined
 
     try {
-      store = markRaw(new VideoEditorYjsStore(ngMap!))
-      editor.value = markRaw(new NextGraphVideoEditor({ store, session, graphObject: doc }))
+      sync = markRaw(new YjsSync(ngMap!))
+      editor.value = markRaw(new NextGraphVideoEditor({ sync, session, graphObject: doc }))
     } catch (error_: unknown) {
       error.value = error_
     }
@@ -46,7 +48,7 @@ watch(
     onCleanup(() => {
       error.value = undefined
       editor.value?.dispose()
-      store?.dispose()
+      sync?.dispose()
     })
   },
   { immediate: true },
@@ -59,5 +61,5 @@ const backUrl = import.meta.env.BASE_URL
 
 <template>
   <VideoEditorDocError v-if="error" :backUrl />
-  <VideoEditorDoc v-else-if="editor" :onCloseProject :editor v-model:name="graphObject.name" />
+  <VideoEditorDoc v-else-if="editor && doc" :onCloseProject :editor v-model:name="doc.name" />
 </template>
