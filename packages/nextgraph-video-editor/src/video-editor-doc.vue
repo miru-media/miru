@@ -8,23 +8,26 @@ import { setupProviders } from './providers'
 import { INITIAL_DOC_UPDATE } from './constants'
 import { NextGraphVideoEditor } from './nextgraph-video-editor'
 import type { MiruVideoDocument } from './shapes/orm/video.typings'
-import type { Session } from '@ng-org/web'
 import { useShape } from '@ng-org/orm/vue'
 import { MiruVideoDocumentShapeType } from './shapes/orm/video.shapeTypes'
 import { nuriToObjectId } from './utils'
+import { getSession } from './nextgraph-session'
 
-const { nuri, session } = defineProps<{ nuri: string; session: Session }>()
+const { nuri } = defineProps<{ nuri: string }>()
 const ydoc = new Y.Doc()
 
 Y.applyUpdateV2(ydoc, INITIAL_DOC_UPDATE)
 const ngMap = ydoc.getMap<Y.Map<any>>('ng')
-const docSet = useShape<MiruVideoDocument>(MiruVideoDocumentShapeType, { graphs:[], subjects: [nuriToObjectId(nuri)]})
+const docSet = useShape<MiruVideoDocument>(MiruVideoDocumentShapeType, {
+  graphs: [],
+  subjects: [nuriToObjectId(nuri)],
+})
 
-await setupProviders(nuriToObjectId(nuri), ydoc)
+const [session] = await Promise.all([getSession(), setupProviders(nuriToObjectId(nuri), ydoc)])
 
 const editor = ref<NextGraphVideoEditor>()
 const error = ref<unknown>()
-const doc = toRef(docSet.first())
+const doc = toRef(() => docSet.first())
 
 watch(
   doc,
@@ -34,14 +37,15 @@ watch(
       return
     }
 
-    console.log(doc.__raw__)
-
     let sync: YjsSync | undefined
+
+    console.log(doc.__raw__)
 
     try {
       sync = markRaw(new YjsSync(ngMap!))
-      editor.value = markRaw(new NextGraphVideoEditor({ sync, session, graphObject: doc }))
+      editor.value = markRaw(new NextGraphVideoEditor({ sync, session: session!, graphObject: doc }))
     } catch (error_: unknown) {
+      console.error(error_)
       error.value = error_
     }
 

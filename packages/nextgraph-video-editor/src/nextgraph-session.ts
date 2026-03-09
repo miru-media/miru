@@ -1,6 +1,5 @@
 import { initNg } from '@ng-org/orm'
-import { init as initNgWeb, ng } from '@ng-org/web'
-import type { Session } from '@ng-org/web'
+import { init as initNgWeb, ng, type Session } from '@ng-org/web'
 
 import { promiseWithResolvers } from 'shared/utils'
 

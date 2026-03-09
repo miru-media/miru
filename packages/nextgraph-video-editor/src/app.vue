@@ -2,19 +2,19 @@
 import { computed, toRef } from 'vue'
 
 import VideoEditorDoc from './video-editor-doc.vue'
-import { useAsyncState, useBrowserLocation } from '@vueuse/core'
+import { useBrowserLocation } from '@vueuse/core'
 import { getSession } from './nextgraph-session'
 import { useI18n, VideoEditorDocList } from 'app-video-editor'
 import { useShape } from '@ng-org/orm/vue'
-import { MiruVideoDocumentShapeType } from './shapes/orm/video.shapeTypes'
-import type { MiruVideoDocument } from './shapes/orm/video.typings'
+import { MiruVideoDocumentSummaryShapeType } from './shapes/orm/video.shapeTypes'
+import type { MiruVideoDocumentSummary } from './shapes/orm/video.typings'
 import type { Schema } from 'webgl-video-editor'
 import { createNextGraphDoc, nuriToObjectId } from './utils'
 
 const location = useBrowserLocation()
 const { t } = useI18n()
 
-const docs = useShape<MiruVideoDocument>(MiruVideoDocumentShapeType, '')
+const docs = useShape<MiruVideoDocumentSummary>(MiruVideoDocumentSummaryShapeType, '')
 
 const docList = computed(() =>
   [...docs]
@@ -36,7 +36,6 @@ const currentDoc = toRef(() => {
 })
 
 const getDocUrl = (id: string) => `${import.meta.env.BASE_URL}#${nuriToObjectId(id)}`
-const asyncSession = useAsyncState(getSession, undefined)
 
 const createDoc = async (name = 'Untitled', content: Schema.SerializedDocument | undefined = undefined) => {
   const nuri = await createNextGraphDoc({ name, content, session: (await getSession())! })
@@ -53,12 +52,8 @@ const deleteDoc = async (docId: string) => {
 
 <template>
   <div class="root">
-    <Suspense v-if="docs && currentDoc && asyncSession.state.value">
-      <video-editor-doc
-        :key="currentDoc?.['@id']"
-        :nuri="currentDoc?.['@id']"
-        :session="asyncSession.state.value"
-      />
+    <Suspense v-if="currentDoc">
+      <video-editor-doc :key="currentDoc['@id']" :nuri="currentDoc['@id']" />
     </Suspense>
     <VideoEditorDocList v-else :docs="docList" @create="createDoc" @delete="deleteDoc" />
   </div>

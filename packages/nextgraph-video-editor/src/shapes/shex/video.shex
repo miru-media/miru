@@ -14,8 +14,16 @@ ex:MiruVideoDocumentShape {
   ex:name xsd:string ;
   ex:description xsd:string ? ;
   ex:createdAt xsd:date ;
-  # ex:assets @ex:MiruMediaAssetShape OR @ex:MiruVideoEffectAssetShape *;
-  ex:assets @ex:MiruMediaAssetShape *;
+  # ex:assets @ex:MiruMediaAssetShape OR @ex:MiruVideoEffectAssetShape * ;
+  ex:assets @ex:MiruMediaAssetShape * ;
+}
+
+ex:MiruVideoDocumentSummaryShape {
+  a [ex:MiruVideoDocument] ;
+
+  ex:name xsd:string ;
+  ex:description xsd:string ? ;
+  ex:createdAt xsd:date ;
 }
 
 ex:MiruVideoEffectAssetShape EXTRA a {
@@ -40,7 +48,8 @@ ex:MiruMediaAssetShape EXTRA a {
   ex:size xsd:integer ;
   ex:audio @ex:MiruMediaAssetAudioShape ? ;
   ex:video @ex:MiruMediaAssetVideoShape ? ;
-  ex:uri xsd:string OR IRI;
+  ex:uri xsd:string OR IRI ;
+  ex:thumbnailUri xsd:string OR IRI ? ;
 }
 
 ex:MiruMediaAssetAudioShape EXTRA a {
