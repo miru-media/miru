@@ -46,7 +46,7 @@
 
   /* BUTTON ENABLED */
   .miru--button.miru--enabled::after {
-    background-color: var(--color-fnt-acc);
+    background-color: var(--color-bg-button-hover);
   }
 
   /* SLIDER */
