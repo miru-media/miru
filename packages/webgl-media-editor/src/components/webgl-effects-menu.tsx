@@ -49,20 +49,18 @@ const EffectItem = (props: {
   })
 
   return (
-    <button
-      type="button"
-      data-id={id}
+    <label
       class={[
         styles['miru--button'],
         styles['miru--filter-preview'],
         () => isActive() && styles['miru--acc'],
         className,
       ]}
-      onClick={onClick}
     >
+      <input type="radio" name="image-filter" value={props.effect.name} data-id={id} onClick={onClick} />
       <canvas ref={canvas} />
       <span class={styles['miru--button__label']}>{props.effect.name}</span>
-    </button>
+    </label>
   )
 }
 
