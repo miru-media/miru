@@ -93,6 +93,15 @@
     pointer-events: none;
   }
 
+  /* MENU RADIO BUTTON */
+  input[type='radio'] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1em;
+    height: 1em;
+  }
+
   &:has(canvas) .miru--button__label {
     margin-top: 0;
     line-height: calc(1em + var(--gap-default));
@@ -108,5 +117,12 @@
     height: 0.5rem;
     content: '';
     border-radius: 50%;
+  }
+}
+
+/* RADIO BUTTON GROUP HIGHLIGHTING */
+.miru--menu__row:has(input[type='radio']:focus-visible) {
+  .miru--button:has(input[type='radio']) {
+    outline: 4px auto -webkit-focus-ring-color;
   }
 }
