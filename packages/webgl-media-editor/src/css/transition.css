@@ -7,7 +7,7 @@
 
 /* BUTTON HOVER */
 .miru--button:hover,
-.miru--hov:not(.miru--acc) {
+.miru--hov:not(.miru--acc, :has(input:checked)) {
   transition:
     color 0.015s,
     background-color 0.015s;
