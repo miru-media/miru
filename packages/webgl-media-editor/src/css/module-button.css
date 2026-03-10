@@ -80,12 +80,15 @@
       } */
   }
 
+  /* LABEL AS BUTTON */
+  &:is(label) {
+    align-content: center;
+  }
+
   /* BUTTON LABEL */
   .miru--button__label {
     margin: auto;
     margin-top: 0.2em;
-
-    /* align-content: center; */
 
     /* margin-left: .2em;
     margin-right: .2em; */
