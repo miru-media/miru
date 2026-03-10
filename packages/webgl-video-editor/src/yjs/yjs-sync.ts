@@ -81,12 +81,12 @@ export class YjsSync implements VideoEditorDocumentSync {
 
     this.#ytree.observe(this.#onYtreeChange)
 
-    doc.nodes.map.forEach((node) => this.#onNodeCreate(new NodeCreateEvent(node)))
+    doc.nodes.forEach((node) => this.#onNodeCreate(new NodeCreateEvent(node)))
 
     const bindNodeListener = <T extends unknown[]>(
-      listener: (...args: T) => unknown,
+      listener_: (...args: T) => unknown,
     ): ((...args: T) => void) => {
-      listener = listener.bind(this)
+      const listener = listener_.bind(this)
       return (...args) => {
         if (!this.#shouldSkipNodeEvent) this.transact(() => listener(...args))
       }
@@ -162,7 +162,7 @@ export class YjsSync implements VideoEditorDocumentSync {
 
   #getOrCreateFromYnode(ynode: Y.Map<unknown>): AnyNode {
     return (
-      this.doc.nodes.map.get(ynode.get('id') as string) ??
+      (this.doc.nodes.get(ynode.get('id') as string) as AnyNode | undefined) ??
       this.doc.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
     )
   }
@@ -183,7 +183,7 @@ export class YjsSync implements VideoEditorDocumentSync {
     if (parentKey === YTREE_NULL_PARENT_KEY) {
       const unparentedIds: string[] = []
       ytree.getAllDescendants(YTREE_NULL_PARENT_KEY, unparentedIds)
-      unparentedIds.forEach((nodeId) => this.doc.nodes.map.get(nodeId)?.remove())
+      unparentedIds.forEach((nodeId) => (this.doc.nodes.get(nodeId) as AnyNode | undefined)?.remove())
       return
     }
 
@@ -259,10 +259,10 @@ export class YjsSync implements VideoEditorDocumentSync {
     }
   }
 
-  #onUpdate({ from, node }: NodeUpdateEvent): void {
+  #onUpdate({ node, key }: NodeUpdateEvent): void {
     const udpates: Record<string, unknown> = {}
 
-    for (const key in from) if (Object.hasOwn(from, key)) udpates[key] = node[key as keyof typeof node]
+    udpates[key] = node[key as keyof typeof node]
 
     updateYmap(this.#getYtreeNode(node.id), udpates)
   }
@@ -279,11 +279,10 @@ export class YjsSync implements VideoEditorDocumentSync {
     return this.#ytree.generateNodeKey()
   }
 
-  /** @internal @hidden */
+  /** @internal */
   serializeYdoc(): Omit<Schema.SerializedDocument, 'assets'> {
     const ytree = this.#ytree
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
     const serialize = <T extends Schema.AnyNodeSerializedSchema = Schema.AnyNodeSerializedSchema>(
       nodeId: string,
     ): T => {

@@ -9,7 +9,7 @@ import type { VueDocument } from './vue-document.ts'
 
 export const toVue = interop.toVue.bind(null, Vue.customRef, Vue.onScopeDispose) as <T>(
   source: MaybeRefOrGetter<T>,
-  set?: (newValue: T) => void,
+  set?: (newValue: T) => unknown,
 ) => Vue.Ref<T>
 
 export const fromVue = interop.fromVue.bind(null, Vue.toValue, Vue.watchEffect) as <T>(
@@ -55,7 +55,9 @@ export function _vueWritable<T extends pub.AnyNode | pub.Document>(
 
   Object.defineProperty(view, key, {
     get: () => vueRef.value,
-    set: (value: any) => (vueRef.value = value),
+    set: (value: any) => {
+      vueRef.value = value
+    },
     configurable: true,
     enumerable: true,
   })

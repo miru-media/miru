@@ -8,7 +8,7 @@ import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
 import { fromVue, toVue } from '../document-views/vue/utils.ts'
 import { LocalSync as VideoEditorLocalStore_ } from '../sync'
-import { VideoEditor as VideoEditor_ } from '../video-editor.ts'
+import { VideoEditor } from '../video-editor.ts'
 
 import { editorToVue } from './vue-video-editor.ts'
 
@@ -38,7 +38,7 @@ export default Vue.defineComponent({
   setup(props, ctx) {
     const editor =
       props.editor ??
-      new VideoEditor_({
+      new VideoEditor({
         sync: props.sync,
         assets: props.assets,
       })

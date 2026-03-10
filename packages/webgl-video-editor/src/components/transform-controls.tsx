@@ -7,14 +7,17 @@ import interact from '@interactjs/interact'
 import { computed, effect, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
-import type { VideoEditor, VisualClip } from '#core'
+import type { VisualClip } from '#core'
 
 import styles from '../css/index.module.css'
 import { getClipTransformMatrix } from '../utils.ts'
 
+import { useEditor } from './utils.ts'
+
 const ROTATE_LINE_LENGTH = 50
 
-export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
+export const TransformControls = () => {
+  const editor = useEditor()
   const container = ref<SVGElement>()
 
   const clipMediaSize = computed(() => {
@@ -54,6 +57,10 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
       },
     }).draggable({
       listeners: {
+        start() {
+          if (!editor.selection?.isVisual()) return
+          editor.selection._startEditing(['position', 'scale'])
+        },
         move(event: DragEvent) {
           const clip = clipProps.value
 
@@ -61,6 +68,9 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
           const { position } = clip
           const { delta } = event
           clip.position = { x: position.x + delta.x / zoom, y: position.y + delta.y / zoom }
+        },
+        end() {
+          editor.selection?._applyEdits()
         },
       },
     })
@@ -78,6 +88,9 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
         start(event: ResizeEvent) {
           const clip = editor.selection
           if (!clip?.isVisual()) return
+
+          clip._startEditing(['position', 'scale'])
+
           resizeStart.pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
           resizeStart.position = clip.position
           const { scale } = clip
@@ -105,6 +118,9 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
           else newScale.x = newScale.y
 
           clip.scale = newScale
+        },
+        end() {
+          editor.selection?._applyEdits()
         },
       },
     })
@@ -149,60 +165,49 @@ export const TransformControls = ({ editor }: { editor: VideoEditor }) => {
   })
 
   return (
-    <svg class={styles.transformControls}>
-      {() => {
-        const clip = editor.selection
-        if (!clip?.isVisual() || !clip.isInClipTime || !clip.asset?.video) return
+    <svg class={styles.transformControls} style={editor.selection?.isVisual() ? 'display:none' : ''}>
+      <g ref={container}>
+        {() => {
+          const clip = editor.selection
+          if (!clip?.isVisual() || !clip.isInClipTime || !clip.asset?.video) return
 
-        return (
-          <g ref={container}>
-            {() => {
-              const { start: rotateStart, end: rotateEnd } = rotateLine.value
-              const points = boxPoints.value
-              const edges: [p1: Pixi.Point, p2: Pixi.Point, edge: string][] = []
+          const { start: rotateStart, end: rotateEnd } = rotateLine.value
+          const points = boxPoints.value
+          const edges: [p1: Pixi.Point, p2: Pixi.Point, edge: string][] = []
 
-              for (let i = 0; i < points.length; i++) {
-                const start = points[i]
-                const end = points[(i + 1) % points.length]
-                edges.push([start.point, end.point, start.edges[0]])
-              }
+          for (let i = 0; i < points.length; i++) {
+            const start = points[i]
+            const end = points[(i + 1) % points.length]
+            edges.push([start.point, end.point, start.edges[0]])
+          }
 
-              return (
-                <>
-                  <polygon
-                    points={points.map(({ point: p }) => `${p.x},${p.y}`).join(' ')}
-                    class={styles.transformDrag}
-                  />
-                  {edges.map(([a, b, edge]) => (
-                    <g>
-                      <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} class={styles.transformBox} />
-                      <line
-                        x1={a.x}
-                        y1={a.y}
-                        x2={b.x}
-                        y2={b.y}
-                        class={styles.transformEdges}
-                        data-edges={edge}
-                      />
-                    </g>
-                  ))}
-                  {boxPoints.value.map(({ point: { x, y }, edges }) => (
-                    <circle cx={x} cy={y} class={styles.transformResizeCorner} data-edges={edges.join(' ')} />
-                  ))}
-                  <line
-                    x1={rotateStart.x}
-                    x2={rotateEnd.x}
-                    y1={rotateStart.y}
-                    y2={rotateEnd.y}
-                    class={styles.transformRotateLine}
-                  />
-                  <circle cx={rotateEnd.x} cy={rotateEnd.y} class={styles.transformRotateHandle} />
-                </>
-              )
-            }}
-          </g>
-        )
-      }}
+          return (
+            <>
+              <polygon
+                points={points.map(({ point: p }) => `${p.x},${p.y}`).join(' ')}
+                class={styles.transformDrag}
+              />
+              {edges.map(([a, b, edge]) => (
+                <g>
+                  <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} class={styles.transformBox} />
+                  <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} class={styles.transformEdges} data-edges={edge} />
+                </g>
+              ))}
+              {boxPoints.value.map(({ point: { x, y }, edges }) => (
+                <circle cx={x} cy={y} class={styles.transformResizeCorner} data-edges={edges.join(' ')} />
+              ))}
+              <line
+                x1={rotateStart.x}
+                x2={rotateEnd.x}
+                y1={rotateStart.y}
+                y2={rotateEnd.y}
+                class={styles.transformRotateLine}
+              />
+              <circle cx={rotateEnd.x} cy={rotateEnd.y} class={styles.transformRotateHandle} />
+            </>
+          )
+        }}
+      </g>
     </svg>
   )
 }

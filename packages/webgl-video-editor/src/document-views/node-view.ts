@@ -1,6 +1,6 @@
 import type * as pub from '../../types/core.d.ts'
 
-export abstract class NodeView<TDocView, T extends pub.AnyNode> {
+export class NodeView<TDocView, T extends pub.AnyNode> {
   docView: TDocView
   original: T
   isDisposed = false

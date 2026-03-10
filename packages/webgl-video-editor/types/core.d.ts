@@ -1,6 +1,8 @@
 import type { Ref } from 'fine-jsx'
 import type { EffectDefinition, Renderer } from 'webgl-effects'
 
+import type { VideoEditor as VideoEditorInternal } from '../src/video-editor.ts'
+
 import type {
   AssetCreateEvent,
   AssetDeleteEvent,
@@ -19,7 +21,7 @@ import type {
 import type * as Schema from './schema.d.ts'
 export * from './events.d.ts'
 
-export { Schema }
+export type { Schema }
 
 export interface ChildNodePosition {
   parentId: string
@@ -81,9 +83,9 @@ export interface Document extends Schema.DocumentSettings {
   toObject: () => Schema.SerializedDocument
   on: <T extends Extract<keyof VideoEditorEvents, string>>(
     type: T,
-    listener: (event: VideoEditorEvents[T]) => void,
+    listener: (event: VideoEditorEvents[T]) => unknown,
     options?: AddEventListenerOptions,
-  ) => void
+  ) => () => void
   emit: (event: VideoEditorEvents[keyof VideoEditorEvents]) => void
 
   dispose: () => void
@@ -91,15 +93,11 @@ export interface Document extends Schema.DocumentSettings {
 }
 
 export interface NodeMap {
-  map: Map<string, AnyNode>
-  byType: {
-    [Type in keyof NodesByType]: Set<NodesByType[Type]>
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   get: <T extends AnyNode>(id: string) => T
   set: (node: AnyNode) => void
   has: (id: string) => boolean
-  delete: (id: string) => void
+  delete: (id: string) => boolean
+  forEach: (fn: (node: AnyNode) => unknown) => void
 }
 
 export interface BaseNode {
@@ -113,6 +111,7 @@ export interface BaseNode {
   remove: () => void
   isTimeline: () => this is Timeline
   isTrack: () => this is Track
+  isTrackChild: () => this is AnyTrackChild
   isClip: () => this is AnyClip
   isGap: () => this is Gap
   isVisual: () => this is Timeline | Track | VisualClip
@@ -238,6 +237,9 @@ export class VideoEditor {
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- false positive
 export interface VideoEditor {
+  /** @internal */
+  _editor: VideoEditorInternal
+
   doc: Document
   sync?: VideoEditorDocumentSync
 
@@ -283,14 +285,13 @@ export interface VideoEditor {
      * @param time The time of the video to seek to in seconds.
      */
 
-    /** @internal @hidden */
+    /** @internal */
     stats: any
   }
 
   /** @internal */
-  readonly _timelineSize: { value: { width: number; height: number } }
-  /** @internal */
   readonly _secondsPerPixel: { value: number }
+  /** @internal */
 
   secondsToPixels: (seconds: number) => number
   pixelsToSeconds: (pixels: number) => number
@@ -302,15 +303,12 @@ export interface VideoEditor {
 
   /**
    * Add a new track to the timeline.
-   *
-   * @param track The track the clip will be added to.
-   * @param asset The media asset attached to the clip.
+   * @param trackType The track the clip will be added to.
    */
   addTrack: (trackType: Track['trackType']) => Track
 
   /**
    * Add a new clip at the end of the specified track.
-   *
    * @param track The track the clip will be added to.
    * @param asset The media asset attached to the clip.
    */
@@ -321,7 +319,6 @@ export interface VideoEditor {
 
   /**
    * Create a new media asset with the given source File or URI
-   *
    * @param source A Blob or URI string of the clip media.
    */
   createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
@@ -331,7 +328,6 @@ export interface VideoEditor {
    * If a clip is selected, its track will be searched for an intersecting clip.
    * If a clip isn't found, all tracks are then searched in order.
    * When a clip is found, its duration is reduced and a similar clip is inserted after it.
-   *
    * @returns The newly created clip or `undefined.`.
    */
   splitClipAtCurrentTime: () => [AnyClip, AnyClip] | undefined
@@ -389,7 +385,6 @@ export interface VideoEditorAssetStore {
     options?: { source?: Blob | string },
   ) => AssetsByType[T]
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   getAsset: <T extends AnyAsset | undefined>(id: string) => T
 
   /** Save a new file from an asset source stream */

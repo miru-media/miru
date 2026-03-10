@@ -48,6 +48,7 @@ abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, 
   declare remove: T['remove']
   declare isTimeline: T['isTimeline']
   declare isTrack: T['isTrack']
+  declare isTrackChild: T['isTrackChild']
   declare isClip: T['isClip']
   declare isGap: T['isGap']
   declare isVisual: T['isVisual']

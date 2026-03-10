@@ -17,18 +17,20 @@ import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
+import { provideEditor } from './utils.ts'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor
   children?: Record<string, Ref>
   i18n?: I18nOptions
-}) => {
+}): JSX.Element => {
   const { editor } = props
   const i18n = provideI18n(props.i18n ?? { messages: {} })
   const { t } = i18n
 
-  if (!hasVideoDecoder()) alert(t('error_no_webcodecs'))
-  else
+  provideEditor(editor._editor)
+
+  if (hasVideoDecoder())
     Promise.all(
       EXPORT_VIDEO_CODECS.map((codec) =>
         assertEncoderConfigIsSupported('video', { codec, width: 1920, height: 1080 })
@@ -42,6 +44,7 @@ export const VideoEditorUI = (props: {
         }
       })
       .catch(() => undefined)
+  else alert(t('error_no_webcodecs'))
 
   const { doc } = editor
   const playback = editor.playback as unknown as PlaybackDocument
@@ -56,14 +59,14 @@ export const VideoEditorUI = (props: {
         }
       >
         {h(editor.canvas, { class: styles.viewportCanvas })}
-        <TransformControls editor={editor} />
+        <TransformControls />
         <LoadingOverlay loading={() => !playback.isReady} />
-        <PlaybackControls editor={editor} />
+        <PlaybackControls />
       </div>
 
-      <SecondaryToolbar editor={editor} />
+      <SecondaryToolbar />
 
-      <Timeline editor={editor}>{{ empty: props.children?.timelineEmpty }}</Timeline>
+      <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
       <div class={styles.slot}>{props.children?.default}</div>
       <progress
         style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}
@@ -72,14 +75,7 @@ export const VideoEditorUI = (props: {
 
       {() =>
         editor._showStats && (
-          <div
-            class={styles.textBodySmall}
-            style={() =>
-              `width:100%;
-          padding:0.25rem;
-          overflow:auto;`
-            }
-          >
+          <div class={styles.textBodySmall} style={() => `width:100%; padding:0.25rem; overflow:auto;`}>
             <p style="display:flex;gap:0.25rem">
               {() =>
                 doc.timeline.children.map((track) =>

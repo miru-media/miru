@@ -28,7 +28,7 @@ export abstract class ParentNode<
 
   get ['children' as never](): TChild[] {
     const array: TChild[] = []
-    for (let current = this.#head.value; current; current = current.next as TChild) array.push(current)
+    for (let current = this.head; current; current = current.next as TChild) array.push(current)
     return array
   }
 
@@ -65,11 +65,10 @@ export abstract class ParentNode<
 
     const tail = this.#tail.value
 
-    if (!tail) this.#head.value = node
-    else {
+    if (tail) {
       tail.next = node
       node.prev = tail
-    }
+    } else this.#head.value = node
 
     this.#tail.value = node
     node.next = undefined

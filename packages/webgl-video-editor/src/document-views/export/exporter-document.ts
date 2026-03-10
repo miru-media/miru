@@ -31,7 +31,7 @@ interface ViewTypeMap {
 
 let decoderAudioContext: OfflineAudioContext | undefined
 
-export class ExportDocumentView extends DocumentView<ViewTypeMap> {
+export class ExportDocument extends DocumentView<ViewTypeMap> {
   renderView: RenderDocument
   clips: ExportClip[] = []
   sources = new Map<string, AvAssetEntry>()
@@ -56,7 +56,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
     const doc = new Document(originalDoc)
     const renderView = new RenderDocument({ doc, gl, renderer, applyVideoRotation: true })
 
-    super({ ...options, doc })
+    super(doc)
 
     this.renderView = renderView
 
@@ -95,7 +95,9 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
 
     let sourceEntry = this.sources.get(asset.id)
 
-    if (!sourceEntry) {
+    if (sourceEntry) {
+      sourceEntry.isAudioOnly &&= clipType === 'audio'
+    } else {
       const input = new Mb.Input({
         formats: Mb.ALL_FORMATS,
         source: new Mb.BlobSource(asset.blob),
@@ -111,17 +113,16 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
         consumers: 0,
       }
       this.sources.set(asset.id, sourceEntry)
-    } else {
-      sourceEntry.isAudioOnly &&= clipType === 'audio'
     }
 
-    sourceEntry.consumers++
+    sourceEntry.consumers += 1
     sourceEntry.start = Math.min(sourceEntry.start, sourceStart)
     sourceEntry.end = Math.max(sourceEntry.end, sourceEnd)
     this.clips.push(exportClip)
   }
 
-  async #prepareSource(entry: AvAssetEntry): Promise<void> {
+  async #prepareSource(entry_: AvAssetEntry): Promise<void> {
+    const entry = entry_
     await entry.asset._refreshObjectUrl()
 
     const { input, isAudioOnly } = entry
@@ -200,6 +201,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
 
     await renderView.whenRendererIsReady
 
+    /* eslint-disable no-await-in-loop -- sequential */
     for (let i = 0; i < totalFrames && !signal?.aborted; i++) {
       this.doc._setCurrentTime(duration * (i / totalFrames))
 
@@ -223,6 +225,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
 
       frame.close()
     }
+    /* eslint-enable no-await-in-loop */
 
     await writer.close()
   }
@@ -244,6 +247,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
         const { time: clipTime } = exportClip.original
         await exportClip.seekAudio(clipTime.start)
 
+        /* eslint-disable no-await-in-loop -- sequential */
         while (exportClip.currentAudioData && !signal?.aborted) {
           const { buffer, timestamp, duration } = exportClip.currentAudioData
           const bufferOffsetS = timestamp / 1e6 - clipTime.source
@@ -263,6 +267,7 @@ export class ExportDocumentView extends DocumentView<ViewTypeMap> {
 
           await exportClip.readNextAudio()
         }
+        /* eslint-enable no-await-in-loop */
       }),
     )
 

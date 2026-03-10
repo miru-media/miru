@@ -26,10 +26,10 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   declare error: Ref<MediaError | undefined>
 
   declare transition: Schema.AnyClip['transition']
-  declare private _time: Ref<ClipTime>
 
-  declare _presentationTime: Ref<ClipTime>
-  declare _playableTime: Ref<ClipTime>
+  declare private _time: Ref<ClipTime>
+  declare private _presentationTime: Ref<ClipTime>
+  declare private _playableTime: Ref<ClipTime>
   readonly #expectedMediaTime = computed((): number => {
     const { start, source, duration } = this.playableTime
     return clamp(this.doc.currentTime - start + source, source, source + duration)
@@ -95,39 +95,9 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
     this.clipType = init.clipType
 
-    this._time = computed((): ClipTime => {
-      const prevTime = this.prev?.time
-      const start = prevTime ? prevTime.start + prevTime.duration : 0
-      const end = start + this.duration
-
-      const { duration } = this
-      const source = this.sourceStart
-      return { start, source, duration, end }
-    })
-    this._presentationTime = computed((): ClipTime => {
-      const { time, prev } = this
-      const inTransitionDuration = prev?.isClip() && prev.transition ? TRANSITION_DURATION_S : 0
-
-      const start = time.start - inTransitionDuration
-      const source = time.source - inTransitionDuration
-      const duration = time.duration + inTransitionDuration
-
-      return { start, source, duration, end: start + duration }
-    })
-    this._playableTime = computed((): ClipTime => {
-      const presentation = this._presentationTime.value
-      if (presentation.source >= 0) return presentation
-
-      const { start, end, source, duration } = presentation
-      const preplayDuration = Math.max(0, start - Math.min(VIDEO_PREPLAY_TIME_S, source))
-
-      return {
-        start: start - preplayDuration,
-        source: source - preplayDuration,
-        duration: duration + preplayDuration,
-        end,
-      }
-    })
+    this._time = computed(() => this._computeTime())
+    this._presentationTime = computed(() => this._computePresentationTime())
+    this._playableTime = computed(() => this._computePlayableTime())
 
     this._mediaSize = computed((): Size => {
       const video = this.asset?.video
@@ -138,8 +108,47 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     })
   }
 
+  _computeTime(): ClipTime {
+    const prevTime = this.prev?.time
+    const start = prevTime ? prevTime.start + prevTime.duration : 0
+    const end = start + this.duration
+
+    const { duration } = this
+    const source = this.sourceStart
+    return { start, source, duration, end }
+  }
+
+  _computePresentationTime(): ClipTime {
+    const { time, prev } = this
+    const inTransitionDuration = prev?.isClip() && prev.transition ? TRANSITION_DURATION_S : 0
+
+    const start = time.start - inTransitionDuration
+    const source = time.source - inTransitionDuration
+    const duration = time.duration + inTransitionDuration
+
+    return { start, source, duration, end: start + duration }
+  }
+
+  _computePlayableTime(): ClipTime {
+    const presentation = this._presentationTime.value
+    if (presentation.source >= 0) return presentation
+
+    const { start, end, source, duration } = presentation
+    const preplayDuration = Math.max(0, start - Math.min(VIDEO_PREPLAY_TIME_S, source))
+
+    return {
+      start: start - preplayDuration,
+      source: source - preplayDuration,
+      duration: duration + preplayDuration,
+      end,
+    }
+  }
+
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isClip(): this is pub.AnyClip {
+    return true
+  }
+  isTrackChild(): this is pub.AnyTrackChild {
     return true
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */

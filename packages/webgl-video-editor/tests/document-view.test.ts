@@ -13,8 +13,8 @@ class TestView extends NodeView<TestDocument, any> {
 
 class TestDocument extends DocumentView<Record<string, TestView>> {
   _createView = vi.fn((original) => new TestView(this, original) as any)
-  constructor(options: { doc: Document }) {
-    super(options)
+  constructor(doc: Document) {
+    super(doc)
     this._init()
   }
 }
@@ -28,7 +28,7 @@ const trackInit = makeTrack('test-track', 'audio', [clipInit])
 beforeEach(() => {
   doc = new Document({})
   doc.importFromJson({ resolution: { width: 1, height: 1 }, frameRate: 1, assets: [], tracks: [trackInit] })
-  testDoc = new TestDocument({ doc })
+  testDoc = new TestDocument(doc)
 })
 
 afterEach(() => {

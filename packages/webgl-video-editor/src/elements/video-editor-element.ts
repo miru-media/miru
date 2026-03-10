@@ -14,7 +14,7 @@ const UNMOUNT_TIMEOUT_MS = 500
 export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEditor {
   static observedAttributes = ['messages', 'languages']
 
-  /** @internal @hidden */
+  /** @internal */
   _editor!: VideoEditor
 
   readonly #scope = createEffectScope()
@@ -40,7 +40,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare readonly doc: pub.VideoEditor['doc']
   declare readonly _secondsPerPixel: pub.VideoEditor['_secondsPerPixel']
   declare readonly _showStats: pub.VideoEditor['_showStats']
-  declare readonly _timelineSize: pub.VideoEditor['_timelineSize']
   declare readonly canvas: pub.VideoEditor['canvas']
   declare readonly currentTime: pub.VideoEditor['currentTime']
   declare readonly effectRenderer: pub.VideoEditor['effectRenderer']
@@ -101,7 +100,9 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
           'canvas:pointermove',
           'canvas:pointerup',
         ] satisfies (keyof pub.VideoEditorEvents)[]
-      ).forEach((type) => this.doc.on(type, dispatchEvent))
+      ).forEach((type) => {
+        this.doc.on(type, dispatchEvent)
+      })
     })
   }
 
@@ -151,7 +152,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
 for (const key of [
   '_secondsPerPixel',
   '_showStats',
-  '_timelineSize',
   'canvas',
   'currentTime',
   'effectRenderer',

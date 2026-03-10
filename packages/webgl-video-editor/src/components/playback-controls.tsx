@@ -1,10 +1,12 @@
-import type { VideoEditor } from '#core'
 import { Button } from 'shared/components/button.tsx'
 import { useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'
 
-export const PlaybackControls = ({ editor }: { editor: VideoEditor }) => {
+import { useEditor } from './utils.ts'
+
+export const PlaybackControls = () => {
+  const editor = useEditor()
   const { playback } = editor
   const { t } = useI18n()
   const playOrPause = () => (playback.isPaused ? t('play') : t('pause'))

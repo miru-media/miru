@@ -2,6 +2,7 @@ import { ref, watch } from 'fine-jsx'
 import { uid } from 'uid'
 
 import { FileSystemAssetStore } from '#assets'
+import type { KeyofUnion } from '#internal'
 
 import type * as core from '../../types/core.d.ts'
 import type { Schema } from '../../types/core.d.ts'
@@ -19,7 +20,7 @@ import type {
 
 import { createInitialDocument } from './utils.ts'
 
-const HISTORY_BATCH_MS = 400
+const HISTORY_BATCH_MS = 200
 
 type HistoryOp =
   | {
@@ -37,8 +38,9 @@ type HistoryOp =
   | {
       type: 'node:update'
       nodeId: string
-      from: Partial<Schema.AnyNodeSchema>
-      to: Partial<Schema.AnyNodeSchema>
+      key: KeyofUnion<Schema.AnyNodeSchema>
+      from: any
+      to: any
     }
   | { type: 'node:delete'; nodeId: string; from: Schema.AnyNodeSchema }
 
@@ -109,13 +111,13 @@ export class LocalSync implements core.VideoEditorDocumentSync {
   }
 
   #untracked<T>(fn: () => T): T {
-    this.#noTrack++
+    this.#noTrack += 1
     const res = fn()
 
     if (res != null && typeof res === 'object' && 'then' in res)
-      return Promise.resolve(res).finally(() => void this.#noTrack--) as T
+      return Promise.resolve(res).finally(() => void (this.#noTrack -= 1)) as T
 
-    this.#noTrack--
+    this.#noTrack -= 1
     return res
   }
 
@@ -148,7 +150,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
       actions.splice(this.#index + 1, Infinity)
     } else {
       actions.splice(this.#index + 1, Infinity, new HistoryAction(...ops))
-      this.#index++
+      this.#index += 1
       this.#canUndo.value = true
       this.#canRedo.value = false
     }
@@ -194,7 +196,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
             }
             // udpate
             case 'node:update':
-              patchObj(nodes.get(op.nodeId), op.to as any)
+              ;(nodes.get(op.nodeId) as unknown as Record<string, unknown>)[op.key] = op.to
               break
             // delete
             case 'node:delete':
@@ -222,7 +224,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
             }
             // revert udpate
             case 'node:update':
-              patchObj(nodes.get(op.nodeId), op.from as any)
+              ;(nodes.get(op.nodeId) as unknown as Record<string, unknown>)[op.key] = op.from
               break
             // recreate deleted
             case 'node:delete':
@@ -275,16 +277,10 @@ export class LocalSync implements core.VideoEditorDocumentSync {
 
     this.#add([{ type: 'node:move', nodeId: node.id, from, to }])
   }
-  #onUpdate({ node, from }: NodeUpdateEvent): void {
-    const to: Record<string, unknown> = {}
+  #onUpdate({ node, key, from }: NodeUpdateEvent): void {
+    const to = node[key as keyof typeof node]
 
-    for (const key in from) {
-      if (Object.hasOwn(from, key)) {
-        to[key] = node[key as keyof typeof node]
-      }
-    }
-
-    this.#add([{ type: 'node:update', nodeId: node.id, from, to }])
+    this.#add([{ type: 'node:update', nodeId: node.id, key, from, to }])
   }
   #onDelete({ node }: NodeDeleteEvent): void {
     const { parent } = node

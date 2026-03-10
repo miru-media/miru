@@ -56,8 +56,7 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   constructor(options: { renderView: RenderDocument }) {
     const { renderView } = options
-    const { doc } = renderView
-    super({ doc })
+    super(renderView.doc)
 
     this.renderView = renderView
 
@@ -93,10 +92,9 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
       effect((onCleanup) => {
         if (this.doc.activeClipIsStalled.value)
-          activeClipIsStalledTimeout = setTimeout(
-            () => (this.#delayedActiveClipIsStalled.value = true),
-            CLIP_STALLED_DELAY_MS,
-          )
+          activeClipIsStalledTimeout = setTimeout(() => {
+            this.#delayedActiveClipIsStalled.value = true
+          }, CLIP_STALLED_DELAY_MS)
         else this.#delayedActiveClipIsStalled.value = false
 
         onCleanup(() => clearTimeout(activeClipIsStalledTimeout))
@@ -162,8 +160,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   }
 
   async withoutRendering(fn: () => Promise<void>): Promise<void> {
-    this.#noRender.value++
-    await fn().finally(() => this.#noRender.value--)
+    this.#noRender.value += 1
+    await fn().finally(() => void (this.#noRender.value -= 1))
   }
 
   dispose(): void {

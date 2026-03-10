@@ -111,6 +111,9 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   isTrack(): this is pub.Track {
     return false
   }
+  isTrackChild(): this is pub.AnyTrackChild {
+    return false
+  }
   isClip(): this is pub.AnyClip {
     return false
   }
@@ -126,7 +129,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   #emitUpdate<Key extends keyof T>(key: Exclude<Key, 'id' | 'type'>, oldValue: T[Key]): void {
-    const event = new NodeUpdateEvent(this as unknown as AnyNode, { [key]: oldValue })
+    const event = new NodeUpdateEvent(this as unknown as AnyNode, key as any, oldValue)
     this.doc.emit(event)
   }
 
@@ -136,7 +139,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     options: {
       equal?: (a: T[Key], b: T[Key]) => boolean
       emit?: boolean
-      onChange?: (value: T[Key]) => void
+      onChange?: (value: T[Key]) => unknown
       defaultValue?: T[Key]
     } = {},
   ): void {

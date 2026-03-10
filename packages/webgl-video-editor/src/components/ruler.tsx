@@ -1,25 +1,27 @@
 import { computed, watch } from 'fine-jsx'
 
-import type { VideoEditor } from '#core'
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
 
 import styles from '../css/index.module.css'
 
+import { useEditor } from './utils.ts'
+
 const RULER_INTERVAL_MULTIPLIER = 32
 
-export const Ruler = ({ editor }: { editor: VideoEditor }) => {
+export const Ruler = () => {
+  const editor = useEditor()
   const { languages } = useI18n()
 
   const intervalS = computed(() => {
     const range = editor._secondsPerPixel.value
     const exponent = Math.floor(Math.log2(range))
-    const magnitude = Math.pow(2, exponent)
+    const magnitude = 2 ** exponent
 
     return magnitude * RULER_INTERVAL_MULTIPLIER
   })
 
-  const Markings = () => {
+  const Markings = (): JSX.Element => {
     const size = computed(() => editor.secondsToPixels(intervalS.value))
     const offset = computed(() => (editor._timelineSize.value.width / 2) % size.value)
 
@@ -36,12 +38,12 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
     )
   }
 
-  const Labels = () => {
+  const Labels = (): JSX.Element => {
     const formattedDurations = new Map<number, string>()
 
     watch([languages], formattedDurations.clear.bind(formattedDurations))
 
-    const getChildren = () => {
+    const getChildren = (): JSX.Element[] => {
       const timelineWidth = editor._timelineSize.value.width
       const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
       const halfTimelineWidth = timelineWidth / 2
@@ -52,7 +54,7 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
       const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
 
       let fromS = editor.doc.currentTime - timelineRangeS / 2
-      fromS = fromS - (fromS % labelIntervalS)
+      fromS -= fromS % labelIntervalS
 
       for (let i = 0; i < nLabels; i++) {
         const timeS = fromS + i * labelIntervalS
@@ -89,8 +91,14 @@ export const Ruler = ({ editor }: { editor: VideoEditor }) => {
 
   return (
     <div class={styles.ruler} onClick={onClick}>
-      <Markings />
-      <Labels />
+      {() =>
+        editor._timelineSize.value.width === 0 ? undefined : (
+          <>
+            <Markings />
+            <Labels />
+          </>
+        )
+      }
     </div>
   )
 }

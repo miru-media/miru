@@ -31,9 +31,8 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   declare readonly activeClipIsStalled: pub.Document['activeClipIsStalled']
 
   constructor(options: { doc: pub.Document }) {
-    super(options)
-
     const { doc } = options
+    super(doc)
 
     Vue.markRaw(this)
     Vue.markRaw(doc)

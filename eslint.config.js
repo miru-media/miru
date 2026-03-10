@@ -6,6 +6,7 @@ import markdown from '@eslint/markdown'
 import { globalIgnores } from 'eslint/config'
 import eslintConfigLove from 'eslint-config-love'
 import importPlugin from 'eslint-plugin-import'
+import { jsdoc } from 'eslint-plugin-jsdoc'
 import * as tseslint from 'typescript-eslint'
 
 const TS_JS_FILES = '**/*.{ts,tsx,js,jsx,cjs,mts,mjs}'
@@ -20,7 +21,24 @@ export default tseslint.config(
   {
     files: [TS_JS_FILES],
     ignores: ['**/*.md/*'],
-    extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked, eslintConfigLove],
+    extends: [
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+      eslintConfigLove,
+      jsdoc({
+        config: 'flat/recommended-typescript',
+        settings: {
+          ignorePrivate: true,
+          ignoreInternal: true,
+          structuredTags: {
+            see: {
+              name: 'namepath-referencing',
+              required: ['name'],
+            },
+          },
+        },
+      }),
+    ],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -88,6 +106,7 @@ export default tseslint.config(
       '@typescript-eslint/naming-convention': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
       '@typescript-eslint/no-unsafe-member-access': 'warn',
@@ -103,7 +122,11 @@ export default tseslint.config(
       'promise/param-names': 'off',
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
       'no-console': 'off',
+      'no-multi-assign': 'off',
+      'no-param-reassign': ['error', { props: false }],
+      'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
       'no-void': 'off',
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       complexity: 'off',
       curly: 'off',
     },
@@ -115,6 +138,7 @@ export default tseslint.config(
       'import/no-extraneous-dependencies': 'error',
       'no-console': 'error',
       'import/no-relative-packages': 'error',
+      'jsdoc/no-undefined-types': 'error',
     },
   },
   {
@@ -127,6 +151,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/strict-void-return': 'off',
       '@typescript-eslint/unbound-method': 'off',
       'import/no-extraneous-dependencies': 'off',
     },

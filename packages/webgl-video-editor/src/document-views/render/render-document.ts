@@ -30,7 +30,8 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   readonly applyVideoRotation: boolean
 
   constructor(options: RenderDocumentOptions) {
-    super(options)
+    const { doc } = options
+    super(doc)
 
     this.applyVideoRotation = options.applyVideoRotation
 
@@ -51,7 +52,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
 
     this._init()
 
-    this.stage = this._getNode(options.doc.timeline).container
+    this.stage = this._getNode(doc.timeline).container
     this.whenRendererIsReady = this.#ownsRenderer ? this.#initPixi() : Promise.resolve()
   }
 

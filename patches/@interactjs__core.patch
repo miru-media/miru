@@ -1,0 +1,13 @@
+diff --git a/Interactable.js b/Interactable.js
+index e9ef1994f1cd79478d112dd3d3d96b9d5e6ab2b4..860eb156114ed14ec4d3cf780ea30764d2bd3006 100644
+--- a/Interactable.js
++++ b/Interactable.js
+@@ -158,7 +158,7 @@ class Interactable {
+   rectChecker(checker) {
+     if (is.func(checker)) {
+       this.getRect = element => {
+-        const rect = extend({}, checker.apply(this, element));
++        const rect = extend({}, checker.call(this, element));
+         if (!('width' in rect)) {
+           rect.width = rect.right - rect.left;
+           rect.height = rect.bottom - rect.top;

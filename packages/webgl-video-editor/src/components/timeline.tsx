@@ -1,72 +1,32 @@
-import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
+import '@interactjs/actions/drop'
+import { effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { InputEvent } from 'shared/types'
-import { useElementSize, useI18n } from 'shared/utils'
-import { splitTime } from 'shared/video/utils'
+import { useI18n } from 'shared/utils'
 
 import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { VideoEditor } from '../video-editor.ts'
 
-import { Clip } from './clip.jsx'
+import { Playhead } from './playhead.jsx'
 import { Ruler } from './ruler.jsx'
-
-const Playhead = ({ editor }: { editor: pub.VideoEditor }) => {
-  const root = ref<HTMLElement>()
-  const size = useElementSize(root)
-
-  const timeParts = computed(() => splitTime(editor.doc.currentTime))
-
-  return (
-    <>
-      <div
-        ref={root}
-        class={styles.timelinePlayhead}
-        style={() => `--time-pill-width: ${size.value.width}px`}
-      >
-        <span class={[styles.timePill, styles.textBodySmall, styles.numeric]}>
-          <span>
-            {() => timeParts.value.hours}:{() => timeParts.value.minutes}
-          </span>
-          <span class={styles.timePillRight}>
-            {() => timeParts.value.seconds}.{() => timeParts.value.subSeconds}
-          </span>
-
-          <svg class={styles.timePillDrop} viewBox="0 0 16 8" fill="none">
-            <path
-              d="M7.99282 8C7.99282 8 10.3614 0 15.3381 0C20.3147 0 -4.57808 0 0.753127 0C6.08433 0 7.99282 8 7.99282 8Z"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
-      </div>
-      <div class={styles.timelineCursor} />
-    </>
-  )
-}
+import { Track } from './track.jsx'
+import { useEditor } from './utils.ts'
 
 export const Timeline = ({
-  editor,
   children,
 }: {
-  editor: pub.VideoEditor
   children?: { empty?: MaybeRefOrGetter<MaybeChild>; tracks?: MaybeRefOrGetter<MaybeChild> }
-}) => {
+}): JSX.Element => {
+  const editor = useEditor()
   const { t } = useI18n()
-  const root = ref<HTMLElement>()
   const scrollContainer = ref<HTMLElement>()
   const { doc } = editor
 
-  const rootSize = useElementSize(root)
-
-  effect(() => {
-    const { width, height } = rootSize.value
-    editor._timelineSize.value = { width: Math.max(width, 1), height: Math.max(height, 1) }
-  })
+  const timelineSize = editor._timelineSize
 
   let lastScroll = 0
-  const scrollIsClose = () => Math.abs(lastScroll - (scrollContainer.value?.scrollLeft ?? 0)) < 1
+  const scrollIsClose = (): boolean => Math.abs(lastScroll - (scrollContainer.value?.scrollLeft ?? 0)) < 1
 
   effect(() => {
     const scrollEl = scrollContainer.value
@@ -84,15 +44,12 @@ export const Timeline = ({
     editor.seekTo(editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
   }
 
-  const hasAnyClips = computed(() => doc.timeline.children.some((track) => !!track.firstClip))
-
   const onInputClipFile = async (event: InputEvent, track: pub.Track | undefined) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     try {
-      track ??= editor.addTrack('video')
-      editor.addClip(track, await editor.createMediaAsset(file))
+      editor.addClip(track ?? editor.addTrack('video'), await editor.createMediaAsset(file))
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
@@ -103,16 +60,18 @@ export const Timeline = ({
     if (!(event.target as HTMLElement).closest(`.${styles.clip}`)) editor.select(undefined)
   }
 
+  const dragTargetTrack = editor.drag.targetTrack
+
   return (
     <div
-      ref={root}
+      ref={editor._timelineContainer}
       class={styles.timeline}
       style={() => `
-          --editor-width: ${rootSize.value.width}px;
-          --editor-height: ${rootSize.value.height}px;
-          --timeline-width:${editor.secondsToPixels(Math.max((editor as unknown as VideoEditor)._resize.value?.docDuration ?? 0, doc.duration))}px`}
+          --editor-width: ${timelineSize.value.width}px;
+          --editor-height: ${timelineSize.value.height}px;
+          --timeline-width:${editor.secondsToPixels(Math.max(editor.resize.docDuration.value, doc.duration))}px`}
     >
-      <Playhead editor={editor} />
+      <Playhead />
 
       <div
         ref={scrollContainer}
@@ -120,7 +79,7 @@ export const Timeline = ({
         onScroll={onScroll}
         onPointerdown={onPointerdownScroller}
       >
-        <Ruler editor={editor} />
+        <Ruler />
 
         <div class={styles.trackList}>
           {() =>
@@ -142,47 +101,17 @@ export const Timeline = ({
                 </div>
               </>
             ) : (
-              doc.timeline.children.map((track, trackIndex) => (
-                <div
-                  class={styles.track}
-                  style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
-                >
-                  {track.clips.map((clip) => (
-                    <Clip
-                      editor={editor as unknown as VideoEditor}
-                      clip={clip}
-                      isSelected={() => editor.selection?.id === clip.id}
-                    />
-                  ))}
-                  <label
-                    class={() => [styles.trackButton, track.clipCount > 0 && styles.square]}
-                    hidden={() => !hasAnyClips.value && trackIndex !== 0}
-                  >
-                    {() =>
-                      track.clipCount ? (
-                        <>
-                          <IconTablerPlus />
-                          <span class={styles.srOnly}>
-                            {track.trackType === 'audio' ? t('add_audio') : t('add_clip')}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <IconTablerVideo />
-                          <span class={styles.textBody}>
-                            {() => (track.trackType === 'audio' ? t('click_add_audio') : t('click_add_clip'))}
-                          </span>
-                        </>
-                      )
-                    }
-                    <input
-                      type="file"
-                      hidden
-                      accept={ACCEPT_VIDEO_FILE_TYPES}
-                      onInput={(event: InputEvent) => onInputClipFile(event, track)}
-                    />
-                  </label>
-                </div>
+              doc.timeline.children.map((track) => (
+                <>
+                  <div
+                    data-before-track-id={track.id}
+                    class={() => [
+                      styles.clipDragTrackSpace,
+                      dragTargetTrack.value?.id === track.id && dragTargetTrack.value.before && styles.active,
+                    ]}
+                  />
+                  <Track data-track-id={track.id} track={track} onInputClipFile={onInputClipFile} />
+                </>
               ))
             )
           }

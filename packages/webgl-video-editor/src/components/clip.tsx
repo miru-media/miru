@@ -2,16 +2,13 @@ import '@interactjs/actions/resize'
 import '@interactjs/actions/drag'
 import '@interactjs/modifiers'
 import '@interactjs/auto-start'
-import type { DragEvent } from '@interactjs/actions/drag/plugin.js'
-import type { ResizeEvent } from '@interactjs/actions/resize/plugin.js'
-import interact from '@interactjs/interact'
-import { computed, effect, ref } from 'fine-jsx'
+import { computed, ref } from 'fine-jsx'
 
 import { Button } from 'shared/components/button.tsx'
 import { stringHashCode, useI18n } from 'shared/utils'
 
 import type { AnyClip } from '../../types/core.d.ts'
-import { MIN_CLIP_DURATION_S, MIN_CLIP_WIDTH_PX } from '../constants.ts'
+import { MIN_CLIP_WIDTH_PX } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
@@ -24,17 +21,6 @@ const CLIP_COLORS = [
   'var(--green)',
   'var(--green-light)',
 ]
-
-const ensureDurationIsPlayable = (clip: AnyClip): void => {
-  const { asset } = clip
-  if (!asset) return
-
-  const sourceDuration = asset.duration
-  const clipTime = clip.time
-  const durationOutsideClip = sourceDuration - (clipTime.source + clipTime.duration)
-  clip.sourceStart += Math.min(0, durationOutsideClip)
-  clip.duration = Math.min(clipTime.duration, sourceDuration)
-}
 
 export const Clip = ({
   clip,
@@ -57,7 +43,7 @@ export const Clip = ({
 
   const boxEdges = computed(() => {
     const { time } = clip
-    const { isDragging, x } = editor._drag
+    const { isDragging, x } = editor.drag
 
     const left = isSelected() && isDragging.value ? x.value : editor.secondsToPixels(time.start)
     const right = left + Math.max(MIN_CLIP_WIDTH_PX, editor.secondsToPixels(time.duration))
@@ -65,163 +51,27 @@ export const Clip = ({
     return { left, right }
   })
 
-  effect((onCleanup) => {
-    const element = mainContainer.value
-    if (!element) return
-
-    const interactable = interact(element, {
-      getRect() {
-        const { time } = clip
-        const left = editor.secondsToPixels(time.start)
-        const right = editor.secondsToPixels(time.end)
-        const { top, bottom } = element.getBoundingClientRect()
-
-        return { left, right, top, bottom }
-      },
-      resize: {
-        edges: { left: `.${styles.clipResizeLeft}`, right: `.${styles.clipResizeRight}` },
-        modifiers: [
-          interact.modifiers.restrictEdges({
-            outer: () => {
-              const { time, prev } = clip
-              const mediaDuration = clip.asset?.duration ?? 0
-              const minStartTime = Math.max(
-                time.end - mediaDuration,
-                Math.max(0, prev ? prev.time.start + MIN_CLIP_DURATION_S : 0),
-              )
-              const maxEndTime = time.start + mediaDuration
-
-              return {
-                left: editor.secondsToPixels(minStartTime),
-                right: editor.secondsToPixels(maxEndTime),
-                top: 0,
-                bottom: 0,
-              }
-            },
-            inner: () => {
-              const { time } = clip
-              const minDuration = MIN_CLIP_DURATION_S
-
-              return {
-                left: editor.secondsToPixels(time.end - minDuration),
-                right: editor.secondsToPixels(time.start + minDuration),
-                top: 0,
-                bottom: 0,
-              }
-            },
-          }),
-        ],
-        listeners: {
-          start(event: ResizeEvent) {
-            if (!clip.asset) event.interaction.stop()
-            else editor._startClipResize(clip)
-          },
-          move({ rect, edges }: ResizeEvent) {
-            editor._transact(() => {
-              const { prev } = clip
-              const newStart = editor.pixelsToSeconds(rect.left)
-              const newDuration = editor.pixelsToSeconds(rect.width)
-
-              if (edges?.left === true) {
-                const delta = newDuration - clip.duration
-                clip.sourceStart = Math.max(0, clip.sourceStart - delta)
-              }
-
-              clip.duration = newDuration
-
-              if (edges?.right === true) ensureDurationIsPlayable(clip)
-
-              if (prev) prev.duration = newStart - prev.time.start
-            })
-          },
-          end() {
-            editor._endClipResize()
-          },
-        },
-      },
-      drag: {
-        modifiers: [
-          interact.modifiers.restrictRect({
-            restriction: () => ({
-              left: 0,
-              right: editor.secondsToPixels(editor.doc.duration),
-              top: 0,
-              bottom: 0,
-            }),
-          }),
-        ],
-        startAxis: 'x',
-        listeners: {
-          start({ rect, interaction }: DragEvent) {
-            if (!isSelected()) {
-              interaction.stop()
-              return
-            }
-
-            editor._startClipDrag(clip)
-            editor._drag.x.value = rect.left
-          },
-          move({ rect }: DragEvent) {
-            editor._transact(() => {
-              editor._drag.x.value = rect.left
-
-              const parent = clip.parent!
-              const newStartTime = editor.pixelsToSeconds(rect.left)
-              const newCenterTime = newStartTime + clip.time.duration / 2
-
-              let insertBefore: AnyClip | undefined
-              for (let { prevClip } = clip; prevClip; { prevClip } = prevClip) {
-                const { start, duration } = prevClip.time
-                if (start >= newStartTime || start + duration / 2 >= newCenterTime) insertBefore = prevClip
-                else break
-              }
-
-              if (insertBefore) {
-                clip.move({ parentId: parent.id, index: insertBefore.index })
-                return
-              }
-
-              const newEndTime = newStartTime + clip.time.duration
-
-              let insertAfter: AnyClip | undefined
-              for (let { nextClip } = clip; nextClip; { nextClip } = nextClip) {
-                const { end, duration } = nextClip.time
-                if (end <= newEndTime || end - duration / 2 <= newCenterTime) insertAfter = nextClip
-                else break
-              }
-              if (insertAfter) {
-                clip.move({ parentId: parent.id, index: insertAfter.index + 1 })
-              }
-            })
-          },
-          end() {
-            editor._endClipDrag()
-          },
-        },
-      },
-    })
-
-    onCleanup(() => {
-      interactable.unset()
-    })
-  })
-
   return (
     <div
       class={() => [
         styles.clip,
-        isSelected() && [styles.isSelected, editor._drag.isDragging.value && styles.isDragging],
+        isSelected() && [styles.isSelected, editor.drag.isDragging.value && styles.isDragging],
         clip.prev && styles.canResizeLeft,
         clip.next && editor.selection === clip.next && styles.nextIsSelected,
       ]}
       style={() => `
         --clip-box-left: ${boxEdges.value.left}px;
         --clip-box-right: ${boxEdges.value.right}px;
-        --drag-offset: ${editor._drag.x.value};
+        --drag-offset: ${editor.drag.x.value};
         --clip-color: ${clipColor.value};
       `}
     >
-      <div ref={mainContainer} class={styles.clipBox} onClick={() => editor.select(clip, false)}>
+      <div
+        ref={mainContainer}
+        data-clip-id={clip.id}
+        class={styles.clipBox}
+        onClick={() => editor.select(clip, false)}
+      >
         <span class={styles.clipName}>{clip.name ?? clip.asset?.name ?? ''}</span>
         <div class={styles.clipControls}>
           <div class={styles.clipResizeLeft}>

@@ -28,6 +28,9 @@ export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
   isGap(): this is Gap {
     return true
   }
+  isTrackChild(): this is pub.AnyTrackChild {
+    return true
+  }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toObject(): Schema.Gap {

@@ -1,6 +1,8 @@
 import type * as pub from '#core'
 
+import type { ExportDocument } from './export/exporter-document.ts'
 import type { NodeView } from './node-view.ts'
+import type { PlaybackDocument } from './playback/playback-document.ts'
 
 export type ViewType<
   TMap extends Partial<Record<pub.AnyNode['type'], NodeView<any, any>>>,
@@ -11,14 +13,20 @@ export type ViewType<
     ? TMap[NonNullable<T>['type']]
     : undefined
 
+/**
+ * While the video editor {@link pub.Document} is a [headless](https://en.wikipedia.org/wiki/Headless_software)
+ * interface, The `DocumentView` provides methods for using a document for different objectives such as
+ * {@link PlaybackDocument playback} and {@link ExportDocument export}. It allows you to create a layer on top
+ * of the document tree by creating a custom view of every node and to listen to events on nodes, assets,
+ * etc.
+ */
 export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type'], NodeView<any, any>>>> {
   readonly doc: pub.Document
   readonly #map = new Map<string, NonNullable<ViewType<TMap, pub.AnyNode>>>()
   protected readonly _abort = new AbortController()
   isDisposed = false
 
-  constructor(options: { doc: pub.Document }) {
-    const { doc } = options
+  constructor(doc: pub.Document) {
     this.doc = doc
   }
 
@@ -49,9 +57,9 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
     createViewsFrom(undefined, doc.timeline)
   }
 
-  protected abstract _createView<T extends pub.AnyNode>(original: T): ViewType<TMap, T>
+  protected abstract _createView<T extends pub.AnyNode>(original: T): ViewType<TMap, T> | undefined
 
-  #createAndAddView<T extends pub.AnyNode>(original: T): ViewType<TMap, T> {
+  #createAndAddView<T extends pub.AnyNode>(original: T): ViewType<TMap, T> | undefined {
     const view = this._createView(original)
     if (view) this.#map.set(original.id, view)
     return view
@@ -72,10 +80,10 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
 
     this._getNode(node)?._move(parent && this._getNode(parent), node.index)
   }
-  #onUpdate({ node, from }: pub.NodeUpdateEvent): void {
+  #onUpdate({ node, key, from }: pub.NodeUpdateEvent): void {
     const view = this._getNode(node)
     if (!view) return
-    Object.keys(from).forEach((key) => view._update(key, from[key]))
+    view._update(key, from)
   }
   #onDelete({ node }: pub.NodeDeleteEvent): void {
     const view = this._getNode(node)

@@ -6,7 +6,7 @@ import type * as pub from '#core'
 import { toVue } from '../document-views/vue/utils.ts'
 import { VueDocument } from '../document-views/vue/vue-document.ts'
 
-type EditorStaticProps = 'doc' | 'sync' | 'canvas' | 'effectRenderer'
+type EditorStaticProps = '_editor' | 'doc' | 'sync' | 'canvas' | 'effectRenderer'
 type EditorMethodProps =
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- needed
   keyof { [P in keyof pub.VideoEditor as pub.VideoEditor[P] extends Function ? P : never]: unknown }
@@ -30,6 +30,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
 
   return fineJsxScope.run(() =>
     Vue.reactive<VueVideoEditorRaw>({
+      _editor: Vue.markRaw(editor._editor),
       doc: docView,
       sync: editor.sync && Vue.markRaw(editor.sync),
       canvas: editor.canvas,
@@ -43,7 +44,6 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       viewportSize: toVue(() => editor.viewportSize),
       zoom: toVue(() => editor.zoom),
       playback: toVue(() => editor.playback),
-      _timelineSize: toVue(() => editor._timelineSize),
       _secondsPerPixel: toVue(() => editor._secondsPerPixel),
       _showStats: toVue(
         () => editor._showStats,

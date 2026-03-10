@@ -2,7 +2,7 @@ import { computed, ref, type Ref } from 'fine-jsx'
 import { uid } from 'uid'
 import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
-import type { NodeSnapshot } from '#internal'
+import type { ClipDrag, ClipResize } from '#internal'
 import type * as Schema from '#schema'
 import type { Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
@@ -12,8 +12,11 @@ import { remap0 } from 'shared/utils/math'
 
 import type * as pub from '../types/webgl-video-editor'
 
+import { useClipDragResize } from './components/utils.ts'
 import { MIN_CLIP_DURATION_S } from './constants.ts'
-import { ExportDocumentView } from './document-views/export/exporter-document.ts'
+import { EditDocument } from './document-views/edit/edit-document.ts'
+import type { AnyEditTrackChild } from './document-views/edit/edit-nodes.ts'
+import { ExportDocument } from './document-views/export/exporter-document.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
@@ -29,31 +32,20 @@ const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined 
 
 const INITIAL_SECONDS_PER_PIXEL = 0.01
 
-type DragResizeInitialState = [
-  prev: NodeSnapshot<Schema.AnyClip> | undefined,
-  cur: NodeSnapshot<Schema.AnyClip>,
-  next: NodeSnapshot<Schema.AnyClip> | undefined,
-]
-
 export class VideoEditor implements pub.VideoEditor {
-  doc!: pub.Document
+  doc!: EditDocument
+  _editor = this
   readonly sync?: pub.VideoEditorDocumentSync
 
   readonly #selection = ref<pub.AnyTrackChild>()
   _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
-  _timelineSize = ref<Size>({ width: 1, height: 1 })
+  _timelineContainer = ref<HTMLElement>()
+  _timelineSize = useElementSize(this._timelineContainer)
   _viewportSize: Ref<Size>
   _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
 
-  _resize = ref<{
-    docDuration: number
-    from: DragResizeInitialState
-  }>()
-  _drag = {
-    from: undefined as DragResizeInitialState | undefined,
-    isDragging: ref(false),
-    x: ref(0),
-  }
+  drag: ClipDrag
+  resize: ClipResize
 
   effectRenderer: EffectRenderer
   playback: PlaybackDocument
@@ -67,6 +59,13 @@ export class VideoEditor implements pub.VideoEditor {
 
   get currentTime(): number {
     return this.doc.currentTime
+  }
+
+  get timelineContainer(): HTMLElement | undefined {
+    return this._timelineContainer.value
+  }
+  set timelineContainer(value) {
+    this._timelineContainer.value = value
   }
 
   readonly #effects = computed(
@@ -99,8 +98,8 @@ export class VideoEditor implements pub.VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): pub.AnyTrackChild | undefined {
-    return this.#selection.value
+  get selection(): AnyEditTrackChild | undefined {
+    return this.doc._getNode(this.#selection.value)
   }
 
   get tracks(): pub.Track[] {
@@ -117,9 +116,11 @@ export class VideoEditor implements pub.VideoEditor {
 
   constructor(options: { sync?: pub.VideoEditorDocumentSync; assets?: pub.VideoEditorAssetStore } = {}) {
     const { sync, assets } = options
-    const doc = (this.doc = sync?.doc ?? new Document({ assets }))
+    const doc = new EditDocument(sync?.doc ?? new Document({ assets }))
 
     this.sync = sync
+    this.doc = doc
+    ;({ drag: this.drag, resize: this.resize } = useClipDragResize(this))
 
     const renderView = new RenderDocument({
       doc,
@@ -266,42 +267,16 @@ export class VideoEditor implements pub.VideoEditor {
   select(clip: pub.AnyTrackChild | undefined, seek = true): void {
     this.#select(clip, seek)
   }
-  #select(clip: pub.AnyTrackChild | undefined, seek: boolean): void {
-    this.#selection.value = clip
+  #select(clip_: pub.AnyTrackChild | undefined, seek: boolean): void {
+    const { doc } = this
+    const clip = (this.#selection.value = doc._getNode(clip_))
 
     if (clip && seek) {
       const { start, end } = clip.time
-      const { doc } = this
 
       if (doc.currentTime < start) doc.seekTo(start)
       else if (doc.currentTime >= end) doc.seekTo(end - 1 / doc.frameRate)
     }
-  }
-
-  _startClipDrag(clip: pub.AnyClip): void {
-    this._drag.isDragging.value = true
-    this._drag.from = [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()]
-  }
-  _endClipDrag(): void {
-    const { isDragging, x } = this._drag
-    isDragging.value = false
-
-    x.value = 0
-  }
-
-  _startClipResize(clip: pub.AnyClip): void {
-    this.playback.pause()
-
-    this._resize.value = {
-      docDuration: this.doc.duration,
-      from: [clip.prevClip?.getSnapshot(), clip.getSnapshot(), clip.nextClip?.getSnapshot()],
-    }
-  }
-  _endClipResize(): void {
-    const resize = this._resize.value
-    if (!resize) return
-
-    this._resize.value = undefined
   }
 
   _transact<T>(fn: () => T): T {
@@ -326,7 +301,7 @@ export class VideoEditor implements pub.VideoEditor {
     onProgress(0)
 
     try {
-      const exporter = new ExportDocumentView({ doc: this.doc, renderOptions: this.playback.renderView })
+      const exporter = new ExportDocument({ doc: this.doc, renderOptions: this.playback.renderView })
 
       await this.playback
         .withoutRendering(async () => {

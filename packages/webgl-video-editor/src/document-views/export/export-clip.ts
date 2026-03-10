@@ -7,7 +7,7 @@ import type * as pub from '../../../types/core.d.ts'
 import type { VideoEffectAsset } from '../../assets/video-effect-asset.ts'
 import { NodeView } from '../node-view.ts'
 
-import type { ExportDocumentView } from './exporter-document.ts'
+import type { ExportDocument } from './exporter-document.ts'
 
 export interface InitOptions {
   video: Mb.InputVideoTrack | null
@@ -15,7 +15,7 @@ export interface InitOptions {
   audioBuffer?: AudioBuffer
 }
 
-export class ExportClip extends NodeView<ExportDocumentView, pub.AnyClip> {
+export class ExportClip extends NodeView<ExportDocument, pub.AnyClip> {
   renderClip = this.docView.renderView._getNode(this.original)
   readonly videoEffect: VideoEffectAsset | undefined
 
@@ -46,7 +46,7 @@ export class ExportClip extends NodeView<ExportDocumentView, pub.AnyClip> {
     )
   }
 
-  constructor(exportView: ExportDocumentView, original: pub.AnyClip) {
+  constructor(exportView: ExportDocument, original: pub.AnyClip) {
     super(exportView, original)
 
     this.targetFrameDurationUs = 1e6 / exportView.doc.frameRate
@@ -113,6 +113,7 @@ export class ExportClip extends NodeView<ExportDocumentView, pub.AnyClip> {
         return true
       }
 
+      // eslint-disable-next-line no-await-in-loop -- TODO: use async iterator
       if (await this.readNextVideoFrame()) break
     }
 
@@ -156,6 +157,7 @@ export class ExportClip extends NodeView<ExportDocumentView, pub.AnyClip> {
       if (this.currentAudioData.timestamp > timeS * 1e6) return true
 
       if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
+      // eslint-disable-next-line no-await-in-loop -- TODO: use async iterator
       if (await this.readNextAudio()) break
     }
 

@@ -75,7 +75,6 @@
   flex-grow: 1;
   flex-shrink: 1;
   flex-direction: column;
-  gap: 0.625rem;
   width: calc(var(--timeline-width) + var(--editor-width));
   min-height: calc(var(--clip-height) * 2.5);
   padding-bottom: 1rem;
@@ -134,4 +133,13 @@
   display: inline-block;
   padding-top: 0.25em;
   background-color: var(--primary-bg);
+}
+
+.clipDragTrackSpace {
+  height: 0.675rem;
+  transition: height 0.2s;
+
+  &.active {
+    height: var(--clip-height);
+  }
 }

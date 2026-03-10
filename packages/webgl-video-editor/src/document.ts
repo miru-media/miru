@@ -19,20 +19,13 @@ const SEEK_EVENT = new PlaybackSeekEvent()
 Pixi.extensions.add(LutUploaderSystem)
 
 class NodeMap implements pub.NodeMap {
-  map: pub.NodeMap['map'] = new Map()
-  byType: pub.NodeMap['byType'] = {
-    timeline: new Set(),
-    track: new Set(),
-    clip: new Set(),
-    gap: new Set(),
-  }
+  private readonly map = new Map<string, pub.AnyNode>()
+  forEach = this.map.forEach.bind(this.map)
   get<T extends pub.AnyNode>(id: T['id']): T {
     return this.map.get(id) as T
   }
   set(node: pub.AnyNode): void {
     this.map.set(node.id, node)
-    const typeSet: Set<pub.NodesByType[typeof node.type]> = this.byType[node.type]
-    typeSet.add(node)
   }
   has(id: string): boolean {
     return this.map.has(id)
@@ -41,13 +34,14 @@ class NodeMap implements pub.NodeMap {
     const node = this.map.get(id)
     if (!node) return true
 
-    const typeSet: Set<pub.NodesByType[typeof node.type]> = this.byType[node.type]
-    typeSet.delete(node)
-
     return this.map.delete(id)
   }
 }
 
+/**
+ * The video editor {@link pub.Document} is a [headless](https://en.wikipedia.org/wiki/Headless_software) interface
+ * containing a mutable tree of timeline nodes, resolution, frameRate, and currentTime.
+ */
 export class Document implements pub.Document {
   declare parent?: undefined
 
@@ -103,7 +97,7 @@ export class Document implements pub.Document {
 
   constructor(options: Partial<Schema.DocumentSettings & { assets: pub.VideoEditorAssetStore }>) {
     this.on('node:create', ({ node }) => this.nodes.set(node))
-    this.on('node:delete', ({ node }) => this.nodes.delete(node.id))
+    this.on('node:delete', ({ node }) => void this.nodes.delete(node.id))
 
     this.#resolution = ref(options.resolution ?? DEFAULT_RESOLUTION)
     this.#frameRate = ref(options.frameRate ?? DEFAULT_FRAMERATE)
@@ -165,15 +159,15 @@ export class Document implements pub.Document {
   on<T extends Extract<keyof pub.VideoEditorEvents, string>>(
     type: T,
     listener: (event: pub.VideoEditorEvents[T]) => void,
-    options?: AddEventListenerOptions,
+    options_?: AddEventListenerOptions,
   ): () => void {
-    options = { signal: this.#disposeAbort.signal, ...options }
+    const options = { signal: this.#disposeAbort.signal, ...options_ }
     this.#eventTarget.addEventListener(type, listener as any, options)
     const remove = () => this.#eventTarget.removeEventListener(type, listener as any, options)
     return remove
   }
 
-  /** @internal @hidden */
+  /** @internal */
   emit(event: pub.VideoEditorEvents[keyof pub.VideoEditorEvents]): void {
     this.#eventTarget.dispatchEvent(event)
   }
@@ -182,7 +176,7 @@ export class Document implements pub.Document {
     this.resolution = content.resolution
     this.frameRate = content.frameRate
 
-    content.assets.forEach((init) => this.assets.create(init))
+    content.assets.forEach((init) => void this.assets.create(init))
 
     const createChildren = (parent: pub.AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
       childrenInit.forEach((childInit, index) => {
@@ -226,7 +220,7 @@ export class Document implements pub.Document {
 
     this.emit(new DocDisposeEvent(this))
     this.#disposeAbort.abort()
-    this.nodes.map.forEach((node) => node.dispose())
+    this.nodes.forEach((node) => node.dispose())
 
     if (this.#ownsAssetStore) this.assets.dispose()
   }
