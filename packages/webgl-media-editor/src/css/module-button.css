@@ -65,11 +65,12 @@
     }
 
     /* BUTTON ACTIVE AND HOVER */
-    &.miru--acc {
+    &.miru--acc,
+    &:has(input:checked) {
       border: 2px solid;
     }
 
-    &.miru--hov:not(.miru--acc) {
+    &.miru--hov:not(.miru--acc, &:has(input:checked)) {
       border: 2px solid;
     }
 
@@ -83,6 +84,8 @@
   .miru--button__label {
     margin: auto;
     margin-top: 0.2em;
+
+    /* align-content: center; */
 
     /* margin-left: .2em;
     margin-right: .2em; */
@@ -98,8 +101,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 1em;
-    height: 1em;
+    width: 0;
+    height: 0;
   }
 
   &:has(canvas) .miru--button__label {

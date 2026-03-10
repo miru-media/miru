@@ -31,15 +31,16 @@
   }
 
   /* BUTTON ACTIVE */
-  .miru--button.miru--acc {
+  .miru--button.miru--acc,
+  .miru--button:has(input:checked) {
     color: var(--color-fnt-acc);
     background-color: var(--color-bg-acc);
     border-color: var(--color-fnt-acc);
   }
 
   /* BUTTON HOVER */
-  .miru--button:not(.miru--acc, :has(canvas)):hover,
-  .miru--hov:not(.miru--acc) {
+  .miru--button:not(.miru--acc, :has(canvas), :has(input:checked)):hover,
+  .miru--hov:not(.miru--acc, :has(input:checked)) {
     background-color: var(--color-bg-button-hover);
     border-color: transparent;
   }

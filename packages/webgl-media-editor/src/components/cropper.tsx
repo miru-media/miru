@@ -26,14 +26,12 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
       <div class={styles['miru--menu']}>
         <p class={styles['miru--menu__row']}>
           {/* <p class="miru--menu__group"> */}
-          <label
-            class={[styles['miru--button'], () => (aspectRatio.value === -1 ? styles['miru--acc'] : '')]}
-          >
+          <label class={styles['miru--button']}>
             <input
               type="radio"
               name="image-crop"
-              value="original"
-              checked
+              value="Original"
+              checked={() => !aspectRatio.value}
               onClick={async () => {
                 await resetCrop()
               }}
@@ -47,13 +45,14 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             { value: 1, Icon: IconTablerCrop_1_1, label: '1:1' },
             { value: 1 / ASPECT_9_16, Icon: IconTablerCropLandscape, label: '16:9' },
           ].map(({ value, Icon, label }) => (
-            <label
-              class={() => [
-                styles['miru--button'],
-                aspectRatio.value.toFixed(1) === value.toFixed(1) && styles['miru--acc'],
-              ]}
-            >
-              <input type="radio" name="image-crop" value={label} onClick={() => setAspectRatio(value)} />
+            <label class={styles['miru--button']}>
+              <input
+                type="radio"
+                name="image-crop"
+                value={label}
+                checked={() => aspectRatio.value.toFixed(1) === value.toFixed(1)}
+                onClick={() => setAspectRatio(value)}
+              />
               <Icon class={styles['miru--button__icon']} />
               <span class={styles['miru--button__label']}>{label}</span>
             </label>
