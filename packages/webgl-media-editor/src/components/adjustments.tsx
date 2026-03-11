@@ -60,7 +60,7 @@ export const AdjustmentsView = ({
         toValue(showPreviews) === true &&
         sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
-      <div class={styles['miru--menu']}>
+      <div id="tab-adjust" role="tabpanel" aria-labelledby="tab-button-adjust" class={styles['miru--menu']}>
         <p class={styles['miru--menu__row']}>
           {() =>
             (
