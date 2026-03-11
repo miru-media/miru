@@ -67,18 +67,24 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
     },
   ]
 
-  const tabKeyDown = (e: KeyboardEvent, index: number): void => {
-    let next = index
-    if (e.key === 'ArrowRight') next = (index + 1) % tabs.length
-    if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
-    if (e.key === 'Home') next = 0
-    if (e.key === 'End') next = tabs.length - 1
-    if (next !== index) {
-      e.preventDefault()
-      currentView.value = tabs[next].view
-      const el: HTMLElement | null = document.querySelector(`[role="tab"]:nth-of-type(${next + 1})`)
-      if (el) el.focus()
+  const mainTabId = ref<number>(0)
+  const tabKeyDown = (e: KeyboardEvent): void => {
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter'].includes(e.key)) return
+    else if (e.key === 'ArrowRight') mainTabId.value = (mainTabId.value + 1) % tabs.length
+    else if (e.key === 'ArrowLeft') mainTabId.value = (mainTabId.value - 1 + tabs.length) % tabs.length
+    else if (e.key === 'Home') mainTabId.value = 0
+    else if (e.key === 'End') mainTabId.value = tabs.length - 1
+    else if (e.key === 'Enter') {
+      currentView.value = tabs[mainTabId.value].view
+      setTimeout(() => {
+        const panel = document.getElementById(`tab-${currentView.value}`)
+        const firstFocusable = panel?.querySelector<HTMLElement>(
+          'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
+        )
+        firstFocusable?.focus()
+      }, 0)
     }
+    e.preventDefault()
   }
 
   return (
@@ -99,10 +105,11 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
               class={() => [
                 styles['miru--button'],
                 currentView.value === view && styles['miru--acc'],
+                mainTabId.value === index && styles['miru--hov'],
                 active() && styles['miru--enabled'],
               ]}
               onClick={() => (currentView.value = view)}
-              onKeyDown={(e: KeyboardEvent) => tabKeyDown(e, index)}
+              onKeyDown={(e: KeyboardEvent) => tabKeyDown(e)}
             >
               <Icon class={styles['miru--button__icon']} />
               <span class={styles['miru--button__label']}>{label}</span>
