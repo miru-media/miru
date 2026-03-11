@@ -154,8 +154,6 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {
-    let newAssetData: { init: Schema.MediaAsset; source: string | Blob } | undefined
-
     const { duration } = asset
 
     const init: Schema.AnyClip = {
@@ -168,12 +166,8 @@ export class VideoEditor implements pub.VideoEditor {
     }
 
     return this._transact(() => {
-      if (newAssetData) this.doc.assets.create(newAssetData.init, { source: newAssetData.source })
-
       const clip = this.doc.createNode(init)
-
       clip.move({ parentId: track.id, index: track.clipCount })
-
       return clip
     })
   }

@@ -63,7 +63,7 @@ export class MediaEditor {
     this.#onEdit = options.onEdit
 
     watch([this.sources, this.editStatesIn], ([sources, states]) => {
-      states?.forEach((state, index) => state != null && sources[index]?.setState(state))
+      states?.forEach((state, index) => state && sources[index]?.setState(state))
     })
 
     watch([this.#effectsIn], ([effects]) => {
@@ -106,7 +106,9 @@ export class MediaEditor {
     this.sources.value = Array.from(newSources)
     this.sourceInputs = sourceOptions
 
-    prevSources.forEach((s) => !newSources.has(s) && s.dispose())
+    prevSources.forEach((s) => {
+      if (!newSources.has(s)) s.dispose()
+    })
     prevSources.length = 0
     prevSourcesByOption.clear()
   }
@@ -142,6 +144,7 @@ export class MediaEditor {
       }),
     )
 
+    // eslint-disable-next-line @typescript-eslint/await-thenable -- maybe promises
     await Promise.all(Array.from(this.effects.value.values()).map((e) => e.promise))
   }
 

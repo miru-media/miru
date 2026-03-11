@@ -24,7 +24,7 @@ export const setUpExtensions = (doc: gltf.Document) => {
   }
   const pointerSetDeclaration = interactivity.createDeclaration().setOp('pointer/set')
 
-  Object.values(TYPES).forEach((type) => graph.addType(type))
+  Object.values(TYPES).forEach((type) => void graph.addType(type))
 
   const makeVisibilityUpdate = (node: gltf.Node, visible: boolean) =>
     interactivity

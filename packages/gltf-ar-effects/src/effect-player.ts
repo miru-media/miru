@@ -134,7 +134,7 @@ export class EffectPlayer {
         this.scene.environment = null
       }
 
-      result.animations.forEach((clip) => animationMixer.clipAction(clip).play())
+      result.animations.forEach((clip) => void animationMixer.clipAction(clip).play())
     })
 
     // set video background texture

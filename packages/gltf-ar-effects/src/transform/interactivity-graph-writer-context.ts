@@ -51,7 +51,6 @@ class PropJsonMap<T, U extends Record<string, any>> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- used for return type
 const getBaseJson = <T>(prop: gltf.Property): T => {
   const json: Partial<gltf.IProperty> = {}
 
@@ -96,7 +95,7 @@ export class InteractivityGraphWriterContext {
     if (!variable) throw new Error('Missing interactivity variable definition.')
 
     let index = this.variables.getIndex(variable)
-    if (index != null) return index
+    if (index !== undefined) return index
 
     const json = getBaseJson<InteractivityVariable>(variable)
 
@@ -114,7 +113,7 @@ export class InteractivityGraphWriterContext {
     if (!event) throw new Error('Missing interactivity custom event definition.')
 
     let index = this.events.getIndex(event)
-    if (index != null) return index
+    if (index !== undefined) return index
 
     const json = getBaseJson<InteractivityEvent>(event)
 
@@ -140,7 +139,7 @@ export class InteractivityGraphWriterContext {
 
     let index = this.declarations.getIndex(declaration)
 
-    if (index != null) return index
+    if (index !== undefined) return index
 
     const op = declaration.getOp()
     const extensionName = declaration.getExtensionName()
@@ -200,7 +199,7 @@ export class InteractivityGraphWriterContext {
 
     if (inputIds.length) {
       const values = (json.values ??= {})
-      inputIds.forEach((id) => (values[id] = this.serializeFlow(node.getInput(id)!)))
+      inputIds.forEach((id) => void (values[id] = this.serializeFlow(node.getInput(id)!)))
     }
 
     // flows out to other nodes
@@ -208,7 +207,7 @@ export class InteractivityGraphWriterContext {
 
     if (flowIds.length) {
       const flows = (json.flows ??= {})
-      flowIds.forEach((id) => (flows[id] = this.serializeFlow(node.getFlow(id)!)))
+      flowIds.forEach((id) => void (flows[id] = this.serializeFlow(node.getFlow(id)!)))
     }
 
     // configuration

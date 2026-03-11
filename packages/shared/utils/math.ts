@@ -9,7 +9,7 @@ export const remap = (
   // eslint-disable-next-line @typescript-eslint/max-params -- --
 ): number => ((value - inputFrom) / (inputTo - inputFrom)) * (outputTo - outputFrom) + outputFrom
 
-/** remap with input and output both from zero */
+/** Remap with input and output both from zero */
 export const remap0 = (value: number, inputTo: number, outputTo: number) => (value / inputTo) * outputTo
 
 export const clamp = (value: number, min: number, max: number) =>

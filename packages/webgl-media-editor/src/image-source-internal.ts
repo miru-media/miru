@@ -37,8 +37,8 @@ interface ImageSourceInternalOptions {
   effects: Ref<Map<string, Effect>>
   adjustColorOp: RendererEffectOp
   manualUpdate: boolean
-  onRenderPreview: () => void
-  onEdit: (state: ImageEditState) => void
+  onRenderPreview: () => unknown
+  onEdit: (state: ImageEditState) => unknown
 }
 
 export class ImageSourceInternal {
@@ -98,7 +98,7 @@ export class ImageSourceInternal {
   }
 
   constructor({
-    sourceOption,
+    sourceOption: sourceOption_,
     thumbnailSize,
     renderer,
     effects,
@@ -154,15 +154,15 @@ export class ImageSourceInternal {
       const optionValue = toValue(thumbnailSize)
       const fullSize = this.crop.value ?? this.#rotated.value
 
-      return fullSize != null ? fit(fullSize, optionValue, 'contain') : optionValue
+      return fullSize ? fit(fullSize, optionValue, 'contain') : optionValue
     })
 
-    sourceOption = normalizeSourceOption(sourceOption)
+    const sourceOption = normalizeSourceOption(sourceOption_)
 
     if (isSyncSource(sourceOption.source)) {
       const fullSizeImage = sourceOption.source
 
-      if (devSlowDown != null) {
+      if (devSlowDown) {
         devSlowDown()
           .then(() => (this.#original.value = fullSizeImage))
           .catch(() => undefined)
@@ -174,7 +174,7 @@ export class ImageSourceInternal {
         sourceOption.type === 'video',
       )
 
-      ;(devSlowDown != null ? devSlowDown(promise) : promise)
+      ;(devSlowDown ? devSlowDown(promise) : promise)
         .then((decoded) => {
           this.#original.value = decoded
         })
@@ -209,14 +209,14 @@ export class ImageSourceInternal {
           this.#isLoading,
           this.pausePreview,
         ],
-        () => this.previewKey.value++,
+        () => (this.previewKey.value += 1),
       )
 
       if (!manualUpdate) watch([this.previewKey], () => this.drawPreview())
 
       watch(
         [this.#rotated, this.#thumbnailSize, this.adjustments, this.crop, this.#isLoading, this.pausePreview],
-        () => this.thumbnailKey.value++,
+        () => (this.thumbnailKey.value += 1),
       )
 
       // emit edit on state change
@@ -247,7 +247,7 @@ export class ImageSourceInternal {
 
     const load = (image: SyncImageSource) => {
       this.#renderer.loadImage(this.#texture, image)
-      this.previewKey.value++
+      this.previewKey.value += 1
     }
 
     this.#isLoading.value = original == null
@@ -316,7 +316,7 @@ export class ImageSourceInternal {
     const crop = this.crop.value
     let cropped = rotated
 
-    if (crop != null) {
+    if (crop) {
       const context = get2dContext()
       resizeImageSync(rotated, crop, crop, context)
       cropped = context.canvas

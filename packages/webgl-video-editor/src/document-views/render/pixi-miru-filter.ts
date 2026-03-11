@@ -4,7 +4,6 @@ import type { EffectOp } from 'webgl-effects'
 
 // eslint-disable-next-line import/no-unresolved -- glob
 import * as _frags from '../../glsl/*.frag'
-import ADJUST_COLOR from '../../glsl/adjust-color.frag'
 import VERTEX_SHADER from '../../glsl/default.vert'
 
 import { LutSource } from './pixi-lut-source.ts'
@@ -60,8 +59,6 @@ const expandOp = (op: EffectOp) => {
   const resources: Record<string, any> = {}
   const sprites: Pixi.Sprite[] = []
   let getIsLoading: (() => boolean) | undefined
-
-  fragmentShader = ADJUST_COLOR
 
   switch (op.type) {
     case 'lut': {

@@ -120,6 +120,7 @@ export default tseslint.config(
       'n/file-extension-in-import': ['error', 'always'],
       'promise/avoid-new': 'off',
       'promise/param-names': 'off',
+      'require-unicode-regexp': ['error', { requireFlag: 'u' }],
       'sort-imports': ['error', { ignoreCase: true, ignoreDeclarationSort: true }],
       'no-console': 'off',
       'no-multi-assign': 'off',

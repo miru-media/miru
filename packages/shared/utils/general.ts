@@ -30,7 +30,10 @@ export const isFunction = (value: unknown): value is Function => typeof value ==
 
 export const asArray = <T>(value: T | T[]) => (Array.isArray(value) ? value : [value])
 
-export const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+export const timeout = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 
 export const isElement = (value: unknown): value is Element =>
   value != null && typeof value === 'object' && 'nodeType' in value && value.nodeType === 1
@@ -42,7 +45,7 @@ interface DevSlowDown {
 
 const VITE_DEV_SLOW_DOWN_MS =
   /* @__PURE__ */ (import.meta.env.VITE_DEV_SLOW_DOWN_MS != null &&
-    parseInt(import.meta.env.VITE_DEV_SLOW_DOWN_MS)) ||
+    parseInt(import.meta.env.VITE_DEV_SLOW_DOWN_MS, 10)) ||
   0
 const slowResolveQueue: (() => void)[] = /* @__PURE__ */ []
 const setResolveTimeout = () =>
@@ -55,7 +58,9 @@ export const devSlowDown: DevSlowDown | undefined = /* @__PURE__ */ VITE_DEV_SLO
   ? async <T>(value?: T | PromiseLike<T>) => {
       if (!slowResolveQueue.length) setResolveTimeout()
 
-      await new Promise<void>((resolve) => slowResolveQueue.push(resolve))
+      await new Promise<void>((resolve) => {
+        slowResolveQueue.push(resolve)
+      })
       return await value
     }
   : undefined
@@ -63,7 +68,7 @@ export const devSlowDown: DevSlowDown | undefined = /* @__PURE__ */ VITE_DEV_SLO
 // https://stackoverflow.com/a/63116134
 export const toKebabCase = (str: string) =>
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- brevity
-  str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
+  str.replace(/[A-Z]+(?![a-z])|[A-Z]/gu, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
 
 // https://stackoverflow.com/a/7616484
 export const stringHashCode = (str: string) => {

@@ -24,6 +24,7 @@
 
 /**
  * Calculates the total distance of a tour by summing distances between consecutive cities.
+ *
  * @param {number[]} tour Array of city indices representing the tour order
  * @param {ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
  * @returns {number} Total distance of the tour
@@ -40,9 +41,10 @@ const calculateTourDistance = (tour, distanceMatrix) => {
 }
 
 /**
- * Generates an initial tour using the nearest neighbor heuristic.
- * Starts from city 0 and always visits the nearest unvisited city next.
- * @param { ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
+ * Generates an initial tour using the nearest neighbor heuristic. Starts from city 0 and always visits the
+ * nearest unvisited city next.
+ *
+ * @param {ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
  * @returns {number[]} Array of city indices representing the initial tour
  */
 
@@ -72,8 +74,9 @@ const nearestNeighborTour = (distanceMatrix) => {
 }
 
 /**
- * Calculates the improvement delta for a 2-opt swap without performing it.
- * This avoids recalculating the entire tour distance.
+ * Calculates the improvement delta for a 2-opt swap without performing it. This avoids recalculating the
+ * entire tour distance.
+ *
  * @param {number[]} tour Current tour as array of city indices
  * @param {number} i Start position for the segment to reverse
  * @param {number} k End position for the segment to reverse
@@ -101,8 +104,9 @@ const calculate2OptDelta = (tour, i, k, distanceMatrix) => {
 }
 
 /**
- * Performs a 2-opt swap by reversing the segment between two positions in-place.
- * This modifies the tour array directly to avoid memory allocations.
+ * Performs a 2-opt swap by reversing the segment between two positions in-place. This modifies the tour array
+ * directly to avoid memory allocations.
+ *
  * @param {number[]} tour Current tour as array of city indices (modified in-place)
  * @param {number} i Start position for the segment to reverse
  * @param {number} k End position for the segment to reverse
@@ -115,14 +119,15 @@ const twoOptSwapInPlace = (tour, i, k) => {
 
   while (left < right) {
     ;[tour[left], tour[right]] = [tour[right], tour[left]]
-    left++
-    right--
+    left += 1
+    right -= 1
   }
 }
 
 /**
- * Implements the Lin-Kernighan algorithm to optimize the tour.
- * Uses 2-opt and 3-opt edge swapping to find better tour configurations.
+ * Implements the Lin-Kernighan algorithm to optimize the tour. Uses 2-opt and 3-opt edge swapping to find
+ * better tour configurations.
+ *
  * @param {number[]} tour Initial tour as array of city indices
  * @param {ArrayLike<number>[]} distanceMatrix 2D array containing distances between all city pairs
  * @returns {number[]} Optimized tour as array of city indices
@@ -197,8 +202,9 @@ const linKernighan = (tour, distanceMatrix) => {
 }
 
 /**
- * Solves the Traveling Salesman Problem using the Lin-Kernighan algorithm.
- * Takes a distance matrix and returns an optimized tour order of the source points.
+ * Solves the Traveling Salesman Problem using the Lin-Kernighan algorithm. Takes a distance matrix and
+ * returns an optimized tour order of the source points.
+ *
  * @param {ArrayLike<number>[]} distanceMatrix The distance matrix computed from the points
  * @returns {number[]} Array of indices of points in optimized tour order
  */

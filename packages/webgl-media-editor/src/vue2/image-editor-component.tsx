@@ -79,7 +79,7 @@ export default {
   watch: {
     sources: {
       handler(this: VueInstance, value?: ImageSourceOption[], prev?: ImageSourceOption[]) {
-        if (value != null && prev != null && (value === prev || value.every((v, i) => prev[i] === v))) return
+        if (value && prev && (value === prev || value.every((v, i) => prev[i] === v))) return
         unwrap(this.editor).setSources(value ?? [])
       },
       immediate: true,

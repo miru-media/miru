@@ -14,6 +14,6 @@ export const globImportFrag = () =>
     ],
     rename: (name, id) => {
       if (name) throw new Error('Unexpected named import.')
-      return id.replace(/.*\//, '').replaceAll('-', '_').replace(/\..*$/, '')
+      return id.replace(/.*\//u, '').replaceAll('-', '_').replace(/\..*$/u, '')
     },
   })

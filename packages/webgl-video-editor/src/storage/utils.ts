@@ -37,7 +37,7 @@ export const isFileComplete = async (key: string): Promise<boolean> => {
 
 export const deleteFile = async (key: string): Promise<void> => await (await getDir()).removeEntry(key)
 
-export const byteCounter = (callback: (total: number) => void) => {
+export const byteCounter = (callback: (total: number) => unknown) => {
   let total = 0
 
   return new TransformStream({

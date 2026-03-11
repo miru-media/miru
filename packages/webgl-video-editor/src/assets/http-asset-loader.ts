@@ -6,7 +6,7 @@ export class HttpAssetLoader implements AssetLoader {
     if (!asset.uri) return false
     const { protocol } = new URL(asset.uri)
 
-    return /^https?/.test(protocol)
+    return /^https?/u.test(protocol)
   }
   async load(
     asset: Schema.MediaAsset,

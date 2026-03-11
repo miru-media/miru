@@ -254,8 +254,8 @@ export class YjsSync implements VideoEditorDocumentSync {
       const nextId = node.next?.id
       const prevId = node.prev?.id
 
-      if (nextId != null && ytreeSiblingIds.has(nextId)) ytree.setNodeBefore(node.id, nextId)
-      else if (prevId != null && ytreeSiblingIds.has(prevId)) ytree.setNodeAfter(node.id, prevId)
+      if (nextId && ytreeSiblingIds.has(nextId)) ytree.setNodeBefore(node.id, nextId)
+      else if (prevId && ytreeSiblingIds.has(prevId)) ytree.setNodeAfter(node.id, prevId)
     }
   }
 

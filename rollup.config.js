@@ -41,11 +41,11 @@ const aliases = {
 /** @type {import('rollup-plugin-esbuild-transform').Options[]} */
 const esbuildOptions = [
   {
-    include: /\.(t|j)s$/,
+    include: /\.(?:t|j)s$/u,
     loader: 'ts',
   },
   {
-    include: /\.(t|j)sx$/,
+    include: /\.(?:t|j)sx$/u,
     loader: 'tsx',
     jsx: 'automatic',
     jsxImportSource: 'fine-jsx',

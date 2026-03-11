@@ -2,12 +2,12 @@
 .host {
   /* FONT TWEAKS */
   font-synthesis: none;
-  text-rendering: optimizelegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 
   /* STACKING CONTEXT */
   isolation: isolate;
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 
   /* RESETS */
   *,

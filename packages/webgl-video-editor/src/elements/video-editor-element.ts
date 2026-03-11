@@ -6,7 +6,7 @@ import { renderComponentTo } from 'shared/video/render-to'
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
-import { LocalSync } from '../sync'
+import { LocalSync } from '../sync/index.ts'
 import { VideoEditor } from '../video-editor.ts'
 
 const UNMOUNT_TIMEOUT_MS = 500

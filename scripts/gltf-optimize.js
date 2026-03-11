@@ -16,6 +16,7 @@ const io = new gltf.NodeIO().registerExtensions([...ALL_EXTENSIONS, ...CUSTOM_EX
 const doc = await io.read(inFile)
 
 await doc.transform(
+  // eslint-disable-next-line @typescript-eslint/strict-void-return -- value is ignored
   convertExtrasToExtensions,
   instance(),
   palette(),

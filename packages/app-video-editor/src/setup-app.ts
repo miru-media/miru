@@ -24,7 +24,7 @@ export const setupApp = {
 
     app.use(
       createI18n({
-        locale: (win as Partial<typeof win>).navigator?.language.replace(/-.*/, ''),
+        locale: (win as Partial<typeof win>).navigator?.language.replace(/-.*/u, ''),
         fallbackLocale: 'en',
         messages: {
           en,

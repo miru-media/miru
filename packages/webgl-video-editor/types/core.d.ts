@@ -282,6 +282,7 @@ export interface VideoEditor {
 
     /**
      * Seek to the given time of the video.
+     *
      * @param time The time of the video to seek to in seconds.
      */
 
@@ -303,12 +304,14 @@ export interface VideoEditor {
 
   /**
    * Add a new track to the timeline.
+   *
    * @param trackType The track the clip will be added to.
    */
   addTrack: (trackType: Track['trackType']) => Track
 
   /**
    * Add a new clip at the end of the specified track.
+   *
    * @param track The track the clip will be added to.
    * @param asset The media asset attached to the clip.
    */
@@ -319,15 +322,16 @@ export interface VideoEditor {
 
   /**
    * Create a new media asset with the given source File or URI
+   *
    * @param source A Blob or URI string of the clip media.
    */
   createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
 
   /**
-   * Split a clip that intersects with the current video time.
-   * If a clip is selected, its track will be searched for an intersecting clip.
-   * If a clip isn't found, all tracks are then searched in order.
-   * When a clip is found, its duration is reduced and a similar clip is inserted after it.
+   * Split a clip that intersects with the current video time. If a clip is selected, its track will be
+   * searched for an intersecting clip. If a clip isn't found, all tracks are then searched in order. When a
+   * clip is found, its duration is reduced and a similar clip is inserted after it.
+   *
    * @returns The newly created clip or `undefined.`.
    */
   splitClipAtCurrentTime: () => [AnyClip, AnyClip] | undefined
@@ -340,7 +344,9 @@ export interface VideoEditor {
 
   /**
    * Render and encode the video composition.
-   * @returns A promise that resolves to an object with a `blob` field and a "blob:" `url` field to the resulting video file.
+   *
+   * @returns A promise that resolves to an object with a `blob` field and a "blob:" `url` field to the
+   *   resulting video file.
    */
   export: () => Promise<{ blob: Blob; url: string } | undefined>
   /** The most recent export result. */

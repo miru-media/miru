@@ -13,7 +13,7 @@ export const createSampleGltf = async (url: string, createMask = false) => {
     ? await createMaskEffectWithAsset(io, url)
     : convertExtrasToExtensions(await io.read(url))
 
-  return (await io.writeBinary(doc)).buffer as ArrayBuffer
+  return (await io.writeBinary(doc)).buffer
 }
 
 const createMaskEffectWithAsset = async (io: gltf.WebIO, url: string) => {
@@ -139,7 +139,9 @@ const createMaskEffectWithAsset = async (io: gltf.WebIO, url: string) => {
     const glassesSourceNodes = glassesDoc.getRoot().getDefaultScene()!.listChildren()
     const map = moveToDocument(doc, glassesDoc, glassesSourceNodes)
 
-    glassesSourceNodes.forEach((sourceNode) => glassesNode.addChild(map.get(sourceNode) as gltf.Node))
+    glassesSourceNodes.forEach((sourceNode) => {
+      void glassesNode.addChild(map.get(sourceNode) as gltf.Node)
+    })
   }
 
   scene

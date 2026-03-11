@@ -81,17 +81,16 @@ export const useThrottle = <T>(delay: number, value: MaybeRefOrGetter<T>) => {
 export const arrayFlatToValue = <T>(value: T | T[], result: T[] = []): T[] => {
   const val = toValue(value)
 
-  if (Array.isArray(val)) val.forEach((v) => arrayFlatToValue(v, result))
+  if (Array.isArray(val)) val.forEach((v) => void arrayFlatToValue(v, result))
   else result.push(val)
 
   return result
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
 export const useEventListener = <T extends Event>(
   targetRef: MaybeRefOrGetter<EventTarget | undefined>,
   type: string,
-  listener: (event: T) => void,
+  listener: (event: T) => unknown,
   options?: AddEventListenerOptions,
 ) =>
   effect((onCleanup) => {
@@ -106,7 +105,7 @@ const supportsHover = ref(false)
 if ('matchMedia' in win) {
   const query = win.matchMedia('(hover: hover)')
   supportsHover.value = query.matches
-  query.addEventListener('change', () => (supportsHover.value = query.matches))
+  query.addEventListener('change', () => void (supportsHover.value = query.matches))
 }
 
 export const useHoverCoords = (targetRef: MaybeRefOrGetter<EventTarget | undefined>) => {

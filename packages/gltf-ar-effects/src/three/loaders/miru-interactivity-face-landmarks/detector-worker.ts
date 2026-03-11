@@ -53,7 +53,7 @@ let landmarker: MediaPipe.FaceLandmarker | undefined
 Object.defineProperty(self, 'module', { value: self })
 Object.defineProperty(self, 'exports', {
   get: () => ({}),
-  set: (ModuleFactory: unknown) => ((self as any).ModuleFactory = ModuleFactory),
+  set: (ModuleFactory: unknown) => void ((self as any).ModuleFactory = ModuleFactory),
 })
 
 const postMessage = (

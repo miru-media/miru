@@ -24,7 +24,7 @@ export const RowSlider: Component<{
 
     <button class={[styles['miru--button'], styles['miru--small']]} disabled>
       <label class={styles['miru--button__label']}>
-        {() => (toValue(value) !== 0 ? toValue(value).toFixed(2) : 0)}
+        {() => (toValue(value) === 0 ? 0 : toValue(value).toFixed(2))}
       </label>
     </button>
   </p>

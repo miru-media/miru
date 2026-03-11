@@ -75,7 +75,7 @@ test('syncs doc changes to Yjs doc', () => {
   sync.doc.resolution = { width: 50, height: 100 }
   const clip = sync.doc.nodes.get<VisualClip>(clipInit.id)
 
-  clip.duration++
+  clip.duration += 1
 
   const ynode = ytree.getNodeValueFromKey(clip.id) as Y.Map<any>
   expect(ynode.get('duration')).toBe(2)

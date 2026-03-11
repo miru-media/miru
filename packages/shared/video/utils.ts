@@ -77,7 +77,7 @@ export const useMappedUniqueArray = <T extends object, U>(
 
   onScopeDispose(() => {
     const mapped = mappedArrayRef.value
-    if (disposeMapValue) mapped.forEach((value) => disposeMapValue(value))
+    if (disposeMapValue) mapped.forEach((value) => void disposeMapValue(value))
     mapped.length = 0
   })
 
@@ -111,7 +111,7 @@ export const useMediaReadyState = (media: MaybeRefOrGetter<HTMLMediaElement | un
   ]
 
   effect(updateValue)
-  events.forEach((type) => useEventListener(media, type, updateValue))
+  events.forEach((type) => void useEventListener(media, type, updateValue))
 
   return readyState
 }
@@ -122,7 +122,7 @@ export const useMediaError = (media: MaybeRefOrGetter<HTMLMediaElement | undefin
   const events = ['error', 'loadedmetadata', 'canplay']
 
   effect(updateValue)
-  events.forEach((type) => useEventListener(media, type, updateValue))
+  events.forEach((type) => void useEventListener(media, type, updateValue))
 
   return error
 }
@@ -171,14 +171,18 @@ export const formatDuration = (durationS: number, languages = navigator.language
   return `${minutes ? `${minutesFormat.format(minutes)} ` : ''}${secondsFormat.format(seconds)}`
 }
 
-export const seekAndWait = async (video: HTMLVideoElement, timeS: number, signal: AbortSignal) => {
+export const seekAndWait = async (
+  video: HTMLVideoElement,
+  timeS: number,
+  signal: AbortSignal,
+): Promise<void> => {
   const p = promiseWithResolvers<unknown>()
 
-  const onError = () => p.reject(video.error ?? new Error('Unkown error'))
-  const onAbort = () => p.reject(new Error('Aborted'))
+  const onError = (): void => p.reject(video.error ?? new Error('Unkown error'))
+  const onAbort = (): void => p.reject(new Error('Aborted'))
 
   const stateChangeEvents = ['load', 'canplay', 'seeked']
-  const onReadyStateChange = () => video.readyState >= 2 && p.resolve(undefined)
+  const onReadyStateChange = (): void => void (video.readyState >= 2 && p.resolve(undefined))
 
   stateChangeEvents.forEach((type) => video.addEventListener(type, onReadyStateChange, { once: true }))
   video.addEventListener('error', onError, { once: true })
@@ -219,7 +223,7 @@ export const useRafLoop = (
   })
 
 export const useInterval = (
-  callback: () => unknown,
+  callback: () => void,
   interval: number,
   options?: { active?: MaybeRefOrGetter<boolean> },
 ) => {
@@ -244,6 +248,7 @@ export const setVideoEncoderConfigCodec = async (
 
     try {
       config.codec = codec
+      // eslint-disable-next-line no-await-in-loop -- sequential
       await assertEncoderConfigIsSupported('video', config)
       foundSupportedCodec = true
       break

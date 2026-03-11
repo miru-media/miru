@@ -37,7 +37,7 @@ export const wrap = (
     this.scope = createEffectScope()
     this._sourceIndex = ref(0)
 
-    if (extraProps != null) {
+    if (extraProps) {
       this._extraProps = Object.fromEntries(
         Object.entries(extraProps).map(([key, info]) => [key, ref(info.default)]),
       )
@@ -67,7 +67,7 @@ export const wrap = (
       },
       immediate: true,
     },
-    ...(extraProps != null &&
+    ...(extraProps &&
       Object.fromEntries(
         Object.entries(extraProps).map(([key]) => [
           key,

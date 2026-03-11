@@ -4,11 +4,14 @@ import tsp from './tsp-lin-kernighan.js'
 import { computeDistanceMatrix, getColorDistanceToLineSegment, paletteToLab } from './utils.js'
 
 /**
- * @import { ColorLab, DistanceMatrix, Palette } from '.'
+ * @import {
+ *   ColorLab,
+ *   DistanceMatrix,
+ *   Palette
+ * } from "."
  */
 
 /**
- *
  * @param {Palette} palette
  * @returns {number[]}
  */
@@ -26,7 +29,6 @@ export const getSinglePaletteSortedIndices = (palette) => {
 }
 
 /**
- *
  * @param {number[]} tour
  * @param {DistanceMatrix} distanceMatrix
  * @returns {number}
@@ -69,7 +71,7 @@ export const getMultiplePalettesSortedIndices = (palettes) => {
     for (let colorIndex = 0; colorIndex < palette.length; colorIndex++) {
       combinedPalette[combinedIndex] = palette[colorIndex]
       indexMap[combinedIndex] = [paletteIndex, colorIndex]
-      combinedIndex++
+      combinedIndex += 1
     }
 
     sortedPalettesIndices[paletteIndex] = []
@@ -128,10 +130,9 @@ const getMinDistanceToLineSegment = (color, sortedPalette) => {
 }
 
 /**
- *
  * @param {ColorLab[]} palette
  * @param {ColorLab[][]} collection
- * @returns {{ closestIndex: number, distance: number, sortedCollection: ColorLab[][] }}
+ * @returns {{ closestIndex: number; distance: number; sortedCollection: ColorLab[][] }}
  */
 export const getClosestPaletteIndex = (palette, collection) => {
   const collectionLength = collection.length

@@ -9,7 +9,7 @@ export const getMediaAssetInfo = async (
 ): Promise<Schema.MediaAsset> => {
   const isBlobSource = typeof source !== 'string'
   let mimeType = isBlobSource ? source.type : ''
-  const name = isBlobSource ? ('name' in source ? source.name : undefined) : source.replace(/.*\//, '')
+  const name = isBlobSource ? ('name' in source ? source.name : undefined) : source.replace(/.*\//u, '')
 
   let mbSource: Mb.Source
   let size: number

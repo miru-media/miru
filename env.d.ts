@@ -82,9 +82,8 @@ declare module 'markdown-it-task-lists' {
 }
 
 declare module 'yjs-orderedtree' {
-  const m = await import(
-    './node_modules/.pnpm/yjs-orderedtree@1.0.1-beta.3_yjs@13.6.27/node_modules/yjs-orderedtree/dist/types/index'
-  )
+  const m =
+    await import('./node_modules/.pnpm/yjs-orderedtree@1.0.1-beta.3_yjs@13.6.29/node_modules/yjs-orderedtree/dist/types/index.ts')
 
   export class YTree extends m.YTree {}
   export const { checkForYTree } = m

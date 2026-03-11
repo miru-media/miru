@@ -1,5 +1,4 @@
 export const defineWrapperProps = <
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   TTarget extends { prototype: TSource & Record<TSourceField, TSource> },
   TSource,
   TSourceField extends string,

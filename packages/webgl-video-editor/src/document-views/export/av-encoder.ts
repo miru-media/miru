@@ -63,6 +63,7 @@ export class AVEncoder {
       for (const checkCodec of [config.codec, ...EXPORT_VIDEO_CODECS]) {
         config.codec = checkCodec
         try {
+          // eslint-disable-next-line no-await-in-loop -- sequential
           await assertEncoderConfigIsSupported('video', config)
           break
         } catch (error) {

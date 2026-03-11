@@ -23,7 +23,7 @@ export default defineConfig({
       rules: [
         {
           match:
-            /\b(https:\/\/(github\.com\/miru-media|upload\.wikimedia\.org|storage\.googleapis\.com\/mediapipe-models|commondatastorage\.googleapis\.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/gi,
+            /\b(?:https:\/\/(?:github\.com\/miru-media|upload\.wikimedia\.org|storage\.googleapis\.com\/mediapipe-models|commondatastorage\.googleapis\.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/giu,
         },
       ],
     }),
@@ -32,7 +32,7 @@ export default defineConfig({
       presets: [presetWind3(), presetIcons()],
       content: {
         pipeline: {
-          include: [/\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/],
+          include: [/\.(?:vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)(?:$|\?)/u],
         },
         filesystem: [resolve('docs/parts/**/*.md')],
       },
@@ -65,60 +65,62 @@ export default defineConfig({
     sourcemap: true,
   },
   assetsInclude: new RegExp(
-    `\\.(` +
-      [
-        // Tesnsor flow task file
-        'task',
-        // HDR textures
-        'hdr',
-        // glTF
-        'gltf',
-        'glb',
+    `\\.(?:${[
+      // Tesnsor flow task file
+      'task',
+      // HDR textures
+      'hdr',
+      // glTF
+      'gltf',
+      'glb',
 
-        // images
-        'apng',
-        'bmp',
-        'png',
-        'jpe?g',
-        'jfif',
-        'pjpeg',
-        'pjp',
-        'gif',
-        'svg',
-        'ico',
-        'webp',
-        'avif',
-        'cur',
-        'jxl',
+      // images
+      'apng',
+      'bmp',
+      'png',
+      'jpe?g',
+      'jfif',
+      'pjpeg',
+      'pjp',
+      'gif',
+      'svg',
+      'ico',
+      'webp',
+      'avif',
+      'cur',
+      'jxl',
 
-        // media
-        'mp4',
-        'webm',
-        'ogg',
-        'mp3',
-        'wav',
-        'flac',
-        'aac',
-        'opus',
-        'mov',
-        'm4a',
-        'vtt',
+      // media
+      'mp4',
+      'webm',
+      'ogg',
+      'mp3',
+      'wav',
+      'flac',
+      'aac',
+      'opus',
+      'mov',
+      'm4a',
+      'vtt',
 
-        // fonts
-        'woff2?',
-        'eot',
-        'ttf',
-        'otf',
+      // fonts
+      'woff2?',
+      'eot',
+      'ttf',
+      'otf',
 
-        // other
-        'webmanifest',
-        'pdf',
-        'txt',
-      ].join('|') +
-      `)(\\?.*)?$`,
-    'i',
+      // other
+      'webmanifest',
+      'pdf',
+      'txt',
+    ].join('|')})(?:\\?.*)?$`,
+    'iu',
   ),
   test: {
     environment: 'happy-dom',
+    coverage: {
+      enabled: true,
+      exclude: ['packages/shared/assets/**', '**/*.{css,svg,d.ts,glsl,frag,vert}'],
+    },
   },
 })

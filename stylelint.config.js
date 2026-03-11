@@ -17,5 +17,4 @@ export default {
     'property-no-unknown': [true, { ignoreProperties: ['composes'] }],
     'value-keyword-case': ['lower', { ignoreProperties: ['composes'] }],
   },
-  ignorePath: ['.gitignore'],
 }

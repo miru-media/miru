@@ -18,17 +18,19 @@ import { ReadyState } from '../video/constants.ts'
 import { getImageSize } from '../video/utils.ts'
 
 const getCanvasContext = (
-  canvas: HTMLCanvasElement | OffscreenCanvas | undefined,
+  canvas_: HTMLCanvasElement | OffscreenCanvas | undefined,
   type: OffscreenRenderingContextId,
   options: unknown,
 ) => {
+  let canvas = canvas_
+
   if (canvas == null) {
     // try offscreen canvas
     if (FULLY_SUPPORTS_OFFSCREEN_CANVAS) {
       canvas = new OffscreenCanvas(1, 1)
       const context = canvas.getContext(type, options)
 
-      if (context != null) return context
+      if (context) return context
     }
 
     // try canvas element
@@ -77,7 +79,7 @@ export const canvasToBlob = async (
   return await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
-        if (blob != null) resolve(blob)
+        if (blob) resolve(blob)
         else reject(new Error(`[miru] Couldn't get Blob from canvas`))
       },
       options?.type,
@@ -154,7 +156,7 @@ export const loadAsyncImageSource = <IsVideo extends boolean>(
   const loadPromise =
     isVideo === true
       ? loadVideoUrl(
-          source instanceof Blob ? (source = toRevoke = URL.createObjectURL(source)) : source,
+          source instanceof Blob ? (toRevoke = URL.createObjectURL(source)) : source,
           crossOrigin,
           signal,
         )
@@ -239,7 +241,13 @@ const loadVideoUrl = async (
   if (!url) throw new Error('Empty video source URL')
   const video = createHiddenMediaElement('video', url, crossOrigin)
   try {
-    await Promise.race([signal?.aborted, whenCanPlay(video)])
+    await Promise.race([
+      signal &&
+        new Promise((_resolve, reject) => {
+          signal.addEventListener('abort', reject)
+        }),
+      whenCanPlay(video),
+    ])
   } catch {
     video.removeAttribute('src')
   }
@@ -298,16 +306,14 @@ export const resizeImageSync = (
   if ('data' in source) {
     context.save()
     context.scale(size.width / source.width, size.height / source.height)
-    if (crop != null) context.putImageData(source, 0, 0, crop.x, crop.y, crop.width, crop.height)
+    if (crop) context.putImageData(source, 0, 0, crop.x, crop.y, crop.width, crop.height)
     else context.putImageData(source, 0, 0)
     context.restore()
-  } else {
-    if (crop != null)
-      context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, size.width, size.height)
-    else {
-      const { width, height } = getImageSize(source)
-      context.drawImage(source, 0, 0, width, height, 0, 0, size.width, size.height)
-    }
+  } else if (crop)
+    context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, size.width, size.height)
+  else {
+    const { width, height } = getImageSize(source)
+    context.drawImage(source, 0, 0, width, height, 0, 0, size.width, size.height)
   }
 }
 

@@ -1,6 +1,6 @@
 /**
  * @typedef {{
- *   root: string,
+ *   root: string
  *   inputs: Record<string, string>
  *   external?: import('rollup').RollupOptions['external']
  *   alwaysBundle?: string[]
@@ -8,7 +8,7 @@
  *   clearDist?: boolean
  *   copy?: (opitons: Required<Omit<Options, 'copy'>>) => import('rollup-plugin-copy').CopyOptions
  * }} Options
- **/
+ */
 
 const packageOptions = (async () => {
   const path = await import('node:path')

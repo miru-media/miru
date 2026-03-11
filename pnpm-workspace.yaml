@@ -29,7 +29,7 @@ catalog:
   uid: ^2.0.2
   vue: ^3.5.26
   vue-i18n-lite: ^1.0.2
-  yjs: ^13.6.27
+  yjs: ^13.6.29
   y-indexeddb: ^9.0.12
   yjs-orderedtree: 1.0.1-beta.3
   y-webrtc: ^10.3.0

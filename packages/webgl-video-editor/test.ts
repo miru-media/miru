@@ -2,7 +2,7 @@
 import * as Mb from 'mediabunny'
 import { Renderer } from 'webgl-effects'
 
-import { getWebgl2Context, setObjectSize } from 'shared/utils'
+import { getWebgl2Context, setObjectSize, timeout } from 'shared/utils'
 
 import { AVEncoder } from './src/document-views/export/av-encoder.ts'
 
@@ -37,6 +37,7 @@ const test = async () => {
   const writer = av.video!.getWriter()
   for (let i = 0; i < 10; i++) {
     const frame = new VideoFrame(bitmap, { duration: 1e6, timestamp: (i * 1e6) / framerate })
+    // eslint-disable-next-line no-await-in-loop -- sequential
     await writer.write(frame)
     frame.close()
   }
@@ -58,7 +59,7 @@ const test = async () => {
     videoEl.addEventListener('error', reject)
   })
     .then(() => videoEl.play())
-    .then(() => new Promise((resolve) => setTimeout(resolve, 200)))
+    .then(() => timeout(200))
 
   const videoTrack = await input.getPrimaryVideoTrack()
   const packet = await new Mb.EncodedPacketSink(videoTrack!).getFirstPacket()
@@ -68,7 +69,7 @@ const test = async () => {
   let decodedFrame: VideoFrame | undefined
 
   const decoder = new VideoDecoder({
-    output: (f) => (decodedFrame = f),
+    output: (f) => void (decodedFrame = f),
     error: (e) => console.error(e),
   })
   decoder.configure({

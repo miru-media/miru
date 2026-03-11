@@ -25,13 +25,13 @@ const getValue = (valueJson: InteractivityValue | InteractivityVariable, types: 
 /**
  * Convert KHR_interactivity draft graph json to a behave-graph json object.
  *
- *  - Prefix socket ids with 'flow' or 'value' to differentiate the socket kinds.
- *  - Use implicit "value", "in" and "out" socket ids.
- *  - Use custom event index as id when id is undefined.
- *  - Change `{ event: { value [0] }} ` custom event config to `{ customEventId: idOrIndex }`
+ * - Prefix socket ids with 'flow' or 'value' to differentiate the socket kinds.
+ * - Use implicit "value", "in" and "out" socket ids.
+ * - Use custom event index as id when id is undefined.
+ * - Change `{ event: { value [0] }} ` custom event config to `{ customEventId: idOrIndex }`
  */
 export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON => {
-  const singleElementTypeRe = /^(int|float|bool)$/
+  const singleElementTypeRe = /^(?:int|float|bool)$/u
   const { types = [] } = graphJson
 
   const readValue = (valueJson: InteractivityValue) => {
@@ -77,7 +77,7 @@ export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON =>
 
     Object.entries(nodeConfig ?? {}).forEach(([id, valueJson]) => {
       const value = valueJson?.value
-      if (value != null) configuration[id] = (value.length === 1 ? value[0] : value) as Behave.ValueJSON
+      if (value) configuration[id] = (value.length === 1 ? value[0] : value) as Behave.ValueJSON
     })
 
     if (op === 'event/receive' || op === 'event/send') {

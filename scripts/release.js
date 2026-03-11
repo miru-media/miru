@@ -171,9 +171,7 @@ async function writePackageJson(packageDir, pkg) {
   await fs.promises.writeFile(filePath, `${JSON.stringify(pkg, null, 2)}\n`)
 }
 
-/**
- * @type {typeof run}
- */
+/** @type {typeof run} */
 async function runUnlessDry(file, args) {
   if (cliArgs.dryRun) console.info('[would run]', file, ...(args ?? []))
   else await run(file, args)

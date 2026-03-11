@@ -43,9 +43,9 @@ export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
 }
 
 export class NodeUpdateEvent<
-    T extends pub.Schema.AnyNodeSchema = pub.Schema.AnyNodeSchema,
-    K extends KeyofUnion<T> = KeyofUnion<T>,
-  >
+  T extends pub.Schema.AnyNodeSchema = pub.Schema.AnyNodeSchema,
+  K extends KeyofUnion<T> = KeyofUnion<T>,
+>
   extends Event
   implements pub.NodeUpdateEvent<T, K>
 {

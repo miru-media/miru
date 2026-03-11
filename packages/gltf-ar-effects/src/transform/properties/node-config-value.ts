@@ -58,14 +58,14 @@ export class NodeConfigValue extends InteractivityGraphProperty<INodeConfigValue
         this.setRef('refValue', null)
         break
       case ValueType.Array:
-        this.listRefs('arrayValue').forEach((item) => this.removeRef('arrayValue', item))
+        this.listRefs('arrayValue').forEach((item) => void this.removeRef('arrayValue', item))
     }
 
     if (isSingleLiteral(value)) {
       this.set('literalValue', value)
       this.set('valueType', ValueType.Literal)
     } else if (Array.isArray(value)) {
-      value.forEach((item) => this.addRef('arrayValue', new NodeConfigValue(this.graph).setValue(item)))
+      value.forEach((item) => void this.addRef('arrayValue', new NodeConfigValue(this.graph).setValue(item)))
       this.set('valueType', ValueType.Array)
     } else {
       this.setRef('refValue', value)

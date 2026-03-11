@@ -144,10 +144,12 @@ export const VideoTrimmerUI = (props: {
 
   const mediaDuration = ref(0)
 
-  ;['timeupdate', 'seeking'].forEach((type) =>
-    useEventListener(media, type, () => (currentTime.value = media.currentTime)),
-  )
-  ;['play', 'pause'].forEach((type) => useEventListener(media, type, () => (isPaused.value = media.paused)))
+  ;['timeupdate', 'seeking'].forEach((type) => {
+    useEventListener(media, type, () => (currentTime.value = media.currentTime))
+  })
+  ;['play', 'pause'].forEach((type) => {
+    useEventListener(media, type, () => (isPaused.value = media.paused))
+  })
 
   const onScrubberDown = (event: PointerEvent) => {
     if (isScrubbing.value || event.button !== 0) return
@@ -222,6 +224,7 @@ export const VideoTrimmerUI = (props: {
 
     if (abort.signal.aborted) return
 
+    // eslint-disable-next-line require-atomic-updates -- abort signal is checked
     media.src = url
     media.load()
     mediaDuration.value = duration
@@ -236,7 +239,7 @@ export const VideoTrimmerUI = (props: {
       end = duration
     } else {
       start = Math.min(state.start, duration)
-      end = state.end !== 0 ? clamp(state.end, state.start, duration) : duration
+      end = state.end === 0 ? duration : clamp(state.end, state.start, duration)
     }
 
     props.onLoad({ duration, hasAudio: hasAudio.value })

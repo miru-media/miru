@@ -73,22 +73,22 @@ export class MediaEditorElement extends HTMLElementOrStub {
   }
 
   attributeChangedCallback(name: ObservedAttr, _oldValue: string | null, newValue: string | null) {
-    newValue ??= ''
+    const value = newValue ?? ''
 
     if (name === 'sources') {
-      if (newValue.trimStart().startsWith('[')) {
+      if (value.trimStart().startsWith('[')) {
         try {
-          this.sources = JSON.parse(newValue)
+          this.sources = JSON.parse(value)
           return
         } catch {
           //
         }
       }
 
-      this.sources = newValue ? [newValue] : []
-    } else if (name === 'effects') this.#effects.value = newValue && JSON.parse(newValue)
-    else if (name === 'assetsPath') this.#effects.value = getDefaultFilterDefinitions(newValue || undefined)
-    else this[name] = newValue as any
+      this.sources = value ? [value] : []
+    } else if (name === 'effects') this.#effects.value = value && JSON.parse(value)
+    else if (name === 'assetsPath') this.#effects.value = getDefaultFilterDefinitions(value || undefined)
+    else this[name] = value as any
   }
 
   connectedCallback() {

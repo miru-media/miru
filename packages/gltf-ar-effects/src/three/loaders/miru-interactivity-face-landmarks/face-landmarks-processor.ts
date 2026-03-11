@@ -119,8 +119,8 @@ export class FaceLandmarksProcessor extends EventTarget {
       }: MessageEvent<WorkerInitResponse | WorkerResultData | WorkerErrorData | WorkerFetchProgressData>) => {
         switch (data.type) {
           case 'init-response': {
-            if (data.error !== undefined) this.workerInit?.reject(data.error)
-            else this.workerInit?.resolve()
+            if (data.error === undefined) this.workerInit?.resolve()
+            else this.workerInit?.reject(data.error)
             break
           }
           case 'fetch-progress': {

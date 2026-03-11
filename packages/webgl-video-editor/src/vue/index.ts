@@ -7,7 +7,7 @@ import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
 import { fromVue, toVue } from '../document-views/vue/utils.ts'
-import { LocalSync as VideoEditorLocalStore_ } from '../sync'
+import { LocalSync as VideoEditorLocalStore_ } from '../sync/index.ts'
 import { VideoEditor } from '../video-editor.ts'
 
 import { editorToVue } from './vue-video-editor.ts'

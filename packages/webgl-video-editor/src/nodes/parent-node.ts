@@ -7,10 +7,10 @@ import type { NonReadonly } from '../../types/internal.d.ts'
 import { BaseNode } from './base-node.ts'
 
 export abstract class ParentNode<
-    T extends Schema.AnyNodeSchema,
-    TParent extends AnyParentNode = AnyParentNode,
-    TChild extends AnyNode = AnyNode,
-  >
+  T extends Schema.AnyNodeSchema,
+  TParent extends AnyParentNode = AnyParentNode,
+  TChild extends AnyNode = AnyNode,
+>
   extends BaseNode<T, TParent>
   implements pub.ParentNode<TChild>
 {
@@ -80,8 +80,8 @@ export abstract class ParentNode<
 
     if (node === head) this.#head.value = next as TChild
     if (node === tail) this.#tail.value = prev as TChild
-    if (prev != null) prev.next = next
-    if (next != null) next.prev = prev
+    if (prev) prev.next = next
+    if (next) next.prev = prev
 
     node.prev = node.next = undefined
   }
@@ -103,7 +103,7 @@ export abstract class ParentNode<
     const { head } = this
     const { prev } = before
     if (before === head) this.#head.value = node
-    if (prev != null) prev.next = node
+    if (prev) prev.next = node
     before.prev = node
   }
 }

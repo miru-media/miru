@@ -53,7 +53,7 @@ test('creating a new media asset from user-selected file saves it to FS storage'
   expect(doc.assets.has('asset-0')).toBeTruthy()
 
   expect(fileStorage.hasCompleteFile).toHaveBeenCalledExactlyOnceWith('asset-0')
-  await Promise.all(fileStorage.hasCompleteFile.mock.results)
+  await Promise.all(fileStorage.hasCompleteFile.mock.results.map((r) => r.value))
 
   expect(fileStorage.create).toHaveBeenCalledExactlyOnceWith('asset-0', expect.any(ReadableStream), {
     size: blob_.size,

@@ -1,7 +1,7 @@
 export interface TrimOptions {
-  /** The time in seconds of the original video to trim from.  */
+  /** The time in seconds of the original video to trim from. */
   start: number
-  /** The time in seconds of the original video to trim until.  */
+  /** The time in seconds of the original video to trim until. */
   end: number
   /** Whether to include the existing audio track in the output. */
   mute?: boolean
@@ -27,23 +27,23 @@ export interface TrimOptions {
 }
 
 /**
+ * @example
+ *   import { trim } from 'media-trimmer'
  *
- * @param source The url string or Blob of the input video file with a video track that the browser's WebCodecs API can decode.
+ *   try {
+ *     const blob = await trim('video.mp4', {
+ *       start: 2, // start time in seconds
+ *       end: 10, // end time in seconds
+ *       mute: false, // ignore the audio track?
+ *     })
+ *   } catch (error) {
+ *     alert(error)
+ *   }
+ *
+ * @param source The url string or Blob of the input video file with a video track that the browser's
+ *   WebCodecs API can decode.
  * @param options An object with start, end, and other options.
  * @returns A promise that resolves to a Blob of the new, trimmed video file.
- *
- * @example
- * import { trim } from 'media-trimmer'
- *
- * try {
- *   const blob = await trim('video.mp4', {
- *     start: 2,    // start time in seconds
- *     end: 10,     // end time in seconds
- *     mute: false, // ignore the audio track?
- *   })
- * } catch (error) {
- *   alert(error)
- * }
  */
 export declare const trim: (source: string | Blob, options: TrimOptions) => Promise<Blob>
 

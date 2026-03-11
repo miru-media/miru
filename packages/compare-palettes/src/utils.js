@@ -2,7 +2,11 @@ import quantize from '@lokesh.dhakar/quantize'
 import * as colorDiff from 'color-diff'
 
 /**
- * @import { ColorLab, ColorRGB, Palette } from '.'
+ * @import {
+ *   ColorLab,
+ *   ColorRGB,
+ *   Palette
+ * } from "."
  */
 
 /**
@@ -16,7 +20,7 @@ export const paletteToLab = (palette) =>
  * @template T
  * @param {T[]} points
  * @param {(a: T, b: T) => number} getDistance
- * @returns { Float32Array[] }
+ * @returns {Float32Array[]}
  */
 export const computeDistanceMatrix = (points, getDistance) => {
   const { length } = points
@@ -94,8 +98,8 @@ export const getImagePixelArray = (image) => {
       (canvas.getContext('2d'))
     if (!context) throw new Error(`Couldn't get canvas context.`)
 
-    let width = 0
-    let height = 0
+    let width
+    let height
 
     if ('videoWidth' in image) ({ videoWidth: width, videoHeight: height } = image)
     else if ('codedWidth' in image) ({ codedWidth: width, codedHeight: height } = image)
@@ -155,8 +159,7 @@ export const getColorDistanceToLineSegment = (color, other1, other2) => {
 }
 
 /**
- *
- * @param {ColorRGB[]|ColorLab[]} palette
+ * @param {ColorRGB[] | ColorLab[]} palette
  * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context
  * @param {number} size
  * @returns {void}

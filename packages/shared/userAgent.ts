@@ -1,7 +1,7 @@
 import { win } from 'shared/utils/window.ts'
 
 const { userAgent = '' } = (win.navigator as Navigator | undefined) ?? {}
-const majorVersion = /Version\/(\d+)/.exec(userAgent)?.[1]
+const majorVersion = /Version\/(?:\d+)/u.exec(userAgent)?.[1]
 
 const IS_CHROMIUM = userAgent.includes('Chrome/') || userAgent.includes('Chromium/')
 export const IS_LIKE_MAC = userAgent.includes('Mac OS')

@@ -39,8 +39,8 @@ class NodeMap implements pub.NodeMap {
 }
 
 /**
- * The video editor {@link pub.Document} is a [headless](https://en.wikipedia.org/wiki/Headless_software) interface
- * containing a mutable tree of timeline nodes, resolution, frameRate, and currentTime.
+ * The video editor {@link pub.Document} is a [headless](https://en.wikipedia.org/wiki/Headless_software)
+ * interface containing a mutable tree of timeline nodes, resolution, frameRate, and currentTime.
  */
 export class Document implements pub.Document {
   declare parent?: undefined

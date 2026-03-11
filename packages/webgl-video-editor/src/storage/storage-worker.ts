@@ -26,9 +26,7 @@ const getFileHandleForOverwriting = async (
   return fileHandle
 }
 
-/**
- * Create a Writable underlying sink to write a file, replacing any existing content.
- */
+/** Create a Writable underlying sink to write a file, replacing any existing content. */
 class StorageWritableSink {
   readonly #key: string
   readonly #handlePromise: Promise<FileSystemSyncAccessHandle>

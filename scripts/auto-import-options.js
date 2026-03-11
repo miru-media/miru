@@ -10,7 +10,7 @@ const iconResolver = () => {
     // https://github.com/unplugin/unplugin-icons/issues/317
     // Camel to kebab case doesn't work for icons like crop-1-1
     // so we use underscore
-    baseResolver(name)?.replace(/_/g, '-')
+    baseResolver(name)?.replaceAll('_', '-')
 }
 
 export const autoImportOptions = {

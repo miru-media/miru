@@ -3,9 +3,11 @@ import type * as pub from './types/media-trimmer.ts'
 
 export const trim: typeof pub.trim = async (
   source: string | Blob,
-  options: pub.TrimOptions,
+  options_: pub.TrimOptions,
 ): Promise<Blob> => {
-  const { onProgress } = options
+  const { onProgress } = options_
+
+  const options: pub.TrimOptions = { ...options_, onProgress: (value) => (progress = value) }
   const trimmer = new Trimmer(source, options)
 
   if (!onProgress) return await trimmer.trim().finally(() => trimmer.dispose())
@@ -20,8 +22,6 @@ export const trim: typeof pub.trim = async (
     rafId = requestAnimationFrame(rafLoop)
   }
   rafLoop()
-
-  options = { ...options, onProgress: (value) => (progress = value) }
 
   return await trimmer.trim().finally(() => {
     trimmer.dispose()

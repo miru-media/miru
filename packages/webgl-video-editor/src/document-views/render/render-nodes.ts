@@ -96,7 +96,7 @@ export class RenderVisualClip extends RenderNodeView<pub.VisualClip> {
             filterAsset?.ops.map((op) => new MiruFilter(op, intensityRef)) ?? []
 
           this._pixiFilters.forEach((filter) =>
-            filter.sprites.forEach((sprite) => this.docView.stage.addChild(sprite)),
+            filter.sprites.forEach((sprite) => void this.docView.stage.addChild(sprite)),
           )
         }
         break

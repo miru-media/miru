@@ -34,6 +34,6 @@ export const useToggleEdit = <T>(
   return {
     toggle,
     clearSavedValue,
-    isToggledOff: toRef(() => sourceRef.value != null && savedValue.value !== defaultValue(sourceRef.value)),
+    isToggledOff: toRef(() => sourceRef.value && savedValue.value !== defaultValue(sourceRef.value)),
   }
 }

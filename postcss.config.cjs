@@ -1,7 +1,7 @@
 const isProd = process.env.NODE_ENV === 'production'
 
 const config = (async () => {
-  const imports = /** @type {{ default: (...args: unknown[]) => any }[] } */ (
+  const imports = /** @type {{ default: (...args: unknown[]) => any }[]} */ (
     await Promise.all([
       import('cssnano'),
       import('postcss-import'),

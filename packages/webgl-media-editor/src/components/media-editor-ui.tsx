@@ -35,7 +35,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
 
   const hasAdjustment = computed(() => {
     const adjustments = currentSource.value?.adjustments.value
-    return adjustments != null && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
+    return adjustments && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {

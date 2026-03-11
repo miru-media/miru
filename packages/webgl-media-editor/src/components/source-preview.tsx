@@ -20,7 +20,7 @@ export const SourcePreview = ({
   const { sources } = toValue(editor)
   const source = computed((): ImageSourceInternal | undefined => sources.value[toValue(sourceIndex)])
 
-  if (onClick != null) useEventListener(() => source.value?.context.canvas, 'click', onClick)
+  if (onClick) useEventListener(() => source.value?.context.canvas, 'click', onClick)
 
   return (
     <div

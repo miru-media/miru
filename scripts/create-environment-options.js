@@ -29,7 +29,7 @@ export default async ({ imageUrls = URLS } = {}) => {
 
   const paletteCollection = await Promise.all(
     imageUrls.map(async (url) => {
-      const fileName = decodeURIComponent(url).replace(/.*\/\d+px-/, '')
+      const fileName = decodeURIComponent(url).replace(/.*\/\d+px-/u, '')
       const filePath = resolve(CACHE_DIR, fileName)
       let input
 

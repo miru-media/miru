@@ -134,7 +134,7 @@ export const WebglEffectsMenu = (props: {
 
   // scroll to selected filter on mount, on container size change and on source change
   watch([container, useElementSize(container), toRef(props.sourceTexture)], ([container]) => {
-    if (container != null) onClickFilter(currentEffect.value, toValue(props.intensity), 'instant')
+    if (container) onClickFilter(currentEffect.value, toValue(props.intensity), 'instant')
     onScroll.cancel({ upcomingOnly: true })
   })
 
@@ -182,7 +182,7 @@ export const WebglEffectsMenu = (props: {
     if (toValue(props.loading) === true || effects.some((e) => e.isLoading)) return
 
     let isStale = false as boolean
-    onCleanup(() => (isStale = true))
+    onCleanup(() => void (isStale = true))
 
     const { width, height } = toValue(props.thumbnailSize)
     const textureSize = { width: width * effects.length, height }

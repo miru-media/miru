@@ -30,7 +30,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
   const aspectRatio = computed(() => {
     const crop = sourceRef.value?.crop.value
 
-    return crop != null ? crop.width / crop.height : NaN
+    return crop ? crop.width / crop.height : NaN
   })
   const zoom = ref(1)
   const unmodifiedCrop = {
@@ -73,7 +73,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
     setObjectSize(unmodifiedCrop, original)
     const cropData = source.crop.value ?? unmodifiedCrop
 
-    if (devSlowDown != null) await devSlowDown()
+    if (devSlowDown) await devSlowDown()
 
     // https://github.com/fengyuanchen/cropperjs/blob/main/README.md
     const $cropper = (cropper.value = new Cropper(cropperImage as never, {
@@ -95,9 +95,8 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
       aspectRatio: aspectRatio.value,
       autoCropArea: 1,
       responsive: true,
-      async ready() {
-        await fitCrop()
-        await setAspectRatio(aspectRatio.value)
+      ready() {
+        void fitCrop().then(() => setAspectRatio(aspectRatio.value))
       },
       cropend() {
         if (!SIMPLE_CROP) recenterCropBox().catch(() => undefined)
@@ -120,8 +119,8 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
 
   // pause previews while cropping
   watch([editor.sources], ([sources], _prev, onCleanup) => {
-    sources.forEach((source) => source.pausePreview.value++)
-    onCleanup(() => sources.forEach((source) => source.pausePreview.value--))
+    sources.forEach((source) => void (source.pausePreview.value += 1))
+    onCleanup(() => sources.forEach((source) => void (source.pausePreview.value -= 1)))
   })
 
   const twice = (fn: () => unknown) => async () => {

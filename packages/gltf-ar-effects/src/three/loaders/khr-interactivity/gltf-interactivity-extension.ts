@@ -50,20 +50,20 @@ export class GLTFInteractivityExtension implements GLTFLoaderPlugin {
     const interactivityExtension = this.json.extensions?.KHR_interactivity
 
     this.parser.associations.forEach((reference, object) => {
-      if (!(reference as GLTFReference | undefined)) return null
+      if (!(reference as GLTFReference | undefined)) return
 
-      if (reference.nodes != null && object instanceof THREE.Object3D)
+      if (reference.nodes !== undefined && object instanceof THREE.Object3D)
         this.objectArrays.nodes[reference.nodes] = object
-      if (reference.materials != null && object instanceof THREE.Material)
+      if (reference.materials !== undefined && object instanceof THREE.Material)
         this.objectArrays.materials[reference.materials] = object
-      if (reference.meshes != null && (object instanceof THREE.Mesh || object instanceof THREE.Group)) {
+      if (reference.meshes !== undefined && (object instanceof THREE.Mesh || object instanceof THREE.Group)) {
         this.objectArrays.meshes[reference.meshes] = object
       }
       // TODO: other object types
     })
 
     const graphJson =
-      interactivityExtension?.graph != null && interactivityExtension.graphs
+      interactivityExtension?.graph !== undefined && interactivityExtension.graphs
         ? interactivityExtension.graphs[interactivityExtension.graph]
         : {}
 

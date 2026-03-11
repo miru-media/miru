@@ -11,7 +11,7 @@ module.exports = {
   hooks: {
     readPackage: (/** @type {any} */ pkg) => {
       const { name } = pkg
-      if (/^(unplugin-icons|@vueuse\/integrations)$/.test(name)) removeOptionalPeerDeps(pkg)
+      if (/^(?:unplugin-icons|@vueuse\/integrations)$/u.test(name)) removeOptionalPeerDeps(pkg)
       else if (name === 'yjs-orderedtree') {
         if (pkg.dependencies.global == null) throw new Error(`"yjs-orderedtree > global" dep doesn't exist.`)
         delete pkg.dependencies.global

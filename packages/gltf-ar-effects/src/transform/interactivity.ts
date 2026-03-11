@@ -140,9 +140,9 @@ export class Interactivity extends gltf.Extension {
         event.setId(eventJson.id ?? null)
 
         if (eventJson.values)
-          Object.entries(eventJson.values).forEach(([id, valueJson]) =>
-            event.setValue(id, readValueContainerJson(ContainerType.Value, valueJson)),
-          )
+          Object.entries(eventJson.values).forEach(([id, valueJson]) => {
+            event.setValue(id, readValueContainerJson(ContainerType.Value, valueJson))
+          })
 
         graph.addEvent(event)
         context.events.push(event)
@@ -153,12 +153,12 @@ export class Interactivity extends gltf.Extension {
         const declaration = setBaseProps(this.createDeclaration().setOp(declarationJson.op), declarationJson)
 
         if ('extension' in declarationJson && typeof declarationJson.extension === 'string') {
-          Object.entries(declarationJson.inputValueSockets).forEach(([id, { type }]) =>
-            declaration.setInputValueSocket(id, context.types[type]),
-          )
-          Object.entries(declarationJson.outputValueSockets).forEach(([id, { type }]) =>
-            declaration.setOutputValueSocket(id, context.types[type]),
-          )
+          Object.entries(declarationJson.inputValueSockets).forEach(([id, { type }]) => {
+            declaration.setInputValueSocket(id, context.types[type])
+          })
+          Object.entries(declarationJson.outputValueSockets).forEach(([id, { type }]) => {
+            declaration.setOutputValueSocket(id, context.types[type])
+          })
         }
 
         graph.addDeclaration(declaration)
@@ -227,11 +227,13 @@ export class Interactivity extends gltf.Extension {
       const context = (gltfWriterContext.extensionData[KHR_INTERACTIVITY] =
         new InteractivityGraphWriterContext(this.document))
 
+      /* eslint-disable @typescript-eslint/strict-void-return -- return value is not used */
       graph.listTypes().forEach(context.addType.bind(context))
       graph.listVariables().forEach(context.addVariable.bind(context))
       graph.listEvents().forEach(context.addEvent.bind(context))
       graph.listDeclarations().forEach(context.addDeclaration.bind(context))
       graph.listNodes().forEach(context.addNode.bind(context))
+      /* eslint-enable @typescript-eslint/strict-void-return */
 
       if (graph === defaultGraph) result.graph = graphIndex
 

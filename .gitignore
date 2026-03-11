@@ -16,6 +16,7 @@ docs/.vitepress/dist
 docs/.vitepress/cache
 
 /types
+/coverage
 
 .env
 .env.*

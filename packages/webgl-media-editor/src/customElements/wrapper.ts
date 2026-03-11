@@ -96,8 +96,8 @@ export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
 
   attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
     if (name === 'source-index') this.sourceIndex = parseInt(newValue ?? '0', 10) || 0
-    else if (name === 'show-preview') this.showPreview = newValue != null
-    else if (name === 'show-slider') this.showIntensity = newValue != null
+    else if (name === 'show-preview') this.showPreview = newValue !== null
+    else if (name === 'show-slider') this.showIntensity = newValue !== null
   }
 }
 

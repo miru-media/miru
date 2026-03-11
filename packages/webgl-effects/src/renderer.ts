@@ -70,7 +70,9 @@ export class Renderer implements Renderer_ {
   }
   scratchPad2d = get2dContext(undefined, { willReadFrequently: true })
 
-  constructor({ gl }: { gl?: WebGL2RenderingContext } = {}) {
+  constructor(options?: { gl?: WebGL2RenderingContext }) {
+    let gl = options?.gl
+
     if (gl) this.#ownsGl = true
     else {
       gl = getWebgl2Context()
@@ -160,12 +162,10 @@ export class Renderer implements Renderer_ {
     texture: WebGLTexture,
     resolution: Size,
     textureSize: Size,
-    crop?: CropState,
+    crop: CropState = { x: 0, y: 0, width: textureSize.width, height: textureSize.height, rotate: 0 },
     flipY = false,
     transform?: mat4,
   ): void {
-    crop ??= { x: 0, y: 0, width: textureSize.width, height: textureSize.height, rotate: 0 }
-
     this.#uniforms.u_flipY = flipY
     this.#uniforms.u_image = texture
     this.#uniforms.u_size = [crop.width, crop.height, 1 / crop.height, 1 / crop.width]
@@ -238,7 +238,7 @@ export class Renderer implements Renderer_ {
       refCount: 0,
     }
 
-    entry.refCount++
+    entry.refCount += 1
     this.#fragmentsToPrograms.set(fragmentShader, entry)
     return entry.programInfo
   }
@@ -247,7 +247,7 @@ export class Renderer implements Renderer_ {
     const entry = this.#fragmentsToPrograms.get(fragmentShader)
     if (!entry) return
 
-    entry.refCount--
+    entry.refCount -= 1
 
     if (entry.refCount <= 0) {
       this.#gl.deleteProgram(entry.programInfo.program)
@@ -366,6 +366,7 @@ export class Renderer implements Renderer_ {
 
     let waitRes = status
     while (waitRes === GL.TIMEOUT_EXPIRED) {
+      // eslint-disable-next-line no-await-in-loop -- polling
       await timeout(intervalMs)
       waitRes = gl.clientWaitSync(sync, 0, 0)
     }

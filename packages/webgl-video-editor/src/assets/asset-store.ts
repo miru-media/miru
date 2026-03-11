@@ -57,7 +57,6 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     return asset as unknown as pub.AssetsByType[T['type']]
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- false positive
   getAsset<T extends pub.AnyAsset | undefined>(id: string): T {
     return this.#map.get(id) as T
   }
@@ -76,10 +75,11 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
 
   async getOrCreateFile(
     asset: pub.MediaAsset,
-    source: Blob | string | undefined,
+    source_: Blob | string | undefined,
     options?: { signal?: AbortSignal | null },
   ): Promise<File> {
     const storageHasFile = await this.fileStorage.hasCompleteFile(asset.id)
+    let source = source_
 
     if (!storageHasFile) {
       source ??= asset.uri
@@ -122,9 +122,9 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   on<T extends pub.AssetEventType>(
     type: T,
     listener: (event: pub.VideoEditorEvents[T]) => void,
-    options?: AddEventListenerOptions,
+    options_?: AddEventListenerOptions,
   ) {
-    options = { signal: this.#abort.signal, ...options }
+    const options = { signal: this.#abort.signal, ...options_ }
     this.addEventListener(type, listener as EventListener, options)
     return () => this.removeEventListener(type, listener as EventListener, options)
   }

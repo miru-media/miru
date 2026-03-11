@@ -18,6 +18,7 @@ export class Effect implements Effect_ {
   private readonly definition: EffectDefinition
 
   get promise() {
+    // eslint-disable-next-line @typescript-eslint/await-thenable -- maybe promises
     return this.resources.length ? Promise.all(this.resources.map((t) => t.promise)) : undefined
   }
 
