@@ -226,7 +226,12 @@ export const WebglEffectsMenu = (props: {
   })
 
   return (
-    <div class={[styles['miru--menu'], props.class]}>
+    <div
+      id="tab-filter"
+      role="tabpanel"
+      aria-labelledby="tab-button-filter"
+      class={[styles['miru--menu'], props.class]}
+    >
       <p
         ref={container}
         class={[styles['miru--menu__row'], styles['miru--menu__row--scroll']]}

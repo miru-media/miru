@@ -132,3 +132,10 @@
     outline: 4px auto -webkit-focus-ring-color;
   }
 }
+
+/* TAB BUTTON GROUP HIGHLIGHTING */
+.miru--menu__row:has([role='tab']:focus-visible) {
+  [role='tab'] {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+}

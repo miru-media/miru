@@ -46,35 +46,55 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
     [EditorView.Filter]: () => <FilterView editor={editor} sourceIndex={currentSourceIndex} showPreviews />,
   }
 
+  const tabs = [
+    {
+      view: EditorView.Crop,
+      Icon: IconTablerCrop,
+      active: () => !!currentSource.value?.crop.value,
+      label: 'Crop',
+    },
+    {
+      view: EditorView.Adjust,
+      Icon: IconTablerFilters,
+      active: () => hasAdjustment.value,
+      label: 'Adjust',
+    },
+    {
+      view: EditorView.Filter,
+      Icon: IconTablerWand,
+      active: () => effectOfCurrentSource.value !== -1 && (currentSource.value?.intensity.value ?? 0) !== 0,
+      label: 'Filter',
+    },
+  ]
+
+  const tabKeyDown = (e: KeyboardEvent, index: number): void => {
+    let next = index
+    if (e.key === 'ArrowRight') next = (index + 1) % tabs.length
+    if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
+    if (e.key === 'Home') next = 0
+    if (e.key === 'End') next = tabs.length - 1
+    if (next !== index) {
+      e.preventDefault()
+      currentView.value = tabs[next].view
+      const el: HTMLElement | null = document.querySelector(`[role="tab"]:nth-of-type(${next + 1})`)
+      if (el) el.focus()
+    }
+  }
+
   return (
     <div class={styles['miru--main']}>
       {/* VIEWS */}
       <div class={styles['miru--center']}>{() => views[currentView.value]?.()}</div>
       {/* MAIN BUTTONS */}
       <p class={styles['miru--menu']}>
-        <p class={styles['miru--menu__row']}>
-          {[
-            {
-              view: EditorView.Crop,
-              Icon: IconTablerCrop,
-              active: () => !!currentSource.value?.crop.value,
-              label: 'Crop',
-            },
-            {
-              view: EditorView.Adjust,
-              Icon: IconTablerFilters,
-              active: () => hasAdjustment.value,
-              label: 'Adjust',
-            },
-            {
-              view: EditorView.Filter,
-              Icon: IconTablerWand,
-              active: () =>
-                effectOfCurrentSource.value !== -1 && (currentSource.value?.intensity.value ?? 0) !== 0,
-              label: 'Filter',
-            },
-          ].map(({ view, Icon, active, label }) => (
+        <div class={styles['miru--menu__row']} role="tablist" aria-label="Image Settings">
+          {Object.values(tabs).map(({ view, Icon, active, label }, index) => (
             <button
+              role="tab"
+              aria-selected={() => currentView.value === view}
+              aria-controls={'tab-' + view}
+              tabindex={() => (currentView.value === view ? 0 : -1)}
+              id={'tab-button-' + view}
               type="button"
               class={() => [
                 styles['miru--button'],
@@ -82,12 +102,13 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
                 active() && styles['miru--enabled'],
               ]}
               onClick={() => (currentView.value = view)}
+              onKeyDown={(e: KeyboardEvent) => tabKeyDown(e, index)}
             >
               <Icon class={styles['miru--button__icon']} />
               <span class={styles['miru--button__label']}>{label}</span>
             </button>
           ))}
-        </p>
+        </div>
       </p>
     </div>
   )

@@ -23,7 +23,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
   return (
     <>
       <div class={styles['miru--preview']}>{container}</div>
-      <div class={styles['miru--menu']}>
+      <div id="tab-crop" role="tabpanel" aria-labelledby="tab-button-crop" class={styles['miru--menu']}>
         <p class={styles['miru--menu__row']}>
           {/* <p class="miru--menu__group"> */}
           <label class={styles['miru--button']}>
