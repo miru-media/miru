@@ -79,7 +79,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
       setTimeout(() => {
         const panel = document.getElementById(`tab-${currentView.value}`)
         const firstFocusable = panel?.querySelector<HTMLElement>(
-          'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
+          'button:not([disabled]), input:not([disabled])',
         )
         firstFocusable?.focus()
       }, 0)
