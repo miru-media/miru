@@ -2,16 +2,7 @@ import Cropper from 'cropperjs'
 import { computed, ref, toValue, watch } from 'fine-jsx'
 import type { CropState } from 'webgl-effects'
 
-import {
-  centerTo,
-  cropIsEqualTo,
-  devSlowDown,
-  drawImage,
-  fit,
-  getCenter,
-  offsetBy,
-  setObjectSize,
-} from 'shared/utils'
+import { centerTo, devSlowDown, drawImage, fit, getCenter, offsetBy, setObjectSize } from 'shared/utils'
 
 import styles from '../css/index.module.css'
 import type { ImageSourceInternal } from '../image-source-internal.ts'
@@ -106,7 +97,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
         const { width, height, naturalWidth, naturalHeight } = $cropper.getCanvasData()
         zoom.value = Math.min(width / naturalWidth, height / naturalHeight)
         const cropperData = $cropper.getData(true)
-        source.crop.value = cropIsEqualTo(cropperData, unmodifiedCrop) ? undefined : cropperData
+        source.crop.value = cropperData
       },
     }))
 

@@ -10,6 +10,7 @@ export const RowSlider: Component<{
 }> = ({ label, value, ...inputProps }) => (
   <p class={[styles['miru--menu__row'], styles['miru--menu__slider-row']]}>
     <button class={[styles['miru--button'], styles['miru--small']]} disabled>
+      {/* <IconTablerSun class={styles['miru--button__icon']} /> */}
       <label id={'row_slider_' + toValue(label) + '_arialabel'} class={styles['miru--button__label']}>
         {label}
       </label>
