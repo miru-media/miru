@@ -28,7 +28,7 @@ type HistoryOp =
       from: Partial<Schema.DocumentSettings>
       to: Partial<Schema.DocumentSettings>
     }
-  | { type: 'node:create'; nodeId: string; init: Schema.AnyNodeSchema }
+  | { type: 'node:create'; nodeId: string; init: Schema.AnyNode }
   | {
       type: 'node:move'
       nodeId: string
@@ -38,11 +38,11 @@ type HistoryOp =
   | {
       type: 'node:update'
       nodeId: string
-      key: KeyofUnion<Schema.AnyNodeSchema>
+      key: KeyofUnion<Schema.AnyNode>
       from: any
       to: any
     }
-  | { type: 'node:delete'; nodeId: string; from: Schema.AnyNodeSchema }
+  | { type: 'node:delete'; nodeId: string; from: Schema.AnyNode }
 
 const LOCAL_STORAGE_PREFIX = 'video-editor:'
 
@@ -83,7 +83,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     this.#restoreFromLocalStorage()
 
     // Persist to localStorage
-    watch([() => doc.toObject()], ([state]) =>
+    watch([() => doc.toJSON()], ([state]) =>
       localStorage.setItem(this.#DOC_CONTENT_KEY, JSON.stringify(state)),
     )
 
@@ -258,7 +258,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
   #onAssetCreate({ asset }: AssetCreateEvent) {
     const map = this.#getAssetMap()
 
-    map[asset.id] = asset.toObject()
+    map[asset.id] = asset.toJSON()
     localStorage.setItem(this.#ASSETS_KEY, JSON.stringify(map))
   }
 
@@ -270,7 +270,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
   }
 
   #onNodeCreate({ node }: NodeCreateEvent): void {
-    this.#add([{ type: 'node:create', nodeId: node.id, init: node.toObject() }])
+    this.#add([{ type: 'node:create', nodeId: node.id, init: node.toJSON() }])
   }
   #onMove({ node, from }: NodeMoveEvent): void {
     const to = node.parent && { parentId: node.parent.id, index: node.index }
@@ -288,7 +288,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
 
     this.#add([
       { type: 'node:move', nodeId, from: parent && { parentId: parent.id, index: node.index } },
-      { type: 'node:delete', nodeId, from: node.toObject() as Schema.AnyNodeSchema },
+      { type: 'node:delete', nodeId, from: node.toJSON() as Schema.AnyNode },
     ])
   }
 

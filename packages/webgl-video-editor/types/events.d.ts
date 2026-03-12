@@ -15,7 +15,7 @@ export class SettingsUpdateEvent extends Event {
   readonly type: 'settings:update'
   readonly from: Partial<pub.Schema.DocumentSettings>
 
-  constructor(from: Partial<pub.Schema.AnyNodeSchema>)
+  constructor(from: Partial<pub.Schema.AnyNode>)
   clone(from?: Partial<pub.Schema.DocumentSettings>): this
 }
 
@@ -28,7 +28,7 @@ export class NodeCreateEvent extends Event {
 }
 
 export class NodeUpdateEvent<
-  T extends pub.Schema.AnyNodeSchema = pub.Schema.AnyNodeSchema,
+  T extends pub.Schema.AnyNode = pub.Schema.AnyNode,
   K extends KeyofUnion<T> = KeyofUnion<T>,
 >
   extends Event
@@ -103,7 +103,7 @@ export class PlaybackSeekEvent extends Event {
 export declare class CanvasEvent<T extends string> extends Event {
   readonly type: `canvas:${T}`
   readonly canvasEventType: T
-  readonly node?: pub.VisualClip
-  constructor(type: T, node: pub.VisualClip | undefined)
-  clone(node?: pub.VisualClip): this
+  readonly node?: pub.VideoClip
+  constructor(type: T, node: pub.VideoClip | undefined)
+  clone(node?: pub.VideoClip): this
 }

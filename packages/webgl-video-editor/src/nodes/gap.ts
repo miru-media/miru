@@ -8,6 +8,8 @@ import { TrackChild } from './track-child.ts'
 export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
   type = 'gap' as const
   declare children: undefined
+  declare effects: never
+  declare color: undefined
 
   readonly #time = computed((): ClipTime => {
     const prevTime = this.prev?.time
@@ -33,7 +35,7 @@ export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-  toObject(): Schema.Gap {
-    return { id: this.id, type: this.type, duration: this.duration }
+  toJSON(): Schema.Gap {
+    return { ...super.toJSON(), duration: this.duration }
   }
 }

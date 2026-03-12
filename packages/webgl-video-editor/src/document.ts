@@ -5,7 +5,7 @@ import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
-import { AudioClip, Gap, VisualClip } from '#nodes'
+import { AudioClip, Gap, VideoClip } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp } from 'shared/utils/math.ts'
 
@@ -102,16 +102,16 @@ export class Document implements pub.Document {
     this.#resolution = ref(options.resolution ?? DEFAULT_RESOLUTION)
     this.#frameRate = ref(options.frameRate ?? DEFAULT_FRAMERATE)
 
-    this.timeline = new Timeline(this)
-
     if (options.assets) this.assets = options.assets
     else {
       this.#ownsAssetStore = true
       this.assets = new FileSystemAssetStore()
     }
+
+    this.timeline = new Timeline(this)
   }
 
-  createNode<T extends Schema.AnyNodeSchema>(init: T): pub.NodesByType[T['type']] {
+  createNode<T extends Schema.AnyNode>(init: T): pub.NodesByType[T['type']] {
     let node: pub.AnyNode
 
     switch (init.type) {
@@ -124,7 +124,7 @@ export class Document implements pub.Document {
       case 'clip':
         switch (init.clipType) {
           case 'video':
-            node = new VisualClip(this, init)
+            node = new VideoClip(this, init)
             break
           case 'audio':
             node = new AudioClip(this, init)
@@ -189,19 +189,19 @@ export class Document implements pub.Document {
     createChildren(this.timeline, content.tracks)
   }
 
-  toObject(): Schema.SerializedDocument {
-    const serialize = <T extends (Schema.AnyNodeSchema | Schema.AnyAssetSchema)['type']>(
+  toJSON(): Schema.SerializedDocument {
+    const serialize = <T extends (Schema.AnyNode | Schema.AnyAssetSchema)['type']>(
       node: Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
     ): Extract<Schema.AnyNodeSerializedSchema | Schema.AnyAssetSchema, T> => {
       if ('children' in node) {
         const serialized = {
-          ...node.toObject(),
+          ...node.toJSON(),
           children: node.children.map(serialize as any),
         }
         return serialized as any
       }
 
-      return node.toObject()
+      return node.toJSON()
     }
 
     const { assets: _assets, timeline, resolution, frameRate } = this

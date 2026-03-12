@@ -1,6 +1,8 @@
 import * as Mb from 'mediabunny'
 
-import type * as Schema from '../../types/schema'
+import { CLIP_COLORS } from '#constants'
+import type * as Schema from '#schema'
+import { stringHashCode } from 'shared/utils'
 
 export const getMediaAssetInfo = async (
   id: string,
@@ -55,6 +57,7 @@ export const getMediaAssetInfo = async (
     type: 'asset:media:av',
     mimeType: await input.getMimeType(),
     name,
+    color: CLIP_COLORS[Math.abs(stringHashCode(id)) % CLIP_COLORS.length],
     size,
     audio: audio
       ? {

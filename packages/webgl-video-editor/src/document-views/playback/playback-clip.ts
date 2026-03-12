@@ -1,12 +1,12 @@
 import { computed, createEffectScope, ref, watch } from 'fine-jsx'
 
+import type * as pub from '#core'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { useEventListener } from 'shared/utils/composables.ts'
 import { createHiddenMediaElement } from 'shared/utils/images.ts'
 import { ReadyState } from 'shared/video/constants.ts'
 import { rangeContainsTime, useInterval } from 'shared/video/utils.ts'
 
-import type * as pub from '../../../types/core'
 import type { NonReadonly } from '../../../types/internal'
 import { MEDIA_SYNC_INTERVAL_MS, MEDIA_SYNC_TOLERANCE_S } from '../../constants.ts'
 import { CanvasEvent } from '../../events.ts'
@@ -38,16 +38,16 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
 
   shouldPlay = computed(() => this.isInPlayableTime.value && !this.docView.isPaused)
 
-  get shouldRender() {
+  get shouldRender(): boolean {
     return this.isInPresentationTime.value
   }
 
-  get mediaIsPaused() {
+  get mediaIsPaused(): boolean {
     return this.mediaElement.paused
   }
 
   get isReady(): boolean {
-    return this.mediaState.isReady.value && this.original.isReady
+    return this.mediaState.isReady.value && this.original.isReady && this.renderClip?.isReady.value !== false
   }
 
   get everHadEnoughData(): boolean {
@@ -116,6 +116,15 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
     useEventListener(this.mediaElement, 'suspend', this.#seekToWithinClip.bind(this))
   }
 
+  _update(key: keyof pub.AnyClip): void {
+    if (key === 'enabled') {
+      const { enabled } = this.original
+
+      if (!enabled) this.mediaElement.pause()
+      this.mediaElement.muted = !enabled
+    }
+  }
+
   seek(): void {
     const { mediaElement } = this
 
@@ -156,6 +165,8 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
   }
 
   #onUpdate(): void {
+    if (!this.original.enabled) return
+
     const { renderClip, docView } = this
 
     if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
@@ -209,6 +220,8 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
   }
 
   dispose(): void {
+    if (this.isDisposed) return
+
     const { mediaElement } = this
     mediaElement.removeAttribute('src')
     mediaElement.remove()
@@ -216,6 +229,6 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
     super.dispose()
     this.#scope.stop()
     this.#disposeAbort.abort()
-    ;(this as NonReadonly<typeof this>).mediaElement = undefined as never
+    ;(this as Partial<NonReadonly<typeof this>>).mediaElement = undefined
   }
 }

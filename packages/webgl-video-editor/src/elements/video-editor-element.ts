@@ -65,6 +65,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare deleteSelection: pub.VideoEditor['deleteSelection']
   declare importJson: pub.VideoEditor['importJson']
   declare export: pub.VideoEditor['export']
+  declare generateId: pub.VideoEditor['generateId']
 
   constructor() {
     super()
@@ -185,6 +186,7 @@ for (const key of [
   'deleteSelection',
   'importJson',
   'export',
+  'generateId',
 ] satisfies (keyof pub.VideoEditor)[])
   VideoEditorElement.prototype[key] = function (...args: any[]): any {
     const editor = this._editor

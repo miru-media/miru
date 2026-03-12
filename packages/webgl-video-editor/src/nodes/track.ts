@@ -1,27 +1,26 @@
 import { computed } from 'fine-jsx'
 
-import type { AnyClip, AnyTrackChild } from '../../types/core.d.ts'
-import type * as pub from '../../types/core.d.ts'
+import type * as pub from '#core'
+import type { Schema } from '#core'
 
-import type { Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 
-export class Track extends ParentNode<Schema.Track, pub.Timeline, AnyTrackChild> implements pub.Track {
+export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild> implements pub.Track {
   type = 'track' as const
 
   trackType!: 'video' | 'audio'
 
-  get firstClip(): AnyClip | undefined {
+  get firstClip(): pub.AnyClip | undefined {
     const { head } = this
     if (head) return head.isClip() ? head : head.nextClip
   }
-  get lastClip(): AnyClip | undefined {
+  get lastClip(): pub.AnyClip | undefined {
     const { tail } = this
     if (tail) return tail.isClip() ? tail : tail.prevClip
   }
 
-  get clips(): AnyClip[] {
-    const clips: AnyClip[] = []
+  get clips(): pub.AnyClip[] {
+    const clips: pub.AnyClip[] = []
     for (let clip = this.firstClip; clip; clip = clip.nextClip) clips.push(clip)
     return clips
   }
@@ -49,7 +48,7 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, AnyTrackChild>
   isTrack(): this is Track {
     return true
   }
-  isVisual(): this is Track {
+  isVideo(): this is Track {
     return this.trackType === 'video'
   }
   isAudio(): this is Track {
@@ -57,10 +56,9 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, AnyTrackChild>
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-  toObject(): Schema.Track {
+  toJSON(): Schema.Track {
     return {
-      id: this.id,
-      type: this.type,
+      ...super.toJSON(),
       trackType: this.trackType,
     }
   }

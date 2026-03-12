@@ -9,8 +9,10 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
   name?: string
   readonly duration: number
   readonly mimeType: string
-  readonly audio?: Schema.MediaAsset['audio']
-  readonly video?: Schema.MediaAsset['video']
+  readonly audio: Schema.MediaAsset['audio']
+  readonly video: Schema.MediaAsset['video']
+  readonly color: Schema.MediaAsset['color']
+  readonly metadata: Schema.MediaAsset['metadata']
 
   blob?: Blob
   readonly #blobUrl = ref('')
@@ -58,6 +60,8 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
     this.audio = init.audio
     this.video = init.video
     this.uri = init.uri
+    this.color = init.color
+    this.metadata = init.metadata
   }
 
   setBlob(blob: Blob | undefined): void {
@@ -93,7 +97,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
     }
   }
 
-  toObject(): pub.Schema.MediaAsset {
+  toJSON(): pub.Schema.MediaAsset {
     return {
       id: this.id,
       type: this.type,
@@ -104,6 +108,8 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
       audio: this.audio,
       video: this.video,
       uri: this.uri,
+      color: this.color,
+      metadata: this.metadata,
     }
   }
 

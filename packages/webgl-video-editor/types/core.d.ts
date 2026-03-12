@@ -76,11 +76,11 @@ export interface Document extends Schema.DocumentSettings {
   /** @internal */
   activeClipIsStalled: Ref<boolean>
 
-  createNode: <T extends Schema.AnyNodeSchema>(init: T) => NodesByType[T['type']]
+  createNode: <T extends Schema.AnyNode>(init: T) => NodesByType[T['type']]
   seekTo: (time: number) => void
   _setCurrentTime: (time: number) => void
   importFromJson: (content: Schema.SerializedDocument) => void
-  toObject: () => Schema.SerializedDocument
+  toJSON: () => Schema.SerializedDocument
   on: <T extends Extract<keyof VideoEditorEvents, string>>(
     type: T,
     listener: (event: VideoEditorEvents[T]) => unknown,
@@ -101,11 +101,14 @@ export interface NodeMap {
 }
 
 export interface BaseNode {
+  id: string
+  name?: string
   readonly doc: Document
   readonly parent?: AnyParentNode
   prev?: AnyNode
   next?: AnyNode
   readonly index: number
+  enabled: boolean
   isDisposed: boolean
   move: (position: ChildNodePosition | undefined) => void
   remove: () => void
@@ -114,10 +117,10 @@ export interface BaseNode {
   isTrackChild: () => this is AnyTrackChild
   isClip: () => this is AnyClip
   isGap: () => this is Gap
-  isVisual: () => this is Timeline | Track | VisualClip
+  isVideo: () => this is Timeline | Track | VideoClip
   isAudio: () => this is Timeline | Track | AudioClip
-  toObject: () => any
-  getSnapshot: () => NodeSnapshot<T extends Schema.AnyNodeSchema ? T : any>
+  toJSON: () => any
+  getSnapshot: () => NodeSnapshot<T extends Schema.AnyNode ? T : any>
   delete: () => void
   dispose: () => void
   [Symbol.dispose]: () => void
@@ -134,9 +137,9 @@ export interface ParentNode<TChild extends AnyNode> extends BaseNode {
 }
 
 export interface Timeline extends ParentNode<Track>, Schema.Timeline {
-  readonly parent: undefined
+  readonly parent?: undefined
   readonly trackCount: number
-  toObject: () => Schema.Timeline
+  toJSON: () => Schema.Timeline
 }
 
 type TrackType = 'video' | 'audio'
@@ -151,7 +154,7 @@ export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly duration: number
   prev?: Track
   next?: Track
-  toObject: () => Schema.Track
+  toJSON: () => Schema.Track
 }
 
 export interface TrackChild extends BaseNode {
@@ -172,16 +175,16 @@ export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.Base
   readonly isInClipTime: boolean
 }
 
-export interface VisualClip extends Clip<Schema.VisualClip>, Schema.VisualClip {
+export interface VideoClip extends Clip<Schema.VideoClip>, Schema.VideoClip {
   position: { x: number; y: number }
   rotation: number
   scale: { x: number; y: number }
-  toObject: () => Schema.VisualClip
+  effects: NonNullable<Schema.VideoClip['effects']>
+  toJSON: () => Schema.VideoClip
 }
 export interface AudioClip extends Clip<Schema.AudioClip>, Schema.AudioClip {
   volume: number
-  mute: boolean
-  toObject: () => Schema.AudioClip
+  toJSON: () => Schema.AudioClip
 }
 
 export interface Gap extends TrackChild, Schema.Gap {}
@@ -189,7 +192,7 @@ export interface Gap extends TrackChild, Schema.Gap {}
 export interface NodesByType {
   timeline: Timeline
   track: Track
-  clip: VisualClip | AudioClip
+  clip: VideoClip | AudioClip
   gap: Gap
 }
 
@@ -197,7 +200,7 @@ export type AnyNode = NodesByType[keyof NodesByType]
 export type AnyClip = NodesByType['clip']
 export type AnyTrackChild = AnyClip | Gap
 export type AnyParentNode = Timeline | Track
-export type AnyVisualNode = Timeline | Track | VisualClip
+export type AnyVideoNode = Timeline | Track | VideoClip
 export type AnyAudioNode = Timeline | Track | AudioClip
 
 export interface MediaAsset extends Readonly<Schema.MediaAsset> {
@@ -207,7 +210,7 @@ export interface MediaAsset extends Readonly<Schema.MediaAsset> {
   uri?: string
   setBlob: (blob: Blob | undefined) => void
   setError: (error: unknown) => void
-  toObject: () => Schema.MediaAsset
+  toJSON: () => Schema.MediaAsset
   dispose: () => void
   [Symbol.dispose]: () => void
   /** @internal */
@@ -216,7 +219,7 @@ export interface MediaAsset extends Readonly<Schema.MediaAsset> {
 
 export interface VideoEffectAsset extends Readonly<Schema.VideoEffectAsset> {
   readonly raw: EffectDefinition
-  toObject: () => Schema.VideoEffectAsset
+  toJSON: () => Schema.VideoEffectAsset
   dispose: () => void
   [Symbol.dispose]: () => void
 }
@@ -338,6 +341,8 @@ export interface VideoEditor {
 
   /** Delete the selected clip */
   deleteSelection: () => void
+
+  generateId: () => string
 
   /** Adds assets and tracks from the provided JSON object */
   importJson: (newContent: Schema.SerializedDocument) => void

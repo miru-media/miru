@@ -6,12 +6,12 @@ import type * as pub from '#core'
 import { DocumentView, type ViewType } from '../document-view.ts'
 
 import { _vuePlainReadonly, _vueWritable } from './utils.ts'
-import { VueAudioClip, VueGap, VueTimeline, VueTrack, VueVisualClip } from './vue-nodes.ts'
+import { VueAudioClip, VueGap, VueTimeline, VueTrack, VueVideoClip } from './vue-nodes.ts'
 
 export interface VueTypeMap {
   timeline: VueTimeline
   track: VueTrack
-  clip: VueVisualClip | VueAudioClip
+  clip: VueVideoClip | VueAudioClip
   gap: VueGap
 }
 
@@ -48,7 +48,7 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   seekTo = this.doc.seekTo.bind(this.doc)
   _setCurrentTime = this.doc._setCurrentTime.bind(this.doc)
   importFromJson = this.doc.importFromJson.bind(this.doc)
-  toObject = this.doc.toObject.bind(this.doc)
+  toJSON = this.doc.toJSON.bind(this.doc)
   on = this.doc.on.bind(this.doc)
   emit = this.doc.emit.bind(this.doc)
 
@@ -68,7 +68,7 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
         break
       case 'clip': {
         const clip = original as unknown as pub.AnyClip
-        view = clip.isVisual() ? new VueVisualClip(this, clip) : new VueAudioClip(this, clip)
+        view = clip.isVideo() ? new VueVideoClip(this, clip) : new VueAudioClip(this, clip)
         break
       }
       case 'gap':

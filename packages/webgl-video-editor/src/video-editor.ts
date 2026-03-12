@@ -160,7 +160,7 @@ export class VideoEditor implements pub.VideoEditor {
       id: this.generateId(),
       type: 'clip',
       clipType: track.trackType,
-      sourceRef: { assetId: asset.id },
+      mediaRef: { assetId: asset.id },
       sourceStart: 0,
       duration,
     }
@@ -178,7 +178,7 @@ export class VideoEditor implements pub.VideoEditor {
 
     this._transact(() => {
       clip.duration = Math.min(asset.duration, clip.duration)
-      clip.sourceRef = { assetId: asset.id }
+      clip.mediaRef = { assetId: asset.id }
     })
   }
 
@@ -207,13 +207,13 @@ export class VideoEditor implements pub.VideoEditor {
 
     return this._transact(() => {
       const startClip = this.doc.createNode({
-        ...clip.toObject(),
+        ...clip.toJSON(),
         id: this.generateId(),
         transition: undefined,
         duration: delta,
       })
       const endClip = this.doc.createNode({
-        ...clip.toObject(),
+        ...clip.toJSON(),
         id: this.generateId(),
         sourceStart: prevClipTime.source + delta,
         duration: prevClipTime.duration - delta,

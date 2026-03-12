@@ -8,19 +8,11 @@ import { Button } from 'shared/components/button.tsx'
 import { stringHashCode, useI18n } from 'shared/utils'
 
 import type { AnyClip } from '../../types/core.d.ts'
-import { MIN_CLIP_WIDTH_PX } from '../constants.ts'
+import { CLIP_COLORS, MIN_CLIP_WIDTH_PX } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
-const CLIP_COLORS = [
-  'var(--red-dark)',
-  'var(--red)',
-  'var(--red-light)',
-  'var(--purple)',
-  'var(--purple-light)',
-  'var(--green)',
-  'var(--green-light)',
-]
+const DISABLED_COLOR = 'var(--white-2)'
 
 export const Clip = ({
   clip,
@@ -33,13 +25,14 @@ export const Clip = ({
 }) => {
   const { t, tr } = useI18n()
   const mainContainer = ref<HTMLElement>()
-  const clipColor = computed(() => {
-    const { asset } = clip
-    if (!asset || !editor.playback._getNode(clip).everHadEnoughData) return 'var(--white-2)'
 
-    const hash = stringHashCode(asset.id)
-    return CLIP_COLORS[Math.abs(hash) % CLIP_COLORS.length]
-  })
+  const clipColor = computed(() =>
+    editor.playback._getNode(clip).everHadEnoughData
+      ? (clip.color ??
+        clip.asset?.color ??
+        CLIP_COLORS[Math.abs(stringHashCode(clip.asset?.id ?? '')) % CLIP_COLORS.length])
+      : DISABLED_COLOR,
+  )
 
   const boxEdges = computed(() => {
     const { time } = clip

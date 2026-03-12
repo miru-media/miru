@@ -1,4 +1,4 @@
-import type { AnyClip, Schema } from '../../types/core.d.ts'
+import type { AnyClip, Schema } from '#core'
 
 import { BaseNode } from './base-node.ts'
 import type { Track } from './track.ts'

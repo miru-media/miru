@@ -63,7 +63,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     this._init()
 
     originalDoc.timeline.children.forEach((track_, trackIndex) => {
-      const track = new Track(doc, track_.toObject())
+      const track = new Track(doc, track_.toJSON())
       track.move({ parentId: doc.timeline.id, index: trackIndex })
 
       track_.children.forEach((trackChild, index) =>
@@ -91,7 +91,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     const sourceEnd = sourceStart + duration
 
     if (!asset?.blob)
-      throw new Error(`[webgl-video-editor]: missing asset "${exportClip.original.sourceRef.assetId}"`)
+      throw new Error(`[webgl-video-editor]: missing asset "${exportClip.original.mediaRef?.assetId}"`)
 
     let sourceEntry = this.sources.get(asset.id)
 
@@ -207,7 +207,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
 
       await Promise.all(
         this.clips.map(async (exportClip) => {
-          if (!exportClip.original.isVisual()) return
+          if (!exportClip.original.isVideo()) return
           await exportClip.seekVideo()
           if (!exportClip.isReady) await exportClip.whenReady(this._abort.signal)
         }),

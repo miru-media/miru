@@ -1,21 +1,31 @@
-import { computed, ref } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 
-import type { AnyNode, AnyParentNode, ChildNodePosition } from '../../types/core.d.ts'
-import type * as pub from '../../types/core.d.ts'
-import type { NodeSnapshot, NonReadonly } from '../../types/internal.d.ts'
+import type { Schema } from '#core'
+import type * as pub from '#core'
+import type { NodeSnapshot, NonReadonly } from '#internal'
+
 import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
 
-import type { Schema } from './index.ts'
-
-export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyParentNode = AnyParentNode>
+export abstract class BaseNode<
+  T extends Schema.Base = any,
+  TParent extends pub.AnyParentNode = pub.AnyParentNode,
+>
   implements pub.BaseNode
 {
+  declare readonly doc: pub.Document
+
   readonly type: T['type']
   readonly id: string
-  declare readonly doc: pub.Document
+  declare name: string
+  declare enabled: boolean
+  declare effects: NonNullable<Schema.Base['effects']>
+  declare color: Schema.Base['color']
+  declare metadata: Schema.Base['metadata']
   abstract readonly children?: unknown
 
   readonly #parent = ref<TParent>()
+
+  readonly _effectAssets: Ref<pub.VideoEffectAsset[]> = ref([])
 
   declare parent?: TParent | undefined
   get ['parent' as never](): TParent | undefined {
@@ -44,13 +54,13 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     this.#next.value = other
   }
 
+  protected readonly _abort = new AbortController()
   isDisposed = false
-  readonly #cleanups: (() => void)[] = []
 
   readonly #index = computed((): number => {
     const { prev } = this
     if (prev) return prev.index + 1
-    if (this.parent?.head === (this as unknown as AnyNode)) return 0
+    if (this.parent?.head === (this as unknown as pub.AnyNode)) return 0
     return -1
   })
 
@@ -59,27 +69,54 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   }
 
   constructor(doc: pub.Document, init: T) {
+    this.doc = doc
+
     this.id = init.id
     this.type = init.type
 
-    this.doc = doc
+    this._defineReactive('name', init.name, { defaultValue: '' })
+    this._defineReactive('enabled', init.enabled, { defaultValue: true })
+    this._defineReactive('effects', init.effects, {
+      defaultValue: [],
+      onChange: (value) => {
+        this._effectAssets.value.length = 0
+        this._effectAssets.value = value?.map(({ assetId }) => this.doc.assets.getAsset(assetId)) ?? []
+      },
+    })
+    this._defineReactive('markers', init.markers, { defaultValue: [] })
+    this._defineReactive('color', init.color)
+    this._defineReactive('metadata', init.metadata, { defaultValue: {} })
+
+    this.doc.assets.on(
+      'asset:create',
+      ({ asset }) => {
+        if (asset.type !== 'asset:effect:video') return
+
+        const index = this.effects.findIndex((e) => e.assetId === asset.id)
+        if (index === -1) return
+
+        const effectAssets = [...this._effectAssets.value]
+        effectAssets[index] = asset
+        this._effectAssets.value.length = 0
+        this._effectAssets.value = effectAssets
+      },
+      { signal: this._abort.signal },
+    )
     this._init(init)
 
-    doc.emit(new NodeCreateEvent(this as unknown as AnyNode))
+    doc.emit(new NodeCreateEvent(this as unknown as pub.AnyNode))
   }
 
   protected abstract _init(init: T): void
 
-  abstract toObject(): Schema.Base
-
-  getSnapshot(): NodeSnapshot<T extends Schema.AnyNodeSchema ? T : any> {
+  getSnapshot(): NodeSnapshot<T extends Schema.AnyNode ? T : any> {
     return {
-      node: this.toObject() as T extends Schema.AnyNodeSchema ? T : any,
+      node: this.toJSON() as T extends Schema.AnyNode ? T : any,
       position: this.parent && { parentId: this.parent.id, index: this.#index.value },
     }
   }
 
-  move(position: ChildNodePosition | undefined) {
+  move(position: pub.ChildNodePosition | undefined) {
     const parentId = position?.parentId
     if (parentId === this.parent?.id && (!position || position.index === this.index)) return
 
@@ -94,7 +131,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
 
     this.doc.emit(
       new NodeMoveEvent(
-        this as unknown as AnyNode,
+        this as unknown as pub.AnyNode,
         fromParent && { parentId: fromParent.id, index: fromIndex },
       ),
     )
@@ -102,6 +139,18 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
 
   remove(): void {
     this.move(undefined)
+  }
+
+  toJSON(): Pick<T, keyof Schema.Base> {
+    return {
+      id: this.id,
+      type: this.type,
+      name: this.name,
+      enabled: this.enabled,
+      effects: this.effects,
+      color: this.color,
+      metadata: this.metadata,
+    }
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
@@ -120,7 +169,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   isGap(): this is pub.Gap {
     return false
   }
-  isVisual(): this is pub.AnyVisualNode {
+  isVideo(): this is pub.AnyVideoNode {
     return false
   }
   isAudio(): this is pub.AnyAudioNode {
@@ -129,7 +178,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   #emitUpdate<Key extends keyof T>(key: Exclude<Key, 'id' | 'type'>, oldValue: T[Key]): void {
-    const event = new NodeUpdateEvent(this as unknown as AnyNode, key as any, oldValue)
+    const event = new NodeUpdateEvent(this as unknown as pub.AnyNode, key as any, oldValue)
     this.doc.emit(event)
   }
 
@@ -171,7 +220,7 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
 
   delete(): void {
     this.parent?._unlinkChild(this as any)
-    this.doc.emit(new NodeDeleteEvent(this as unknown as AnyNode))
+    this.doc.emit(new NodeDeleteEvent(this as unknown as pub.AnyNode))
     this.dispose()
   }
 
@@ -179,18 +228,17 @@ export abstract class BaseNode<T extends Schema.Base = any, TParent extends AnyP
     if (this.isDisposed) return
     this.isDisposed = true
 
-    this.#cleanups.forEach((fn) => fn())
+    this._abort.abort()
 
     this.parent?._unlinkChild(this as any)
-    ;(this as unknown as NonReadonly<typeof this>).doc = undefined as never
-    ;(this as NonReadonly<typeof this>).doc = undefined as never
+    ;(this as Partial<NonReadonly<typeof this>>).doc = undefined
   }
 
   [Symbol.dispose](): void {
     this.dispose()
   }
 
-  onDispose(fn: () => void) {
-    this.#cleanups.push(fn)
+  onDispose(fn: () => void): void {
+    this._abort.signal.addEventListener('abort', fn, { once: true })
   }
 }

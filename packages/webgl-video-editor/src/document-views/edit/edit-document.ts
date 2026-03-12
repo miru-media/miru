@@ -12,16 +12,16 @@ import {
   type EditAudioClip,
   EditClip,
   type EditGap,
-  type EditNodeProxy,
   type EditTimeline,
+  type EditTrack,
+  type EditVideoClip,
   EditView,
-  type EditVisualClip,
 } from './edit-nodes.ts'
 
 export interface ViewTypeMap {
   timeline: EditTimeline
-  track: EditNodeProxy<pub.Track>
-  clip: EditVisualClip | EditAudioClip
+  track: EditTrack
+  clip: EditVideoClip | EditAudioClip
   gap: EditGap
 }
 
@@ -33,7 +33,7 @@ export interface ViewTypeMap {
 export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Document {
   readonly vueScope = Vue.effectScope()
   readonly fineJsxScope = createEffectScope()
-  edits = new Map<pub.AnyNode, pub.Schema.AnyNodeSchema>()
+  edits = new Map<pub.AnyNode, pub.Schema.AnyNode>()
 
   declare resolution: pub.Document['resolution']
   declare frameRate: pub.Document['frameRate']
@@ -62,7 +62,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   seekTo = this.doc.seekTo.bind(this.doc)
   _setCurrentTime = this.doc._setCurrentTime.bind(this.doc)
   importFromJson = this.doc.importFromJson.bind(this.doc)
-  toObject = this.doc.toObject.bind(this.doc)
+  toJSON = this.doc.toJSON.bind(this.doc)
   emit = this.doc.emit.bind(this.doc)
 
   constructor(doc: pub.Document) {
@@ -104,7 +104,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
       : super._getNode(original)
   }
 
-  createNode<T extends pub.Schema.AnyNodeSchema>(init: T): pub.NodesByType[T['type']] {
+  createNode<T extends pub.Schema.AnyNode>(init: T): pub.NodesByType[T['type']] {
     const node = this.doc.createNode(init)
     return (this._createView(node) as typeof node | undefined) ?? node
   }

@@ -41,6 +41,7 @@ export class MiruFilter extends Pixi.Filter implements Pick<Pixi.Filter, 'resour
     output: Pixi.RenderSurface,
     clearMode: boolean,
   ): void {
+    if (this.isLoading) return
     this.resources.filterUniforms.uniforms.u_intensity = this.opIntensity * this.#intensity.value
 
     super.apply(filterManager, input, output, clearMode)

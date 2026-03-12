@@ -5,7 +5,6 @@ export * from './public-constants.ts'
 export const MOBILE_MAX_WIDTH = 640
 
 export const MIN_CLIP_DURATION_S = 0.25
-export const TRANSITION_DURATION_S = 0.5
 export const MIN_CLIP_WIDTH_PX = 2
 
 export const SourceNodeState = {
@@ -34,3 +33,13 @@ export const TIMELINE_ID = 'timeline'
 
 export const PIXI_LUT_UPLOADER_ID = 'webgl-video-editor:lut'
 export const PIXI_HALD_LUT_UPLOADER_ID = 'webgl-video-editor:hald-lut'
+
+export const CLIP_COLORS = [
+  '#e83757', // red-dark
+  '#ff5372', // red
+  '#ff7a92', // red-light
+  '#a06efb', // purple
+  '#ac7dff', // purple-light
+  '#03ad70', // green
+  '#1ed291', // green-light
+]

@@ -7,13 +7,12 @@ export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
   declare clipType: 'audio'
 
   declare volume: number
-  declare mute: boolean
+  declare enabled: boolean
 
   protected _init(init: Schema.AudioClip): void {
     super._init(init)
 
     this._defineReactive('volume', init.volume, { defaultValue: 1 })
-    this._defineReactive('mute', init.mute, { defaultValue: false })
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
@@ -21,12 +20,11 @@ export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
     return true
   }
 
-  toObject(): Schema.AudioClip {
-    const { volume, mute } = this
-    const obj: Schema.AudioClip = super.toObject() as Schema.BaseClip & { clipType: 'audio' }
+  toJSON(): Schema.AudioClip {
+    const { volume } = this
+    const obj: Schema.AudioClip = super.toJSON()
 
     if (volume !== 1) obj.volume = volume
-    if (mute) obj.mute = mute
 
     return obj
   }

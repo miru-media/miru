@@ -9,7 +9,7 @@ import { NodeView } from '../src/document-views/node-view.ts'
 import { Document } from '../src/document.ts'
 import * as events from '../src/events.ts'
 
-import { makeClip, makeTrack } from './utils.ts'
+import { makeAudioClip, makeTrack, makeVideoClip } from './utils.ts'
 
 class TestView extends NodeView<TestDocument, any> {
   _move = vi.fn()
@@ -29,13 +29,13 @@ let editDoc: EditDocument
 let testDoc: TestDocument
 
 let editClip1: EditView<pub.AudioClip> & pub.AudioClip
-let editClip2: EditView<pub.VisualClip> & pub.VisualClip
+let editClip2: EditView<pub.VideoClip> & pub.VideoClip
 let originalClip1: pub.AudioClip
-let originalClip2: pub.VisualClip
+let originalClip2: pub.VideoClip
 
-const clipInit1 = makeClip({ id: 'clip-1', clipType: 'audio', sourceRef: { assetId: 'unknown' } })
-const clipInit2 = makeClip({ id: 'clip-2', clipType: 'video', sourceRef: { assetId: 'unknown' } })
-const clipInit3 = makeClip({ id: 'clip-3', clipType: 'video', sourceRef: { assetId: 'unknown' } })
+const clipInit1 = makeAudioClip({ id: 'clip-1', mediaRef: { assetId: 'unknown' } })
+const clipInit2 = makeVideoClip({ id: 'clip-2', mediaRef: { assetId: 'unknown' } })
+const clipInit3 = makeVideoClip({ id: 'clip-3', mediaRef: { assetId: 'unknown' } })
 const trackInit = makeTrack('test-track', 'audio', [clipInit1, clipInit2])
 
 const onDocUpdate = vi.fn()
@@ -141,11 +141,11 @@ test('while editing, changes appear only on proxies', () => {
 
   editClip2.duration += 10
 
-  expect(originalClip1).toMatchObject({ duration: 1, name: undefined })
-  expect(editClip1.toObject()).toEqual({ ...clipInit1, duration: 2, name: 'new name' })
+  expect(originalClip1.toJSON()).toMatchObject({ duration: 1, name: '' })
+  expect(editClip1.toJSON()).toEqual({ ...clipInit1, duration: 2, name: 'new name' })
 
-  expect(originalClip2.toObject()).toEqual({ ...clipInit2, duration: 11 })
-  expect(editClip2.toObject()).toEqual({ ...clipInit2, duration: 11 })
+  expect(originalClip2.toJSON()).toEqual({ ...clipInit2, duration: 11 })
+  expect(editClip2.toJSON()).toEqual({ ...clipInit2, duration: 11 })
 
   expect(originalClip2.time).toEqual({ start: 1, source: 0, end: 12, duration: 11 })
   expect(editClip2.time).toEqual({ start: 2, source: 0, end: 13, duration: 11 })
@@ -165,11 +165,11 @@ test('applying edits updates original doc', () => {
   editClip1._applyEdits()
 
   expect(originalClip1).toMatchObject({ duration: 2, name: 'new name' })
-  expect(editClip1.toObject()).toMatchObject({ duration: 2, name: 'new name' })
+  expect(editClip1.toJSON()).toMatchObject({ duration: 2, name: 'new name' })
 
   expect(onDocUpdate).toHaveBeenCalledWith(expect.objectContaining({ key: 'duration', from: 1 }))
 
-  expect(originalClip2).toMatchObject({ duration: 11, name: undefined })
+  expect(originalClip2.toJSON()).toMatchObject({ duration: 11, name: '' })
 })
 
 test('dropping edits clears changes without updating original', () => {
@@ -181,11 +181,11 @@ test('dropping edits clears changes without updating original', () => {
 
   editClip1._dropEdits()
 
-  expect(originalClip1.toObject()).toEqual(clipInit1)
-  expect(editClip1.toObject()).toEqual(clipInit1)
+  expect(originalClip1.toJSON()).toEqual(clipInit1)
+  expect(editClip1.toJSON()).toEqual(clipInit1)
 
-  expect(originalClip2).toMatchObject({ duration: 11, name: undefined })
-  expect(editClip2.toObject()).toMatchObject({ duration: 11, name: undefined })
+  expect(originalClip2).toMatchObject({ duration: 11, name: '' })
+  expect(editClip2.toJSON()).toMatchObject({ duration: 11, name: '' })
 })
 
 test('deferred update events from original node are fired when dropping edits', () => {

@@ -27,7 +27,7 @@ const showFilterMenu = ref(false)
 
 watchEffect(() => {
   const { selection } = editor
-  showFilterMenu.value &&= !!selection?.isVisual()
+  showFilterMenu.value &&= !!selection?.isVideo()
 })
 
 const showDebugButtons = ref(import.meta.env.DEV)
@@ -60,8 +60,8 @@ useEventListener(
         </button>
 
         <button
-          v-if="editor.selection.isVisual()"
-          :class="['toolbar-button', editor.selection.filter && 'active']"
+          v-if="editor.selection.isVideo()"
+          :class="['toolbar-button', editor.selection.effects && 'active']"
           @click="() => (showFilterMenu = !showFilterMenu)"
         >
           <div :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'" />

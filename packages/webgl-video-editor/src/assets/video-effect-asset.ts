@@ -16,7 +16,7 @@ export class VideoEffectAsset extends BaseAsset<pub.Schema.VideoEffectAsset> imp
     return this.raw.ops
   }
 
-  toObject(): pub.Schema.VideoEffectAsset {
+  toJSON(): pub.Schema.VideoEffectAsset {
     return {
       ...this.raw,
       name: this.name,

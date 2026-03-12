@@ -17,6 +17,14 @@ export const getOrCreateYmap = (root: Y.Doc | Y.Map<Y.Map<any>>, key: string) =>
   return subMap
 }
 
+const createYarrayOfYmaps = (values: Record<string, unknown>[]): Y.Array<Y.Map<unknown>> => {
+  const yarray = new Y.Array<Y.Map<unknown>>()
+  const ymaps = values.map((obj) => new Y.Map(Object.entries(obj)))
+
+  yarray.insert(0, ymaps)
+  return yarray
+}
+
 export const initYjsRoot = (
   root: Y.Doc | Y.Map<any>,
 ): { ytree: YTree; settings: Y.Map<any>; ydoc: Y.Doc } => {
@@ -48,6 +56,33 @@ export const initYjsRoot = (
   return { ytree, settings: settignsYmap, ydoc: settignsYmap.doc! }
 }
 
+export const createYnodeFromJson = (init: Schema.AnyNode): Y.Map<unknown> =>
+  new Y.Map(
+    Object.entries(init)
+      .filter(([key]) => key !== 'children')
+      .map(([key, value]) => {
+        let yjsValue
+        switch (key) {
+          // effects are stored in YArrays although we never use more than one effect atm
+          case 'effects':
+            yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['effects']) ?? [])
+            break
+          // TODO:
+          case 'markers':
+            yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['markers']) ?? [])
+            break
+          // metadata is stored as a YMap of values
+          case 'metadata':
+            yjsValue = new Y.Map(Object.entries((value as typeof init.metadata) ?? {}))
+            break
+          default:
+            yjsValue = value
+        }
+
+        return [key, yjsValue]
+      }),
+  )
+
 export const initYmapFromJson = ({
   root,
   content,
@@ -59,17 +94,11 @@ export const initYmapFromJson = ({
 }): void => {
   const ydoc = 'doc' in root ? root.doc : root
 
-  if (!ydoc) throw new Error('YMap must be bound to a doc!')
-
-  ydoc.transact(() => {
+  const init = () => {
     const { ytree, settings } = initYjsRoot(root)
 
     const addNodeAndChildren = (parentKey: string, init: Schema.AnyNodeSerializedSchema) => {
-      ytree.createNode(
-        parentKey,
-        init.id,
-        new Y.Map(Object.entries(init).filter(([key]) => key !== 'children')),
-      )
+      ytree.createNode(parentKey, init.id, createYnodeFromJson(init))
       if ('children' in init) init.children.forEach((child) => addNodeAndChildren(init.id, child))
     }
 
@@ -80,17 +109,18 @@ export const initYmapFromJson = ({
       ytree.createNode(YTREE_ROOT_KEY, YTREE_NULL_PARENT_KEY, new Y.Map())
     }
 
-    // create the timeline node if it's missing
     try {
       ytree.getNodeValueFromKey('timeline')
-      content.tracks.forEach((track) => addNodeAndChildren(TIMELINE_ID, track))
     } catch {
+      // create the timeline node if it's missing
       addNodeAndChildren(YTREE_NULL_PARENT_KEY, {
         id: TIMELINE_ID,
         type: 'timeline',
-        children: content.tracks,
-      } as const)
+        children: [],
+      })
     }
+
+    content.tracks.forEach((track) => addNodeAndChildren(TIMELINE_ID, track))
 
     // update doc settings
     const { resolution, frameRate } = content
@@ -99,7 +129,10 @@ export const initYmapFromJson = ({
 
     // add assets
     if (assetsYmap) for (const asset of content.assets) assetsYmap.set(asset.id, asset)
-  })
+  }
+
+  if (ydoc) ydoc.transact(init)
+  else init()
 }
 
 export const createInitialUpdate = (root: Y.Doc | Y.Map<unknown>): string => {

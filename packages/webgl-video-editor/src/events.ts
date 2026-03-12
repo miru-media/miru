@@ -43,7 +43,7 @@ export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
 }
 
 export class NodeUpdateEvent<
-  T extends pub.Schema.AnyNodeSchema = pub.Schema.AnyNodeSchema,
+  T extends pub.Schema.AnyNode = pub.Schema.AnyNode,
   K extends KeyofUnion<T> = KeyofUnion<T>,
 >
   extends Event
@@ -156,9 +156,9 @@ export class PlaybackSeekEvent extends Event implements pub.PlaybackSeekEvent {
 export class CanvasEvent<T extends string> extends Event implements pub.CanvasEvent<T> {
   declare readonly type: `canvas:${T}`
   readonly canvasEventType: T
-  readonly node?: pub.VisualClip
+  readonly node?: pub.VideoClip
 
-  constructor(type: T, node: pub.VisualClip | undefined) {
+  constructor(type: T, node: pub.VideoClip | undefined) {
     super(`canvas:${type}`)
     this.canvasEventType = type
     this.node = node

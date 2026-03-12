@@ -7,7 +7,7 @@ import interact from '@interactjs/interact'
 import { computed, effect, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
-import type { VisualClip } from '#core'
+import type { VideoClip } from '#core'
 
 import styles from '../css/index.module.css'
 import { getClipTransformMatrix } from '../utils.ts'
@@ -22,11 +22,11 @@ export const TransformControls = () => {
 
   const clipMediaSize = computed(() => {
     const clip = editor.selection
-    return clip?.isVisual() && clip.asset?.video ? clip.asset.video : { width: 0, height: 0 }
+    return clip?.isVideo() && clip.asset?.video ? clip.asset.video : { width: 0, height: 0 }
   })
-  const clipProps = computed((): Pick<VisualClip, 'position' | 'rotation' | 'scale'> => {
+  const clipProps = computed((): Pick<VideoClip, 'position' | 'rotation' | 'scale'> => {
     const clip = editor.selection
-    return clip?.isVisual() ? clip : { position: { x: 0, y: 0 }, rotation: 0, scale: { x: 1, y: 1 } }
+    return clip?.isVideo() ? clip : { position: { x: 0, y: 0 }, rotation: 0, scale: { x: 1, y: 1 } }
   })
 
   const rotateZoomMatrix = computed(() => {
@@ -58,7 +58,7 @@ export const TransformControls = () => {
     }).draggable({
       listeners: {
         start() {
-          if (!editor.selection?.isVisual()) return
+          if (!editor.selection?.isVideo()) return
           editor.selection._startEditing(['position', 'scale'])
         },
         move(event: DragEvent) {
@@ -87,7 +87,7 @@ export const TransformControls = () => {
       listeners: {
         start(event: ResizeEvent) {
           const clip = editor.selection
-          if (!clip?.isVisual()) return
+          if (!clip?.isVideo()) return
 
           clip._startEditing(['position', 'scale'])
 
@@ -131,12 +131,12 @@ export const TransformControls = () => {
     })
   })
 
-  const clipMatrix = computed(() =>
-    (editor.selection?.isVisual()
-      ? getClipTransformMatrix(editor.selection, false)
-      : new Pixi.Matrix()
-    ).scale(editor.zoom, editor.zoom),
-  )
+  const clipMatrix = computed(() => {
+    const clip = editor.selection
+    if (!clip?.isVideo()) return new Pixi.Matrix()
+
+    return getClipTransformMatrix(clip, false).scale(editor.zoom, editor.zoom)
+  })
 
   const boxPoints = computed(() => {
     const { width, height } = clipMediaSize.value
@@ -155,7 +155,7 @@ export const TransformControls = () => {
   const rotateLine = computed(() => {
     const halfWidth = clipMediaSize.value.width / 2
     const matrix = clipMatrix.value
-    const clipScale = editor.selection?.isVisual() ? editor.selection.scale : { x: 1, y: 1 }
+    const clipScale = editor.selection?.isVideo() ? editor.selection.scale : { x: 1, y: 1 }
     const { zoom } = editor
 
     return {
@@ -165,11 +165,11 @@ export const TransformControls = () => {
   })
 
   return (
-    <svg class={styles.transformControls} style={editor.selection?.isVisual() ? 'display:none' : ''}>
+    <svg class={styles.transformControls} style={editor.selection?.isVideo() ? 'display:none' : ''}>
       <g ref={container}>
         {() => {
           const clip = editor.selection
-          if (!clip?.isVisual() || !clip.isInClipTime || !clip.asset?.video) return
+          if (!clip?.isVideo() || !clip.isInClipTime || !clip.asset?.video) return
 
           const { start: rotateStart, end: rotateEnd } = rotateLine.value
           const points = boxPoints.value

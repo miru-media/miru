@@ -1,6 +1,6 @@
 import { computed, ref } from 'fine-jsx'
 
-import type { AnyClip, AnyNode, AnyParentNode, AudioClip, ClipTime, Timeline, Track, VisualClip } from '#core'
+import type { AnyClip, AnyNode, AnyParentNode, AudioClip, ClipTime, Timeline, Track, VideoClip } from '#core'
 import type { KeyofUnion } from '#internal'
 import type { Clip, Gap } from '#nodes'
 
@@ -20,13 +20,12 @@ const IS_EDIT_VIEW = '_is_edit_view'
 const viewProxies = new WeakMap<EditView<any>, EditNodeProxy<AnyNode>>()
 
 export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
-  static METHODS = new Set<KeyofUnion<AnyNode | NodeView<EditDocument, any>>>([
+  static BOUND_METHODS = new Set<KeyofUnion<AnyNode | NodeView<EditDocument, any>>>([
     'delete',
     'dispose',
     'getSnapshot',
     'move',
     'remove',
-    // 'toObject',
   ])
 
   readonly [IS_EDIT_VIEW]? = true as boolean
@@ -49,7 +48,7 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     const Constructor = this.constructor as typeof EditView
     const methods: typeof this._boundMethods = {}
 
-    Constructor.METHODS.forEach((key) => {
+    Constructor.BOUND_METHODS.forEach((key) => {
       methods[key] = (original as unknown as typeof methods)[key].bind(original)
     })
 
@@ -220,15 +219,16 @@ export class EditClip<T extends AnyClip> extends EditView<T> {
 export type EditNodeProxy<T extends AnyNode> = EditView<T> & T
 
 export type EditTimeline = EditNodeProxy<Timeline>
-export type EditVisualClip = EditNodeProxy<VisualClip>
+export type EditTrack = EditNodeProxy<Track>
+export type EditVideoClip = EditNodeProxy<VideoClip>
 export type EditAudioClip = EditNodeProxy<AudioClip>
 export type EditGap = EditNodeProxy<Gap>
-export type AnyEditTrackChild = EditVisualClip | EditAudioClip | EditGap
+export type AnyEditTrackChild = EditVideoClip | EditAudioClip | EditGap
 
 export const createEditViewProxy = <T extends AnyNode>(
   view: EditView<T> | EditClip<any>,
 ): EditNodeProxy<T> => {
-  const proxy = new Proxy<EditView<any>>(view, nodeHandler) as EditNodeProxy<any>
-  viewProxies.set(view, proxy)
+  const proxy = new Proxy<EditView<any>>(view, nodeHandler) as EditNodeProxy<T>
+  viewProxies.set(view, proxy as any)
   return proxy
 }

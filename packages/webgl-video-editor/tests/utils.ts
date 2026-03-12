@@ -1,26 +1,47 @@
 import type { Schema } from '#core'
+import type { Base } from '#schema'
+
+const makeBase = <T extends string>(id: string, type: T): Base & { type: T } => ({
+  id,
+  type,
+  name: '',
+  enabled: true,
+  effects: [],
+  metadata: {},
+})
 
 export const makeTrack = (
   id: string,
   trackType: Schema.SerializedTrack['trackType'],
   children: Schema.SerializedTrack['children'],
 ): Schema.SerializedTrack => ({
-  id,
-  type: 'track',
+  ...makeBase(id, 'track'),
   trackType,
   children,
 })
 
-export const makeClip = (
-  init: Partial<Omit<Schema.SerializedClip, 'id' | 'type' | 'sourceRef'>> & {
-    id: string
-    sourceRef: Schema.SerializedClip['sourceRef']
-  },
-): Schema.SerializedClip => ({
-  type: 'clip',
-  clipType: 'audio',
+const makeBaseClip = <T extends Schema.BaseClip['clipType']>(id: string, clipType: T) => ({
+  ...makeBase(id, 'clip'),
+  clipType,
   duration: 1,
   sourceStart: 0,
+})
+
+export const makeVideoClip = (
+  init: Partial<Omit<Schema.VideoClip, 'id' | 'type'>> & {
+    id: string
+  },
+): Schema.VideoClip => ({
+  ...makeBaseClip(init.id, 'video'),
+  ...init,
+})
+
+export const makeAudioClip = (
+  init: Partial<Omit<Schema.AudioClip, 'id' | 'type'>> & {
+    id: string
+  },
+): Schema.AudioClip => ({
+  ...makeBaseClip(init.id, 'audio'),
   ...init,
 })
 

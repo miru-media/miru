@@ -4,9 +4,9 @@ import type { AssetLoader, Schema } from '#core'
 export class HttpAssetLoader implements AssetLoader {
   canLoad(asset: Schema.MediaAsset): boolean {
     if (!asset.uri) return false
-    const { protocol } = new URL(asset.uri)
+    const { protocol } = new URL(asset.uri, document.baseURI)
 
-    return /^https?/u.test(protocol)
+    return /^https?:/u.test(protocol)
   }
   async load(
     asset: Schema.MediaAsset,

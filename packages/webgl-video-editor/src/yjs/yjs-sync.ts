@@ -15,12 +15,12 @@ import {
 import type * as pub from '../../types/core.d.ts'
 import type { AnyNode, AnyParentNode, VideoEditorDocumentSync } from '../../types/core.d.ts'
 import type { DocumentSettings } from '../../types/schema'
-import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '../constants.ts'
+import { TIMELINE_ID } from '../constants.ts'
 import { Document } from '../document.ts'
 import { NodeCreateEvent } from '../events.ts'
 
 import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY } from './constants.ts'
-import { initYjsRoot, initYmapFromJson } from './utils.ts'
+import { createYnodeFromJson, initYjsRoot, initYmapFromJson } from './utils.ts'
 
 const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
   if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
@@ -76,8 +76,8 @@ export class YjsSync implements VideoEditorDocumentSync {
     this.#yundo = new Y.UndoManager([ytree._ymap, settings])
     this.settingsYmap = settings
 
-    doc.resolution = (settings.get('resolution') as Size | undefined) ?? DEFAULT_RESOLUTION
-    doc.frameRate = (settings.get('frameRate') as number | undefined) ?? DEFAULT_FRAMERATE
+    doc.resolution = settings.get('resolution') as Size
+    doc.frameRate = settings.get('frameRate') as number
 
     this.#ytree.observe(this.#onYtreeChange)
 
@@ -163,7 +163,7 @@ export class YjsSync implements VideoEditorDocumentSync {
   #getOrCreateFromYnode(ynode: Y.Map<unknown>): AnyNode {
     return (
       (this.doc.nodes.get(ynode.get('id') as string) as AnyNode | undefined) ??
-      this.doc.createNode(ynode.toJSON() as Schema.AnyNodeSchema)
+      this.doc.createNode(ynode.toJSON() as Schema.AnyNode)
     )
   }
 
@@ -229,7 +229,7 @@ export class YjsSync implements VideoEditorDocumentSync {
     try {
       ynode = this.#getYtreeNode(node.id)
     } catch {
-      ynode = new Y.Map(Object.entries(node.toObject()))
+      ynode = createYnodeFromJson(node.toJSON())
       ytree.createNode(YTREE_NULL_PARENT_KEY, node.id, ynode)
       ytree.recomputeParentsAndChildren()
     }
@@ -259,12 +259,52 @@ export class YjsSync implements VideoEditorDocumentSync {
     }
   }
 
-  #onUpdate({ node, key }: NodeUpdateEvent): void {
-    const udpates: Record<string, unknown> = {}
+  #onUpdate({ node, key, from }: NodeUpdateEvent): void {
+    const ynode = this.#getYtreeNode(node.id)
+    const prevNodeValue = from
 
-    udpates[key] = node[key as keyof typeof node]
+    switch (key) {
+      // effects are stored in YArrays although we only ever have one atm
+      case 'effects': {
+        const yeffects = ynode.get('effects') as Y.Array<Y.Map<unknown>>
+        const firstEffect = node.effects?.[0]
 
-    updateYmap(this.#getYtreeNode(node.id), udpates)
+        if (firstEffect) {
+          let ymap = yeffects.get(0) as Y.Map<unknown> | undefined
+
+          if (!ymap) {
+            ymap = new Y.Map<unknown>()
+            yeffects.insert(0, [ymap])
+          }
+
+          updateYmap(ymap, firstEffect)
+        } else if (yeffects.length > 0) {
+          yeffects.delete(0, Math.min(yeffects.length, 1))
+        }
+
+        break
+      }
+      // TODO:
+      case 'markers':
+        return
+      // metadata is stored as a YMap of values
+      case 'metadata': {
+        const newMetadata = node.metadata ?? {}
+        const metadataYmap = ynode.get('metadata') as Y.Map<unknown>
+
+        updateYmap(metadataYmap, newMetadata)
+
+        // delete properties that were removed from the metadata
+        for (const key in prevNodeValue as typeof node.metadata) {
+          if (!(key in newMetadata)) metadataYmap.delete(key)
+        }
+
+        break
+      }
+      // other properties are plain JSON values
+      default:
+        updateYmap(ynode, { [key]: node[key as keyof typeof node] })
+    }
   }
 
   #onDelete({ node }: NodeDeleteEvent): void {

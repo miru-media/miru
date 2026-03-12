@@ -4,21 +4,21 @@ import type { YTree } from 'yjs-orderedtree'
 
 import { TIMELINE_ID } from '#constants'
 import type { Schema } from '#core'
-import type { VisualClip } from '#nodes'
+import type { VideoClip } from '#nodes'
 import { initYjsRoot, YjsSync, YTREE_NULL_PARENT_KEY } from 'webgl-video-editor/yjs'
 
-import { makeClip, makeTrack } from './utils.ts'
+import { makeTrack, makeVideoClip } from './utils.ts'
 
 let ydoc: Y.Doc
 let sync: YjsSync
 let ytree: YTree
 let settings: Y.Map<any>
 
-const clipInit = makeClip({
+const clipInit = makeVideoClip({
   id: 'test-clip',
   clipType: 'video',
   name: 'test clip',
-  sourceRef: { assetId: 'unknown' },
+  mediaRef: { assetId: 'unknown' },
   duration: 1,
   transition: undefined,
 })
@@ -63,7 +63,7 @@ test('creating a sync with empty YDoc initializes it', () => {
 test('populates document from Yjs data', () => {
   using sync = new YjsSync(ydoc)
 
-  expect(sync.doc.toObject()).toEqual({
+  expect(sync.doc.toJSON()).toEqual({
     resolution: { width: 1, height: 2 },
     frameRate: 60,
     assets: [],
@@ -73,7 +73,7 @@ test('populates document from Yjs data', () => {
 
 test('syncs doc changes to Yjs doc', () => {
   sync.doc.resolution = { width: 50, height: 100 }
-  const clip = sync.doc.nodes.get<VisualClip>(clipInit.id)
+  const clip = sync.doc.nodes.get<VideoClip>(clipInit.id)
 
   clip.duration += 1
 

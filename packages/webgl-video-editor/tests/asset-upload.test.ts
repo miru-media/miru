@@ -6,7 +6,7 @@ import type { AssetLoader } from '#core'
 import { Document } from '../src/document.ts'
 import type { FileSystemStorage } from '../src/storage/file-system-storage.ts'
 
-import { makeAvAsset, makeClip, makeTrack } from './utils.ts'
+import { makeAvAsset, makeTrack, makeVideoClip } from './utils.ts'
 
 const resolution = { width: 100, height: 100 }
 const frameRate = 25
@@ -42,7 +42,9 @@ test('creating a new media asset from user-selected file saves it to FS storage'
     resolution,
     frameRate,
     assets: [],
-    tracks: [makeTrack('track-0', 'audio', [makeClip({ id: 'clip-0', sourceRef: { assetId: 'asset-0' } })])],
+    tracks: [
+      makeTrack('track-0', 'audio', [makeVideoClip({ id: 'clip-0', mediaRef: { assetId: 'asset-0' } })]),
+    ],
   })
 
   fileStorage.hasCompleteFile.mockResolvedValue(false)

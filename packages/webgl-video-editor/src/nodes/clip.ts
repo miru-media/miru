@@ -1,14 +1,13 @@
 import { computed, ref, type Ref } from 'fine-jsx'
 
+import type { ClipTime, Schema } from '#core'
+import type * as pub from '#core'
 import type { Size } from 'shared/types.ts'
 import { clamp } from 'shared/utils/math.ts'
 import { rangeContainsTime } from 'shared/video/utils.ts'
 
-import type { ClipTime } from '../../types/core.d.ts'
-import type * as pub from '../../types/core.d.ts'
-import { TRANSITION_DURATION_S, VIDEO_PREPLAY_TIME_S } from '../constants.ts'
+import { VIDEO_PREPLAY_TIME_S } from '../constants.ts'
 
-import type { Schema } from './index.ts'
 import { TrackChild } from './track-child.ts'
 
 export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
@@ -18,11 +17,10 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   declare readonly type: 'clip'
   abstract clipType: T['clipType']
   declare children: undefined
-  declare name: string
 
   declare sourceStart: Schema.AnyClip['sourceStart']
   declare private _asset: Ref<pub.MediaAsset | undefined>
-  declare sourceRef: Schema.AnyClip['sourceRef']
+  declare mediaRef: T['mediaRef']
   declare error: Ref<MediaError | undefined>
 
   declare transition: Schema.AnyClip['transition']
@@ -65,33 +63,16 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     return this._mediaSize.value
   }
 
-  readonly #abort = new AbortController()
-
-  constructor(doc: pub.Document, init: T) {
-    super(doc, init)
-
-    this.transition = init.transition
-
-    doc.assets.on(
-      'asset:create',
-      ({ asset }) => {
-        if (asset.id === this.sourceRef.assetId && asset.type === 'asset:media:av') this._asset.value = asset
-      },
-      { signal: this.#abort.signal },
-    )
-  }
-
   protected _init(init: T): void {
     super._init(init)
-    this._asset = ref<pub.MediaAsset>(undefined as never)
+    this._asset = ref<pub.MediaAsset>()
 
-    this._defineReactive('sourceRef', init.sourceRef, {
-      onChange: (value) => (this._asset.value = this.doc.assets.getAsset(value.assetId)),
-      equal: (a, b) => a.assetId === b.assetId,
+    this._defineReactive('mediaRef', init.mediaRef, {
+      onChange: (value) =>
+        (this._asset.value = value?.assetId ? this.doc.assets.getAsset(value.assetId) : undefined),
+      equal: (a, b) => a?.assetId === b?.assetId && a?.placeholder !== b?.placeholder,
     })
-    this._defineReactive('name', init.name)
     this._defineReactive('sourceStart', init.sourceStart)
-    this._defineReactive('transition', init.transition)
 
     this.clipType = init.clipType
 
@@ -106,6 +87,14 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
       const { width, height } = video
       return video.rotation % 180 ? { width: height, height: width } : { width, height }
     })
+
+    this.doc.assets.on(
+      'asset:create',
+      ({ asset }) => {
+        if (asset.id === this.mediaRef?.assetId && asset.type === 'asset:media:av') this._asset.value = asset
+      },
+      { signal: this._abort.signal },
+    )
   }
 
   _computeTime(): ClipTime {
@@ -120,7 +109,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
   _computePresentationTime(): ClipTime {
     const { time, prev } = this
-    const inTransitionDuration = prev?.isClip() && prev.transition ? TRANSITION_DURATION_S : 0
+    const inTransitionDuration = prev?.isClip() ? (prev.transition?.duration ?? 0) : 0
 
     const start = time.start - inTransitionDuration
     const source = time.source - inTransitionDuration
@@ -153,14 +142,12 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-  toObject(): Schema.BaseClip {
+  toJSON(): Pick<T, keyof Schema.BaseClip> {
     return {
-      id: this.id,
-      type: 'clip',
-      name: this.name,
+      ...super.toJSON(),
       clipType: this.clipType,
       sourceStart: this.sourceStart,
-      sourceRef: this.sourceRef,
+      mediaRef: this.mediaRef,
       duration: this.duration,
       transition: this.transition,
     }

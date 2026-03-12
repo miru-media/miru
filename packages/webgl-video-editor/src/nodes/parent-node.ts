@@ -1,13 +1,13 @@
 import { ref } from 'fine-jsx'
 
-import type { AnyNode, AnyParentNode, Schema } from '../../types/core.d.ts'
-import type * as pub from '../../types/core.d.ts'
-import type { NonReadonly } from '../../types/internal.d.ts'
+import type { AnyNode, AnyParentNode, Schema } from '#core'
+import type * as pub from '#core'
+import type { NonReadonly } from '#internal'
 
 import { BaseNode } from './base-node.ts'
 
 export abstract class ParentNode<
-  T extends Schema.AnyNodeSchema,
+  T extends Schema.AnyNode,
   TParent extends AnyParentNode = AnyParentNode,
   TChild extends AnyNode = AnyNode,
 >

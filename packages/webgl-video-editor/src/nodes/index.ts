@@ -1,10 +1,8 @@
 export type { BaseNode } from './base-node.ts'
 export { Clip } from './clip.ts'
-export { VisualClip } from './visual-clip.ts'
+export { VideoClip } from './video-clip.ts'
 export { AudioClip } from './audio-clip.ts'
 export { Gap } from './gap.ts'
 export { Timeline } from './timeline.ts'
 export type { ParentNode } from './parent-node.ts'
 export { Track } from './track.ts'
-
-export type * as Schema from '../../types/schema.ts'

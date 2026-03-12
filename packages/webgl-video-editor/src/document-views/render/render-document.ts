@@ -4,12 +4,12 @@ import type * as pub from '../../../types/core'
 import type { SettingsUpdateEvent } from '../../events.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
 
-import { RenderTimeline, RenderTrack, RenderVisualClip } from './render-nodes.ts'
+import { RenderTimeline, RenderTrack, RenderVideoClip } from './render-nodes.ts'
 
 interface ViewTypeMap {
   timeline: RenderTimeline
   track: RenderTrack
-  clip: RenderVisualClip | undefined
+  clip: RenderVideoClip | undefined
 }
 
 export interface RenderDocumentOptions {
@@ -23,7 +23,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   readonly canvas: HTMLCanvasElement | OffscreenCanvas
   readonly gl: WebGL2RenderingContext
   readonly renderer: Pixi.WebGLRenderer
-  readonly stage: Pixi.Container
+  declare stage: Pixi.Container
   declare whenRendererIsReady: Promise<void>
 
   readonly #ownsRenderer: boolean
@@ -52,7 +52,6 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
 
     this._init()
 
-    this.stage = this._getNode(doc.timeline).container
     this.whenRendererIsReady = this.#ownsRenderer ? this.#initPixi() : Promise.resolve()
   }
 
@@ -70,19 +69,20 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   }
 
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
-    if (!original.isVisual()) return undefined as ViewType<ViewTypeMap, T>
+    if (!original.isVideo()) return undefined as ViewType<ViewTypeMap, T>
 
     let view
 
     switch (original.type) {
       case 'timeline':
         view = new RenderTimeline(this, original)
+        this.stage = view.container
         break
       case 'track':
         view = new RenderTrack(this, original)
         break
       case 'clip':
-        view = new RenderVisualClip(this, original)
+        view = new RenderVideoClip(this, original)
         break
     }
 

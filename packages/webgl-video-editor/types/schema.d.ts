@@ -4,6 +4,11 @@ interface Base {
   id: string
   type: string
   name?: string
+  enabled?: boolean
+  effects?: { id: string; assetId: string; intensity: number }[]
+  markers?: never[]
+  color?: string
+  metadata?: Record<string, unknown>
 }
 
 interface DocumentSettings {
@@ -25,6 +30,8 @@ export interface BaseAsset<T extends string> {
   id: string
   type: `asset:${T}`
   name?: string
+  color?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface MediaAsset extends BaseAsset<'media:av'> {
@@ -65,27 +72,40 @@ export interface TrackChild extends Base {
   duration: number
 }
 
-export interface BaseClip<T extends 'audio' | 'video' = 'audio' | 'video'> extends TrackChild {
+export interface MediaAssetRef {
+  assetId: string
+}
+
+export interface VideoPlaceholderRef {
+  assetId?: undefined
+}
+
+export interface AudioPlaceholderRef {
+  assetId?: undefined
+}
+
+export interface BaseClip<
+  T extends 'audio' | 'video' = 'audio' | 'video',
+  TPlaceholder extends VideoPlaceholderRef | AudioPlaceholderRef = any,
+> extends TrackChild {
   type: 'clip'
   clipType: T
   sourceStart: number
-  sourceRef: { assetId: string }
-  transition?: { type: string }
+  mediaRef?: MediaAssetRef | TPlaceholder
+  transition?: { assetId: string; duration: number }
 }
 
-export interface VisualClip extends BaseClip<'video'> {
+export interface VideoClip extends BaseClip<'video', VideoPlaceholderRef> {
   position?: { x: number; y: number }
   rotation?: number
   scale?: { x: number; y: number }
-  filter?: { assetId: string; intensity: number }
 }
 
-export interface AudioClip extends BaseClip<'audio'> {
+export interface AudioClip extends BaseClip<'audio', AudioPlaceholderRef> {
   volume?: number
-  mute?: boolean
 }
 
-export type AnyClip = VisualClip | AudioClip
+export type AnyClip = VideoClip | AudioClip
 
 export interface Gap extends TrackChild {
   type: 'gap'
@@ -99,10 +119,10 @@ export interface SerializedTrack extends Track {
   children: (SerializedClip | SerializedGap)[]
 }
 
-export type SerializedClip = VisualClip | AudioClip
+export type SerializedClip = VideoClip | AudioClip
 export type SerializedGap = Gap
 
-export type AnyNodeSchema = Timeline | Track | AnyClip | Gap
+export type AnyNode = Timeline | Track | AnyClip | Gap
 export type AnyNodeSerializedSchema = SerializedTimeline | SerializedTrack | SerializedClip | SerializedGap
 
 export interface SerializedDocument extends DocumentSettings {

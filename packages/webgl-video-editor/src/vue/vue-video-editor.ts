@@ -69,6 +69,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       secondsToPixels: editor.secondsToPixels.bind(editor),
       pixelsToSeconds: editor.pixelsToSeconds.bind(editor),
       addTrack: editor.addTrack.bind(editor),
+      generateId: editor.generateId.bind(editor),
 
       dispose(): void {
         fineJsxScope.stop()

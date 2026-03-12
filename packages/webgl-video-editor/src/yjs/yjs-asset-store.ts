@@ -14,7 +14,7 @@ export class YjsAssetStore extends FileSystemAssetStore {
 
     ymap.forEach((init) => void this.create(init))
 
-    this.on('asset:create', ({ asset }) => void this.ymap.set(asset.id, asset.toObject()))
+    this.on('asset:create', ({ asset }) => void this.ymap.set(asset.id, asset.toJSON()))
     this.on('asset:delete', ({ asset }) => this.ymap.delete(asset.id))
 
     ymap.observe(this.#boundOnYmapUpdate)

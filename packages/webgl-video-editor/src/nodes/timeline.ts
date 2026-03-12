@@ -1,6 +1,6 @@
-import type * as pub from '../../types/core.d.ts'
+import type { Schema } from '#core'
+import type * as pub from '#core'
 
-import type { Schema } from './index.ts'
 import { ParentNode } from './parent-node.ts'
 
 export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> implements pub.Timeline {
@@ -22,7 +22,7 @@ export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> impl
   isTimeline(): this is Timeline {
     return true
   }
-  isVisual(): this is Timeline {
+  isVideo(): this is Timeline {
     return true
   }
   isAudio(): this is Timeline {
@@ -30,10 +30,7 @@ export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> impl
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-  toObject(): Schema.Timeline {
-    return {
-      id: this.id,
-      type: this.type,
-    }
+  toJSON(): Schema.Timeline {
+    return super.toJSON()
   }
 }

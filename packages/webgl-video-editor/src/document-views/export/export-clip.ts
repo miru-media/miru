@@ -41,9 +41,7 @@ export class ExportClip extends NodeView<ExportDocument, pub.AnyClip> {
   audioBuffer?: AudioBuffer
 
   get isReady(): boolean {
-    return (
-      this.original.isReady && this.videoIsReady && !this.renderClip?._pixiFilters.some((f) => f.isLoading)
-    )
+    return this.original.isReady && this.videoIsReady && this.renderClip?.isReady.value !== false
   }
 
   constructor(exportView: ExportDocument, original: pub.AnyClip) {

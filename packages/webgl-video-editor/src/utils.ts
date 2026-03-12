@@ -2,11 +2,12 @@ import * as Pixi from 'pixi.js'
 
 import type * as pub from '../types/core.d.ts'
 
-export const getClipTransformMatrix = (clip: pub.VisualClip, withVideoRotation: boolean): Pixi.Matrix => {
+export const getClipTransformMatrix = (clip: pub.VideoClip, withVideoRotation: boolean): Pixi.Matrix => {
   const { scale, asset } = clip
   if (!asset?.video) return new Pixi.Matrix()
 
   const { width, height, rotation: videoRotation } = asset.video
+  const { resolution } = clip.doc
 
   const matrix = new Pixi.Matrix()
 
@@ -30,6 +31,13 @@ export const getClipTransformMatrix = (clip: pub.VisualClip, withVideoRotation: 
       .scale(scale.x, scale.y)
       .rotate((clip.rotation * Math.PI) / 180)
       .translate(halfWidth, halfHeight)
+  }
+
+  {
+    // center the image
+    const dx = resolution.width - width
+    const dy = resolution.height - height
+    if (dx !== 0 || dy !== 0) matrix.translate(dx / 2, dy / 2)
   }
 
   if (position.x !== 0 || position.y !== 0) matrix.translate(position.x, position.y)

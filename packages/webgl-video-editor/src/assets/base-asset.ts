@@ -14,7 +14,7 @@ export abstract class BaseAsset<T extends Schema.AnyAssetSchema = any> {
     this.raw = init
   }
 
-  toObject(): T {
+  toJSON(): T {
     return this.raw
   }
 
