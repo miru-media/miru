@@ -76,7 +76,15 @@
   }
 
   .miru--menu__slider-row {
-    grid-template-columns: 1fr 4fr 1fr;
+    grid-template-columns: 2.5rem 5rem 1fr 5rem;
+
+    svg {
+      justify-self: center;
+    }
+
+    svg + label {
+      text-align: left;
+    }
   }
 
   /* MENU BUTTON ROW SCROLLABLE */

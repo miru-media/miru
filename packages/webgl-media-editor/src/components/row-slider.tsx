@@ -7,14 +7,16 @@ export const RowSlider: Component<{
   [key: string]: unknown
   value: number
   label: string
-}> = ({ label, value, ...inputProps }) => (
+  Icon: () => JSX.Element
+}> = ({ label, value, Icon, ...inputProps }) => (
   <p class={[styles['miru--menu__row'], styles['miru--menu__slider-row']]}>
-    <button class={[styles['miru--button'], styles['miru--small']]} disabled>
-      {/* <IconTablerSun class={styles['miru--button__icon']} /> */}
-      <label id={'row_slider_' + toValue(label) + '_arialabel'} class={styles['miru--button__label']}>
-        {label}
-      </label>
-    </button>
+    {/* <button class={[styles['miru--button'], styles['miru--small']]} disabled> */}
+    {/* <Icon class={styles['miru--button__icon']} /> */}
+    <Icon class={styles['miru--button__icon']} aria-disabled />
+    <label id={'row_slider_' + toValue(label) + '_arialabel'} class={styles['miru--slider-label']}>
+      {label}
+    </label>
+    {/* </button> */}
 
     <input
       type="range"
@@ -26,11 +28,10 @@ export const RowSlider: Component<{
       role="slider"
       aria-labelledby={'row_slider_' + toValue(label) + '_arialabel'}
     />
-
-    <button class={[styles['miru--button'], styles['miru--small']]} disabled>
-      <label class={styles['miru--button__label']}>
-        {() => (toValue(value) !== 0 ? toValue(value).toFixed(2) : 0)}
-      </label>
-    </button>
+    {/* <button class={[styles['miru--button'], styles['miru--small']]} disabled> */}
+    <label class={styles['miru--slider-label']}>
+      {() => (toValue(value) !== 0 ? toValue(value).toFixed(2) : 0)}
+    </label>
+    {/* </button> */}
   </p>
 )

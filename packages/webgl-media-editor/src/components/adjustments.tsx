@@ -23,15 +23,15 @@ export const AdjustmentsView = ({
   const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
   const { sources } = editor
 
-  const sliders: { key: keyof AdjustmentsState; label: string }[] = [
-    { key: 'brightness', label: 'Brightness' },
-    { key: 'contrast', label: 'Contrast' },
-    { key: 'saturation', label: 'Saturation' },
+  const sliders = [
+    { key: 'brightness' as const, label: 'Brightness', Icon: IconTablerSun },
+    { key: 'contrast' as const, label: 'Contrast', Icon: IconTablerContrastFilled },
+    { key: 'saturation' as const, label: 'Saturation', Icon: IconTablerDropletHalfFilled },
   ]
 
   const inputMode = ref<'keyboard' | 'mouse'>('mouse')
 
-  const onInputSlider = (event: InputEvent, attr: keyof AdjustmentsState) => {
+  const onInputSlider = (event: InputEvent, attr: keyof AdjustmentsState): void => {
     const $source = source.value
     if ($source == null) return
 
@@ -52,7 +52,7 @@ export const AdjustmentsView = ({
     }
   }
 
-  const onChangeSlider = (event: InputEvent, attr: keyof AdjustmentsState) => {
+  const onChangeSlider = (event: InputEvent, attr: keyof AdjustmentsState): void => {
     event.target.valueAsNumber = source.value?.adjustments.value?.[attr] ?? 0
   }
 
@@ -66,6 +66,7 @@ export const AdjustmentsView = ({
         {sliders.map((item) =>
           RowSlider({
             label: item.label,
+            Icon: item.Icon,
             min: -1,
             max: 1,
             value: toRef(() => source.value?.adjustments.value?.[item.key] ?? 0),

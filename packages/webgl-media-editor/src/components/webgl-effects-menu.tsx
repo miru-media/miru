@@ -262,6 +262,7 @@ export const WebglEffectsMenu = (props: {
         (toValue(showIntensity) ?? true) &&
         RowSlider({
           label: 'Intensity',
+          Icon: IconTablerCircleOff,
           min: 0,
           max: 1,
           value: toRef(props.intensity),
