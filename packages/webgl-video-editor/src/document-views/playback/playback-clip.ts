@@ -23,6 +23,8 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
   readonly renderClip = this.docView.renderView._getNode(this.original)
 
   isInPresentationTime = computed(() => {
+    if (this.isDisposed) return false
+
     const { presentationTime, doc } = this.original
     const docTime = doc.currentTime
 
@@ -32,8 +34,8 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
       (docTime > presentationTime.start && presentationTime.end === doc.duration)
     )
   })
-  isInPlayableTime = computed(() =>
-    rangeContainsTime(this.original.playableTime, this.original.doc.currentTime),
+  isInPlayableTime = computed(
+    () => !this.isDisposed && rangeContainsTime(this.original.playableTime, this.original.doc.currentTime),
   )
 
   shouldPlay = computed(() => this.isInPlayableTime.value && !this.docView.isPaused)
@@ -172,8 +174,13 @@ export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
     if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
 
     if (renderClip) {
-      const { asset } = this.original
+      const { original } = renderClip
+      const { asset } = original
       const { sprite } = renderClip
+
+      // track changes to node properties
+      void renderClip.spriteFilters.value
+      void renderClip.matrix.value
 
       if (this.isInPresentationTime.value && asset) {
         sprite.visible ||= this.mediaState.wasEverPlayable.value

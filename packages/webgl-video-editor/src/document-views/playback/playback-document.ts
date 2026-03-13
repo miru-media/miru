@@ -121,6 +121,17 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     return view as ViewType<ViewTypeMap, T>
   }
 
+  /**
+   * This method is called by the {@link Pixi.Ticker} every `requestAnimationFrame` and is used to update the
+   * `doc.currentTime`, emit the playback udpate event and render when needed.
+   *
+   * While paused, we and render inside a computed getter so that reactive values are tracked and the getter
+   * with all of its side effects are run only if a reactive dependency has changed.
+   *
+   * While playing, we always call the render method directly, but we still access the computed value which
+   * will then only track the reactive values that tell us that we're playing and return without rendering
+   * again.
+   */
   tick(): void {
     if (this.#noRender.value) return
 
@@ -128,20 +139,31 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     const { deltaMS } = this.ticker
     const { duration } = this.doc
 
+    // While playing, update current time and render.
     if (shouldAdvance) {
       this.stats.begin()
       this.doc._setCurrentTime(Math.min(this.currentTime + deltaMS / 1e3, duration))
+      this._updateAndRender(false)
     }
 
-    this.doc.emit(UPDATE_EVENT)
-
-    this.renderView.render()
+    // Always read the computed value, which checks playback status and skips rendering while playing.
+    void this._updateAndRenderReactive.value
 
     if (shouldAdvance) {
-      if (this.currentTime >= duration) this.pause()
+      if (this.currentTime >= this.doc.duration) this.pause()
       this.stats.end()
     }
   }
+
+  _updateAndRender(skipWhilePlaying: boolean): unknown {
+    if (skipWhilePlaying && !this.isPaused && this.isReady) return
+
+    this.doc.emit(UPDATE_EVENT)
+    this.renderView.render()
+    return undefined
+  }
+
+  _updateAndRenderReactive = computed(this._updateAndRender.bind(this, true))
 
   play(): void {
     if (this.#noRender.value) return
