@@ -9,9 +9,8 @@
 
 /* SLIDER */
 .miru--slider {
-  flex-grow: 1;
   justify-self: center;
-  width: calc(100% - 2 * var(--gap-default));
+  width: 100%;
   height: calc(100% - 2 * var(--gap-default));
   background-clip: padding-box;
   border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
@@ -40,8 +39,8 @@
 }
 
 .miru--slider-label {
-  flex-grow: 0;
-  flex-basis: 5rem;
+  justify-self: center;
+  width: 5rem;
   overflow: hidden;
   text-align: center;
 }

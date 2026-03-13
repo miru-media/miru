@@ -67,6 +67,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
 
         {RowSlider({
           label: 'Scale',
+          Icon: IconTablerCrop,
           min: 0.1,
           max: 2,
           value: zoom,
