@@ -36,6 +36,7 @@
   /* SCROLLBAR COLOR */
   --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
   --color-scrollbar-both: hsl(var(--theme-hue) 10% 50%) transparent;
+  --color-scrollbar-ticks: hsl(var(--theme-hue) 10% 50%);
 
   /* SLIDER COLOR */
   --color-slider-thumb: hsl(var(--theme-hue-acc) 60% 50%);
@@ -66,6 +67,7 @@
   /* SCROLLBAR COLOR */
   --color-scrollbar-thumb: hsl(var(--theme-hue) 10% 50%);
   --color-scrollbar-both: hsl(var(--theme-hue) 10% 50%) transparent;
+  --color-scrollbar-ticks: hsl(var(--theme-hue) 10% 50%);
 
   /* SLIDER COLOR */
   --color-slider-thumb: hsl(var(--theme-hue-acc) 80% 40%);
@@ -93,6 +95,7 @@
   /* SCROLLBAR COLOR */
   --color-scrollbar-thumb: var(--light-gray);
   --color-scrollbar-both: var(--light-gray) transparent;
+  --color-scrollbar-ticks: var(--light-gray);
 
   /* SLIDER COLOR */
   --color-slider-thumb: var(--text-lighter);

@@ -9,8 +9,6 @@ import type { MediaEditor } from '../media-editor.ts'
 import { RowSlider } from './row-slider.jsx'
 import { SourcePreview } from './source-preview.jsx'
 
-const SNAP_MARGIN = 0.15
-
 export const AdjustmentsView = ({
   editor,
   sourceIndex,
@@ -34,21 +32,13 @@ export const AdjustmentsView = ({
   const onInputSlider = (event: InputEvent, attr: keyof AdjustmentsState): void => {
     const $source = source.value
     if ($source == null) return
-
-    const savedValue = $source.adjustments.value?.[attr] ?? 0
-    const direction = event.target.valueAsNumber > savedValue ? 1 : -1
-    const shouldSnap =
-      inputMode.value === 'mouse' &&
-      ((direction === 1 && event.target.valueAsNumber > 0 && event.target.valueAsNumber <= SNAP_MARGIN) ||
-        (direction === -1 && event.target.valueAsNumber < 0 && event.target.valueAsNumber >= -SNAP_MARGIN))
-
     $source.adjustments.value = {
       ...($source.adjustments.value ?? {
         brightness: 0,
         contrast: 0,
         saturation: 0,
       }),
-      [attr]: shouldSnap ? 0 : event.target.valueAsNumber,
+      [attr]: event.target.valueAsNumber,
     }
   }
 
@@ -67,6 +57,7 @@ export const AdjustmentsView = ({
           RowSlider({
             label: item.label,
             Icon: item.Icon,
+            ticks: [-1, 0, 1],
             min: -1,
             max: 1,
             value: toRef(() => source.value?.adjustments.value?.[item.key] ?? 0),
