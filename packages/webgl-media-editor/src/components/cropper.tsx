@@ -64,17 +64,17 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             <span class={styles['miru--button__label']}>Rotate</span>
           </button>
         </p>
-
-        {RowSlider({
-          label: 'Scale',
-          Icon: IconTablerCrop,
-          min: 0.1,
-          max: 2,
-          value: zoom,
-          onInput: (event: InputEvent) => {
+        <RowSlider
+          label="Scale"
+          Icon={IconTablerCrop}
+          ticks={[1 / 10, 1 / 2, 1, 2]}
+          min="0.1"
+          max="2"
+          value={zoom}
+          onInput={(event: InputEvent) => {
             setZoom(event.target.valueAsNumber)
-          },
-        })}
+          }}
+        />
       </div>
     </>
   )

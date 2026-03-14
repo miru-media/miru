@@ -14,6 +14,11 @@
     background: transparent;
   }
 
+  /* SLIDER TICKS */
+  datalist + div > span {
+    background-color: var(--color-scrollbar-ticks);
+  }
+
   /* PREVIEW */
   .miru--preview {
     background-color: var(--color-bg-preview);

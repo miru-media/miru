@@ -46,8 +46,8 @@ catalogs:
       specifier: ^1.1.2
       version: 1.1.2
     fine-jsx:
-      specifier: ^0.0.11
-      version: 0.0.11
+      specifier: ^0.0.14
+      version: 0.0.14
     gl-matrix:
       specifier: ^3.4.4
       version: 3.4.4
@@ -282,7 +282,7 @@ importers:
         version: 2.32.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.4)(eslint@9.34.0(jiti@2.5.1))
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       glob:
         specifier: ^13.0.0
         version: 13.0.0
@@ -564,7 +564,7 @@ importers:
         version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       mp4-muxer:
         specifier: 'catalog:'
         version: 5.2.2
@@ -582,7 +582,7 @@ importers:
     dependencies:
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       webgl-effects:
         specifier: workspace:^
         version: link:../webgl-effects
@@ -600,7 +600,7 @@ importers:
         version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       mp4-muxer:
         specifier: 'catalog:'
         version: 5.2.2
@@ -653,7 +653,7 @@ importers:
         version: 1.6.2
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       gl-matrix:
         specifier: 'catalog:'
         version: 3.4.4
@@ -698,7 +698,7 @@ importers:
         version: 1.1.2
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       gl-matrix:
         specifier: 'catalog:'
         version: 3.4.4
@@ -771,7 +771,7 @@ importers:
         version: 1.5.1
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       shared:
         specifier: workspace:^
         version: link:../shared
@@ -4799,8 +4799,8 @@ packages:
     resolution: {integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==}
     engines: {node: '>=10'}
 
-  fine-jsx@0.0.11:
-    resolution: {integrity: sha512-K1IU+QuTLqxDa8x9yDJ141UVzMcbQ7lOQz40lsI/EwxakM8whRdK1P6fYTB5M/oXcADTyzSi3bSkrLBvdq3GMg==}
+  fine-jsx@0.0.14:
+    resolution: {integrity: sha512-yWxkcsybh4qnQHoWXVpvf1jDS4HNWbDV7LJAmG6dAXi+OF9Mp9QiVYxEBxZMclDIyldjjR0e4B3ox/aEeAPUig==}
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -12934,7 +12934,7 @@ snapshots:
       locate-path: 6.0.0
       path-exists: 4.0.0
 
-  fine-jsx@0.0.11:
+  fine-jsx@0.0.14:
     dependencies:
       '@reactively/core': 0.0.8
 

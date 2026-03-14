@@ -26,7 +26,7 @@
   }
 
   &[value_current='0'] {
-    opacity: 0.5;
+    filter: saturate(0) brightness(1.6);
   }
 
   &:focus-visible {
@@ -43,4 +43,28 @@
   width: 5rem;
   overflow: hidden;
   text-align: center;
+}
+
+datalist {
+  display: none !important;
+}
+
+datalist + div {
+  position: absolute;
+  top: 2px;
+  display: block;
+  grid-column: 3 / -3;
+  width: calc(100% - 2 * var(--gap-default) - var(--width-slider-thumb));
+  height: 6px;
+  margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
+  overflow: hidden;
+
+  & > span {
+    position: absolute;
+    display: block;
+    width: 1px;
+    height: 100%;
+    padding: 0;
+    transform: translateX(-50%);
+  }
 }
