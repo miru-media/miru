@@ -51,18 +51,29 @@ export const AdjustmentsView = ({
         sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
       }
       <div id="tab-adjust" role="tabpanel" aria-labelledby="tab-button-adjust" class={styles['miru--menu']}>
-        {sliders.map((item) =>
-          RowSlider({
-            label: item.label,
-            Icon: item.Icon,
-            ticks: [-1, 0, 1],
-            zeroPoint: 0,
-            value: toRef(() => source.value?.adjustments.value?.[item.key] ?? 0),
-            onInput: (event: InputEvent) => onInputSlider(event, item.key),
-            onChange: (event: InputEvent) => onChangeSlider(event, item.key),
-          }),
-        )}
+        {sliders.map((item) => (
+          <>
+            <RowSlider
+              label={item.label}
+              Icon={item.Icon}
+              ticks={[-1, 0, 1]}
+              zeroPoint={0}
+              value={toRef(() => source.value?.adjustments.value?.[item.key] ?? 0)}
+              onInput={(event: InputEvent) => onInputSlider(event, item.key)}
+              onChange={(event: InputEvent) => onChangeSlider(event, item.key)}
+            />
+          </>
+        ))}
       </div>
+      {/* <RowSlider
+              label="test"
+              Icon={IconTablerDropletHalfFilled.Icon}
+              ticks={[-1, 0, 1]}
+              zeroPoint={0}
+              value={toRef(() => source.value?.adjustments.value?.saturation ?? 0)}
+              onInput={(event: InputEvent) => onInputSlider(event, "saturation")}
+              onChange={(event: InputEvent) => onChangeSlider(event, "saturation")}
+            /> */}
     </>
   )
 }
