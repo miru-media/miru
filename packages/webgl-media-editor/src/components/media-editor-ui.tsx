@@ -69,12 +69,12 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
 
   const mainTabId = ref<number>(0)
   const tabKeyDown = (e: KeyboardEvent): void => {
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter'].includes(e.key)) return
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter', ' '].includes(e.key)) return
     else if (e.key === 'ArrowRight') mainTabId.value = (mainTabId.value + 1) % tabs.length
     else if (e.key === 'ArrowLeft') mainTabId.value = (mainTabId.value - 1 + tabs.length) % tabs.length
     else if (e.key === 'Home') mainTabId.value = 0
     else if (e.key === 'End') mainTabId.value = tabs.length - 1
-    else if (e.key === 'Enter') {
+    else if (['Enter', ' '].includes(e.key)) {
       currentView.value = tabs[mainTabId.value].view
       setTimeout(() => {
         const panel = document.getElementById(`tab-${currentView.value}`)
@@ -84,6 +84,8 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
         firstFocusable?.focus()
       }, 0)
     }
+    const tabEls = document.querySelectorAll<HTMLElement>('[role="tab"]')
+    tabEls[mainTabId.value].focus()
     e.preventDefault()
   }
 
@@ -94,18 +96,18 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
       {/* MAIN BUTTONS */}
       <p class={styles['miru--menu']}>
         <div class={styles['miru--menu__row']} role="tablist" aria-label="Image Settings">
-          {Object.values(tabs).map(({ view, Icon, active, label }, index) => (
+          {Object.values(tabs).map(({ view, Icon, active, label }) => (
             <button
               role="tab"
               aria-selected={() => currentView.value === view}
               aria-controls={'tab-' + view}
-              tabindex={() => (currentView.value === view ? 0 : -1)}
+              tabindex={() => (tabs[mainTabId.value].view === view ? 0 : -1)}
               id={'tab-button-' + view}
               type="button"
               class={() => [
                 styles['miru--button'],
                 currentView.value === view && styles['miru--acc'],
-                mainTabId.value === index && styles['miru--hov'],
+                // mainTabId.value === index && styles['miru--hov'],
                 active() && styles['miru--enabled'],
               ]}
               onClick={() => (currentView.value = view)}
