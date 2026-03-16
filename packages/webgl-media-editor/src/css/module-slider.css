@@ -25,10 +25,6 @@
     width: var(--width-slider-thumb);
   }
 
-  &[value_current='0'] {
-    filter: saturate(0) brightness(1.6);
-  }
-
   &:focus-visible {
     outline: solid currentcolor !important;
   }
@@ -52,12 +48,12 @@ datalist {
 datalist + div {
   position: absolute;
   top: 2px;
-  display: block;
+  display: block !important;
   grid-column: 3 / -3;
   width: calc(100% - 2 * var(--gap-default) - var(--width-slider-thumb));
   height: 6px;
   margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
-  overflow: hidden;
+  overflow: visible;
 
   & > span {
     position: absolute;
