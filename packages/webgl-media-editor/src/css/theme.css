@@ -71,7 +71,14 @@
   .miru--slider::-webkit-slider-thumb {
     /* seems like this does not like & nesting */
     background-color: var(--color-slider-thumb);
+  }
+
+  .miru--slider:not([centered], [zero])::-webkit-slider-thumb {
     box-shadow: -4000px 0 0 4000px var(--color-slider-progress);
+  }
+
+  .miru--slider[centered]:not([zero])::-webkit-slider-thumb {
+    box-shadow: -4000px 0 0 8000px var(--color-slider-progress);
   }
 
   /* CROPPER */

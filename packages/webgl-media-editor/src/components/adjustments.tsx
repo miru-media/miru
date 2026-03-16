@@ -1,4 +1,4 @@
-import { computed, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
+import { computed, type MaybeRefOrGetter, toRef, toValue } from 'fine-jsx'
 
 import type { AdjustmentsState, InputEvent } from 'shared/types'
 
@@ -26,8 +26,6 @@ export const AdjustmentsView = ({
     { key: 'contrast' as const, label: 'Contrast', Icon: IconTablerContrastFilled },
     { key: 'saturation' as const, label: 'Saturation', Icon: IconTablerDropletHalfFilled },
   ]
-
-  const inputMode = ref<'keyboard' | 'mouse'>('mouse')
 
   const onInputSlider = (event: InputEvent, attr: keyof AdjustmentsState): void => {
     const $source = source.value
@@ -58,15 +56,8 @@ export const AdjustmentsView = ({
             label: item.label,
             Icon: item.Icon,
             ticks: [-1, 0, 1],
-            min: -1,
-            max: 1,
+            zeroPoint: 0,
             value: toRef(() => source.value?.adjustments.value?.[item.key] ?? 0),
-            onMouseDown: () => {
-              inputMode.value = 'mouse'
-            },
-            onKeyDown: () => {
-              inputMode.value = 'keyboard'
-            },
             onInput: (event: InputEvent) => onInputSlider(event, item.key),
             onChange: (event: InputEvent) => onChangeSlider(event, item.key),
           }),

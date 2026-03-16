@@ -7,9 +7,10 @@ export const RowSlider: Component<{
   [key: string]: unknown
   value: number
   label: string
+  zeroPoint: number
   Icon: () => JSX.Element
   ticks: number[]
-}> = ({ label, value, Icon, ticks, ...inputProps }) => (
+}> = ({ label, value, Icon, ticks, zeroPoint, ...inputProps }) => (
   <p class={[styles['miru--menu__row'], styles['miru--menu__slider-row']]}>
     <datalist id={`row_slider_ticks_${toValue(label)}`}>
       {toValue(ticks).map((tick) => (
@@ -32,11 +33,14 @@ export const RowSlider: Component<{
     <input
       type="range"
       step="any"
-      list={`row_slider_ticks_${toValue(label)}`}
       class={styles['miru--slider']}
       {...inputProps}
       value={value}
-      value_current={value}
+      zero={() => (toValue(value) === toValue(zeroPoint) ? '' : null)}
+      min={toValue(ticks)[0]}
+      max={toValue(ticks)[toValue(ticks).length - 1]}
+      list={`row_slider_ticks_${toValue(label)}`}
+      centered={toValue(ticks)[0] < 0 ? '' : null}
       role="slider"
       aria-labelledby={'row_slider_' + toValue(label) + '_arialabel'}
     />
