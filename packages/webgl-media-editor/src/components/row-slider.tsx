@@ -36,11 +36,12 @@ export const RowSlider: Component<{
       class={styles['miru--slider']}
       {...inputProps}
       value={value}
+      // value_current={value}
       zero={() => (toValue(value) === toValue(zeroPoint) ? '' : null)}
       min={toValue(ticks)[0]}
       max={toValue(ticks)[toValue(ticks).length - 1]}
       list={`row_slider_ticks_${toValue(label)}`}
-      centered={toValue(ticks)[0] < 0 ? '' : null}
+      iscentered={toValue(ticks)[0] < 0 ? '' : null}
       role="slider"
       aria-labelledby={'row_slider_' + toValue(label) + '_arialabel'}
     />

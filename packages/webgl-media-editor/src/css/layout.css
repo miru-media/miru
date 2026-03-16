@@ -64,7 +64,8 @@
   flex-direction: column;
 
   /* MENU BUTTON ROW */
-  .miru--menu__row {
+  .miru--menu__row,
+  fieldset {
     position: relative;
     display: grid;
     grid-auto-columns: minmax(0, 1fr);
@@ -73,6 +74,10 @@
     justify-content: space-around;
     height: var(--height-menu-row);
     overflow-y: hidden;
+  }
+
+  .miru--menu__row > fieldset {
+    grid-column: span var(--options-amt);
   }
 
   .miru--menu__slider-row {
@@ -120,4 +125,14 @@
 /* For WebKit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 40px; /* Set to a large value */
+}
+
+fieldset {
+  /* reset: all */
+  min-inline-size: min-content !important;
+  min-inline-size: 0 !important;
+}
+
+legend {
+  display: none !important;
 }

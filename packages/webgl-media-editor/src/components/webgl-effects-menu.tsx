@@ -232,11 +232,14 @@ export const WebglEffectsMenu = (props: {
       aria-labelledby="tab-button-filter"
       class={[styles['miru--menu'], props.class]}
     >
-      <p
+      <fieldset
         ref={container}
         class={[styles['miru--menu__row'], styles['miru--menu__row--scroll']]}
         onScroll={onScroll}
+        role="radiogroup"
+        aria-labelledby="filters-label"
       >
+        <legend id="filters-label">Image Filters</legend>
         {() =>
           [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => (
             <EffectItem
@@ -256,19 +259,20 @@ export const WebglEffectsMenu = (props: {
             ></EffectItem>
           ))
         }
-      </p>
+      </fieldset>
 
       {() =>
-        (toValue(showIntensity) ?? true) &&
-        RowSlider({
-          label: 'Intensity',
-          Icon: IconTablerCircleOff,
-          ticks: [0, 1 / 2, 1],
-          zeroPoint: 0,
-          value: toRef(props.intensity),
-          onInput: onInputIntensity,
-          disabled: () => !currentEffect.value,
-        })
+        (toValue(showIntensity) ?? true) && (
+          <RowSlider
+            label="Intensity"
+            Icon={IconTablerCircleOff}
+            ticks={[0, 1 / 2, 1]}
+            zeroPoint={0}
+            value={toRef(props.intensity)}
+            onInput={onInputIntensity}
+            disabled={() => !currentEffect.value}
+          />
+        )
       }
     </div>
   )
