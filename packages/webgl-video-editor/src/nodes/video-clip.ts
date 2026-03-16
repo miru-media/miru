@@ -21,12 +21,9 @@ export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
   protected _init(init: Schema.VideoClip): void {
     super._init(init)
 
-    const reactivePointOptions = {
-      equal: pointsAreEqual,
-    }
-    this._defineReactive('position', init.position, { ...reactivePointOptions, defaultValue: { x: 0, y: 0 } })
+    this._defineReactive('position', init.position, { equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } })
     this._defineReactive('rotation', init.rotation, { defaultValue: 0 })
-    this._defineReactive('scale', init.scale, { ...reactivePointOptions, defaultValue: { x: 1, y: 1 } })
+    this._defineReactive('scale', init.scale, { equal: pointsAreEqual, defaultValue: { x: 1, y: 1 } })
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --

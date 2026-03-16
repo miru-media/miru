@@ -6,7 +6,7 @@ import type * as Schema from '#schema'
 
 import { createInitialDocument } from '../sync/utils.ts'
 
-import { YTREE_NULL_PARENT_KEY, YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
+import { YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
 
 export const getOrCreateYmap = (root: Y.Doc | Y.Map<Y.Map<any>>, key: string) => {
   if ('getMap' in root) return root.getMap<any>(key)
@@ -38,12 +38,6 @@ export const initYjsRoot = (
 
   for (const [key, value] of Object.entries(settings))
     if (settignsYmap.get(key) == null) settignsYmap.set(key, value)
-
-  try {
-    ytree.getNodeValueFromKey(YTREE_NULL_PARENT_KEY)
-  } catch {
-    ytree.createNode(YTREE_ROOT_KEY, YTREE_NULL_PARENT_KEY, {})
-  }
 
   try {
     ytree.getNodeValueFromKey(TIMELINE_ID)
@@ -102,18 +96,11 @@ export const initYmapFromJson = ({
       if ('children' in init) init.children.forEach((child) => addNodeAndChildren(init.id, child))
     }
 
-    // create the null parent tree node if it's missing
-    try {
-      ytree.getNodeValueFromKey(YTREE_NULL_PARENT_KEY)
-    } catch {
-      ytree.createNode(YTREE_ROOT_KEY, YTREE_NULL_PARENT_KEY, new Y.Map())
-    }
-
     try {
       ytree.getNodeValueFromKey('timeline')
     } catch {
       // create the timeline node if it's missing
-      addNodeAndChildren(YTREE_NULL_PARENT_KEY, {
+      addNodeAndChildren(YTREE_ROOT_KEY, {
         id: TIMELINE_ID,
         type: 'timeline',
         children: [],

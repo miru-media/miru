@@ -5,7 +5,7 @@ import type { YTree } from 'yjs-orderedtree'
 import { TIMELINE_ID } from '#constants'
 import type { Schema } from '#core'
 import type { VideoClip } from '#nodes'
-import { initYjsRoot, YjsSync, YTREE_NULL_PARENT_KEY } from 'webgl-video-editor/yjs'
+import { initYjsRoot, YjsSync } from 'webgl-video-editor/yjs'
 
 import { makeTrack, makeVideoClip } from './utils.ts'
 
@@ -55,7 +55,7 @@ test('creating a sync with empty YDoc initializes it', () => {
     frameRate: 24,
     resolution: { height: 1080, width: 1920 },
   })
-  expect([...ydoc.getMap('ytree').keys()].sort()).toEqual(['root', '_', 'timeline'].sort())
+  expect([...ydoc.getMap('ytree').keys()].sort()).toEqual(['root', 'timeline'].sort())
 
   ydoc.destroy()
 })
@@ -81,7 +81,7 @@ test('syncs doc changes to Yjs doc', () => {
   expect(ynode.get('duration')).toBe(2)
 
   clip.delete()
-  expect(ytree.getNodeParentFromKey(clip.id)).toBe(YTREE_NULL_PARENT_KEY)
+  expect(() => ytree.getNodeParentFromKey(clip.id)).toThrow()
 })
 
 test('disposes sync on YDoc destroy', () => {

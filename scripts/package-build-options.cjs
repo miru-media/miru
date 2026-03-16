@@ -54,6 +54,7 @@ const packageOptions = (async () => {
         sync: 'src/sync/index.ts',
         vue: 'src/vue/index.ts',
         yjs: 'src/yjs/index.ts',
+        'yjs/utils': 'src/yjs/utils.ts',
       },
       copy: (options) => ({
         targets: [

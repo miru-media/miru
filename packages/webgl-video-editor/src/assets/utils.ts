@@ -2,7 +2,7 @@ import * as Mb from 'mediabunny'
 
 import { CLIP_COLORS } from '#constants'
 import type * as Schema from '#schema'
-import { stringHashCode } from 'shared/utils'
+import { stringHashCode } from 'shared/utils/index.ts'
 
 export const getMediaAssetInfo = async (
   id: string,

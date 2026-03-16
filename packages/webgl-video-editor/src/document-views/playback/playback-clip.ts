@@ -1,13 +1,13 @@
 import { computed, createEffectScope, ref, watch } from 'fine-jsx'
 
 import type * as pub from '#core'
+import type { NonReadonly } from '#internal'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { useEventListener } from 'shared/utils/composables.ts'
 import { createHiddenMediaElement } from 'shared/utils/images.ts'
 import { ReadyState } from 'shared/video/constants.ts'
 import { rangeContainsTime, useInterval } from 'shared/video/utils.ts'
 
-import type { NonReadonly } from '../../../types/internal'
 import { MEDIA_SYNC_INTERVAL_MS, MEDIA_SYNC_TOLERANCE_S } from '../../constants.ts'
 import { CanvasEvent } from '../../events.ts'
 import { NodeView } from '../node-view.ts'

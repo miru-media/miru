@@ -33,6 +33,9 @@
     },
     "./yjs": {
       "import": "./src/yjs/index.ts"
+    },
+    "./yjs/utils": {
+      "import": "./src/yjs/utils.ts"
     }
   },
   "publishConfig": {
@@ -55,7 +58,10 @@
         "import": "./dist/sync.js"
       },
       "./yjs": {
-        "import": "./src/yjs.js"
+        "import": "./dist/yjs.js"
+      },
+      "./yjs/utils": {
+        "import": "./dist/yjs/utils.ts"
       }
     }
   },

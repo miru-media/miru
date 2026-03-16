@@ -1,7 +1,7 @@
 import { createEffectScope, ref } from 'fine-jsx'
 
-import { HTMLElementOrStub } from 'shared/utils/window'
-import { renderComponentTo } from 'shared/video/render-to'
+import { HTMLElementOrStub } from 'shared/utils/window.ts'
+import { renderComponentTo } from 'shared/video/render-to.ts'
 
 import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
