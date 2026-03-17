@@ -38,6 +38,7 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Widen input file format suport
   - Add asset management, Text, Subtitles, Images, and stickers
   - Add keyframe animation
+  - OpenTimelineIO import and export
 
 - ## <span class="task-date">2026-H1</span> <span class="task-wip" /> Collaborative video editing
 
