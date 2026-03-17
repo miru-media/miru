@@ -46,6 +46,12 @@
     font-size: var(--size-button-icon);
   }
 
+  /* BUTTON WITH RADIO INPUT */
+  &[disabled]:has(input[type='radio']) {
+    text-decoration: line-through;
+    opacity: 0.4;
+  }
+
   /* BUTTON WITH CANVAS */
   &:has(canvas) {
     box-sizing: border-box;

@@ -32,6 +32,18 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
     rotate: 0,
   }
 
+  const originalAspectRatio = computed(() => {
+    const original = sourceRef.value?.original
+    if (!original) return -1
+    return original.width / original.height
+  })
+
+  // const hasCrop = (): boolean => {
+  //   const data = cropper.value?.getData()
+  //   console.log('hasCrop', !!(data && data.width > 0 && data.height > 0))
+  //   return !!(data && data.width > 0 && data.height > 0)
+  // }
+
   const container = document.createElement('div')
   container.className = styles['miru--cropper-container']
 
@@ -84,10 +96,14 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
       minCropBoxWidth: 1,
       minCropBoxHeight: 1,
       aspectRatio: aspectRatio.value,
+      // autoCrop: hasCrop(),
       autoCropArea: 1,
       responsive: true,
-      ready() {
-        void fitCrop().then(() => setAspectRatio(aspectRatio.value))
+      async ready() {
+        await fitCrop()
+        await setAspectRatio(aspectRatio.value)
+        // if (!hasCrop()) cropper.value?.clear()
+        // console.log('ccropper ccreated', hasCrop())
       },
       cropend() {
         if (!SIMPLE_CROP) recenterCropBox().catch(() => undefined)
@@ -97,6 +113,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
         zoom.value = Math.min(width / naturalWidth, height / naturalHeight)
         const cropperData = $cropper.getData(true)
         source.crop.value = cropperData
+        // source.crop.value = hasCrop() ? cropperData : unmodifiedCrop
       },
     }))
 
@@ -120,6 +137,8 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
   }
 
   const setAspectRatio = async (value: number) => {
+    // const $cropper = cropper.value
+    // $cropper?.crop()
     await withUnlimitedCropper(async () => {
       await fitCrop()
       cropper.value?.setAspectRatio(value)
@@ -128,6 +147,10 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
 
   const resetCrop = async () => {
     const $cropper = cropper.value
+    // $cropper?.clear()
+    // return
+    if (sourceRef.value) sourceRef.value.crop.value = undefined
+
     const source = sourceRef.value
     const original = source?.original
     if (source == null || $cropper == null || original == null) return
@@ -186,6 +209,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
 
       await setAspectRatio(aspectRatio.value)
     })
+    // if (!hasCrop()) cropper.value?.clear()
   }
 
   const withUnlimitedCropper = async (fn: () => unknown) => {
@@ -243,6 +267,7 @@ export const useCrop = ({ editor, sourceIndex }: { editor: MediaEditor; sourceIn
     setAspectRatio,
     resetCrop: () => resetCrop().then(resetCrop),
     aspectRatio,
+    originalAspectRatio,
     zoom,
     setZoom,
     rotate,
