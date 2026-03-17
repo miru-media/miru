@@ -189,10 +189,11 @@ export abstract class BaseNode<
       equal?: (a: T[Key], b: T[Key]) => boolean
       emit?: boolean
       onChange?: (value: T[Key]) => unknown
+      transform?: (value: T[Key]) => T[Key]
       defaultValue?: T[Key]
     } = {},
   ): void {
-    const ref_ = ref(initialValue)
+    const ref_ = ref(options.transform ? options.transform(initialValue) : initialValue)
     type This = typeof this
     const equal = options.equal ?? Object.is
 
@@ -202,8 +203,10 @@ export abstract class BaseNode<
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
         return value === undefined ? options.defaultValue : value
       },
-      set(this: This, value: T[Key]) {
+      set(this: This, value_: T[Key]) {
         const prev = ref_.value
+        const { transform } = options
+        const value = transform ? transform(value_) : value_
         if (equal(prev, value)) return
 
         ref_.value = value

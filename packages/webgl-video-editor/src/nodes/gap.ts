@@ -1,6 +1,6 @@
-import { computed } from 'fine-jsx'
+import { Rational } from 'shared/utils/math.ts'
 
-import type { ClipTime, Schema } from '../../types/core.d.ts'
+import type { ClipTimeRational, Schema } from '../../types/core.d.ts'
 import type * as pub from '../../types/core.d.ts'
 
 import { TrackChild } from './track-child.ts'
@@ -11,20 +11,16 @@ export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
   declare effects: never
   declare color: undefined
 
-  readonly #time = computed((): ClipTime => {
-    const prevTime = this.prev?.time
-    const start = prevTime ? prevTime.start + prevTime.duration : 0
-    const end = start + this.duration
+  declare readonly transition: undefined
+
+  _computeTimeRational(): ClipTimeRational {
+    const prevTime = this.prev?.timeRational
+    const start = prevTime ? prevTime.start.add(prevTime.duration) : Rational.ZERO
+    const end = start.add(this.duration)
 
     const { duration } = this
-    return { start, source: 0, duration, end }
-  })
-
-  get time(): ClipTime {
-    return this.#time.value
+    return { start, source: Rational.ZERO, duration, end }
   }
-
-  declare readonly transition: undefined
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isGap(): this is Gap {

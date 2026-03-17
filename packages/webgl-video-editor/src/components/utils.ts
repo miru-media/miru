@@ -4,9 +4,9 @@ import interact from '@interactjs/interact'
 import { effect, ref } from 'fine-jsx'
 import { inject, provide } from 'fine-jsx/jsx-runtime'
 
-import { MIN_CLIP_DURATION_S } from '#constants'
 import type { AnyClip } from '#core'
 import type { ClipDrag, ClipResize } from '#internal'
+import { Rational } from 'shared/utils/math.ts'
 
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
@@ -29,7 +29,7 @@ export const useClipDragResize = (editor: VideoEditor): { drag: ClipDrag; resize
     clips: undefined,
   }
 
-  const getClip = () => {
+  const getClip = (): AnyClip | undefined => {
     const { selection } = editor
     if (selection?.isClip()) return selection
   }
@@ -39,14 +39,14 @@ export const useClipDragResize = (editor: VideoEditor): { drag: ClipDrag; resize
     drag.x.value = rect.left
   }
 
-  const onDragMove = ({ rect }: DragEvent) => {
+  const onDragMove = ({ rect }: DragEvent): void => {
     editor._transact(() => {
       const clip = getClip()
-      if (!clip) return
+      if (!clip?.parent) return
 
       editor.drag.x.value = rect.left
 
-      const parent = clip.parent!
+      const { parent } = clip
       const newStartTime = editor.pixelsToSeconds(rect.left)
       const newCenterTime = newStartTime + clip.time.duration / 2
 
@@ -99,25 +99,28 @@ export const useClipDragResize = (editor: VideoEditor): { drag: ClipDrag; resize
 
     resize.isResizing.value = true
   }
-  const onResizeMove = ({ rect, edges }: ResizeEvent) => {
+  const onResizeMove = ({ rect, edges }: ResizeEvent): void => {
     editor._transact(() => {
       const clip = getClip()
       if (!clip) return
 
-      const { prev } = clip
-      const newStart = editor.pixelsToSeconds(rect.left)
-      const newDuration = editor.pixelsToSeconds(rect.width)
+      const docFrameRate = editor.doc.frameRate
+      const { prev, duration } = clip
+      const newStart = Rational.fromDecimal(editor.pixelsToSeconds(rect.left), docFrameRate)
+      const newDuration = Rational.fromDecimal(editor.pixelsToSeconds(rect.width), docFrameRate).toRate(
+        duration.rate,
+      )
 
       if (edges?.left === true) {
-        const delta = newDuration - clip.duration
-        clip.sourceStart = Math.max(0, clip.sourceStart - delta)
+        const delta = newDuration.subtract(duration)
+        clip.sourceStart = clip.sourceStart.subtract(delta)
       }
 
       clip.duration = newDuration
 
       if (edges?.right === true) ensureDurationIsPlayable(clip)
 
-      if (prev) prev.duration = newStart - prev.time.start
+      if (prev) prev.duration = newStart.subtract(Rational.fromDecimal(prev.time.start, docFrameRate))
     })
   }
 
@@ -165,7 +168,7 @@ export const useClipDragResize = (editor: VideoEditor): { drag: ClipDrag; resize
               const mediaDuration = clip.asset?.duration ?? 0
               const minStartTime = Math.max(
                 time.end - mediaDuration,
-                Math.max(0, prev ? prev.time.start + MIN_CLIP_DURATION_S : 0),
+                Math.max(0, prev ? prev.time.start + 1 / clip.doc.frameRate : 0),
               )
               const maxEndTime = time.start + mediaDuration
 
@@ -181,7 +184,7 @@ export const useClipDragResize = (editor: VideoEditor): { drag: ClipDrag; resize
               if (!clip) return { left: 0, right: 0, top: 0, bottom: 0 }
 
               const { time } = clip
-              const minDuration = MIN_CLIP_DURATION_S
+              const minDuration = 1 / clip.doc.frameRate
 
               return {
                 left: editor.secondsToPixels(time.end - minDuration),
@@ -231,9 +234,11 @@ const ensureDurationIsPlayable = (clip: AnyClip): void => {
   const { asset } = clip
   if (!asset) return
 
-  const sourceDuration = asset.duration
-  const clipTime = clip.time
-  const durationOutsideClip = sourceDuration - (clipTime.source + clipTime.duration)
-  clip.sourceStart += Math.min(0, durationOutsideClip)
-  clip.duration = Math.min(clipTime.duration, sourceDuration)
+  const docFrameRate = clip.doc.frameRate
+  const sourceDuration = Rational.fromDecimal(asset.duration, docFrameRate)
+  const durationOutsideClip = sourceDuration.subtract(clip.sourceStart.add(clip.duration))
+  const { sourceStart } = clip
+  clip.sourceStart = sourceStart.add(durationOutsideClip)
+
+  clip.duration = Rational.min(clip.duration, sourceDuration)
 }

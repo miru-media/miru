@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import type * as pub from '#core'
+import { Rational } from 'shared/utils/math.ts'
 
 import { DocumentView } from '../src/document-views/document-view.ts'
 import { EditDocument } from '../src/document-views/edit/edit-document.ts'
@@ -85,7 +86,7 @@ test('re-emits events from original doc with proxied nodes', () => {
   editDoc.on('playback:seek', listener)
 
   const originalClip3 = doc.createNode(clipInit3)
-  originalClip3.duration += 1
+  originalClip3.duration = originalClip3.duration.add(new Rational(1, 1))
   originalClip3.delete()
 
   doc.emit(new events.AssetCreateEvent({} as any))
@@ -98,7 +99,12 @@ test('re-emits events from original doc with proxied nodes', () => {
   )
   expect(listener).toHaveBeenNthCalledWith(
     2,
-    expect.objectContaining({ type: 'node:update', node: viewMarkerMatcher, key: 'duration', from: 1 }),
+    expect.objectContaining({
+      type: 'node:update',
+      node: viewMarkerMatcher,
+      key: 'duration',
+      from: new Rational(1, 1),
+    }),
   )
   expect(listener).toHaveBeenNthCalledWith(
     3,
@@ -125,27 +131,27 @@ test('while editing, update events to original node are suppressed', () => {
   editDoc.on('node:update', editListener)
 
   editClip1._startEditing(['duration'])
-  originalClip1.duration += 1
+  originalClip1.duration = originalClip1.duration.add(new Rational(1, 1))
   expect(editListener).not.toHaveBeenCalled()
-  expect(editClip1.duration).toBe(1)
+  expect(editClip1.duration).toEqual(new Rational(1, 1))
 })
 
 test('while editing, changes appear only on proxies', () => {
   editClip1._startEditing(['duration', 'name'])
 
-  editClip1.duration += 1
+  editClip1.duration = editClip1.duration.add(new Rational(1, 1))
   editClip1.name = 'new name'
 
   expect(onDocUpdate).not.toHaveBeenCalled()
   expect(onEditDocUpdate).toHaveBeenCalled()
 
-  editClip2.duration += 10
+  editClip2.duration = editClip2.duration.add(new Rational(10, 1))
 
-  expect(originalClip1.toJSON()).toMatchObject({ duration: 1, name: '' })
-  expect(editClip1.toJSON()).toEqual({ ...clipInit1, duration: 2, name: 'new name' })
+  expect(originalClip1.toJSON()).toMatchObject({ duration: new Rational(1, 1), name: '' })
+  expect(editClip1.toJSON()).toEqual({ ...clipInit1, duration: new Rational(2, 1), name: 'new name' })
 
-  expect(originalClip2.toJSON()).toEqual({ ...clipInit2, duration: 11 })
-  expect(editClip2.toJSON()).toEqual({ ...clipInit2, duration: 11 })
+  expect(originalClip2.toJSON()).toEqual({ ...clipInit2, duration: new Rational(11, 1) })
+  expect(editClip2.toJSON()).toEqual({ ...clipInit2, duration: new Rational(11, 1) })
 
   expect(originalClip2.time).toEqual({ start: 1, source: 0, end: 12, duration: 11 })
   expect(editClip2.time).toEqual({ start: 2, source: 0, end: 13, duration: 11 })
@@ -157,35 +163,37 @@ test('while editing, changes appear only on proxies', () => {
 test('applying edits updates original doc', () => {
   editClip1._startEditing(['duration', 'name'])
 
-  editClip1.duration += 1
+  editClip1.duration = editClip1.duration.add(new Rational(1, 1))
   editClip1.name = 'new name'
 
-  editClip2.duration += 10
+  editClip2.duration = editClip2.duration.add(new Rational(10, 1))
 
   editClip1._applyEdits()
 
-  expect(originalClip1).toMatchObject({ duration: 2, name: 'new name' })
-  expect(editClip1.toJSON()).toMatchObject({ duration: 2, name: 'new name' })
+  expect(originalClip1).toMatchObject({ duration: new Rational(2, 1), name: 'new name' })
+  expect(editClip1.toJSON()).toMatchObject({ duration: new Rational(2, 1), name: 'new name' })
 
-  expect(onDocUpdate).toHaveBeenCalledWith(expect.objectContaining({ key: 'duration', from: 1 }))
+  expect(onDocUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({ key: 'duration', from: new Rational(1, 1) }),
+  )
 
-  expect(originalClip2.toJSON()).toMatchObject({ duration: 11, name: '' })
+  expect(originalClip2.toJSON()).toMatchObject({ duration: new Rational(11, 1), name: '' })
 })
 
 test('dropping edits clears changes without updating original', () => {
   editClip1._startEditing(['duration', 'name'])
 
-  editClip1.duration += 1
+  editClip1.duration = editClip1.duration.add(new Rational(1, 1))
   editClip1.name = 'new name'
-  editClip2.duration += 10
+  editClip2.duration = editClip2.duration.add(new Rational(10, 1))
 
   editClip1._dropEdits()
 
   expect(originalClip1.toJSON()).toEqual(clipInit1)
   expect(editClip1.toJSON()).toEqual(clipInit1)
 
-  expect(originalClip2).toMatchObject({ duration: 11, name: '' })
-  expect(editClip2.toJSON()).toMatchObject({ duration: 11, name: '' })
+  expect(originalClip2).toMatchObject({ duration: new Rational(11, 1), name: '' })
+  expect(editClip2.toJSON()).toMatchObject({ duration: new Rational(11, 1), name: '' })
 })
 
 test('deferred update events from original node are fired when dropping edits', () => {
@@ -197,7 +205,7 @@ test('deferred update events from original node are fired when dropping edits', 
   editClip1.name = 'name on edit'
   expect(onEditDocUpdate).toHaveBeenCalled()
 
-  editClip1.duration = 10
+  editClip1.duration = editClip1.duration.add(new Rational(10, 1))
 
   onEditDocUpdate.mockClear()
   editClip1._dropEdits()

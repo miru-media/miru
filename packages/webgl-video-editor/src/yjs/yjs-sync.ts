@@ -29,7 +29,13 @@ const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): voi
   for (const key in updates) {
     if (Object.hasOwn(updates, key)) {
       const newValue = updates[key]
-      if (!jsonValuesAreEqual(newValue, ymap.get(key))) ymap.set(key, newValue)
+      if (!jsonValuesAreEqual(newValue, ymap.get(key)))
+        ymap.set(
+          key,
+          typeof newValue === 'object' && newValue != null && 'toJSON' in newValue
+            ? (newValue.toJSON as () => any)()
+            : newValue,
+        )
     }
   }
 }

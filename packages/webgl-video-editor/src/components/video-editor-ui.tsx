@@ -5,7 +5,7 @@ import { h } from 'fine-jsx/jsx-runtime'
 import type { VideoEditor } from '#core'
 import { LoadingOverlay } from 'shared/components/loading-overlay'
 import type { I18nOptions, InputEvent } from 'shared/types'
-import { provideI18n } from 'shared/utils'
+import { provideI18n, Rational } from 'shared/utils'
 import { ReadyState } from 'shared/video/constants.ts'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
@@ -115,8 +115,13 @@ export const VideoEditorUI = (props: {
                               min="0"
                               max="20"
                               step="0.25"
-                              value={clip.sourceStart}
-                              onInput={(event: InputEvent) => (clip.sourceStart = event.target.valueAsNumber)}
+                              value={() => clip.sourceStart.valueOf()}
+                              onInput={(event: InputEvent) =>
+                                (clip.sourceStart = Rational.fromDecimal(
+                                  event.target.valueAsNumber,
+                                  clip.sourceStart.rate,
+                                ))
+                              }
                             />
                           </label>
                           [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}

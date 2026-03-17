@@ -2,6 +2,7 @@ import { computed } from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { Schema } from '#core'
+import { Rational } from 'shared/utils/math.ts'
 
 import { ParentNode } from './parent-node.ts'
 
@@ -31,12 +32,12 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
 
   readonly #duration = computed(() => {
     const { lastClip } = this
-    if (!lastClip) return 0
+    if (!lastClip) return Rational.ZERO
 
-    return lastClip.time.end
+    return lastClip.timeRational.end
   })
 
-  get duration(): number {
+  get duration(): Rational {
     return this.#duration.value
   }
 

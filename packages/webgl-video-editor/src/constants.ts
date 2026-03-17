@@ -4,7 +4,6 @@ export * from './public-constants.ts'
 
 export const MOBILE_MAX_WIDTH = 640
 
-export const MIN_CLIP_DURATION_S = 0.25
 export const MIN_CLIP_WIDTH_PX = 2
 
 export const SourceNodeState = {

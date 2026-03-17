@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging -- -- */
 import type { Ref } from 'fine-jsx'
 import type { EffectDefinition, Renderer } from 'webgl-effects'
 
@@ -33,6 +34,13 @@ export interface ClipTime {
   source: number
   duration: number
   end: number
+}
+
+export interface ClipTimeRational {
+  start: Rational
+  source: Rational
+  duration: Rational
+  end: Rational
 }
 
 export interface VideoEditorEvents {
@@ -151,13 +159,15 @@ export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly lastClip?: AnyClip
   readonly clips: AnyClip[]
   readonly clipCount: number
-  readonly duration: number
+  readonly duration: Rational
   prev?: Track
   next?: Track
   toJSON: () => Schema.Track
 }
 
 export interface TrackChild extends BaseNode {
+  duration: Rational
+  readonly timeRational: ClipTimeRational
   readonly time: ClipTime
   readonly parent?: Track
   prev?: AnyTrackChild | undefined
@@ -167,6 +177,7 @@ export interface TrackChild extends BaseNode {
 }
 
 export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip<T['clipType']> {
+  sourceStart: Rational
   readonly isReady: boolean
   readonly asset: MediaAsset | undefined
   readonly playableTime: ClipTime
@@ -233,12 +244,11 @@ export type AnyAsset = AssetsByType[keyof AssetsByType]
 
 export type { AssetOrigin } from './schema.d.ts'
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging, @typescript-eslint/no-extraneous-class -- false positive
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- false positive
 export class VideoEditor {
   constructor(options?: { sync?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- false positive
 export interface VideoEditor {
   /** @internal */
   _editor: VideoEditorInternal
@@ -441,4 +451,22 @@ export interface AssetLoader {
     asset: Schema.MediaAsset,
     options?: { signal?: AbortSignal | null },
   ) => Promise<{ stream: ReadableStream<Uint8Array>; size?: number }>
+}
+
+export interface Rational {
+  value: number
+  rate: number
+
+  add: (other: RationalLike) => Rational
+  subtract: (other: RationalLike) => Rational
+  toRate: (rate: number) => Rational
+  compare: (other: RationalLike) => number
+  isLessThan: (other: RationalLike) => boolean
+  isGreaterThan: (other: RationalLike) => boolean
+  isEqualTo: (other: RationalLike) => boolean
+  isLte: (other: RationalLike) => boolean
+  isGte: (other: RationalLike) => boolean
+  clamp: (min: RationalLike, max: RationalLike) => Rational
+  valueOf: () => number
+  toJSON: () => { value: number; rate: number }
 }

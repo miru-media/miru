@@ -2,7 +2,12 @@ import * as Mb from 'mediabunny'
 
 import { CLIP_COLORS } from '#constants'
 import type * as Schema from '#schema'
-import { stringHashCode } from 'shared/utils/index.ts'
+import { Rational, stringHashCode } from 'shared/utils/index.ts'
+
+const getRational = (track: Mb.InputTrack, value: number): Rational => {
+  const { timeResolution } = track
+  return Rational.fromDecimal(value, timeResolution)
+}
 
 export const getMediaAssetInfo = async (
   id: string,
@@ -62,21 +67,21 @@ export const getMediaAssetInfo = async (
     audio: audio
       ? {
           codec: audio.codec,
-          duration: await audio.computeDuration(),
+          duration: getRational(audio, await audio.computeDuration()),
           numberOfChannels: audio.numberOfChannels,
           sampleRate: audio.sampleRate,
-          firstTimestamp: await audio.getFirstTimestamp(),
+          firstTimestamp: getRational(audio, await audio.getFirstTimestamp()),
         }
       : undefined,
     video: video
       ? {
           codec: video.codec,
-          duration: await video.computeDuration(),
+          duration: getRational(video, await video.computeDuration()),
           rotation: video.rotation,
           width: video.codedWidth,
           height: video.codedHeight,
           frameRate: (await video.computePacketStats()).averagePacketRate,
-          firstTimestamp: await video.getFirstTimestamp(),
+          firstTimestamp: getRational(video, await video.getFirstTimestamp()),
         }
       : undefined,
     duration: await input.computeDuration(),

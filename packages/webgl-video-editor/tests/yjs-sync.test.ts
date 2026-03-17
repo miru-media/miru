@@ -5,6 +5,7 @@ import type { YTree } from 'yjs-orderedtree'
 import { TIMELINE_ID } from '#constants'
 import type { Schema } from '#core'
 import type { VideoClip } from '#nodes'
+import { Rational } from 'shared/utils/math.ts'
 import { initYjsRoot, YjsSync } from 'webgl-video-editor/yjs'
 
 import { makeTrack, makeVideoClip } from './utils.ts'
@@ -19,7 +20,6 @@ const clipInit = makeVideoClip({
   clipType: 'video',
   name: 'test clip',
   mediaRef: { assetId: 'unknown' },
-  duration: 1,
   transition: undefined,
 })
 const trackInit = makeTrack('test-track', 'video', [clipInit])
@@ -75,10 +75,10 @@ test('syncs doc changes to Yjs doc', () => {
   sync.doc.resolution = { width: 50, height: 100 }
   const clip = sync.doc.nodes.get<VideoClip>(clipInit.id)
 
-  clip.duration += 1
+  clip.duration = clip.duration.add(new Rational(1, 1))
 
   const ynode = ytree.getNodeValueFromKey(clip.id) as Y.Map<any>
-  expect(ynode.get('duration')).toBe(2)
+  expect(ynode.get('duration')).toEqual(new Rational(2, 1).toJSON())
 
   clip.delete()
   expect(() => ytree.getNodeParentFromKey(clip.id)).toThrow()

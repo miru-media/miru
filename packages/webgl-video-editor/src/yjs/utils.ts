@@ -70,7 +70,10 @@ export const createYnodeFromJson = (init: Schema.AnyNode): Y.Map<unknown> =>
             yjsValue = new Y.Map(Object.entries((value as typeof init.metadata) ?? {}))
             break
           default:
-            yjsValue = value
+            yjsValue =
+              typeof value === 'object' && value != null && 'toJSON' in value
+                ? (value.toJSON as () => any)()
+                : value
         }
 
         return [key, yjsValue]

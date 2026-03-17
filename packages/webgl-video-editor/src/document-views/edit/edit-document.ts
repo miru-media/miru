@@ -7,22 +7,13 @@ import type { Valueof } from '#internal'
 import { DocumentView, type ViewType } from '../document-view.ts'
 import { defineWrapperProps } from '../utils.ts'
 
-import {
-  createEditViewProxy,
-  type EditAudioClip,
-  EditClip,
-  type EditGap,
-  type EditTimeline,
-  type EditTrack,
-  type EditVideoClip,
-  EditView,
-} from './edit-nodes.ts'
+import { EditClip, EditGap, EditView } from './edit-nodes.ts'
 
 export interface ViewTypeMap {
-  timeline: EditTimeline
-  track: EditTrack
-  clip: EditVideoClip | EditAudioClip
-  gap: EditGap
+  timeline: EditView.Timeline
+  track: EditView.Track
+  clip: EditView.VideoClip | EditView.AudioClip
+  gap: EditView.Gap
 }
 
 /**
@@ -90,8 +81,12 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   }
 
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
-    const view = original.isClip() ? new EditClip(this, original) : new EditView(this, original)
-    const proxy = createEditViewProxy(view)
+    const view = original.isClip()
+      ? new EditClip(this, original)
+      : original.isGap()
+        ? new EditGap(this, original)
+        : new EditView(this, original)
+    const proxy = EditView.proxy(view)
     return proxy as unknown as ViewType<ViewTypeMap, T>
   }
 

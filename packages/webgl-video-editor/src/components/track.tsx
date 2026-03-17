@@ -27,7 +27,7 @@ export const Track = ({
     <div
       {...props}
       class={styles.track}
-      style={() => `--track-width: ${editor.secondsToPixels(track.duration)}px;`}
+      style={() => `--track-width: ${editor.secondsToPixels(track.duration.valueOf())}px;`}
     >
       {() =>
         track.clips.map((clip) => (

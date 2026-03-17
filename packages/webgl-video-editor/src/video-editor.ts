@@ -8,14 +8,13 @@ import type { Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { useElementSize } from 'shared/utils/composables.ts'
 import { getWebgl2Context } from 'shared/utils/images.ts'
-import { remap0 } from 'shared/utils/math'
+import { Rational, remap0 } from 'shared/utils/math'
 
 import type * as pub from '../types/webgl-video-editor'
 
 import { useClipDragResize } from './components/utils.ts'
-import { MIN_CLIP_DURATION_S } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
-import type { AnyEditTrackChild } from './document-views/edit/edit-nodes.ts'
+import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { ExportDocument } from './document-views/export/exporter-document.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/render-document.ts'
@@ -98,7 +97,7 @@ export class VideoEditor implements pub.VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): AnyEditTrackChild | undefined {
+  get selection(): EditView.AnyTrackChild | undefined {
     return this.doc._getNode(this.#selection.value)
   }
 
@@ -161,8 +160,8 @@ export class VideoEditor implements pub.VideoEditor {
       type: 'clip',
       clipType: track.trackType,
       mediaRef: { assetId: asset.id },
-      sourceStart: 0,
-      duration,
+      sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
+      duration: Rational.fromDecimal(duration, this.doc.frameRate),
     }
 
     return this._transact(() => {
@@ -177,13 +176,13 @@ export class VideoEditor implements pub.VideoEditor {
     if (!clip?.isClip()) return
 
     this._transact(() => {
-      clip.duration = Math.min(asset.duration, clip.duration)
+      clip.duration = Rational.min(Rational.fromDecimal(asset.duration, clip.duration.rate), clip.duration)
       clip.mediaRef = { assetId: asset.id }
     })
   }
 
   splitClipAtCurrentTime(): [pub.AnyClip, pub.AnyClip] | undefined {
-    const { currentTime } = this.doc
+    const { currentTime, frameRate } = this.doc
     const trackOfSelectedClip = this.#selection.value?.parent
 
     // first search the track that contains a selected clip
@@ -200,10 +199,10 @@ export class VideoEditor implements pub.VideoEditor {
     if (!clip?.parent) return
 
     const { parent } = clip
-    const prevClipTime = clip.time
-    const delta = currentTime - prevClipTime.start
+    const prevClipTime = clip.timeRational
+    const delta = Rational.fromDecimal(currentTime, frameRate).subtract(prevClipTime.start.toRate(frameRate))
 
-    if (delta < MIN_CLIP_DURATION_S) return
+    if (delta.value < 1) return
 
     return this._transact(() => {
       const startClip = this.doc.createNode({
@@ -215,8 +214,8 @@ export class VideoEditor implements pub.VideoEditor {
       const endClip = this.doc.createNode({
         ...clip.toJSON(),
         id: this.generateId(),
-        sourceStart: prevClipTime.source + delta,
-        duration: prevClipTime.duration - delta,
+        sourceStart: prevClipTime.source.add(delta),
+        duration: prevClipTime.duration.subtract(delta),
       })
 
       startClip.move({ parentId: parent.id, index: clip.index })

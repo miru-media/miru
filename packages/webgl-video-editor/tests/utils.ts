@@ -23,8 +23,8 @@ export const makeTrack = (
 const makeBaseClip = <T extends Schema.BaseClip['clipType']>(id: string, clipType: T) => ({
   ...makeBase(id, 'clip'),
   clipType,
-  duration: 1,
-  sourceStart: 0,
+  sourceStart: { value: 0, rate: 1 },
+  duration: { value: 1, rate: 1 },
 })
 
 export const makeVideoClip = (
@@ -54,19 +54,19 @@ export const makeAvAsset = (id: string, duration: number, uri?: string): Schema.
   duration,
   audio: {
     codec: 'aac',
-    duration,
+    duration: { value: duration, rate: 1 },
     numberOfChannels: 2,
     sampleRate: 48000,
-    firstTimestamp: 0,
+    firstTimestamp: { value: 0, rate: 1 },
   },
   video: {
     codec: 'avc',
-    duration,
+    duration: { value: duration, rate: 1 },
     rotation: 0,
     width: 1920,
     height: 1080,
     frameRate: 25,
-    firstTimestamp: 0,
+    firstTimestamp: { value: 0, rate: 1 },
   },
   uri,
 })

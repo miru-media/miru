@@ -7,7 +7,7 @@ import type * as pub from '#core'
 import type { Schema } from '#core'
 import { AudioClip, Gap, VideoClip } from '#nodes'
 import type { Size } from 'shared/types.ts'
-import { clamp } from 'shared/utils/math.ts'
+import { clamp, Rational } from 'shared/utils/math.ts'
 
 import { LutUploaderSystem } from './document-views/render/pixi-lut-source.ts'
 import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
@@ -51,7 +51,7 @@ export class Document implements pub.Document {
 
   readonly _currentTime = ref(0)
   readonly #duration = computed(() =>
-    this.timeline.children.reduce((end, track) => Math.max(track.duration, end), 0),
+    this.timeline.children.reduce((end, track) => Math.max(track.duration.valueOf(), end), 0),
   )
 
   readonly #resolution: Ref<Size>
@@ -143,7 +143,7 @@ export class Document implements pub.Document {
   }
 
   seekTo(time: number): void {
-    this._setCurrentTime(time)
+    this._setCurrentTime(Rational.fromDecimal(time, this.frameRate).valueOf())
     this.emit(SEEK_EVENT)
   }
 

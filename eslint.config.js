@@ -143,9 +143,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.{ts,tsx,js,jsx}'],
+    files: ['packages/*/tests/**', '**/*.test.{ts,tsx,js,jsx}'],
     ignores: ['**/*.md/*'],
     rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',

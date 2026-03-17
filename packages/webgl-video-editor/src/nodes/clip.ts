@@ -1,9 +1,9 @@
 import { computed, ref, type Ref } from 'fine-jsx'
 
-import type { ClipTime, Schema } from '#core'
+import type { ClipTime, ClipTimeRational, Schema } from '#core'
 import type * as pub from '#core'
 import type { Size } from 'shared/types.ts'
-import { clamp } from 'shared/utils/math.ts'
+import { clamp, Rational } from 'shared/utils/math.ts'
 import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import { VIDEO_PREPLAY_TIME_S } from '../constants.ts'
@@ -18,14 +18,13 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   abstract clipType: T['clipType']
   declare children: undefined
 
-  declare sourceStart: Schema.AnyClip['sourceStart']
+  declare sourceStart: Rational
   declare private _asset: Ref<pub.MediaAsset | undefined>
   declare mediaRef: T['mediaRef']
   declare error: Ref<MediaError | undefined>
 
   declare transition: Schema.AnyClip['transition']
 
-  declare private _time: Ref<ClipTime>
   declare private _presentationTime: Ref<ClipTime>
   declare private _playableTime: Ref<ClipTime>
   readonly #expectedMediaTime = computed((): number => {
@@ -43,9 +42,6 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     return this.asset?.isLoading === false
   }
 
-  get time(): ClipTime {
-    return this._time.value
-  }
   get presentationTime(): ClipTime {
     return this._presentationTime.value
   }
@@ -70,13 +66,12 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     this._defineReactive('mediaRef', init.mediaRef, {
       onChange: (value) =>
         (this._asset.value = value?.assetId ? this.doc.assets.getAsset(value.assetId) : undefined),
-      equal: (a, b) => a?.assetId === b?.assetId && a?.placeholder !== b?.placeholder,
+      equal: (a, b) => a?.assetId === b?.assetId,
     })
-    this._defineReactive('sourceStart', init.sourceStart)
+    this._defineReactive('sourceStart', init.sourceStart, { transform: Rational.from })
 
     this.clipType = init.clipType
 
-    this._time = computed(() => this._computeTime())
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())
 
@@ -97,10 +92,10 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     )
   }
 
-  _computeTime(): ClipTime {
-    const prevTime = this.prev?.time
-    const start = prevTime ? prevTime.start + prevTime.duration : 0
-    const end = start + this.duration
+  _computeTimeRational(): ClipTimeRational {
+    const prevTime = this.prev?.timeRational
+    const start = prevTime ? prevTime.end : Rational.ZERO
+    const end = start.add(this.duration)
 
     const { duration } = this
     const source = this.sourceStart
@@ -109,7 +104,10 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
   _computePresentationTime(): ClipTime {
     const { time, prev } = this
-    const inTransitionDuration = prev?.isClip() ? (prev.transition?.duration ?? 0) : 0
+    const inTransition = prev?.isClip() ? prev.transition : undefined
+    if (!inTransition) return time
+
+    const inTransitionDuration = inTransition.duration.value - inTransition.duration.rate
 
     const start = time.start - inTransitionDuration
     const source = time.source - inTransitionDuration

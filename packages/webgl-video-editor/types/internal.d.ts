@@ -2,7 +2,7 @@ import type { Ref } from 'fine-jsx'
 
 import type { AudioClip, ChildNodePosition, Gap, Schema, Timeline, Track, VideoClip } from '#core'
 
-import type { EditAudioClip, EditVideoClip } from '../src/document-views/edit/edit-nodes.ts'
+import type { EditView } from '../src/document-views/edit/edit-nodes.ts'
 
 export interface SchemaTypes {
   track: Schema.Track
@@ -52,9 +52,9 @@ export interface ClipResize {
   isResizing: Ref<boolean>
   clips:
     | [
-        prev?: EditVideoClip | EditAudioClip,
-        self: EditVideoClip | EditAudioClip,
-        next?: EditVideoClip | EditAudioClip,
+        prev?: EditView.VideoClip | EditView.AudioClip,
+        self: EditView.VideoClip | EditView.AudioClip,
+        next?: EditView.VideoClip | EditView.AudioClip,
       ]
     | undefined
 }

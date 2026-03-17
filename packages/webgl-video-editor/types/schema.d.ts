@@ -1,5 +1,10 @@
 import type { EffectDefinition } from 'webgl-effects'
 
+export interface Rational {
+  value: number
+  rate: number
+}
+
 interface Base {
   id: string
   type: string
@@ -40,19 +45,19 @@ export interface MediaAsset extends BaseAsset<'media:av'> {
   size: number
   audio?: {
     codec: string
-    duration: number
+    duration: Rational
     numberOfChannels: number
     sampleRate: number
-    firstTimestamp: number
+    firstTimestamp: Rational
   }
   video?: {
     codec: string
-    duration: number
+    duration: Rational
     rotation: number
     width: number
     height: number
     frameRate: number
-    firstTimestamp: number
+    firstTimestamp: Rational
   }
   uri?: string
 }
@@ -69,7 +74,7 @@ export interface Track extends Base {
 }
 
 export interface TrackChild extends Base {
-  duration: number
+  duration: Rational
 }
 
 export interface MediaAssetRef {
@@ -90,9 +95,9 @@ export interface BaseClip<
 > extends TrackChild {
   type: 'clip'
   clipType: T
-  sourceStart: number
+  sourceStart: Rational
   mediaRef?: MediaAssetRef | TPlaceholder
-  transition?: { assetId: string; duration: number }
+  transition?: { assetId: string; duration: Rational }
 }
 
 export interface VideoClip extends BaseClip<'video', VideoPlaceholderRef> {

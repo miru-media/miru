@@ -125,6 +125,7 @@ export class VueTrack extends VueParentNode<pub.Track> implements pub.Track {
 }
 
 abstract class VueTrackChild<T extends pub.AnyTrackChild> extends VueNodeView<T> implements pub.TrackChild {
+  declare readonly timeRational: T['timeRational']
   declare readonly time: T['time']
   declare duration: T['duration']
 
@@ -132,6 +133,7 @@ abstract class VueTrackChild<T extends pub.AnyTrackChild> extends VueNodeView<T>
     super(docView, original)
 
     _vueWritable(this, original, 'duration')
+    _vuePlainReadonly(this, original, 'timeRational')
     _vuePlainReadonly(this, original, 'time')
   }
 }
@@ -190,7 +192,4 @@ export class VueAudioClip extends VueClip<pub.AudioClip> implements pub.AudioCli
   }
 }
 
-export class VueGap extends VueNodeView<pub.Gap> implements pub.Gap {
-  declare readonly time: pub.Gap['time']
-  declare readonly duration: pub.Gap['duration']
-}
+export class VueGap extends VueTrackChild<pub.Gap> implements pub.Gap {}
