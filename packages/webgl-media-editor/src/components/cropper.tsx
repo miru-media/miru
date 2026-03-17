@@ -15,10 +15,19 @@ const ASPECT_9_16 = 0.5625
 
 export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> = (props) => {
   const editor = toValue(props.editor)
-  const { aspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom } = useCrop({
-    editor,
-    sourceIndex: toValue(props.sourceIndex),
-  })
+  const { aspectRatio, originalAspectRatio, resetCrop, setAspectRatio, rotate, container, zoom, setZoom } =
+    useCrop({
+      editor,
+      sourceIndex: toValue(props.sourceIndex),
+    })
+
+  const ratios = [
+    { value: ASPECT_9_16, Icon: IconTablerCropPortrait, label: '9:16' },
+    { value: 1, Icon: IconTablerCrop_1_1, label: '1:1' },
+    { value: 1 / ASPECT_9_16, Icon: IconTablerCropLandscape, label: '16:9' },
+  ]
+
+  const duplicatedRatio = ratios.find((item) => item.value === originalAspectRatio.value)
 
   return (
     <>
@@ -43,17 +52,18 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
               <span class={styles['miru--button__label']}>Original</span>
             </label>
 
-            {[
-              { value: ASPECT_9_16, Icon: IconTablerCropPortrait, label: '9:16' },
-              { value: 1, Icon: IconTablerCrop_1_1, label: '1:1' },
-              { value: 1 / ASPECT_9_16, Icon: IconTablerCropLandscape, label: '16:9' },
-            ].map(({ value, Icon, label }) => (
-              <label class={styles['miru--button']}>
+            {ratios.map(({ value, Icon, label }) => (
+              <label
+                class={styles['miru--button']}
+                disabled={() => (duplicatedRatio?.value === value ? true : null)}
+              >
                 <input
                   type="radio"
                   name="image-crop"
                   value={label}
-                  checked={() => aspectRatio.value.toFixed(1) === value.toFixed(1)}
+                  checked={() =>
+                    duplicatedRatio?.value !== value && aspectRatio.value.toFixed(1) === value.toFixed(1)
+                  }
                   onClick={() => setAspectRatio(value)}
                 />
                 <Icon class={styles['miru--button__icon']} />
