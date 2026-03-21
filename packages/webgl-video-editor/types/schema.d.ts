@@ -101,8 +101,8 @@ export interface BaseClip<
 }
 
 export interface VideoClip extends BaseClip<'video', VideoPlaceholderRef> {
-  position?: { x: number; y: number }
-  rotation?: number
+  translate?: { x: number; y: number }
+  rotate?: number
   scale?: { x: number; y: number }
 }
 

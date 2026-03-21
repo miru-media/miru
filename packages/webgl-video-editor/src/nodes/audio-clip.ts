@@ -1,5 +1,5 @@
-import type { Schema } from '../../types/core.d.ts'
-import type * as pub from '../../types/core.d.ts'
+import type { Schema } from '#core'
+import type * as pub from '#core'
 
 import { Clip } from './clip.ts'
 
@@ -28,4 +28,5 @@ export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
 
     return obj
   }
+
 }

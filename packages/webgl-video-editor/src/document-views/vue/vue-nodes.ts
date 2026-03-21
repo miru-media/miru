@@ -30,7 +30,9 @@ abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, 
   declare prev: ViewType<VueTypeMap, T['prev']>
   declare next: ViewType<VueTypeMap, T['next']>
   declare index: T['index']
+  declare name: T['name']
   declare enabled: T['enabled']
+  declare effects: T['effects']
   declare color: pub.Schema.Base['color']
 
   declare move: T['move']
@@ -168,14 +170,14 @@ abstract class VueClip<T extends pub.AnyClip> extends VueTrackChild<T> implement
 }
 
 export class VueVideoClip extends VueClip<pub.VideoClip> implements pub.VideoClip {
-  declare readonly position: pub.VideoClip['position']
-  declare readonly rotation: pub.VideoClip['rotation']
+  declare readonly translate: pub.VideoClip['translate']
+  declare readonly rotate: pub.VideoClip['rotate']
   declare readonly scale: pub.VideoClip['scale']
   declare readonly effects: pub.VideoClip['effects']
 
   constructor(docView: VueDocument, original: pub.VideoClip) {
     super(docView, original)
-    ;(['position', 'rotation', 'scale', 'effects'] as const).forEach((key) =>
+    ;(['translate', 'rotate', 'scale', 'effects'] as const).forEach((key) =>
       _vueWritable(this, original, key),
     )
     _vuePlainReadonly(this, original, 'clipType')

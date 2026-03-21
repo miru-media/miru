@@ -101,7 +101,11 @@ export class Rational {
   }
 
   toJSON(): { value: number; rate: number } {
-    return { value: this.value, rate: this.rate }
+    return { rate: this.rate, value: this.value }
+  }
+
+  toOTIO(): { OTIO_SCHEMA: 'RationalTime.1'; rate: number; value: number } {
+    return { OTIO_SCHEMA: 'RationalTime.1', rate: this.rate, value: this.value }
   }
 
   static simplified = (value: number, rate: number): Rational => {

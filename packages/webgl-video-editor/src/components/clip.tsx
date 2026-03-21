@@ -65,7 +65,7 @@ export const Clip = ({
         class={styles.clipBox}
         onClick={() => editor.select(clip, false)}
       >
-        <span class={styles.clipName}>{clip.name ?? clip.asset?.name ?? ''}</span>
+        <span class={styles.clipName}>{clip.name || (clip.asset?.name ?? '')}</span>
         <div class={styles.clipControls}>
           <div class={styles.clipResizeLeft}>
             <IconTablerChevronLeft />

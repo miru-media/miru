@@ -108,15 +108,14 @@ export interface NodeMap {
   forEach: (fn: (node: AnyNode) => unknown) => void
 }
 
-export interface BaseNode {
-  id: string
-  name?: string
+export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   readonly doc: Document
   readonly parent?: AnyParentNode
+  readonly index: number
   prev?: AnyNode
   next?: AnyNode
-  readonly index: number
   enabled: boolean
+  effects: NonNullable<Schema.Base['effects']>
   isDisposed: boolean
   move: (position: ChildNodePosition | undefined) => void
   remove: () => void
@@ -177,6 +176,7 @@ export interface TrackChild extends BaseNode {
 }
 
 export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip<T['clipType']> {
+  name: string
   sourceStart: Rational
   readonly isReady: boolean
   readonly asset: MediaAsset | undefined
@@ -187,8 +187,8 @@ export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.Base
 }
 
 export interface VideoClip extends Clip<Schema.VideoClip>, Schema.VideoClip {
-  position: { x: number; y: number }
-  rotation: number
+  translate: { x: number; y: number }
+  rotate: number
   scale: { x: number; y: number }
   effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
@@ -198,7 +198,9 @@ export interface AudioClip extends Clip<Schema.AudioClip>, Schema.AudioClip {
   toJSON: () => Schema.AudioClip
 }
 
-export interface Gap extends TrackChild, Schema.Gap {}
+export interface Gap extends TrackChild, Schema.Gap {
+  toJSON: () => Schema.Gap
+}
 
 export interface NodesByType {
   timeline: Timeline
@@ -469,4 +471,5 @@ export interface Rational {
   clamp: (min: RationalLike, max: RationalLike) => Rational
   valueOf: () => number
   toJSON: () => { value: number; rate: number }
+  toOTIO: () => { OTIO_SCHEMA: 'RationalTime.1'; rate: number; value: number }
 }

@@ -33,4 +33,5 @@ export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> impl
   toJSON(): Schema.Timeline {
     return super.toJSON()
   }
+
 }

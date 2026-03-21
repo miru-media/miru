@@ -24,21 +24,21 @@ export const TransformControls = () => {
     const clip = editor.selection
     return clip?.isVideo() && clip.asset?.video ? clip.asset.video : { width: 0, height: 0 }
   })
-  const clipProps = computed((): Pick<VideoClip, 'position' | 'rotation' | 'scale'> => {
+  const clipProps = computed((): Pick<VideoClip, 'translate' | 'rotate' | 'scale'> => {
     const clip = editor.selection
-    return clip?.isVideo() ? clip : { position: { x: 0, y: 0 }, rotation: 0, scale: { x: 1, y: 1 } }
+    return clip?.isVideo() ? clip : { translate: { x: 0, y: 0 }, rotate: 0, scale: { x: 1, y: 1 } }
   })
 
   const rotateZoomMatrix = computed(() => {
     const { zoom } = editor
-    const { rotation } = clipProps.value
+    const { rotate } = clipProps.value
     const mediaSize = clipMediaSize.value
     const halfWidth = mediaSize.width / 2
     const halfHeight = mediaSize.height / 2
 
     return new Pixi.Matrix()
       .translate(-halfWidth, -halfHeight)
-      .rotate((rotation * Math.PI) / 180)
+      .rotate((rotate * Math.PI) / 180)
       .translate(halfWidth, halfHeight)
       .scale(zoom, zoom)
   })
@@ -51,7 +51,7 @@ export const TransformControls = () => {
       getRect() {
         const clip = clipProps.value
 
-        const { x, y } = clip.position
+        const { x, y } = clip.translate
         const { width, height } = clipMediaSize.value
         return { left: x, top: y, right: x + width, bottom: y + height }
       },
@@ -59,15 +59,15 @@ export const TransformControls = () => {
       listeners: {
         start() {
           if (!editor.selection?.isVideo()) return
-          editor.selection._startEditing(['position', 'scale'])
+          editor.selection._startEditing(['translate', 'scale'])
         },
         move(event: DragEvent) {
           const clip = clipProps.value
 
           const { zoom } = editor
-          const { position } = clip
+          const { translate } = clip
           const { delta } = event
-          clip.position = { x: position.x + delta.x / zoom, y: position.y + delta.y / zoom }
+          clip.translate = { x: translate.x + delta.x / zoom, y: translate.y + delta.y / zoom }
         },
         end() {
           editor.selection?._applyEdits()
@@ -78,7 +78,7 @@ export const TransformControls = () => {
     let edges: Record<string, boolean | undefined> = {}
     const resizeStart = {
       pointer: { x: 0, y: 0 },
-      position: { x: 0, y: 0 },
+      translate: { x: 0, y: 0 },
       size: { width: 0, height: 0 },
     }
 
@@ -89,10 +89,10 @@ export const TransformControls = () => {
           const clip = editor.selection
           if (!clip?.isVideo()) return
 
-          clip._startEditing(['position', 'scale'])
+          clip._startEditing(['translate', 'scale'])
 
           resizeStart.pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
-          resizeStart.position = clip.position
+          resizeStart.translate = clip.translate
           const { scale } = clip
           const mediaSize = clipMediaSize.value
           resizeStart.size = { width: mediaSize.width * scale.x, height: mediaSize.height * scale.y }

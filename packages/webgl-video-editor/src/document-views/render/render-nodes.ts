@@ -76,8 +76,8 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
   /** @internal */
   _update<Key extends keyof pub.VideoClip>(key: Key, oldValue: pub.VideoClip[Key]): void {
     switch (key) {
-      case 'position':
-      case 'rotation':
+      case 'translate':
+      case 'rotate':
       case 'scale':
       case 'mediaRef':
         this.sprite.setFromMatrix(getClipTransformMatrix(this.original, this.docView.applyVideoRotation))

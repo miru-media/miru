@@ -190,18 +190,16 @@ export class Document implements pub.Document {
   }
 
   toJSON(): Schema.SerializedDocument {
-    const serialize = <T extends (Schema.AnyNode | Schema.AnyAssetSchema)['type']>(
-      node: Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
-    ): Extract<Schema.AnyNodeSerializedSchema | Schema.AnyAssetSchema, T> => {
-      if ('children' in node) {
-        const serialized = {
-          ...node.toJSON(),
-          children: node.children.map(serialize as any),
-        }
-        return serialized as any
-      }
+    const serialize = <
+      T extends (Schema.AnyNode | Schema.AnyAssetSchema)['type'],
+      TN extends Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
+    >(
+      node: TN,
+    ): Extract<Schema.AnyNodeSerializedSchema, ReturnType<TN['toJSON']>> => {
+      const json = node.toJSON()
+      const serialized = 'children' in node ? { ...json, children: node.children.map(serialize) } : json
 
-      return node.toJSON()
+      return serialized as Extract<Schema.AnyNodeSerializedSchema, ReturnType<TN['toJSON']>>
     }
 
     const { assets: _assets, timeline, resolution, frameRate } = this

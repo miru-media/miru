@@ -19,8 +19,8 @@ export class ExportClip extends NodeView<ExportDocument, pub.AnyClip> {
   renderClip = this.docView.renderView._getNode(this.original)
   readonly videoEffect: VideoEffectAsset | undefined
 
-  declare position: { x: number; y: number }
-  declare rotation: number
+  declare translate: { x: number; y: number }
+  declare rotate: number
   declare scale: { x: number; y: number }
   declare volume: number
   declare mute: boolean

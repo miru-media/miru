@@ -13,16 +13,16 @@ const pointsAreEqual = (a?: Point, b?: Point): boolean =>
 export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
   declare clipType: 'video'
 
-  declare position: { x: number; y: number }
-  declare rotation: number
+  declare translate: { x: number; y: number }
+  declare rotate: number
   declare scale: { x: number; y: number }
   declare effects: pub.VideoClip['effects']
 
   protected _init(init: Schema.VideoClip): void {
     super._init(init)
 
-    this._defineReactive('position', init.position, { equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } })
-    this._defineReactive('rotation', init.rotation, { defaultValue: 0 })
+    this._defineReactive('translate', init.translate, { equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } })
+    this._defineReactive('rotate', init.rotate, { defaultValue: 0 })
     this._defineReactive('scale', init.scale, { equal: pointsAreEqual, defaultValue: { x: 1, y: 1 } })
   }
 
@@ -32,15 +32,16 @@ export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
   }
 
   toJSON(): Schema.VideoClip {
-    const { position, rotation, scale, effects } = this
+    const { translate, rotate, scale, effects } = this
     const obj: Schema.VideoClip = super.toJSON()
 
-    if (position.x !== 0 || position.y !== 0) obj.position = position
-    if (rotation !== 0) obj.rotation = rotation
+    if (translate.x !== 0 || translate.y !== 0) obj.translate = translate
+    if (rotate !== 0) obj.rotate = rotate
     if (scale.x !== 1 || scale.y !== 1) obj.scale = scale
     if (effects.length)
       obj.effects = effects.map(({ id, assetId, intensity }) => ({ id, assetId, intensity }))
 
     return obj
   }
+
 }

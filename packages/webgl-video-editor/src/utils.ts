@@ -21,15 +21,15 @@ export const getClipTransformMatrix = (clip: pub.VideoClip, withVideoRotation: b
     )
   }
 
-  const { position } = clip
+  const { translate } = clip
   const halfWidth = width / 2
   const halfHeight = height / 2
 
-  if (clip.rotation !== 0 || scale.x !== 1 || scale.y !== 1) {
+  if (clip.rotate !== 0 || scale.x !== 1 || scale.y !== 1) {
     matrix
       .translate(-halfWidth, -halfHeight)
       .scale(scale.x, scale.y)
-      .rotate((clip.rotation * Math.PI) / 180)
+      .rotate((clip.rotate * Math.PI) / 180)
       .translate(halfWidth, halfHeight)
   }
 
@@ -40,7 +40,7 @@ export const getClipTransformMatrix = (clip: pub.VideoClip, withVideoRotation: b
     if (dx !== 0 || dy !== 0) matrix.translate(dx / 2, dy / 2)
   }
 
-  if (position.x !== 0 || position.y !== 0) matrix.translate(position.x, position.y)
+  if (translate.x !== 0 || translate.y !== 0) matrix.translate(translate.x, translate.y)
 
   return matrix
 }
