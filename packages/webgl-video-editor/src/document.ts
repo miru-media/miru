@@ -186,14 +186,11 @@ export class Document implements pub.Document {
       })
     }
 
-    createChildren(this.timeline, content.tracks)
+    createChildren(this.timeline, content.timeline.children)
   }
 
   toJSON(): Schema.SerializedDocument {
-    const serialize = <
-      T extends (Schema.AnyNode | Schema.AnyAssetSchema)['type'],
-      TN extends Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
-    >(
+    const serialize = <T extends Schema.AnyNode['type'], TN extends Extract<pub.AnyNode, { type: T }>>(
       node: TN,
     ): Extract<Schema.AnyNodeSerializedSchema, ReturnType<TN['toJSON']>> => {
       const json = node.toJSON()
@@ -202,13 +199,11 @@ export class Document implements pub.Document {
       return serialized as Extract<Schema.AnyNodeSerializedSchema, ReturnType<TN['toJSON']>>
     }
 
-    const { assets: _assets, timeline, resolution, frameRate } = this
-
     return {
-      resolution,
-      frameRate,
-      assets: Array.from(_assets.values()).map(serialize),
-      tracks: timeline.children.map(serialize),
+      resolution: this.resolution,
+      frameRate: this.frameRate,
+      assets: Array.from(this.assets.values()).map((asset) => asset.toJSON()),
+      timeline: serialize(this.timeline),
     }
   }
 

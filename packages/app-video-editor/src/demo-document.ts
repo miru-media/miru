@@ -139,7 +139,7 @@ export const demoDoc = createInitialDocument()
 demoDoc.resolution = { width: 1080, height: 1920 }
 demoDoc.frameRate = 24
 demoDoc.assets = Object.values(assets)
-demoDoc.tracks.push(
+demoDoc.timeline.children.push(
   {
     id: uid(),
     type: 'track',

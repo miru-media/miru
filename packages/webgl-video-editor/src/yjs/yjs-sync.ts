@@ -288,7 +288,7 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
       // effects are stored in YArrays although we only ever have one atm
       case 'effects': {
         const yeffects = ynode.get('effects') as Y.Array<Y.Map<unknown>>
-        const firstEffect = node.effects?.[0]
+        const firstEffect = node.effects.at(0)
 
         if (firstEffect) {
           let ymap = yeffects.get(0) as Y.Map<unknown> | undefined
@@ -355,7 +355,7 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
 
     return {
       ...(this.settingsYmap.toJSON() as Schema.DocumentSettings),
-      tracks: serialize<Schema.SerializedTimeline>(this.doc.timeline.id).children,
+      timeline: serialize(this.doc.timeline.id),
     }
   }
 

@@ -6,10 +6,8 @@ import type { AssetLoader } from '#core'
 import { Document } from '../src/document.ts'
 import type { FileSystemStorage } from '../src/storage/file-system-storage.ts'
 
+import { docWithTracks } from './test-content.ts'
 import { makeAvAsset, makeTrack, makeVideoClip } from './utils.ts'
-
-const resolution = { width: 100, height: 100 }
-const frameRate = 25
 
 vi.mock('../src/storage/file-system-storage.ts', () => {
   const FileSystemStorage = vi.fn(
@@ -25,7 +23,7 @@ vi.mock('../src/storage/file-system-storage.ts', () => {
 })
 
 test('creating a new media asset from user-selected file saves it to FS storage', async () => {
-  using doc = new Document({ resolution, frameRate })
+  using doc = new Document({})
   const fileStorage = vi.mocked((doc.assets as FileSystemAssetStore).fileStorage)
 
   const blob_ = new Blob([new ArrayBuffer(1)])
@@ -38,14 +36,11 @@ test('creating a new media asset from user-selected file saves it to FS storage'
   loaders.length = 0
   loaders.push(mockLoader)
 
-  doc.importFromJson({
-    resolution,
-    frameRate,
-    assets: [],
-    tracks: [
+  doc.importFromJson(
+    docWithTracks([
       makeTrack('track-0', 'audio', [makeVideoClip({ id: 'clip-0', mediaRef: { assetId: 'asset-0' } })]),
-    ],
-  })
+    ]),
+  )
 
   fileStorage.hasCompleteFile.mockResolvedValue(false)
   fileStorage.get.mockResolvedValue(new File([], '---'))

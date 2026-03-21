@@ -10,6 +10,7 @@ import { NodeView } from '../src/document-views/node-view.ts'
 import { Document } from '../src/document.ts'
 import * as events from '../src/events.ts'
 
+import { docWithTracks } from './test-content.ts'
 import { makeAudioClip, makeTrack, makeVideoClip } from './utils.ts'
 
 class TestView extends NodeView<TestDocument, any> {
@@ -46,7 +47,7 @@ const viewMarkerMatcher = expect.objectContaining({ _is_edit_view: true })
 beforeEach(() => {
   doc = new Document({})
   doc.on('node:update', onDocUpdate)
-  doc.importFromJson({ resolution: { width: 1, height: 1 }, frameRate: 1, assets: [], tracks: [trackInit] })
+  doc.importFromJson(docWithTracks([trackInit]))
 
   editDoc = new EditDocument(doc)
   testDoc = new TestDocument(editDoc)

@@ -24,6 +24,7 @@ interface DocumentSettings {
   }
   /** The frames per second of the video */
   frameRate: number
+  metadata?: Record<string, unknown>
 }
 
 export interface Timeline extends Base {
@@ -132,5 +133,5 @@ export type AnyNodeSerializedSchema = SerializedTimeline | SerializedTrack | Ser
 
 export interface SerializedDocument extends DocumentSettings {
   assets: (MediaAsset | VideoEffectAsset)[]
-  tracks: SerializedTrack[]
+  timeline: SerializedTimeline
 }

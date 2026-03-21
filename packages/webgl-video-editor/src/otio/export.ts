@@ -2,20 +2,42 @@ import type * as pub from '#core'
 import type { Schema } from '#core'
 import { Rational } from 'shared/utils'
 
-export const documentToOTIO = (doc: pub.Document) => {
-  const serialize = <T extends (Schema.AnyNode | Schema.AnyAssetSchema)['type']>(
-    node: Extract<pub.AnyNode | pub.AnyAsset, { type: T }>,
-  ): Record<string, any> => {
-    if ('children' in node) {
-      return {
-        ...nodeOrAssetToOTIO(node),
-        children: node.children.map(serialize),
-      }
+export namespace Otio {
+  export interface TimelineDocument {
+    OTIO_SCHEMA: 'Timeline.1'
+    metadata?: {
+      [index: string]: unknown
+      Miru: Schema.DocumentSettings & { assets: Schema.AnyAssetSchema[] }
     }
-
-    return nodeOrAssetToOTIO(node)
+    name: ''
+    global_start_time: null
+    tracks: TimelineStack
   }
 
+  export interface BaseItem<T extends string = string> {
+    OTIO_SCHEMA: T
+    name: string
+    enabled: boolean
+    color: string | null
+    metadata: {
+      [index: string]: unknown
+      Miru?: { [index: string]: unknown; id: string; type: string }
+    }
+    effects: {
+      [index: string]: any
+      OTIO_SCHEMA: 'Effect.1'
+      name: string
+      effect_name: string
+      metadata: { [index: string]: unknown; Miru?: Record<string, any> }
+    }[]
+  }
+  export type TimelineStack = ReturnType<typeof timelineStack>
+  export type Track = ReturnType<typeof track>
+  export type Clip = ReturnType<typeof baseClip>
+  export type Gap = ReturnType<typeof gap>
+}
+
+export const documentToOTIO = (doc: pub.Document): Otio.TimelineDocument => {
   const settings: Schema.DocumentSettings = {
     resolution: doc.resolution,
     frameRate: doc.frameRate,
@@ -24,54 +46,36 @@ export const documentToOTIO = (doc: pub.Document) => {
   return {
     OTIO_SCHEMA: 'Timeline.1',
     metadata: {
+      ...settings.metadata,
       Miru: {
         ...settings,
-        assets: Array.from(doc.assets.values()).map(serialize),
+        assets: Array.from(doc.assets.values()).map((asset) => asset.toJSON()),
       },
     },
     name: '',
     global_start_time: null,
-    tracks: serialize(doc.timeline),
+    tracks: timelineStack(doc.timeline),
   }
 }
 
-const nodeOrAssetToOTIO = <T extends pub.AnyNode | pub.AnyAsset>(item: T) => {
-  switch (item.type) {
-    case 'timeline':
-      return timeline(item)
-    case 'track':
-      return track(item)
-    case 'clip':
-      return item.clipType === 'audio' ? audioClip(item) : videoClip(item)
-    case 'gap':
-      return gap(item)
-    case 'asset:effect:video':
-    case 'asset:media:av':
-      return item.toJSON()
-  }
-}
+const baseNode = <T extends pub.AnyNode, TO extends string>(node: T, OTIO_SCHEMA: TO): Otio.BaseItem<TO> => ({
+  OTIO_SCHEMA,
+  name: node.name ?? '',
+  enabled: node.enabled,
+  color: node.color ?? null,
+  effects: node.effects.map((effect): any => ({
+    OTIO_SCHEMA: 'Effect.1',
+    name: effect.assetId,
+    effect_name: effect.assetId,
+    metadata: { Miru: effect },
+  })),
+  metadata: { ...node.metadata, Miru: { id: node.id, type: node.type } },
+})
 
-const baseNode = <T extends pub.AnyNode>(node: T, OTIO_SCHEMA = '') => {
-  const { metadata, ...json } = node.toJSON() as ReturnType<T['toJSON']>
-
-  return {
-    OTIO_SCHEMA,
-    name: node.name,
-    enabled: node.enabled,
-    color: node.color,
-    effects: node.effects.map((effect): any => ({
-      OTIO_SCHEMA: 'Effect.1',
-      name: effect.assetId,
-      effect_name: effect.assetId,
-      metadata: { Miru: effect },
-    })),
-    metadata: { ...metadata, Miru: json },
-  }
-}
-
-const timeline = (node: pub.Timeline) => ({
+const timelineStack = (node: pub.Timeline) => ({
   ...baseNode(node, 'Stack.1'),
   name: 'tracks',
+  children: node.children.map(track),
 })
 
 const track = (node: pub.Track) => {
@@ -85,9 +89,10 @@ const track = (node: pub.Track) => {
       start_time: new Rational(0, frameRate).toOTIO(),
     },
     kind: node.isAudio() ? 'Audio' : 'Video',
+    children: node.children.map((child) => (child.type === 'clip' ? anyClip(child) : gap(child))),
   }
 }
-const trackChild = <T extends pub.AnyTrackChild>(node: T, schemaName: string) => {
+const trackChild = <T extends pub.AnyTrackChild, TO extends string>(node: T, schemaName: TO) => {
   const { duration, source } = node.timeRational
 
   return {
@@ -100,7 +105,7 @@ const trackChild = <T extends pub.AnyTrackChild>(node: T, schemaName: string) =>
   }
 }
 
-const clip = <T extends pub.AnyClip>(node: T) => {
+const baseClip = <T extends pub.AnyClip>(node: T) => {
   const { asset } = node
 
   return {
@@ -124,7 +129,7 @@ const clip = <T extends pub.AnyClip>(node: T) => {
 }
 
 const audioClip = (node: pub.AudioClip) => {
-  const otio = clip(node)
+  const otio = baseClip(node)
 
   otio.effects.unshift({
     OTIO_SCHEMA: 'Effect.1',
@@ -138,8 +143,8 @@ const audioClip = (node: pub.AudioClip) => {
 }
 
 const videoClip = (node: pub.VideoClip) => {
-  const otio = clip(node)
-  const json = otio.metadata.Miru
+  const otio = baseClip(node)
+  const json = otio.metadata.Miru as Partial<Schema.VideoClip>
 
   if (!!json.translate || !!(json.rotate ?? 0) || !!json.scale) {
     // https://github.com/AcademySoftwareFoundation/OpenTimelineIO/discussions/1794
@@ -159,5 +164,7 @@ const videoClip = (node: pub.VideoClip) => {
 
   return otio
 }
+
+const anyClip = (node: pub.AnyClip) => (node.clipType === 'audio' ? audioClip(node) : videoClip(node))
 
 const gap = (node: pub.Gap) => trackChild(node, 'Gap.1')

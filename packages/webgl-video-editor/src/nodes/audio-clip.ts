@@ -28,5 +28,4 @@ export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
 
     return obj
   }
-
 }

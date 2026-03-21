@@ -4,6 +4,7 @@ import { DocumentView } from '../src/document-views/document-view.ts'
 import { NodeView } from '../src/document-views/node-view.ts'
 import { Document } from '../src/document.ts'
 
+import { docWithTracks } from './test-content.ts'
 import { makeAudioClip, makeTrack } from './utils.ts'
 
 class TestView extends NodeView<TestDocument, any> {
@@ -27,7 +28,7 @@ const trackInit = makeTrack('test-track', 'audio', [clipInit])
 
 beforeEach(() => {
   doc = new Document({})
-  doc.importFromJson({ resolution: { width: 1, height: 1 }, frameRate: 1, assets: [], tracks: [trackInit] })
+  doc.importFromJson(docWithTracks([trackInit]))
   testDoc = new TestDocument(doc)
 })
 

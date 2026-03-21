@@ -43,5 +43,4 @@ export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
 
     return obj
   }
-
 }

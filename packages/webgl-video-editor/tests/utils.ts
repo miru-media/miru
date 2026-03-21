@@ -1,15 +1,21 @@
 import type { Schema } from '#core'
 import type { Base } from '#schema'
 
-const makeBase = <T extends string>(id: string, type: T): Base & { type: T } => ({
+const makeBase = <T extends string>(id: string, type: T): Omit<Base, 'type'> & { type: T } => ({
   id,
   type,
   name: '',
   enabled: true,
   effects: [],
+  color: undefined,
   metadata: {},
 })
 
+export const makeTimeline = (children: Schema.SerializedTimeline['children']): Schema.SerializedTimeline => ({
+  ...makeBase('timeline', 'timeline'),
+  id: 'timeline',
+  children,
+})
 export const makeTrack = (
   id: string,
   trackType: Schema.SerializedTrack['trackType'],
@@ -43,6 +49,11 @@ export const makeAudioClip = (
 ): Schema.AudioClip => ({
   ...makeBaseClip(init.id, 'audio'),
   ...init,
+})
+
+export const makeGap = (id: string, duration = 1) => ({
+  ...makeBase(id, 'gap'),
+  duration: { value: duration, rate: 1 },
 })
 
 export const makeAvAsset = (id: string, duration: number, uri?: string): Schema.MediaAsset => ({

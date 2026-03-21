@@ -1,0 +1,235 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OTIO export is as expected 1`] = `
+{
+  "OTIO_SCHEMA": "Timeline.1",
+  "global_start_time": null,
+  "metadata": {
+    "Miru": {
+      "assets": [],
+      "frameRate": 25,
+      "resolution": {
+        "height": 1920,
+        "width": 1080,
+      },
+    },
+  },
+  "name": "",
+  "tracks": {
+    "OTIO_SCHEMA": "Stack.1",
+    "children": [
+      {
+        "OTIO_SCHEMA": "Track.1",
+        "children": [
+          {
+            "OTIO_SCHEMA": "Clip.1",
+            "color": null,
+            "effects": [],
+            "enabled": true,
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "available_range": null,
+              "metadata": {
+                "Miru": undefined,
+              },
+              "name": "",
+              "target_url": null,
+            },
+            "metadata": {
+              "Miru": {
+                "id": "clip-0-0",
+                "type": "clip",
+              },
+            },
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 1,
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 0,
+              },
+            },
+          },
+          {
+            "OTIO_SCHEMA": "Clip.1",
+            "color": null,
+            "effects": [],
+            "enabled": true,
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "available_range": null,
+              "metadata": {
+                "Miru": undefined,
+              },
+              "name": "",
+              "target_url": null,
+            },
+            "metadata": {
+              "Miru": {
+                "id": "clip-0-1",
+                "type": "clip",
+              },
+            },
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 1,
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 0,
+              },
+            },
+          },
+        ],
+        "color": null,
+        "effects": [],
+        "enabled": true,
+        "kind": "Video",
+        "metadata": {
+          "Miru": {
+            "id": "track-0",
+            "type": "track",
+          },
+        },
+        "name": "",
+        "source_range": {
+          "OTIO_SCHEMA": "TimeRange.1",
+          "duration": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 25,
+            "value": 50,
+          },
+          "start_time": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 25,
+            "value": 0,
+          },
+        },
+      },
+      {
+        "OTIO_SCHEMA": "Track.1",
+        "children": [
+          {
+            "OTIO_SCHEMA": "Clip.1",
+            "color": null,
+            "effects": [
+              {
+                "OTIO_SCHEMA": "Effect.1",
+                "effect_name": "AudioGain",
+                "gain": 1,
+                "metadata": {
+                  "Miru": {
+                    "id": "volume",
+                  },
+                },
+                "name": "AudioGain",
+              },
+            ],
+            "enabled": true,
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "available_range": null,
+              "metadata": {
+                "Miru": undefined,
+              },
+              "name": "",
+              "target_url": null,
+            },
+            "metadata": {
+              "Miru": {
+                "id": "clip-1-0",
+                "type": "clip",
+              },
+            },
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 1,
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 0,
+              },
+            },
+          },
+          {
+            "OTIO_SCHEMA": "Gap.1",
+            "color": null,
+            "effects": [],
+            "enabled": true,
+            "metadata": {
+              "Miru": {
+                "id": "gap-0-1",
+                "type": "gap",
+              },
+            },
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 1,
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 1,
+                "value": 0,
+              },
+            },
+          },
+        ],
+        "color": null,
+        "effects": [],
+        "enabled": true,
+        "kind": "Audio",
+        "metadata": {
+          "Miru": {
+            "id": "track-1",
+            "type": "track",
+          },
+        },
+        "name": "",
+        "source_range": {
+          "OTIO_SCHEMA": "TimeRange.1",
+          "duration": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 25,
+            "value": 25,
+          },
+          "start_time": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 25,
+            "value": 0,
+          },
+        },
+      },
+    ],
+    "color": null,
+    "effects": [],
+    "enabled": true,
+    "metadata": {
+      "Miru": {
+        "id": "timeline",
+        "type": "timeline",
+      },
+    },
+    "name": "tracks",
+  },
+}
+`;

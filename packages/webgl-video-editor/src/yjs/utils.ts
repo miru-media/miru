@@ -50,35 +50,40 @@ export const initYjsRoot = (
   return { ytree, settings: settignsYmap, ydoc: settignsYmap.doc! }
 }
 
-export const createYnodeFromJson = (init: Schema.AnyNode): Y.Map<unknown> =>
-  new Y.Map(
-    Object.entries(init)
-      .filter(([key]) => key !== 'children')
-      .map(([key, value]) => {
-        let yjsValue
-        switch (key) {
-          // effects are stored in YArrays although we never use more than one effect atm
-          case 'effects':
-            yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['effects']) ?? [])
-            break
-          // TODO:
-          case 'markers':
-            yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['markers']) ?? [])
-            break
-          // metadata is stored as a YMap of values
-          case 'metadata':
-            yjsValue = new Y.Map(Object.entries((value as typeof init.metadata) ?? {}))
-            break
-          default:
-            yjsValue =
-              typeof value === 'object' && value != null && 'toJSON' in value
-                ? (value.toJSON as () => any)()
-                : value
-        }
+const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void => {
+  Object.entries(init)
+    .filter(([key]) => key !== 'children')
+    .forEach(([key, value]) => {
+      let yjsValue
+      switch (key) {
+        // effects are stored in YArrays although we never use more than one effect atm
+        case 'effects':
+          yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['effects']) ?? [])
+          break
+        // TODO:
+        case 'markers':
+          yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['markers']) ?? [])
+          break
+        // metadata is stored as a YMap of values
+        case 'metadata':
+          yjsValue = new Y.Map(Object.entries((value as typeof init.metadata) ?? {}))
+          break
+        default:
+          yjsValue =
+            typeof value === 'object' && value != null && 'toJSON' in value
+              ? (value.toJSON as () => any)()
+              : value
+      }
 
-        return [key, yjsValue]
-      }),
-  )
+      ynode.set(key, yjsValue)
+    })
+}
+
+export const createYnodeFromJson = (init: Schema.AnyNode): Y.Map<unknown> => {
+  const ymap = new Y.Map()
+  updateYnodeFromJson(ymap, init)
+  return ymap
+}
 
 export const initYmapFromJson = ({
   root,
@@ -91,7 +96,7 @@ export const initYmapFromJson = ({
 }): void => {
   const ydoc = 'doc' in root ? root.doc : root
 
-  const init = () => {
+  const init = (): void => {
     const { ytree, settings } = initYjsRoot(root)
 
     const addNodeAndChildren = (parentKey: string, init: Schema.AnyNodeSerializedSchema) => {
@@ -110,7 +115,8 @@ export const initYmapFromJson = ({
       })
     }
 
-    content.tracks.forEach((track) => addNodeAndChildren(TIMELINE_ID, track))
+    updateYnodeFromJson(ytree.getNodeValueFromKey('timeline') as Y.Map<unknown>, content.timeline)
+    content.timeline.children.forEach((track) => addNodeAndChildren(TIMELINE_ID, track))
 
     // update doc settings
     const { resolution, frameRate } = content

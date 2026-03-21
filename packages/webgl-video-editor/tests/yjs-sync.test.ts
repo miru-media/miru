@@ -8,7 +8,7 @@ import type { VideoClip } from '#nodes'
 import { Rational } from 'shared/utils/math.ts'
 import { initYjsRoot, YjsSync } from 'webgl-video-editor/yjs'
 
-import { makeTrack, makeVideoClip } from './utils.ts'
+import { makeTimeline, makeTrack, makeVideoClip } from './utils.ts'
 
 let ydoc: Y.Doc
 let sync: YjsSync
@@ -67,7 +67,7 @@ test('populates document from Yjs data', () => {
     resolution: { width: 1, height: 2 },
     frameRate: 60,
     assets: [],
-    tracks: [trackInit],
+    timeline: makeTimeline([trackInit]),
   } satisfies Schema.SerializedDocument)
 })
 
