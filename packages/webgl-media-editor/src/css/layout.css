@@ -137,6 +137,7 @@ fieldset {
   /* reset: all */
   min-inline-size: min-content !important;
   min-inline-size: 0 !important;
+  border: none;
 }
 
 legend {
