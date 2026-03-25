@@ -44,6 +44,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
     //   label: '16:9',
     // },
   ]
+  
 
   // const duplicatedRatio = ratios.find((item) => item.value === originalAspectRatio.value)
 
@@ -61,7 +62,13 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             }}
             disabled={() => aspectRatio.value === 1 / aspectRatio.value}
           >
-            <IconTablerRotateClockwise class={styles['miru--button__icon']} />
+            {()=>{
+                if(tilt.value === 'portrait'){
+                  return  <IconTablerDeviceMobile class={styles['miru--button__icon']} />
+                }
+                return  <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} />
+              }}
+            {/* <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} /> */}
             <span class={styles['miru--button__label']}>
               {() => tilt.value[0].toUpperCase() + tilt.value.slice(1)}
             </span>
