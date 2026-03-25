@@ -881,9 +881,9 @@ iframe {
   height: 100dvh;
 }
 
-:focus-visible, label:has(:focus-visible){
+:focus-visible, label:has([type="file"]:focus-visible){
   outline: 4px solid white;
 }
-label:has(:focus-visible) :focus-visible{
+label:has([type="file"]:focus-visible) [type="file"]:focus-visible{
   outline: none;
 }
