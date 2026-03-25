@@ -34,9 +34,15 @@
     height: 100%;
     min-height: 0;
 
-    .cropper-drag-box {
+    /* .cropper-drag-box {
       opacity: 1;
-    }
+    } */
+
+    /* &>div {
+      opacity: 0.25 !important;
+      width: 100% !important;
+      height: 100% !important;
+    } */
   }
 }
 
