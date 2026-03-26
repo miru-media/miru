@@ -17,6 +17,9 @@
   /* COLOR SCHEMES */
   color-scheme: light dark;
 
+  /* FOCUS */
+  /* --foc-med: light-dark() */
+
   /* FONT COLORS */
   --fnt-dark: light-dark(hsl(0, 0%, 100%), hsl(220, 5%, 2%));
   --fnt-light: light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));

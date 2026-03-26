@@ -70,15 +70,11 @@
       object-fit: cover;
     }
 
-    /* BUTTON ACTIVE AND HOVER */
-    &.miru--acc,
-    &:has(input:checked) {
+    /* BUTTON HOVER */
+    
+    /* &.miru--hov:not(.miru--acc, &:has(input:checked)) {
       border: 2px solid;
-    }
-
-    &.miru--hov:not(.miru--acc, &:has(input:checked)) {
-      border: 2px solid;
-    }
+    } */
 
     /* &:not(.miru--hov):not(.miru--acc) canvas{
         height: calc(100% - 1.75rem) ;

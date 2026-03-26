@@ -101,7 +101,7 @@
   /* MENU BUTTON ROW SCROLLABLE */
   .miru--menu__row--scroll {
     grid-auto-columns: 1fr;
-    gap: var(--gap-default);
+    /* gap: var(--gap-default); */
     justify-content: unset;
     height: var(--height-menu-row-scroll);
     padding-top: var(--gap-default);
