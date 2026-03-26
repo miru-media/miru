@@ -12,26 +12,23 @@
   justify-self: center;
   width: 100%;
   height: calc(100% - 2 * var(--gap-default));
-  background-clip: padding-box;
-  border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
-    transparent;
+  background-clip: content-box;
+  border-top: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid transparent;
   border-right: var(--gap-default) solid transparent;
-  border-bottom: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid
-    transparent;
+  border-bottom: calc(var(--height-menu-row) / 2 - var(--height-slider) / 2 - var(--gap-default)) solid transparent;
   border-left: var(--gap-default) solid transparent;
   border-radius: 0.1em;
 
   &::-moz-range-thumb {
     width: var(--width-slider-thumb);
   }
+  &::-webkit-slider-thumb {
+    width: var(--width-slider-thumb);
+  }
 
   &:focus-visible {
     outline: solid currentcolor !important;
   }
-}
-
-::-webkit-slider-thumb {
-  width: var(--width-slider-thumb) !important;
 }
 
 .miru--slider-label {
@@ -46,6 +43,7 @@ datalist {
 }
 
 datalist + div {
+  pointer-events: none;
   position: absolute;
   top: 2px;
   display: block !important;
