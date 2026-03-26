@@ -1,0 +1,51 @@
+{
+  "name": "website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpx @11ty/eleventy",
+    "build-nocolor": "cross-env NODE_DISABLE_COLORS=1 pnpx @11ty/eleventy",
+    "build-ghpages": "pnpx @11ty/eleventy --pathprefix=/eleventy-base-blog/",
+    "start": "pnpx @11ty/eleventy --serve --quiet",
+    "start-ghpages": "pnpx @11ty/eleventy --pathprefix=/eleventy-base-blog/ --serve --quiet",
+    "debug": "cross-env DEBUG=Eleventy* pnpx @11ty/eleventy",
+    "debugstart": "cross-env DEBUG=Eleventy* pnpx @11ty/eleventy --serve --quiet",
+    "benchmark": "cross-env DEBUG=Eleventy:Benchmark* pnpx @11ty/eleventy"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.5",
+    "@11ty/eleventy-img": "^6.0.4",
+    "@11ty/eleventy-navigation": "^1.0.5",
+    "@11ty/eleventy-plugin-rss": "^3.0.0",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
+    "@11ty/eleventy-plugin-vite": "7.1.0-alpha.2",
+    "@types/luxon": "^3.7.1",
+    "cross-env": "^10.1.0",
+    "luxon": "^3.7.2",
+    "markdown-it-attrs": "^4.3.1",
+    "prism-themes": "^1.9.0",
+    "prismjs": "^1.30.0",
+    "vue-router": "^5.0.4",
+    "zod": "^4.3.6",
+    "zod-validation-error": "^5.0.0"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "catalog:",
+    "@gltf-transform/extensions": "catalog:",
+    "@gltf-transform/functions": "catalog:",
+    "@vueuse/core": "catalog:",
+    "@zachleat/heading-anchors": "^1.0.5",
+    "app-video-editor": "workspace:^",
+    "base64-js": "catalog:",
+    "bulma": "^1.0.4",
+    "gltf-ar-effects": "workspace:^",
+    "media-trimmer": "workspace:^",
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^",
+    "webgl-video-editor": "workspace:^",
+    "y-indexeddb": "catalog:",
+    "y-webrtc": "catalog:",
+    "yjs": "catalog:"
+  }
+}

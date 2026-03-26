@@ -13,32 +13,25 @@ npm install webgl-video-editor
 ```html
 <!-- after importing the library, the <video-editor> custom element will be defined -->
 <video-editor id="trimmer" source="video.mp4"></video-editor>
-
-<button id="export" type="buton">Get trimmed video</button>
+<button id="export" type="buton">Render video</button>
 
 <script>
   import 'webgl-video-editor'
 
   const editor = document.getElementById('editor')
 
-  async function restoreFromLocalStorage() {
-    try {
-      const savedJson = localStorage.getItem(docContentKey)
+  // Render and encode the video composition
+  button.addEventListener('click', async () => {
+    const blob = await editor.export()
 
-      if (savedJson) {
-        const parsed = JSON.parse(savedJson)
-        return editor.importJson(parsed)
-      }
-    } catch (error) {
-      console.error(error)
-    }
-  }
+    const anchor = document.createElement('a')
+    const blobUrl = URL.createObjectURL(blob)
 
-  restoreFromLocalStorage()
-
-  // save to localStorage when the content changes
-  editor.addEventListener('change', function (event) {
-    localStorage.setItem(docContentKey, JSON.stringify(event.detail))
+    anchor.href = blobUrl
+    anchor.target = '_blank'
+    anchor.download = 'trimmed.webm'
+    anchor.dispatchEvent(new MouseEvent('click'))
+    URL.revokeObjectURL(blobUrl)
   })
 </script>
 ```

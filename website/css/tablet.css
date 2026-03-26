@@ -1,0 +1,62 @@
+@media screen and (width <= 1199px) {
+  .image-wide {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media screen and (width <= 1056px) {
+  .page-container {
+    max-width: 728px;
+    padding: 0 24px;
+  }
+
+  .heading.hero {
+    max-width: 100%;
+  }
+
+  .button-group {
+    flex-shrink: 0;
+  }
+
+  .content {
+    margin: 0 16px;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    padding: 16px;
+  }
+
+  .nav-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    display: none;
+    padding: 12px 24px;
+    margin-top: 4px;
+    text-align: center;
+    background-color: var(--color-background);
+    border-radius: var(--radius-l);
+    box-shadow: 0 0 0 1px var(--color-border-level-2);
+
+    &.open {
+      display: block;
+    }
+  }
+
+  .grid {
+    &.gap-l {
+      gap: 16px;
+    }
+
+    &.gap-xl {
+      gap: 24px;
+    }
+  }
+
+  .nav-hamburger {
+    display: flex;
+  }
+}

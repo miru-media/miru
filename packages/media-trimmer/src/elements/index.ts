@@ -1,3 +1,1 @@
-import { MediaTrimmerElement } from './media-trimmer-element.jsx'
-
-export { MediaTrimmerElement }
+export { MediaTrimmerElement, TrimEvent } from './media-trimmer-element.jsx'

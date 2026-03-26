@@ -1,7 +1,7 @@
 <h1 align="center">
   <picture>
-    <source srcset="./docs/branding/logo/white-logo.svg" media="(prefers-color-scheme: dark)" height="170">
-    <img alt="Miru" src="./docs/branding/logo/dark-logo.svg" height="170" >
+    <source srcset="./website/content/media/logo/white-logo.svg" media="(prefers-color-scheme: dark)" height="170">
+    <img alt="Miru" src="./website/content/media/logo/dark-logo.svg" height="170" >
   </picture>
 </h1>
 
@@ -13,8 +13,8 @@
 [Miru](https://miru.media) is a set of modular, extensible Web platform tools and components for still image and multi-track video editing and state-of-the-art, real-time AR. Using WebGL, WebAssembly, and open source, mobile-optimized machine learning models, Miru will give people on the social web the tools to edit images and apply interactive effects to recorded video without compromising on privacy and transparency. Miru aims to provide intuitive and user-friendly UIs which developers can easily integrate into their Web apps regardless of the front-end frameworks they use.
 
 <p align="center">
-    <img src="./docs/public/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" height="320">
-    <img src="./docs/public/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" height="320">
+    <img src="./website/content/media/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" height="320">
+    <img src="./website/content/media/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" height="320">
 </p>
 
 <!-- #region main -->
@@ -53,7 +53,7 @@ vanilla JS or any major front-end framework like Vue or React.
   })
 
   // display the trimming progress
-  trimmer.addEventListener('progress', (event) => (progress.value = event.detail.progress))
+  trimmer.addEventListener('progress', (event) => (progress.value = event.trimmer.progress))
 </script>
 ```
 
@@ -65,12 +65,12 @@ We've outlined our development plans in our [roadmap here](https://miru.media/ro
 
 Miru's tools are published to npm as the following packages:
 
-| npm package                                                              | Description                                                      | Docs                              |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------- | --------------------------------- |
-| [`webgl-media-editor`](https://www.npmjs.com/package/webgl-media-editor) | A simple image editor with cropping, rotation, and WebGL filters | [docs](/guide/webgl-media-editor) |
-| [`media-trimmer`](https://www.npmjs.com/package/media-trimmer)           | A simple MP4 video trimmer using the WebCodecs API               | [docs](/guide/media-trimmer)      |
-| [`webgl-effects`](https://www.npmjs.com/package/webgl-effects)           | A library for applying filters and effects to images with WebGL2 |                                   |
-| [`webgl-video-editor`](https://www.npmjs.com/package/video-editor)       | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](/guide/webgl-video-editor) |
+| npm package                                                              | Description                                                      | Docs                                                |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------- | --------------------------------------------------- |
+| [`webgl-media-editor`](https://www.npmjs.com/package/webgl-media-editor) | A simple image editor with cropping, rotation, and WebGL filters | [docs](website/content/guide/webgl-media-editor.md) |
+| [`media-trimmer`](https://www.npmjs.com/package/media-trimmer)           | A simple MP4 video trimmer using the WebCodecs API               | [docs](website/content/guide/media-trimmer.md)      |
+| [`webgl-effects`](https://www.npmjs.com/package/webgl-effects)           | A library for applying filters and effects to images with WebGL2 |                                                     |
+| [`webgl-video-editor`](https://www.npmjs.com/package/video-editor)       | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](website/content/guide/webgl-video-editor.md) |
 
 <!-- #endregion main -->
 

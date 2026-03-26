@@ -68,16 +68,16 @@
   }
 
   /* CROPPER */
-  .cropper-container {
-    .cropper-view-box {
+  :global .cropper-container {
+    :global .cropper-view-box {
       outline-color: var(--color-crop-outline);
     }
 
-    .cropper-dashed {
+    :global .cropper-dashed {
       border-color: var(--color-crop-dashed);
     }
 
-    .cropper-drag-box {
+    :global .cropper-drag-box {
       background-color: var(--color-crop-overlay);
     }
   }

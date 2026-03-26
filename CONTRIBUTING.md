@@ -35,12 +35,12 @@ We use [Rollup](https://rollupjs.org/) to build our published libraries and Vite
 
 ```sh
 pnpm run libs:build
-pnpm run docs:build
+pnpm run website:build
 ```
 
 ## Project structure
 
-We use a monorepo structure with public internal packages in the `packages/` directory, and the source code of the project website in the `docs/` directory. For development and building, there are also some scripts in the `scripts/` directory.
+We use a monorepo structure with public internal packages in the `packages/` directory, and the source code of the project website in the `website/` directory. For development and building, there are also some scripts in the `scripts/` directory.
 
 ```text
 packages/
@@ -49,7 +49,7 @@ packages/
     webgl-video-editor/
     gltf-ar-effects/
     ...
-docs/
+website/
     index.md
     demos.md
     ar-effects.md

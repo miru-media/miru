@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { demoDoc } from './demo-document.ts'
 
-interface DocListItem {
+export interface DocListItem {
   id: string
   name: string
   url: string
@@ -10,36 +10,38 @@ interface DocListItem {
 
 const props = defineProps<{ docs: DocListItem[] }>()
 
-const emit = defineEmits<{ create: [title?: string, content?: any]; delete: [id: string] }>()
+const emit = defineEmits<{
+  open: [doc: DocListItem, event: Event]
+  create: [title?: string, content?: any]
+  delete: [id: string]
+}>()
 </script>
 
 <template>
-  <div class="root bulma-container">
+  <div class="root bulma-container prose dark:prose-invert">
     <div class="bulma-columns columns-container">
       <div class="bulma-column">
         <div class="bulma-content">
           <h1 class="text-center mb-4">Projects</h1>
         </div>
-        <ClientOnly>
-          <ul class="project-list">
-            <li v-for="{ id, name, url, createdAt } of props.docs" :key="id" class="project-list-item">
-              <a :href="url" class="project-card">
-                <div>{{ name }}</div>
-                <div class="text-[0.75em]">{{ new Date(createdAt).toLocaleString() }}</div>
-              </a>
-              <button class="project-delete" @click="() => emit('delete', id)">
-                <div class="i-tabler:trash" />
-                <div class="sr-only">{{ $t('delete') }}</div>
-              </button>
-            </li>
-          </ul>
-        </ClientOnly>
+        <ul class="project-list">
+          <li v-for="doc of props.docs" :key="doc.id" class="project-list-item">
+            <a :href="doc.url" class="project-card" @click="(event) => emit('open', doc, event)">
+              <div>{{ doc.name }}</div>
+              <div class="text-[0.75em]">{{ new Date(doc.createdAt).toLocaleString() }}</div>
+            </a>
+            <button class="project-delete" @click="() => emit('delete', doc.id)">
+              <div class="i-tabler:trash" />
+              <div class="sr-only">{{ $t('delete') }}</div>
+            </button>
+          </li>
+        </ul>
       </div>
       <div class="bulma-column">
         <div class="flex gap-1rem flex-col">
           <img
             alt="Video editing illustration"
-            src="../../../docs/branding/illustrations/2.svg"
+            src="../../../website/content/media/illustrations/2.svg"
             class="bulma-is-hidden-mobile max-w-20rem m-auto"
           />
           <button @click="() => emit('create')" class="create-button">

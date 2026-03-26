@@ -9,10 +9,10 @@ You can try out a demo effect at <https://miru.media/ar-effects>.
 
 ## Package contents
 
-| directory                                  | contents                                                                                                                                                                                            |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`src/transform`](./src/transform)         | [glTF Transform](https://gltf-transform.dev/) extensions for reading and writing asset files. These can be used to [programatically create effect files](../../docs/ar-effects-demo/sample-gltf.ts) |
-| [`src/three/loaders`](./src/three/loaders) | [Three.js glTF loader](https://threejs.org/docs/#examples/en/loaders/GLTFLoader) to load glTF effect files and run them in a browser.                                                               |
+| directory                                  | contents                                                                                                                                                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`src/transform`](./src/transform)         | [glTF Transform](https://gltf-transform.dev/) extensions for reading and writing asset files. These can be used to [programatically create effect files](../../website/content/ar-effects/sample-gltf.ts) |
+| [`src/three/loaders`](./src/three/loaders) | [Three.js glTF loader](https://threejs.org/docs/#examples/en/loaders/GLTFLoader) to load glTF effect files and run them in a browser.                                                                     |
 
 ## glTF JSON example
 

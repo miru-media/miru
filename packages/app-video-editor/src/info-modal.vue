@@ -9,8 +9,8 @@ const INFO_VERSION = 1
 const { current: currentLocale } = useI18n()
 const { state: ContentComponent, executeImmediate: updateContent } = useAsyncState(
   async () => {
-    if (currentLocale.value === 'de') return import('./info-modal-content.de.md').then((m) => m.default)
-    return import('./info-modal-content.en.md').then((m) => m.default)
+    if (currentLocale.value === 'de') return import('./info-modal-content.de.vue').then((m) => m.default)
+    return import('./info-modal-content.en.vue').then((m) => m.default)
   },
   undefined,
   { immediate: true },
@@ -34,7 +34,7 @@ watch(currentLocale, updateContent)
 <template>
   <dialog
     ref="dialog"
-    class="video-editor-info-modal bulma-modal"
+    class="video-editor-info-modal bulma-modal prose dark:prose-invert"
     @close="onCloseDialog"
     @cancel="onCloseDialog"
     style="color: var(--bulma-body-color)"
@@ -42,20 +42,20 @@ watch(currentLocale, updateContent)
     <content-component v-if="ContentComponent" class="bulma-modal-card">
       <template #header="{ title }">
         <div class="bulma-columns bulma-is-vcentered">
-          <div class="bulma-column bulma-content">
+          <div class="bulma-column">
             <h1 class="title" :aria-label="'Miru | ' + title">
               <picture>
                 <source
-                  srcset="../../../docs/branding/logo/white-logo.svg"
+                  srcset="../../../website/content/media/logo/white-logo.svg"
                   media="(prefers-color-scheme: dark)"
                 />
-                <img alt="logo" src="../../../docs/branding/logo/dark-logo.svg" class="logo" />
+                <img alt="logo" src="../../../website/content/media/logo/dark-logo.svg" class="logo" />
               </picture>
               {{ title }}
             </h1>
           </div>
           <div class="bulma-column">
-            <img src="../../../docs/branding/illustrations/2.svg" class="illustration" alt="" />
+            <img src="../../../website/content/media/illustrations/2.svg" class="illustration" alt="" />
           </div>
         </div>
       </template>
@@ -70,9 +70,11 @@ watch(currentLocale, updateContent)
   </dialog>
 </template>
 
-<style>
+<style scoped>
 .video-editor-info-modal {
   color-scheme: dark light;
+  align-items: stretch;
+
   &:focus {
     outline: none;
   }
@@ -98,10 +100,6 @@ watch(currentLocale, updateContent)
     max-height: 32vh;
     margin: auto;
     margin-top: -1rem;
-  }
-
-  .bulma-content {
-    margin: 0;
   }
 
   .task-list {

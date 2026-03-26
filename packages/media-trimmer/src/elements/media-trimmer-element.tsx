@@ -3,6 +3,7 @@ import { createEffectScope, ref } from 'fine-jsx'
 import { HTMLElementOrStub } from 'shared/utils'
 import { renderComponentTo } from 'shared/video/render-to'
 
+import styles from '../media-trimmer.module.css'
 import { trim } from '../trim.ts'
 import type { LoadInfo, TrimState } from '../types/ui.ts'
 import { VideoTrimmerUI } from '../video-trimmer-ui.jsx'
@@ -18,8 +19,10 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
   readonly #state = ref<TrimState>({ start: 0, end: 0, mute: false })
   #unmount?: () => void
   #disconnectTimeout?: ReturnType<typeof setTimeout>
+  progress = 0
   #isTrimming = false
-  #mediaInfo?: LoadInfo
+  duration = 0
+  hasAudio = false
 
   get source(): string | Blob | undefined {
     return this.#source.value
@@ -60,6 +63,8 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
     clearTimeout(this.#disconnectTimeout)
     if (this.#unmount) return
 
+    this.classList.add(styles.host)
+
     this.#unmount = this.#scope.run(() =>
       renderComponentTo(
         VideoTrimmerUI,
@@ -86,10 +91,10 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
 
     if (this.#isTrimming) throw new Error('[media-trimmer] Trim is already in progress.')
     if (source == null || source === '') throw new Error(`[media-trimmer]: Source media wasn't set.`)
-    if (!this.#mediaInfo) throw new Error(`[media-trimmer] Source isn't ready yet`)
+    if (!this.duration) throw new Error(`[media-trimmer] Source isn't ready yet`)
 
     this.#isTrimming = true
-    const { duration, hasAudio } = this.#mediaInfo
+    const { duration, hasAudio } = this
 
     try {
       if (start === 0 && end === duration && (!hasAudio || !mute))
@@ -99,27 +104,43 @@ export class MediaTrimmerElement extends HTMLElementOrStub {
         start,
         end,
         mute,
-        onProgress: (progress) => this.#dispatch('progress', { progress }),
+        onProgress: (progress) => {
+          this.progress = progress
+          this.#dispatch('progress')
+        },
       })
     } finally {
       this.#isTrimming = false
+      this.progress = 0
     }
   }
 
   #onLoad(info: LoadInfo) {
-    this.#mediaInfo = info
-    this.#dispatch('load', info)
+    this.duration = info.duration
+    this.hasAudio = info.hasAudio
+    this.#dispatch('load')
   }
   #onChange(state: TrimState) {
     this.#state.value = state
-    this.#dispatch('change', state)
+    this.#dispatch('change')
   }
   #onError(error: unknown) {
-    this.#dispatch('error', new ErrorEvent('error', { error }))
+    this.dispatchEvent(new ErrorEvent('error', { error }))
   }
 
-  #dispatch(type: string, detail: unknown) {
-    if (type === 'load') this.#mediaInfo = detail as LoadInfo
-    this.dispatchEvent(new CustomEvent(type, { detail }))
+  #dispatch(type: TrimEventType) {
+    this.dispatchEvent(new TrimEvent(type, this))
+  }
+}
+
+type TrimEventType = 'change' | 'load' | 'progress'
+
+export class TrimEvent extends Event {
+  declare readonly type: TrimEventType
+  declare readonly trimmer: MediaTrimmerElement
+
+  constructor(type: TrimEventType, trimmer: MediaTrimmerElement) {
+    super(type)
+    this.trimmer = trimmer
   }
 }

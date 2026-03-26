@@ -7,13 +7,14 @@ import { globalIgnores } from 'eslint/config'
 import eslintConfigLove from 'eslint-config-love'
 import importPlugin from 'eslint-plugin-import'
 import { jsdoc } from 'eslint-plugin-jsdoc'
+import globals from 'globals'
 import * as tseslint from 'typescript-eslint'
 
 const TS_JS_FILES = '**/*.{ts,tsx,js,jsx,cjs,mts,mjs}'
 
 export default tseslint.config(
   includeIgnoreFile(resolve('.gitignore')),
-  globalIgnores(['!docs/.vitepress', 'docs/.vitepress/cache', '**/auto-imports.d.ts']),
+  globalIgnores(['**/auto-imports.d.ts']),
   {
     files: [TS_JS_FILES],
     extends: [eslint.configs.recommended],
@@ -133,7 +134,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/**/*.{ts,tsx,js,jsx}'],
+    files: [`packages/${TS_JS_FILES}`],
     ignores: ['**/*.md/*'],
     rules: {
       'import/no-extraneous-dependencies': 'error',
@@ -144,7 +145,6 @@ export default tseslint.config(
   },
   {
     files: ['packages/*/tests/**', '**/*.test.{ts,tsx,js,jsx}'],
-    ignores: ['**/*.md/*'],
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -159,22 +159,24 @@ export default tseslint.config(
     },
   },
 
+  // markdown
   {
     files: ['**/*.md'],
     ignores: ['**/CHANGELOG.md'],
     extends: [markdown.configs.processor],
     language: 'markdown/gfm',
-  },
-  {
-    files: ['**/*.md/*'],
-    extends: [eslint.configs.recommended, tseslint.configs.stylistic, tseslint.configs.strict],
     languageOptions: {
-      parserOptions: {
-        projectService: false,
+      globals: {
+        ...globals.browser,
       },
     },
-    rules: {
-      'import/no-unresolved': 'off',
+  },
+  {
+    files: [`**/*.md/${TS_JS_FILES}`],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
     },
   },
 )

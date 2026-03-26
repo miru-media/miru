@@ -1,0 +1,13 @@
+---
+layout: layouts/base
+---
+
+<div class="background-gradient"></div>
+<a href="#main" id="skip-link" class="visually-hidden">Skip to main content</a>
+<div class="page-container">
+    {% include "../header.njk" %}
+    <main id="main" class="{{ pageClass }}">
+        {{ content | safe }}
+    </main>
+    {% include "../footer.njk" %}
+</div>

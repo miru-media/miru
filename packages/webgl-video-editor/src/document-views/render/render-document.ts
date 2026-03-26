@@ -4,7 +4,10 @@ import type * as pub from '../../../types/core'
 import type { SettingsUpdateEvent } from '../../events.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
 
+import { LutUploaderSystem } from './pixi-lut-source.ts'
 import { RenderTimeline, RenderTrack, RenderVideoClip } from './render-nodes.ts'
+
+Pixi.extensions.add(LutUploaderSystem)
 
 interface ViewTypeMap {
   timeline: RenderTimeline
@@ -59,12 +62,12 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
     const { renderer, gl, canvas } = this
     try {
       await renderer.init({ context: gl, canvas })
+      const { width, height } = this.doc.resolution
+      renderer.resize(width, height)
     } catch (error) {
       this.doc.emit(new ErrorEvent('error', { error }))
     }
 
-    const { width, height } = this.doc.resolution
-    renderer.resize(width, height)
     this.doc.on('settings:update', this.#onSettingsUpdate.bind(this), { signal: this._abort.signal })
   }
 

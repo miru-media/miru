@@ -1,0 +1,41 @@
+---
+layout: layouts/app
+title: Miru photo editor
+---
+
+<div class="fullscreen-app">
+  <div class="flex flex-col justify-center w-full h-full max-w-600px m-auto overflow-hidden gap-12px">
+    <div id="empty-state">
+      <img
+        src="/media/illustrations/3.svg"
+        alt=""
+        class="w-full min-h-0 max-w-50vw max-h-50vh block m-auto"
+      />
+      <div class="flex justify-center gap-10 p-10">
+        <button id="back-button" class="button tertiary">
+          <div class="i-tabler:chevron-left text-2rem"></div>
+          Back
+        </button>
+        <label id="file-button" class="button primary">
+          <div class="i-tabler:photo text-2rem"></div>
+          Choose an image
+          <input id="file-input" type="file" accept="image/*" class="max-w-0" hidden="hidden" />
+        </label>
+      </div>
+    </div>
+    <div id="editor-container" class="hidden h-full">
+      <media-editor id="editor" class="min-h-0 flex-1 h-full m-auto"></media-editor>
+      <div class="flex justify-between p-4">
+        <button id="cancel-button" class="button tertiary">
+          <div class="i-tabler:chevron-left text-2rem"></div>
+          Cancel
+        </button>
+        <button id="download-button" class="button primary">
+          <div class="i-tabler-download text-2rem"></div>
+          Download
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./index.ts"></script>

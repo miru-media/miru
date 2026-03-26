@@ -21,7 +21,7 @@ jobs:
         with:
           path: |
             node_modules/.remote-assets
-            docs/node_modules/.remote-assets
+            website/node_modules/.remote-assets
           key: ${{ runner.os }}-remote-assets
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -32,8 +32,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - run: pnpm vue-tsc -b tsconfig.check.json
+      - run: pnpm vue-tsc -b config/tsconfig.check.json
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm libs:build
-      - run: pnpm docs:build
+      - run: pnpm website:build

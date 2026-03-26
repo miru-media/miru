@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    // avoid errors in dependencies that publish original typescript files
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
-  }
-}

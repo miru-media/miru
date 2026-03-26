@@ -35,27 +35,27 @@ It also comes with a Web Component UI:
 <progress id="export-progress" max="1" />
 
 <script type="module">
-const trimmer = document.getElementById('trimmer')
-const button = document.getElementById('export')
-const progress = document.getElementById('export-progress')
+  const trimmer = document.getElementById('trimmer')
+  const button = document.getElementById('export')
+  const progress = document.getElementById('export-progress')
 
-// save the trimmed video to a file
-button.addEventListener('click', async () => {
-  const blob = await trimmer.toBlob()
+  // save the trimmed video to a file
+  button.addEventListener('click', async () => {
+    const blob = await trimmer.toBlob()
 
-  const anchor = document.createElement('a')
-  const blobUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    const blobUrl = URL.createObjectURL(blob)
 
-  anchor.href = blobUrl
-  anchor.target = '_blank'
-  anchor.download = 'trimmed.webm'
-  anchor.dispatchEvent(new MouseEvent('click'))
-  URL.revokeObjectURL(blobUrl)
-})
+    anchor.href = blobUrl
+    anchor.target = '_blank'
+    anchor.download = 'trimmed.webm'
+    anchor.dispatchEvent(new MouseEvent('click'))
+    URL.revokeObjectURL(blobUrl)
+  })
 
-// display the trimming progress
-trimmer.addEventListener('progress', (event) => progress.value = event.detail.progress)
-<script>
+  // display the trimming progress
+  trimmer.addEventListener('progress', (event) => (progress.value = event.detail.progress))
+</script>
 ```
 
 Powered by:

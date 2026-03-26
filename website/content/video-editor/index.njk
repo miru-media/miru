@@ -1,0 +1,64 @@
+---
+title: Video Editor
+layout: layouts/app
+---
+
+<script type="module" src="./index.ts"></script>
+<style>
+  .root {
+    color-scheme: dark;
+    color: var(--white-3);
+    padding-top: 1rem;
+  }
+  .columns-container {
+    margin: 0;
+  }
+  .project-list {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+  .project-list-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    font-size: 1.5rem;
+  }
+  .project-card,
+  .create-button {
+    display: flex;
+    gap: 0.675rem;
+    flex-grow: 1;
+    color: var(--white-3);
+    border-color: gray;
+    border-radius: 0.625rem;
+    padding: 0.675rem 0.875rem;
+    text-decoration: none;
+  }
+  .create-button {
+    align-items: center;
+    justify-content: center;
+    border-style: dashed;
+    border-width: 0.1875rem;
+    font-size: 1.25rem;
+    background-color: rgb(255 255 255 / 3%);
+  }
+  .project-card {
+    flex-direction: column;
+    border-style: solid;
+    background-color: rgb(29 107 228 / 10%);
+    border-color: rgb(29 107 228 / 40%);
+    outline-color: rgb(29 107 228);
+  }
+  .project-delete {
+    border-radius: 0.25rem;
+    font-size: 1.75rem;
+    &:focus-visible {
+      outline: solid currentColor;
+    }
+  }
+</style>

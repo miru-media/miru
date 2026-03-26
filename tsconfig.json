@@ -1,20 +1,16 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./config/tsconfig.base.json",
   "include": [
     "env.d.ts",
     "packages",
     "example",
     "scripts",
+    "config",
     "tools",
-    "docs",
-    "docs/.vitepress/**/*.ts",
+    "website",
     "./*.ts",
     "./*.js",
     "./*.cjs",
-    "./.*.cjs",
-    "**/*.md"
-  ],
-  "vueCompilerOptions": {
-    "vitePressExtensions": [".md"]
-  }
+    "./.*.cjs"
+  ]
 }

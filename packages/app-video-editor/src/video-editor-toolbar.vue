@@ -15,7 +15,7 @@ import { state } from './state'
 const { editor } = defineProps<{ editor: VideoEditor }>()
 
 const onInputVideoFile = async (event: Event) => {
-  const { target } = event as InputEvent
+  const { target: target } = event as InputEvent
   const file = target.files?.[0]
   if (!file) return
 

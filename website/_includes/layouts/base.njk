@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="{{ metadata.language }}" class="theme-dark">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ title or metadata.title }}</title>
+        <meta name="description" content="{{ description or metadata.description }}">
+        <link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="{{ metadata.title }}">
+        <link rel="icon" href="/favicon.svg" type="image/svg">
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <meta property="og:type" content="website">
+        <meta property="og:image" content="/og.png">
+        <meta
+        name="generator" content="{{ eleventy.generator }}">
+        {#- Add the contents of a file to the bundle #}
+        <style>
+            {% include "css/index.css" %}
+            {% include "css/tablet.css" %}
+            {% include "css/mobile.css" %}
+        </style>
+        {#- Render the CSS bundle using inlined CSS (for the fastest site performance in production) #}
+        <style>{% getBundle "css" %}</style>
+        <script eleventy:ignore>
+            function updateTheme() {
+                const {classList} = document.documentElement;
+                classList.remove('theme-light', 'theme-dark');
+                classList.add(
+                    this.matches
+                    ? 'theme-dark'
+                    : 'theme-light');
+            }
+            const query = matchMedia('(prefers-color-scheme: dark)')
+            updateTheme.call(query)
+            query.addEventListener('change', updateTheme)
+        </script>
+        {# handled by vite #}
+        <script type="module" src="/main.ts"></script>
+    </head>
+    <body>
+        {{ content | safe }}
+        <!-- This page `{{ page.url }}` was built on {% currentBuildDate %} -->
+        <script type="module" src="{% getBundleFileUrl 'js' %}"></script>
+    </body>
+</html>

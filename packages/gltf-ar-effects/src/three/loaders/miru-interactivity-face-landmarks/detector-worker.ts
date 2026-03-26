@@ -1,4 +1,5 @@
 import type * as MediaPipe from '@mediapipe/tasks-vision'
+import visionBundleUrl from '@mediapipe/tasks-vision?url'
 
 export interface WorkerInitData {
   type: 'INIT'
@@ -6,7 +7,6 @@ export interface WorkerInitData {
     wasmLoaderPath: string
     wasmBinaryPath: string
   }
-  mediaPipeTasksVisionUrl: string
   modelAssetPath: string
 }
 
@@ -55,6 +55,7 @@ Object.defineProperty(self, 'exports', {
   get: () => ({}),
   set: (ModuleFactory: unknown) => void ((self as any).ModuleFactory = ModuleFactory),
 })
+Object.defineProperty(self, 'import', { value: (url: string) => import(url) })
 
 const postMessage = (
   data: WorkerInitResponse | WorkerResultData | WorkerFetchProgressData | WorkerErrorData,
@@ -66,7 +67,7 @@ onmessage = async (event: MessageEvent<WorkerInitData | WorkerFrameData>) => {
 
   switch (data.type) {
     case 'INIT': {
-      const { wasmFileset, mediaPipeTasksVisionUrl, modelAssetPath } = data
+      const { wasmFileset, modelAssetPath } = data
 
       try {
         const response = await fetch(modelAssetPath)
@@ -93,9 +94,7 @@ onmessage = async (event: MessageEvent<WorkerInitData | WorkerFrameData>) => {
           .then(() => postMessage({ type: 'fetch-progress', progress: 1 }))
           .catch((error: unknown) => postMessage({ type: 'error', error }))
 
-        const { FaceLandmarker } = (await import(
-          /* @vite-ignore */ mediaPipeTasksVisionUrl
-        )) as typeof MediaPipe
+        const { FaceLandmarker } = (await import(visionBundleUrl)) as typeof MediaPipe
 
         const landmarker_ = await FaceLandmarker.createFromModelBuffer(wasmFileset, teedBody[1].getReader())
         await landmarker_.setOptions({

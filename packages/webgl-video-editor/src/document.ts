@@ -1,5 +1,4 @@
 import { computed, ref, type Ref } from 'fine-jsx'
-import * as Pixi from 'pixi.js'
 
 import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
@@ -9,14 +8,11 @@ import { AudioClip, Gap, VideoClip } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
-import { LutUploaderSystem } from './document-views/render/pixi-lut-source.ts'
 import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
 import { Timeline } from './nodes/timeline.ts'
 import { Track } from './nodes/track.ts'
 
 const SEEK_EVENT = new PlaybackSeekEvent()
-
-Pixi.extensions.add(LutUploaderSystem)
 
 class NodeMap implements pub.NodeMap {
   private readonly map = new Map<string, pub.AnyNode>()

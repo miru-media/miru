@@ -9,11 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-ssr
 *.local
-
-docs/.vitepress/dist
-docs/.vitepress/cache
 
 /types
 /coverage

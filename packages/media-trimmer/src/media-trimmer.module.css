@@ -2,8 +2,6 @@
 @import url('../../webgl-video-editor/src/css/clip.module.css');
 
 .videoTrimmer {
-  composes: host;
-
   display: flex;
   flex-direction: column;
   width: inherit;

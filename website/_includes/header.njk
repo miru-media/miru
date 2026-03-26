@@ -1,0 +1,23 @@
+<header class="nav-container">
+    <a href="/" class="nav-brand mt-[-6px]">
+        <img class="light-only" src="/media/logo/dark-logo.svg" style="width:auto;height:28px" alt="Miru home"/>
+        <img class="dark-only" src="/media/logo/white-logo.svg" style="width:auto;height:28px" alt="Miru home"/>
+    </a>
+    {#- Read more about `eleventy-navigation` at https://www.11ty.dev/docs/plugins/navigation/ #}
+    <nav role="navigation" class="nav-menu" data-navigation>
+        {%- for entry in collections.all | eleventyNavigation %}
+            <a href="{{ entry.url }}" {% if entry.url == page.url %} aria-current="page" {% endif %} class="nav-link">{{ entry.title }}</a>
+        {%- endfor %}
+    </nav>
+    <div class="button-group">
+        <a href="https://codeberg.org/miru-media/miru" class="button ghost compact hide-on-mobile" aria-label="Codeberg">
+            <div class="i-devicon-plain:codeberg text-1.5rem"></div>
+        </a>
+        <a href="https://github.com/miru-media/miru" class="button ghost compact hide-on-mobile" aria-label="Github">
+            <div class="i-mdi:github text-1.75rem"></div>
+        </a>
+        <button class="button ghost compact nav-hamburger" data-mobile-toggle aria-label="Show menu">
+            <span class="i-material-symbols:menu text-xl"></span>
+        </button>
+    </div>
+</header>
