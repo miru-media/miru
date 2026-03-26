@@ -75,8 +75,9 @@
       &:not(:has(input:checked)) {
         background-color: var(--sec-dark) !important;
       }
-      /* INACTIVE BUTTON HOOVER */
-      &:not(:has(input:checked)):hover {
+      /* INACTIVE BUTTON HOOVER, hover class for filter scroll pseudo hover */
+      &:not(:has(input:checked)):hover,
+      &:not(:has(input:checked)).miru--hov {
         background-color: var(--sec-light) !important;
         color: var(--fnt-dark);
       }
