@@ -10,32 +10,25 @@
   --size-button-icon: 1.25rem;
   --roundness-button: 0.25rem;
   --height-slider: 0.6rem;
-  --width-slider-thumb: .75rem;
-  --gap-default: .17rem;
+  --width-slider-thumb: 0.75rem;
+  --gap-default: 0.2rem;
   --gap-preview: 1rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;
 
   /* FOCUS */
-  --foc-med: 4px solid light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
+  --outline-focus: 4px solid light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
 
   /* FONT COLORS */
-  --fnt-dark: light-dark(hsl(0, 0%, 100%), hsl(220, 5%, 2%));
-  --fnt-light: light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
+  --text-soft: light-dark(hsl(0, 0%, 100%), hsl(220, 5%, 2%));
+  --text-strong: light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
 
-  /* PRIMARY COLORS */
-  --pri-dark: light-dark(hsl(206, 0%, 89%), hsl(206, 0%, 12%));
-  --pri-med: light-dark(hsl(206, 74%, 50%), hsl(206, 74%, 50%));
-  --pri-light: light-dark(hsl(206, 0%, 60%), hsl(206, 0%, 80%));
-
-  /* SECONDARY COLORS */
-  --sec-dark: light-dark(hsl(327, 0%, 89%), hsl(327, 0%, 12%));
-  --sec-med: light-dark(hsl(327, 99%, 37%), hsl(327, 99%, 37%));
-  --sec-light: light-dark(hsl(327, 0%, 60%), hsl(327, 0%, 80%));
-
-  /* TERTIARY COLORS */
-  --ter-dark: light-dark(hsl(204, 0%, 80%), hsl(204, 5%, 2%));
-  --ter-med: light-dark(hsl(204, 5%, 70%), hsl(204, 5%, 15%));
-  --ter-light: light-dark(hsl(204, 0%, 55%), hsl(204, 0%, 80%));
+  /* BACKGROUND COLORS */
+  --background-accent: light-dark(hsl(206, 74%, 50%), hsl(206, 74%, 50%));
+  --background-softer: light-dark(hsl(204, 0%, 80%), hsl(204, 5%, 2%));
+  --background-soft: light-dark(hsl(204, 5%, 70%), hsl(204, 5%, 15%));
+  --background-mid: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 37%));
+  --background-strong: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 60%));
+  --background-stronger: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 75%));
 }

@@ -18,6 +18,7 @@
   -webkit-appearance: none;
   background: transparent;
   cursor: pointer;
+  z-index: 1;
 
   /* Track */
   &::-webkit-slider-runnable-track {
@@ -55,11 +56,11 @@
   text-align: center;
   position: relative;
 
-   /* ENABLED MARKER */
+  /* ENABLED MARKER */
   &.miru--enabled::after {
     position: absolute;
     top: 0;
-    right: .75rem;
+    right: 0.75rem;
     display: block;
     width: 0.35rem;
     height: 0.35rem;
@@ -68,7 +69,6 @@
     z-index: 999;
   }
 }
-
 
 datalist {
   display: none !important;
@@ -89,8 +89,17 @@ datalist + div {
     position: absolute;
     display: block;
     width: 2px;
-    height: 100%;
+    height: 8px;
+    
     padding: 0;
     transform: translateX(-50%);
   }
+}
+
+.miru--menu__row:has([iscentered]) [tick="0"],
+.miru--menu__row:not(:has([iscentered])) [tick="1"] {
+  border-radius: 50%;
+  width: 8px;
+    height: 8px;
+  /* border: 5px solid; */
 }

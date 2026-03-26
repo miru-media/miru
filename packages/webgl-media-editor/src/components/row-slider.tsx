@@ -23,7 +23,7 @@ export const RowSlider: Component<{
         const percentageMultiplier = 100
         const min = ticksV[0]
         const max = ticksV[ticksV.length - 1]
-        return <span style={`left: ${((tick - min) / (max - min)) * percentageMultiplier}%`} />
+        return <span style={`left: ${((tick - min) / (max - min)) * percentageMultiplier}%`} tick={tick} />
       })}
     </div>
     <Icon class={styles['miru--button__icon']} aria-disabled />
