@@ -1,11 +1,11 @@
 .host {
   /* APP COLOR [ter] */
-  background-color: var(--ter-dark);
+  background-color: var(--background-softer);
 
   /* SCROLLBARS [ter] */
   & {
     ::-webkit-scrollbar-thumb {
-      background-color: var(--ter-med);
+      background-color: var(--background-soft);
     }
     ::-webkit-scrollbar-track {
       background: transparent;
@@ -14,156 +14,163 @@
 
   /* PREVIEW [ter] */
   .miru--preview {
-    background-color: var(--ter-med);
+    background-color: var(--background-soft);
   }
 
   /* CROPPER [ter] */
   :global .cropper-container {
     /* CROP BOX */
     :global .cropper-view-box {
-      outline-color: var(--ter-light);
+      outline-color: var(--text-strong);
     }
     /* AROUND CROP BOX */
     :global .cropper-drag-box {
-      background-color: var(--ter-med) !important;
+      background-color: var(--background-soft) !important;
     }
     /* GUIDES */
     :global .cropper-dashed {
-      border-color: var(--ter-light);
+      border-color: var(--text-strong);
     }
   }
 
   /* TAB GROUP [pri] */
   [role="tablist"] {
-    color: var(--fnt-light);
+    color: var(--text-strong);
     /* RADIO BUTTON GROUP HIGHLIGHTING */
     &:has([role="tab"]:focus-visible) {
-      border: var(--foc-med) !important;
+      border: var(--outline-focus) !important;
     }
     /* TAB BUTTON */
     & > [role="tab"] {
       /* ENABLED DOT */
       &.miru--enabled::after {
-        background-color: var(--fnt-light);
+        background-color: var(--text-strong);
       }
       /* ACTIVE BUTTON */
       &[aria-selected="true"] {
-        background-color: var(--pri-med) !important;
+        background-color: var(--background-accent) !important;
       }
       /* INACTIVE BUTTON */
       &:not([aria-selected="true"]) {
-        background-color: var(--pri-dark) !important;
+        background-color: var(--background-soft) !important;
       }
       /* INACTIVE BUTTON HOOVER OR FOCUS */
       &:not([aria-selected="true"]):hover,
       &:not([aria-selected="true"]):focus-visible {
-        background-color: var(--pri-light) !important;
-        color: var(--fnt-dark);
-        &.miru--enabled::after {
-          background-color: var(--fnt-dark);
-        }
+        background-color: var(--background-strong) !important;
       }
     }
   }
 
   /* RADIO GROUP [sec] */
   fieldset {
-    color: var(--fnt-light);
+    color: var(--text-strong);
     /* RADIO BUTTON GROUP HIGHLIGHTING */
     &:has(input[type="radio"]:focus-visible) {
-      border: var(--foc-med) !important;
+      border: var(--outline-focus) !important;
     }
     /* RADIO BUTTON */
     & > label {
       /* ACTIVE BUTTON */
       &:has(input:checked) {
-        background-color: var(--sec-med) !important;
+        background-color: var(--background-mid) !important;
       }
       /* INACTIVE BUTTON */
       &:not(:has(input:checked)) {
-        background-color: var(--sec-dark) !important;
+        background-color: var(--background-soft) !important;
       }
       /* INACTIVE BUTTON HOOVER, hover class for filter scroll pseudo hover */
       &:not(:has(input:checked)):hover,
       &:not(:has(input:checked)).miru--hov {
-        background-color: var(--sec-light) !important;
-        color: var(--fnt-dark);
+        background-color: var(--background-strong) !important;
       }
     }
   }
 
   /* SLIDER GROUP [sec, ter] */
   .miru--menu__slider-row {
-    color: var(--fnt-light);
-    /* SLIDER INACTIVE COLORS */
-    & {
-      --med: var(--sec-dark);
-      --light: var(--ter-light);
-      --dark: var(--ter-med);
-    }
-    /* SLIDER ACTIVE COLORS */
-    &:not(:has([zero])):has(:hover),
-    &:not(:has([zero])):has(:focus-visible) {
-      --med: var(--sec-med);
-      --light: var(--sec-light);
-      --dark: var(--sec-dark);
-    }
+    color: var(--text-strong);
     /* SLIDER */
     input {
       /* KEYBOARD FOCUS */
       &:focus-visible {
-        outline: var(--foc-med) !important;
+        outline: var(--outline-focus) !important;
       }
       /* SLIDER THUMB, SEPARATED BECAUSE COMBINING THEM DESTROYS WEBKIT SETTING */
       &::-webkit-slider-thumb {
-        background-color: var(--light);
-        border-color: var(--dark);
+        background-color: var(--background-stronger);
+        border-color: var(--background-softer);
       }
       &::-moz-range-thumb {
-        background-color: var(--light);
-        border-color: var(--dark);
+        background-color: var(--background-stronger);
+        border-color: var(--background-softer);
       }
-      /* DEFAULT SLIDER TRACK */
+      &[zero]::-webkit-slider-thumb {
+        background-color: var(--background-accent);
+        border-color: var(--background-softer);
+      }
+      &[zero]::-moz-range-thumb {
+        background-color: var(--background-accent);
+        border-color: var(--background-softer);
+      }
+      /* GRADIENT COLORS */
       &::-webkit-slider-runnable-track {
-        background: linear-gradient(90deg, var(--med) 0%, var(--dark) 50%, var(--med) 100%);
+        --g0: var(--background-soft);
+        --g1: var(--background-soft);
       }
       &::-moz-range-track {
-        background: linear-gradient(90deg, var(--med) 0%, var(--dark) 50%, var(--med) 100%);
+        --g0: var(--background-soft);
+        --g1: var(--background-soft);
+      }
+      &:hover::-webkit-slider-runnable-track {
+        --g0: var(--background-soft);
+        --g1: var(--background-mid);
+      }
+      &:hover::-moz-range-track {
+        --g0: var(--background-soft);
+        --g1: var(--background-mid);
+      }
+      /* CENTERED SLIDER TRACK */
+      &::-webkit-slider-runnable-track {
+        background: linear-gradient(90deg, var(--g1) 0%, var(--g0) 50%, var(--g1) 100%);
+      }
+      &::-moz-range-track {
+        background: linear-gradient(90deg, var(--g1) 0%, var(--g0) 50%, var(--g1) 100%);
       }
       /* SLIDER TRACK NOT CENTERED */
       &:not([iscentered])::-webkit-slider-runnable-track {
-        background: linear-gradient(90deg, var(--dark) 0%, var(--med) 100%);
+        background: linear-gradient(90deg, var(--g0) 0%, var(--g1) 100%);
       }
       &:not([iscentered])::-moz-range-track {
-        background: linear-gradient(90deg, var(--dark) 0%, var(--med) 100%);
+        background: linear-gradient(90deg, var(--g0) 0%, var(--g1) 100%);
       }
     }
     /* SLIDER TICKS */
     datalist + div > span {
-      background-color: var(--light);
+      background-color: var(--background-strong);
     }
     /* VALUE LABEL */
-    input + label{
+    input + label {
       /* ENABLED DOT */
       &.miru--enabled::after {
-        background-color: var(--fnt-light);
+        background-color: var(--text-strong);
       }
     }
   }
 
   /* DEFAULT GROUP [ter] */
   .miru--menu__row:not([role="tablist"], fieldset, .miru--menu__slider-row) {
-    color: var(--fnt-light);
+    color: var(--text-strong);
     /* BUTTON */
     & > .miru--button {
       /* BUTTON */
       & {
-        background-color: var(--ter-dark);
+        background-color: var(--background-softer);
       }
       /* BUTTON HOVER */
       &:hover {
-        background-color: var(--ter-light);
-        color: var(--fnt-dark);
+        background-color: var(--background-soft) !important;
+        /* color: var(--text-soft); */
       }
     }
   }
