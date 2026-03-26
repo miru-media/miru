@@ -4,23 +4,16 @@
 );
 @use 'bulma/sass/utilities/initial-variables' as iv;
 @use 'bulma/sass/base';
-@use 'bulma/sass/elements/button';
-@use 'bulma/sass/elements/block';
-@use 'bulma/sass/elements/content';
 @use 'bulma/sass/elements/progress';
 @use 'bulma/sass/components/dropdown';
-@use 'bulma/sass/components/card';
 @use 'bulma/sass/components/modal';
 @use 'bulma/sass/form/shared';
 @use 'bulma/sass/form/input-textarea';
 @use 'bulma/sass/form/tools';
 @use 'bulma/sass/form/select';
 @use 'bulma/sass/grid/columns';
-@use 'bulma/sass/layout/container';
 @use 'bulma/sass/layout/level';
 @use 'bulma/sass/themes';
-@use 'bulma/sass/helpers/flexbox';
-@use 'bulma/sass/helpers/visibility';
 
 :root {
   --bulma-body-overflow-y: auto;

@@ -5,10 +5,13 @@
       svg {
         overflow: visible;
       }
-      .anim-1 {
-        animation: hero-anim-1 3s;
-        animation-iteration-count: infinite;
-        animation-direction: alternate;
+      
+      @media not (prefers-reduced-motion: reduce) {
+        .anim-1 {
+          animation: hero-anim-1 3s;
+          animation-iteration-count: infinite;
+          animation-direction: alternate;
+        }
       }
 
       .timing-1 {

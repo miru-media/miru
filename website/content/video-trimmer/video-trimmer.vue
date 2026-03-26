@@ -34,6 +34,14 @@ const exportVideo = async () => {
   }
 }
 
+const onClickBack = () => {
+  if ((navigator as Navigator & { canGoBack: boolean }).canGoBack) history.back()
+  else {
+    window.close()
+    location.href = '/demos/'
+  }
+}
+
 const onChange = (event: TrimEvent) => {
   const { start, end } = event.trimmer
   console.log(event.type, start, end)
@@ -70,11 +78,11 @@ const onInputFile = (event: Event) => {
 
     <progress class="w-full border-0" :value="progress" max="1" />
     <div class="flex justify-evenly">
-      <label :class="['button', source ? 'tertiary' : 'primary']">
-        <div class="i-tabler:upload"></div>
-        <span> Choose a file </span>
-      </label>
-      <button v-if="source" :class="['button', !resultUrl && 'primary']" @click="exportVideo">Export</button>
+      <button class="button tertiary" @click="() => (source = '')">
+        <div class="i-tabler:x text-2rem"></div>
+        Cancel
+      </button>
+      <button :class="['button', !resultUrl && 'primary']" @click="exportVideo">Export</button>
       <a
         class="button primary"
         v-if="resultUrl"
@@ -98,7 +106,7 @@ const onInputFile = (event: Event) => {
   <div v-else>
     <img src="../media/illustrations/2.svg" alt="" class="w-full max-w-50vw max-h-50vh block m-auto" />
     <div class="flex justify-center gap-10 p-10">
-      <button id="back-button" class="button tertiary">
+      <button id="back-button" class="button tertiary" @click="onClickBack">
         <div class="i-tabler:chevron-left text-2rem"></div>
         Back
       </button>

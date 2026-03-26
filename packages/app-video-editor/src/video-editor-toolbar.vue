@@ -93,7 +93,7 @@ useEventListener(
         {{ $t('export') }}
       </button>
 
-      <a v-if="editor.exportResult" :href="editor.exportResult.url" target="_blank" class="bulma-button">
+      <a v-if="editor.exportResult" :href="editor.exportResult.url" target="_blank" class="button primary">
         {{ editor.exportResult.blob.type }} {{ filesize(editor.exportResult.blob.size) }}
       </a>
 

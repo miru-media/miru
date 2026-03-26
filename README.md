@@ -70,7 +70,7 @@ Miru's tools are published to npm as the following packages:
 | [`webgl-media-editor`](https://www.npmjs.com/package/webgl-media-editor) | A simple image editor with cropping, rotation, and WebGL filters | [docs](website/content/guide/webgl-media-editor.md) |
 | [`media-trimmer`](https://www.npmjs.com/package/media-trimmer)           | A simple MP4 video trimmer using the WebCodecs API               | [docs](website/content/guide/media-trimmer.md)      |
 | [`webgl-effects`](https://www.npmjs.com/package/webgl-effects)           | A library for applying filters and effects to images with WebGL2 |                                                     |
-| [`webgl-video-editor`](https://www.npmjs.com/package/video-editor)       | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](website/content/guide/webgl-video-editor.md) |
+| [`webgl-video-editor`](https://www.npmjs.com/package/webgl-video-editor) | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](website/content/guide/webgl-video-editor.md) |
 
 <!-- #endregion main -->
 

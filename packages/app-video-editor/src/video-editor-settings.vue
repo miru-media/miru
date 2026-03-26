@@ -31,7 +31,7 @@ const onBlur = (event: FocusEvent) => {
     <div class="bulma-level-left">
       <button
         v-if="onCloseProject"
-        class="bulma-button overlay"
+        class="button overlay square"
         :title="t('close_project')"
         :aria-label="t('close_project')"
         @click="onCloseProject"
@@ -45,7 +45,7 @@ const onBlur = (event: FocusEvent) => {
         <div :class="['bulma-dropdown bulma-is-right', isOpen && 'bulma-is-active']">
           <div class="bulma-dropdown-trigger">
             <button
-              class="bulma-button overlay"
+              class="button overlay square"
               @click="() => (isOpen = !isOpen)"
               :title="$t('settings')"
               :aria-label="$t('settings')"
@@ -115,5 +115,11 @@ const onBlur = (event: FocusEvent) => {
   > * > * {
     pointer-events: all;
   }
+}
+
+.square {
+  aspect-ratio: 1;
+  padding: 0.5rem;
+  font-size: 1.5rem;
 }
 </style>

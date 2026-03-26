@@ -34,8 +34,11 @@ const onClickDownload = (): void => {
 }
 
 const onClickBack = (): void => {
-  window.close()
-  location.href = '/demos/'
+  if ((navigator as Navigator & { canGoBack: boolean }).canGoBack) history.back()
+  else {
+    window.close()
+    location.href = '/demos/'
+  }
 }
 const onClickCancel = toggleEmptyState
 

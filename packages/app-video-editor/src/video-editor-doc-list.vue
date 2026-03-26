@@ -18,12 +18,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="root bulma-container prose dark:prose-invert">
+  <div class="root prose-lg dark:prose-invert">
     <div class="bulma-columns columns-container">
       <div class="bulma-column">
-        <div class="bulma-content">
-          <h1 class="text-center mb-4">Projects</h1>
-        </div>
+        <h1 class="text-center mb-4">Projects</h1>
         <ul class="project-list">
           <li v-for="doc of props.docs" :key="doc.id" class="project-list-item">
             <a :href="doc.url" class="project-card" @click="(event) => emit('open', doc, event)">
@@ -42,7 +40,7 @@ const emit = defineEmits<{
           <img
             alt="Video editing illustration"
             src="../../../website/content/media/illustrations/2.svg"
-            class="bulma-is-hidden-mobile max-w-20rem m-auto"
+            class="<md:hidden max-w-20rem m-auto"
           />
           <button @click="() => emit('create')" class="create-button">
             <div class="i-tabler:plus" />

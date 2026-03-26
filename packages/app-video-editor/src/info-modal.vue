@@ -60,8 +60,8 @@ watch(currentLocale, updateContent)
         </div>
       </template>
       <template #confirm="{ text }">
-        <footer class="bulma-modal-card-foot bulma-is-justify-content-end">
-          <button class="bulma-button bulma-is-success" @click="() => dialog?.close()">
+        <footer class="bulma-modal-card-foot !justify-end">
+          <button class="button primary" @click="() => dialog?.close()">
             {{ text }}
           </button>
         </footer>
