@@ -45,7 +45,12 @@ export const RowSlider: Component<{
       role="slider"
       aria-labelledby={'row_slider_' + toValue(label) + '_arialabel'}
     />
-    <label class={styles['miru--slider-label']}>
+    <label
+      class={[
+        styles['miru--slider-label'],
+        () => toValue(value) !== toValue(zeroPoint) && styles['miru--enabled'],
+      ]}
+    >
       {() => (toValue(value) === 0 ? 0 : toValue(value).toFixed(2))}
     </label>
   </p>
