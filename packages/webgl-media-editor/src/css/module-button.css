@@ -1,6 +1,6 @@
 /* MODULE BUTTON */
 .host {
-  &[show-labels='false'] .miru--button:has(.miru--button__icon) {
+  &[show-labels="false"] .miru--button:has(.miru--button__icon) {
     .miru--button__label {
       display: none;
     }
@@ -9,6 +9,10 @@
       margin-bottom: 0 !important;
     }
   }
+}
+
+*:focus-visible {
+  outline-offset: -4px;
 }
 
 /* BUTTON */
@@ -24,10 +28,6 @@
   &[disabled] {
     pointer-events: none;
     opacity: 0.8;
-  }
-
-  &:focus-visible {
-    outline-offset: -4px;
   }
 
   &.miru--mark-disabled {
@@ -47,7 +47,7 @@
   }
 
   /* BUTTON WITH RADIO INPUT */
-  &[disabled]:has(input[type='radio']) {
+  &[disabled]:has(input[type="radio"]) {
     text-decoration: line-through;
     opacity: 0.4;
   }
@@ -71,7 +71,7 @@
     }
 
     /* BUTTON HOVER */
-    
+
     /* &.miru--hov:not(.miru--acc, &:has(input:checked)) {
       border: 2px solid;
     } */
@@ -102,7 +102,7 @@
   }
 
   /* MENU RADIO BUTTON */
-  input[type='radio'] {
+  input[type="radio"] {
     position: absolute;
     top: 0;
     left: 0;
@@ -123,21 +123,14 @@
     display: block;
     width: 0.5rem;
     height: 0.5rem;
-    content: '';
+    content: "";
     border-radius: 50%;
   }
 }
 
-/* RADIO BUTTON GROUP HIGHLIGHTING */
-.miru--menu__row:has(input[type='radio']:focus-visible) {
-  .miru--button:has(input[type='radio']) {
-    outline: 4px auto -webkit-focus-ring-color;
-  }
-}
-
 /* TAB BUTTON GROUP HIGHLIGHTING */
-.miru--menu__row:has([role='tab']:focus-visible) {
-  [role='tab'] {
+.miru--menu__row:has([role="tab"]:focus-visible) {
+  [role="tab"] {
     outline: 4px auto -webkit-focus-ring-color;
   }
 }

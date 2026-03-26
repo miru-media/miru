@@ -57,7 +57,7 @@
     border: none;
   }
 
-  .miru--slider {
+  /* .miru--slider {
     overflow: hidden;
     appearance: none;
     touch-action: none;
@@ -87,5 +87,5 @@
     height: 200px;
     margin-top: -80px;
     appearance: none;
-  }
+  } */
 }

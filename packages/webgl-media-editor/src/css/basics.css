@@ -10,15 +10,15 @@
   --size-button-icon: 1.25rem;
   --roundness-button: 0.25rem;
   --height-slider: 0.6rem;
-  --width-slider-thumb: 0.5rem;
-  --gap-default: 1rem;
+  --width-slider-thumb: .75rem;
+  --gap-default: .17rem;
   --gap-preview: 1rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;
 
   /* FOCUS */
-  /* --foc-med: light-dark() */
+  --foc-med: 4px solid light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
 
   /* FONT COLORS */
   --fnt-dark: light-dark(hsl(0, 0%, 100%), hsl(220, 5%, 2%));

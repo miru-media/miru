@@ -36,10 +36,14 @@
   /* TAB GROUP [pri] */
   [role="tablist"] {
     color: var(--fnt-light);
+    /* RADIO BUTTON GROUP HIGHLIGHTING */
+    &:has([role="tab"]:focus-visible) {
+      border: var(--foc-med) !important;
+    }
     /* TAB BUTTON */
     & > [role="tab"] {
       /* ENABLED DOT */
-      .miru--enabled::after {
+      &.miru--enabled::after {
         background-color: var(--fnt-light);
       }
       /* ACTIVE BUTTON */
@@ -55,7 +59,7 @@
       &:not([aria-selected="true"]):focus-visible {
         background-color: var(--pri-light) !important;
         color: var(--fnt-dark);
-        .miru--enabled::after {
+        &.miru--enabled::after {
           background-color: var(--fnt-dark);
         }
       }
@@ -65,6 +69,10 @@
   /* RADIO GROUP [sec] */
   fieldset {
     color: var(--fnt-light);
+    /* RADIO BUTTON GROUP HIGHLIGHTING */
+    &:has(input[type="radio"]:focus-visible) {
+      border: var(--foc-med) !important;
+    }
     /* RADIO BUTTON */
     & > label {
       /* ACTIVE BUTTON */
@@ -87,50 +95,59 @@
   /* SLIDER GROUP [sec, ter] */
   .miru--menu__slider-row {
     color: var(--fnt-light);
-    /* SLIDER ACTIVE COLORS */
-    &:has(input:not([zero])) {
-      --med: var(--sec-med);
-      --light: var(--sec-light);
-      --dark: var(--sec-dark);
-    }
     /* SLIDER INACTIVE COLORS */
-    &:has(input[zero]) {
+    & {
       --med: var(--sec-dark);
       --light: var(--ter-light);
       --dark: var(--ter-med);
     }
+    /* SLIDER ACTIVE COLORS */
+    &:not(:has([zero])):has(:hover),
+    &:not(:has([zero])):has(:focus-visible) {
+      --med: var(--sec-med);
+      --light: var(--sec-light);
+      --dark: var(--sec-dark);
+    }
     /* SLIDER */
     input {
+      /* KEYBOARD FOCUS */
+      &:focus-visible {
+        outline: var(--foc-med) !important;
+      }
       /* SLIDER THUMB, SEPARATED BECAUSE COMBINING THEM DESTROYS WEBKIT SETTING */
       &::-webkit-slider-thumb {
-        background-color: var(--med);
-        box-shadow: 0 0 20px 1px var(--med);
+        background-color: var(--light);
+        border-color: var(--dark);
       }
       &::-moz-range-thumb {
-        background-color: var(--med);
-        box-shadow: 0 0 20px 1px var(--med);
-      }
-      &:hover::-webkit-slider-thumb {
         background-color: var(--light);
-      }
-      &:hover::-moz-range-thumb {
-        background-color: var(--light);
+        border-color: var(--dark);
       }
       /* DEFAULT SLIDER TRACK */
-      & {
-        background-color: var(--dark);
+      &::-webkit-slider-runnable-track {
+        background: linear-gradient(90deg, var(--med) 0%, var(--dark) 50%, var(--med) 100%);
+      }
+      &::-moz-range-track {
+        background: linear-gradient(90deg, var(--med) 0%, var(--dark) 50%, var(--med) 100%);
       }
       /* SLIDER TRACK NOT CENTERED */
-      &:not([iscentered])::-moz-range-progress {
-        background-color: var(--med);
+      &:not([iscentered])::-webkit-slider-runnable-track {
+        background: linear-gradient(90deg, var(--dark) 0%, var(--med) 100%);
       }
-      &:not([iscentered])::-webkit-slider-thumb {
-        box-shadow: -1000px 0 0 1000px var(--med);
+      &:not([iscentered])::-moz-range-track {
+        background: linear-gradient(90deg, var(--dark) 0%, var(--med) 100%);
       }
     }
     /* SLIDER TICKS */
     datalist + div > span {
       background-color: var(--light);
+    }
+    /* VALUE LABEL */
+    input + label{
+      /* ENABLED DOT */
+      &.miru--enabled::after {
+        background-color: var(--fnt-light);
+      }
     }
   }
 
