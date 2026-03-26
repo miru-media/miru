@@ -75,7 +75,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
           </button>
 
           {/* IF USING FIELDSET INSIDE A ROW, PASS OPTIONS AMOUT FOR PROPER SIZING */}
-          <fieldset style="--options-amt:4" role="radiogroup" aria-labelledby="ratio-label">
+          <fieldset style="--options-amt:3" role="radiogroup" aria-labelledby="ratio-label">
             <legend id="ratio-label">Aspect Ratio</legend>
             {/* <p class="miru--menu__group"> */}
             <label class={styles['miru--button']}>

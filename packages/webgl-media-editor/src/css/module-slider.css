@@ -58,7 +58,7 @@ datalist + div {
   & > span {
     position: absolute;
     display: block;
-    width: 1px;
+    width: 2px;
     height: 100%;
     padding: 0;
     transform: translateX(-50%);

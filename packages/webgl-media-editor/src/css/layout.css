@@ -134,12 +134,25 @@
 }
 
 fieldset {
-  /* reset: all */
   min-inline-size: min-content !important;
   min-inline-size: 0 !important;
-  border: none;
+  border: 0;
+  padding: 0;
+
+  legend {
+    display: none !important;
+  }
 }
 
-legend {
-  display: none !important;
+fieldset label,
+[role="tab"] {
+  &:not(:first-of-type, :last-of-type) {
+    border-radius: 0;
+  }
+  &:first-of-type {
+    border-radius: 0.5rem 0 0 0.5rem;
+  }
+  &:last-of-type {
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
 }
