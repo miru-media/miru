@@ -1,43 +1,46 @@
 .host {
-  /* APP COLOR */
+  /* APP COLOR [ter] */
   background-color: var(--ter-dark);
 
-  /* SCROLLBARS */
+  /* SCROLLBARS [ter] */
   & {
     ::-webkit-scrollbar-thumb {
-      background-color: var(--ter-light);
+      background-color: var(--ter-med);
     }
     ::-webkit-scrollbar-track {
       background: transparent;
     }
   }
 
-  /* PREVIEW */
+  /* PREVIEW [ter] */
   .miru--preview {
     background-color: var(--ter-med);
   }
 
-  /* CROPPER */
+  /* CROPPER [ter] */
   :global .cropper-container {
+    /* CROP BOX */
     :global .cropper-view-box {
-      outline-color: var(--sec-med);
+      outline-color: var(--ter-light);
     }
-    :global .cropper-dashed {
-      border-color: var(--ter-light);
-    }
+    /* AROUND CROP BOX */
     :global .cropper-drag-box {
       background-color: var(--ter-med) !important;
     }
+    /* GUIDES */
+    :global .cropper-dashed {
+      border-color: var(--ter-light);
+    }
   }
 
-  /* TAB GROUP */
+  /* TAB GROUP [pri] */
   [role="tablist"] {
-    color: var(--ter-light);
+    color: var(--fnt-light);
     /* TAB BUTTON */
     & > [role="tab"] {
       /* ENABLED DOT */
       .miru--enabled::after {
-        background-color: var(--ter-light);
+        background-color: var(--fnt-light);
       }
       /* ACTIVE BUTTON */
       &[aria-selected="true"] {
@@ -51,17 +54,17 @@
       &:not([aria-selected="true"]):hover,
       &:not([aria-selected="true"]):focus-visible {
         background-color: var(--pri-light) !important;
-        color: var(--ter-dark);
+        color: var(--fnt-dark);
         .miru--enabled::after {
-          background-color: var(--ter-dark);
+          background-color: var(--fnt-dark);
         }
       }
     }
   }
 
-  /* RADIO GROUP */
+  /* RADIO GROUP [sec] */
   fieldset {
-    color: var(--ter-light);
+    color: var(--fnt-light);
     /* RADIO BUTTON */
     & > label {
       /* ACTIVE BUTTON */
@@ -75,58 +78,74 @@
       /* INACTIVE BUTTON HOOVER */
       &:not(:has(input:checked)):hover {
         background-color: var(--sec-light) !important;
-        color: var(--ter-dark);
+        color: var(--fnt-dark);
       }
     }
   }
 
-  /* SLIDER GROUP */
+  /* SLIDER GROUP [sec, ter] */
   .miru--menu__slider-row {
-    color: var(--ter-light);
+    color: var(--fnt-light);
+    /* SLIDER ACTIVE COLORS */
+    &:has(input:not([zero])) {
+      --med: var(--sec-med);
+      --light: var(--sec-light);
+      --dark: var(--sec-dark);
+    }
+    /* SLIDER INACTIVE COLORS */
+    &:has(input[zero]) {
+      --med: var(--sec-dark);
+      --light: var(--ter-light);
+      --dark: var(--ter-med);
+    }
     /* SLIDER */
     input {
       /* SLIDER THUMB, SEPARATED BECAUSE COMBINING THEM DESTROYS WEBKIT SETTING */
       &::-webkit-slider-thumb {
-        background-color: var(--sec-med);
+        background-color: var(--med);
+        box-shadow: 0 0 20px 1px var(--med);
       }
       &::-moz-range-thumb {
-        background-color: var(--sec-med);
+        background-color: var(--med);
+        box-shadow: 0 0 20px 1px var(--med);
+      }
+      &:hover::-webkit-slider-thumb {
+        background-color: var(--light);
+      }
+      &:hover::-moz-range-thumb {
+        background-color: var(--light);
       }
       /* DEFAULT SLIDER TRACK */
       & {
-        background-color: var(--ter-med);
+        background-color: var(--dark);
       }
-      /* ACTIVE SLIDER TRACK CENTERED */
-      &[iscentered]:not([zero]) {
-        background-color: var(--sec-dark);
+      /* SLIDER TRACK NOT CENTERED */
+      &:not([iscentered])::-moz-range-progress {
+        background-color: var(--med);
       }
-      /* ACTIVE SLIDER TRACK NOT CENTERED */
-      &:not([iscentered], [zero])::-moz-range-progress {
-        background-color: var(--sec-dark);
-      }
-      &:not([iscentered], [zero])::-webkit-slider-thumb {
-        box-shadow: -4000px 0 0 4000px var(--sec-dark);
+      &:not([iscentered])::-webkit-slider-thumb {
+        box-shadow: -1000px 0 0 1000px var(--med);
       }
     }
     /* SLIDER TICKS */
     datalist + div > span {
-      background-color: var(--sec-med);
+      background-color: var(--light);
     }
   }
 
-  /* DEFAULT GROUP */
+  /* DEFAULT GROUP [ter] */
   .miru--menu__row:not([role="tablist"], fieldset, .miru--menu__slider-row) {
-    color: var(--ter-light);
+    color: var(--fnt-light);
     /* BUTTON */
-    &>.miru--button {
+    & > .miru--button {
       /* BUTTON */
-      &{
+      & {
         background-color: var(--ter-dark);
       }
       /* BUTTON HOVER */
       &:hover {
         background-color: var(--ter-light);
-        color: var(--ter-dark);
+        color: var(--fnt-dark);
       }
     }
   }
