@@ -25,7 +25,7 @@
   --text-strong: light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
 
   /* BACKGROUND COLORS */
-  --background-accent: light-dark(hsl(206, 74%, 50%), hsl(206, 74%, 50%));
+  --background-accent: light-dark(hsl(216, 79%, 50%), hsl(216, 79%, 50%));
   --background-softer: light-dark(hsl(204, 0%, 80%), hsl(204, 5%, 2%));
   --background-soft: light-dark(hsl(204, 5%, 70%), hsl(204, 5%, 15%));
   --background-mid: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 37%));

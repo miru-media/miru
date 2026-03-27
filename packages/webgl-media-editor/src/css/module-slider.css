@@ -34,11 +34,12 @@
   &::-webkit-slider-thumb {
     appearance: none;
     -webkit-appearance: none;
-    width: calc(var(--height-slider) * 2);
-    height: calc(var(--height-slider) * 2);
+    width: calc(var(--height-slider) * 2 - 1px);
+    height: calc(var(--height-slider) * 2 - 1px);
     border-radius: 50%;
     margin-top: calc(var(--height-slider) * -0.5);
     border: 2px solid;
+    box-sizing: border-box;
   }
   &::-moz-range-thumb {
     width: calc(var(--height-slider) * 2);
@@ -46,6 +47,7 @@
     border-radius: 50%;
     margin-top: calc(var(--height-slider) * -0.5);
     border: 2px solid;
+    box-sizing: border-box;
   }
 }
 
@@ -77,29 +79,28 @@ datalist {
 datalist + div {
   pointer-events: none;
   position: absolute;
-  top: calc(50% - var(--gap-default) - var(--width-slider-thumb) - 6px);
+  z-index: 1;
+  top: calc(50% - var(--height-slider) / 2 -2px);
   display: block !important;
   grid-column: 3 / -3;
   width: calc(100% - 2 * var(--gap-default) - var(--width-slider-thumb));
-  height: 6px;
+  height: calc(var(--height-slider) + 4px);
   margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
   overflow: visible;
+
+  /* :root input:not(:hover) ~ & , */
+  :root input[zero] ~ & {
+    display: none !important;
+  }
 
   & > span {
     position: absolute;
     display: block;
     width: 2px;
-    height: 8px;
-    
+    height: 100%;
+
     padding: 0;
     transform: translateX(-50%);
   }
 }
 
-.miru--menu__row:has([iscentered]) [tick="0"],
-.miru--menu__row:not(:has([iscentered])) [tick="1"] {
-  border-radius: 50%;
-  width: 8px;
-    height: 8px;
-  /* border: 5px solid; */
-}

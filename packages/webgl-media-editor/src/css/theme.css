@@ -106,11 +106,11 @@
         border-color: var(--background-softer);
       }
       &[zero]::-webkit-slider-thumb {
-        background-color: var(--background-accent);
+        background-color: var(--background-mid);
         border-color: var(--background-softer);
       }
       &[zero]::-moz-range-thumb {
-        background-color: var(--background-accent);
+        background-color: var(--background-mid);
         border-color: var(--background-softer);
       }
       /* GRADIENT COLORS */
@@ -147,7 +147,7 @@
     }
     /* SLIDER TICKS */
     datalist + div > span {
-      background-color: var(--background-strong);
+      background-color: var(--background-softer);
     }
     /* VALUE LABEL */
     input + label {
