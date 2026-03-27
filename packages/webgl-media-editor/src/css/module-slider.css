@@ -2,9 +2,6 @@
 
 .miru--menu__row:has(.miru--slider[disabled]) {
   pointer-events: none;
-
-  /* display: none; */
-  opacity: 0;
 }
 
 /* SLIDER */
