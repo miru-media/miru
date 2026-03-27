@@ -264,18 +264,18 @@ export const WebglEffectsMenu = (props: {
       </fieldset>
 
       {() =>
-        (toValue(showIntensity) ?? true) && (
+        // (toValue(showIntensity) ?? true) && (
           <RowSlider
             label="Intensity"
             Icon={IconTablerCircleOff}
-            ticks={[0, 1 / 2, 1]}
+            ticks={[0, 1]}
             zeroPoint={0}
             value={toRef(props.intensity)}
             onInput={onInputIntensity}
             onChange={(e: Event)=>e.preventDefault()}
-            disabled={() => !currentEffect.value}
+            disabled={() => toValue(showIntensity) ?? !currentEffect.value}
           />
-        )
+        // )
       }
     </div>
   )

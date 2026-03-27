@@ -90,6 +90,17 @@
   /* SLIDER GROUP [sec, ter] */
   .miru--menu__slider-row {
     color: var(--text-strong);
+
+    input[disabled] {
+      &::-webkit-slider-thumb {
+        background-color: transparent;
+        border-color: transparent;
+      }
+      &::-moz-range-thumb {
+        background-color: transparent;
+        border-color: transparent;
+      }
+    }
     /* SLIDER */
     input {
       /* KEYBOARD FOCUS */
