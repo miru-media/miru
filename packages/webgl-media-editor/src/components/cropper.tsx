@@ -116,7 +116,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
         <RowSlider
           label="Scale"
           Icon={IconTablerCrop}
-          ticks={[1 / 10, 1 / 2, 1, 2]}
+          ticks={[1 / 10, 1, 2]}
           zeroPoint={1}
           value={zoom}
           onInput={(event: InputEvent) => setZoom(event.target.valueAsNumber)}
