@@ -142,7 +142,7 @@ if (!import.meta.env.SSR) {
 
   color-scheme: dark;
 
-  &:has(.bulma-modal:open) {
+  &:has(.bulma-modal:open, .bulma-modal.open) {
     color: red;
     :global(& .button.overlay, & .video-editor .button.overlay) {
       visibility: hidden;

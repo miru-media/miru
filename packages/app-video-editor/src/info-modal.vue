@@ -20,12 +20,16 @@ const dialog = ref<HTMLDialogElement>()
 state.showInfo = state.hasSeenIntro < INFO_VERSION
 
 watchEffect(() => {
-  if (state.showInfo) dialog.value?.showModal()
+  if (state.showInfo) {
+    dialog.value?.showModal()
+    dialog.value?.classList.add('open')
+  }
 })
 
 const onCloseDialog = () => {
   state.hasSeenIntro = INFO_VERSION
   state.showInfo = false
+  dialog.value?.classList.remove('open')
 }
 
 watch(currentLocale, updateContent)
@@ -41,9 +45,9 @@ watch(currentLocale, updateContent)
   >
     <content-component v-if="ContentComponent" class="bulma-modal-card">
       <template #header="{ title }">
-        <div class="bulma-columns bulma-is-vcentered">
+        <div class="not-prose bulma-columns bulma-is-vcentered">
           <div class="bulma-column">
-            <h1 class="title" :aria-label="'Miru | ' + title">
+            <h1 class="prose-lg dark:prose-invert title" :aria-label="'Miru | ' + title">
               <picture>
                 <source
                   srcset="../../../website/content/media/logo/white-logo.svg"

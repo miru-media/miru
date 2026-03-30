@@ -45,7 +45,7 @@ dialog {
   border-style: none;
 }
 
-.#{iv.$class-prefix}modal:open {
+.#{iv.$class-prefix}modal:is(.open, :open) {
   @extend .#{iv.$class-prefix}is-active;
 }
 
