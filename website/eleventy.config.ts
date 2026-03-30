@@ -11,6 +11,7 @@ import EleventyVitePlugin from '@11ty/eleventy-plugin-vite'
 import markdownItAttrs from 'markdown-it-attrs'
 
 import pluginFilters from './_config/filters.ts'
+import pluginShortcodes from './_config/shortcodes.ts'
 import viteOptions from './vite.config.ts'
 
 const MOBILE_IMAGE_WIDTH = 400
@@ -103,6 +104,9 @@ export default async (eleventyConfig) => {
 
   // Filters
   eleventyConfig.addPlugin(pluginFilters)
+
+  // Shortcodes
+  eleventyConfig.addPlugin(pluginShortcodes)
 
   eleventyConfig.addPlugin(IdAttributePlugin, {
     // by default we use Eleventy’s built-in `slugify` filter:
