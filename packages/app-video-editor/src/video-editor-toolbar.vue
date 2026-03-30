@@ -6,7 +6,7 @@ import { debounce } from 'throttle-debounce'
 import { type InputEvent } from 'shared/types'
 import { useEventListener } from 'shared/utils'
 
-import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES } from 'webgl-video-editor/vue'
+import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES, AssetBin } from 'webgl-video-editor/vue'
 
 import type { VideoEditor } from 'webgl-video-editor'
 import FilterMenu from './video-editor-filter-menu.vue'
@@ -87,6 +87,16 @@ useEventListener(
           {{ $t('Debug') }}
         </button>
       </template>
+
+      <button
+        class="toolbar-button"
+        @click="() => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)"
+      >
+        <div
+          :class="editor.activeAssetBin === AssetBin.video ? 'icon i-tabler-folder-filled' : 'icon i-tabler-folder'"
+        />
+        {{ $t('media') }}
+      </button>
 
       <button class="toolbar-button" @click="() => editor.export()">
         <div class="icon i-tabler-download" />

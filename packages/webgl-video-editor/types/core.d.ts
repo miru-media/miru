@@ -3,6 +3,7 @@ import type { Ref } from 'fine-jsx'
 import type { EffectDefinition, Renderer } from 'webgl-effects'
 
 import type { VideoEditor as VideoEditorInternal } from '../src/video-editor.ts'
+import type { AssetBin } from '../src/constants'
 
 import type {
   AssetCreateEvent,
@@ -294,6 +295,9 @@ export interface VideoEditor {
 
   /** The audio and video tracks which contain clips */
   tracks: Track[]
+
+  /** The state of the asset bin ui */
+  activeAssetBin : AssetBin
 
   /** The webgl-effects Renderer instance */
   readonly effectRenderer: Renderer

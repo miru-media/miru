@@ -49,6 +49,10 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
         () => editor._showStats,
         (value) => (editor._showStats = value),
       ),
+      activeAssetBin: toVue(
+        () => editor.activeAssetBin,
+        (value) => (editor.activeAssetBin = value)
+      ),
 
       seekTo: editor.seekTo.bind(editor),
       addClip: (track: pub.Track, asset: pub.MediaAsset) =>
