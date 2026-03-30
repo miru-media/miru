@@ -40,6 +40,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare readonly doc: pub.VideoEditor['doc']
   declare readonly _secondsPerPixel: pub.VideoEditor['_secondsPerPixel']
   declare readonly _showStats: pub.VideoEditor['_showStats']
+  declare readonly activeAssetBin: pub.VideoEditor['activeAssetBin']
   declare readonly canvas: pub.VideoEditor['canvas']
   declare readonly currentTime: pub.VideoEditor['currentTime']
   declare readonly effectRenderer: pub.VideoEditor['effectRenderer']
@@ -153,6 +154,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
 for (const key of [
   '_secondsPerPixel',
   '_showStats',
+  'activeAssetBin',
   'canvas',
   'currentTime',
   'effectRenderer',
