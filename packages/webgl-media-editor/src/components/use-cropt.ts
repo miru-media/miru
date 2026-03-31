@@ -58,18 +58,18 @@ export const useCropt = ({
     const cropperData = cropper.value.getData(true)
     sourceRef.value.crop.value = cropperData
     // recenter cropbox. necessary bc with zoom & crop the cropbox can end up not centered
-    const containerData = cropper.value.getContainerData()
-    const containerRatio = containerData.width / containerData.height
+    const {width, height} = cropper.value.getContainerData()
+    const containerRatio = width / height
     const newBox = centerTo(
       {
-        width: value > containerRatio ? containerData.width : containerData.height * value,
-        height: value > containerRatio ? containerData.width / value : containerData.height,
+        width: value > containerRatio ? width : height * value,
+        height: value > containerRatio ? width / value : height,
       },
-      getCenter(containerData),
+      getCenter({width, height}),
     )
     cropper.value.setCropBoxData(newBox)
     // make sure image fits. minimize image to force resize on clamp
-    const zoomForSnapping = 0.001
+    const zoomForSnapping = 1
     setZoom(zoomForSnapping)
     clampImage()
     // track unchanged status
@@ -78,6 +78,7 @@ export const useCropt = ({
   // apply zoom. get pivot point & apply and store zoom
   const setZoom = (value: number): void => {
     if (!cropper.value) return
+    // get scale factire
     const canvasData = cropper.value.getCanvasData()
     const cropBoxData = cropper.value.getCropBoxData()
     const baseScale = Math.max(
@@ -86,6 +87,10 @@ export const useCropt = ({
     )
     cropper.value.zoomTo(baseScale * value)
     zoom.value = value
+
+    // const { width, height, naturalWidth, naturalHeight } = cropper.value.getCanvasData()
+    // zoom.value = Math.min(width / naturalWidth, height / naturalHeight)
+    // cropper.value.zoomTo(baseScale * value)
   }
   // apply rotation. rotate 90 deg
   const setRotation = (): void => {
@@ -128,6 +133,8 @@ export const useCropt = ({
   watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {
     if (source == null || original == null) return
     // create canvas element & append to container
+
+    // create canvas element & append to container
     const cropperImage = document.createElement('canvas')
     setObjectSize(cropperImage, original)
     const context = cropperImage.getContext('2d')
@@ -168,6 +175,8 @@ export const useCropt = ({
         },
       })
     })
+    // initialize cropper
+    setZoom(1)
     // remove cropper on unwatch
     onCleanup(() => {
       cropper.value?.destroy()
