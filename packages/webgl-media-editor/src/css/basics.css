@@ -12,7 +12,7 @@
   --height-slider: 0.4rem;
   --width-slider-thumb: 1rem;
   --gap-default: 0.2rem;
-  --gap-preview: 1rem;
+  --gap-preview: 0.4rem;
 
   /* COLOR SCHEMES */
   color-scheme: light dark;
