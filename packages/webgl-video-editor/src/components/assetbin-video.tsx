@@ -1,8 +1,31 @@
+import { useEditor } from "./utils"
+import { MediaAsset } from "../assets/media-asset"
+import { ref } from "fine-jsx"
+import { useI18n } from "shared/utils"
 
 export const AssetBinVideo = () => {
+    const editor = useEditor()
+    const { t } = useI18n()
+    const getVideoAssets = (): MediaAsset[] => {
+        return Array.from(editor.doc.assets.values()).filter(
+            (asset): asset is MediaAsset => asset.type === "asset:media:av" && asset.video != null
+        )
+    }
+
+    const assets = ref<MediaAsset[]>(getVideoAssets())
+
     return (
         <div>
-            <h2>Asset Bin Video</h2>
+            <h2>{t('media')}</h2>
+            {()=>
+                assets.value.length === 0 ? (
+                    <p>{t('assetbin_media_empty')}</p>
+                ) : (
+                    assets.value.map((asset) => (
+                        <h3>{asset.name}</h3>
+                    ))
+                )
+            }
         </div>
     )
 }
