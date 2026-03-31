@@ -44,6 +44,7 @@ export const useCropt = ({
   // zoom. tracking handled via setZoom
   const zoom = ref(NaN)
   // apply crop. (on -1 crop full image) apply & store crop
+  const cropperPaddingFactor = 0.9
   const setAspectRatio = (value: number, tilt: 'portrait' | 'landscape'): void => {
     if (!sourceRef.value || !cropper.value) return
     // flip ratio if necessary for tilt
@@ -58,14 +59,16 @@ export const useCropt = ({
     const cropperData = cropper.value.getData(true)
     sourceRef.value.crop.value = cropperData
     // recenter cropbox. necessary bc with zoom & crop the cropbox can end up not centered
-    const {width, height} = cropper.value.getContainerData()
+    const { width, height } = cropper.value.getContainerData()
+
     const containerRatio = width / height
     const newBox = centerTo(
       {
-        width: value > containerRatio ? width : height * value,
-        height: value > containerRatio ? width / value : height,
+        width: value > containerRatio ? width * cropperPaddingFactor : height * value * cropperPaddingFactor,
+        height:
+          value > containerRatio ? (width * cropperPaddingFactor) / value : height * cropperPaddingFactor,
       },
-      getCenter({width, height}),
+      getCenter({ width, height }),
     )
     cropper.value.setCropBoxData(newBox)
     // make sure image fits. minimize image to force resize on clamp
@@ -177,6 +180,7 @@ export const useCropt = ({
     })
     // initialize cropper
     setZoom(1)
+    setAspectRatio(-1, 'landscape')
     // remove cropper on unwatch
     onCleanup(() => {
       cropper.value?.destroy()
