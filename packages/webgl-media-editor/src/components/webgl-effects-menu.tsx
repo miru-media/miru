@@ -225,6 +225,8 @@ export const WebglEffectsMenu = (props: {
     renderer.deleteTexture(fb.texture)
   })
 
+  const fxArray = [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)]
+
   return (
     <div
       id="tab-filter"
@@ -232,39 +234,36 @@ export const WebglEffectsMenu = (props: {
       aria-labelledby="tab-button-filter"
       class={[styles['miru--menu'], props.class]}
     >
-      <fieldset
-        ref={container}
-        class={[styles['miru--menu__row'], styles['miru--menu__row--scroll']]}
-        onScroll={onScroll}
-        role="radiogroup"
-        aria-labelledby="filters-label"
-      >
+      <fieldset class={[styles['miru--menu__row--scroll']]} role="radiogroup" aria-labelledby="filters-label">
         <legend id="filters-label">Image Filters</legend>
-        {() =>
-          [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => (
-            <>
-              <EffectItem
-                effect={effect}
-                id={id || ''}
-                imageData={imageData}
-                thumbnailIndex={thumbnailIndex}
-                size={props.thumbnailSize}
-                isActive={() => currentEffect.value === id}
-                onClick={() => onClickFilter(id)}
-                class={[
-                  () => scrolledEffectId.value === id && styles['miru--hov'],
-                  () =>
-                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                    styles['miru--loading'],
-                ]}
-              ></EffectItem>
-            </>
-          ))
-        }
+        <div ref={container} onScroll={onScroll}>
+          {() =>
+            fxArray.map(([id, effect], thumbnailIndex) => (
+              <>
+                <EffectItem
+                  effect={effect}
+                  id={id || ''}
+                  imageData={imageData}
+                  thumbnailIndex={thumbnailIndex}
+                  size={props.thumbnailSize}
+                  isActive={() => currentEffect.value === id}
+                  onClick={() => onClickFilter(id)}
+                  class={[
+                    () => scrolledEffectId.value === id && styles['miru--hov'],
+                    () =>
+                      ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                      styles['miru--loading'],
+                  ]}
+                ></EffectItem>
+              </>
+            ))
+          }
+        </div>
       </fieldset>
 
-      {() =>
-        // (toValue(showIntensity) ?? true) && (
+      {
+        () => (
+          // (toValue(showIntensity) ?? true) && (
           <RowSlider
             label="Intensity"
             Icon={IconTablerCircleOff}
@@ -272,9 +271,10 @@ export const WebglEffectsMenu = (props: {
             zeroPoint={0}
             value={toRef(props.intensity)}
             onInput={onInputIntensity}
-            onChange={(e: Event)=>e.preventDefault()}
+            onChange={(e: Event) => e.preventDefault()}
             disabled={() => toValue(showIntensity) ?? !currentEffect.value}
           />
+        )
         // )
       }
     </div>
