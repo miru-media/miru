@@ -26,30 +26,13 @@
   flex: 1 1 0%;
   flex-direction: column;
   min-height: 0;
-  
+
   /* CROPPER SPECIFIC PREVIEW WRAPPER */
   .miru--cropper-container {
-    /* overflow: hidden !important; */
     position: relative;
     width: 100%;
     height: 100%;
     min-height: 0;
-    
-
-    :global .cropper-wrap-box{
-      /* overflow: visible !important; */
-    }
-    
-    /* .cropper-drag-box {
-      padding: .5rem;
-      opacity: 1;
-    } */
-
-    /* &>div {
-      opacity: 0.25 !important;
-      width: 100% !important;
-      height: 100% !important;
-    } */
   }
 }
 
@@ -62,6 +45,12 @@
   min-height: 0;
   max-height: 100%;
   padding: var(--gap-preview);
+
+  &[hidden] {
+    opacity: 0 !important;
+    max-height: 0px !important;
+    max-width: 0px !important;
+  }
 
   & > canvas {
     width: 100%;
