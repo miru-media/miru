@@ -72,7 +72,7 @@
 
   /* MENU BUTTON ROW */
   .miru--menu__row,
-  fieldset {
+  .miru--menu__row > fieldset {
     position: relative;
     display: grid;
     gap: var(--gap-default);
@@ -82,41 +82,44 @@
     justify-content: space-around;
     height: var(--height-menu-row);
     overflow-y: hidden;
-  }
-
-  .miru--menu__row > fieldset {
     grid-column: span var(--options-amt);
   }
 
+  .miru--menu__row--scroll {
+    display: flex;
+    height: var(--height-menu-row-scroll);
+    width: 100%;
+  }
+  .miru--menu__row--scroll > div {
+    display: flex;
+    height: var(--height-menu-row-scroll);
+    width: auto;
+    overflow: scroll hidden !important;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory !important;
+    padding-bottom: var(--gap-default);
+    padding-left: 50%;
+    padding-right: 50%;
+  }
+  .miru--menu__row--scroll > div > label {
+    width: 4rem;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+  }
+
   .miru--menu__slider-row {
-    grid-template-columns: 2.5rem 5rem 1fr 5rem;
+    grid-template-columns: 2.5rem 5rem 1fr 5rem 2.5rem;
 
     svg {
       justify-self: center;
     }
 
+    label {
+      text-align: right;
+    }
+
     svg + label {
       text-align: left;
-    }
-  }
-
-  /* MENU BUTTON ROW SCROLLABLE */
-  .miru--menu__row--scroll {
-    grid-auto-columns: 1fr;
-    /* gap: var(--gap-default); */
-    justify-content: unset;
-    height: var(--height-menu-row-scroll);
-    padding-top: var(--gap-default);
-    padding-right: 50%;
-    padding-bottom: calc(0.5rem + var(--gap-default)) !important;
-    padding-left: 50%;
-    overflow: scroll hidden !important;
-    scroll-behavior: smooth;
-    scroll-snap-type: x proximity;
-
-    .miru--button {
-      flex-shrink: 0;
-      scroll-snap-align: center;
     }
   }
 }
@@ -146,7 +149,8 @@ fieldset {
   }
 }
 
-fieldset, [role="tablist"]{
+fieldset,
+[role="tablist"] {
   border-radius: var(--roundness-button);
 }
 

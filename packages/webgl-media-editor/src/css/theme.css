@@ -70,7 +70,7 @@
       border: var(--outline-focus) !important;
     }
     /* RADIO BUTTON */
-    & > label {
+    label {
       /* ACTIVE BUTTON */
       &:has(input:checked) {
         background-color: var(--background-mid) !important;
