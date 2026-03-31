@@ -10,11 +10,13 @@ import type { MediaEditor } from '../media-editor.ts'
 interface UseCroptReturn {
   container: HTMLDivElement
   aspectRatio: Ref<number>
-  aspectRatioUnchanged: Ref<boolean>
   zoom: Ref<number>
-  setAspectRatio: (value: number, tilt: 'portrait' | 'landscape') => void
+  tilt: Ref<'portrait' | 'landscape'>
+  setAspectRatio: (value: number) => void
   setZoom: (value: number) => void
+  setTilt: (value: 'portrait' | 'landscape') => void
   setRotation: (value: number) => void
+  maxZoom: number
 }
 
 export const useCropt = ({
@@ -26,6 +28,8 @@ export const useCropt = ({
 }): UseCroptReturn => {
   // cropper instance
   const cropper = ref<Cropper>()
+  // maximum zoom allowed. used for gesture zoom limit
+  const maxZoom = 2
   // image source
   const sourceRef = computed(
     (): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)],
@@ -34,26 +38,27 @@ export const useCropt = ({
   const container = document.createElement('div')
   container.className = styles['miru--cropper-container']
   // current aspect ratio
-  const aspectRatio = computed(() => {
-    const crop = sourceRef.value?.crop.value
-    if (!crop) return NaN
-    return crop.width / crop.height
-  })
-  // current crop is original aspect ratio
-  const aspectRatioUnchanged = ref(true)
+  const aspectRatio = ref(-1)
   // zoom. tracking handled via setZoom
   const zoom = ref(NaN)
+  // tilt of the image tracker for toggling crop buttons and getting initial tilt
+  const tilt = ref('portrait' as 'portrait' | 'landscape')
   // apply crop. (on -1 crop full image) apply & store crop
   const cropperPaddingFactor = 0.9
-  const setAspectRatio = (value: number, tilt: 'portrait' | 'landscape'): void => {
+  const setAspectRatio = (value: number): void => {
     if (!sourceRef.value || !cropper.value) return
-    // flip ratio if necessary for tilt
-    value = (value < 1 && tilt === 'landscape') || (value > 1 && tilt === 'portrait') ? 1 / value : value
-    // set aspect ratio
-    if (value === -1) {
+    const isOrig = value === -1
+    // set original aspect ratio if wanted
+    if (isOrig) {
       const { naturalWidth, naturalHeight } = cropper.value.getImageData()
-      value = naturalWidth / naturalHeight
+      value = tilt.value === 'landscape' ? naturalWidth / naturalHeight : naturalHeight / naturalWidth
     }
+    // flip ratio if necessary for tilt
+    value =
+      (value < 1 && tilt.value === 'landscape') || (value > 1 && tilt.value === 'portrait')
+        ? 1 / value
+        : value
+
     cropper.value.setAspectRatio(value)
     // track crop in source ref
     const cropperData = cropper.value.getData(true)
@@ -76,7 +81,14 @@ export const useCropt = ({
     setZoom(zoomForSnapping)
     clampImage()
     // track unchanged status
-    aspectRatioUnchanged.value = value === -1
+    aspectRatio.value = isOrig? -1 : value
+  }
+  // set tilt > turns cropper sideways
+  const setTilt = (value: 'landscape' | 'portrait'): void => {
+    tilt.value = value
+    const crop = sourceRef.value?.crop.value
+    if (!crop) return
+    setAspectRatio(aspectRatio.value)
   }
   // apply zoom. get pivot point & apply and store zoom
   const setZoom = (value: number): void => {
@@ -84,16 +96,12 @@ export const useCropt = ({
     // get scale factire
     const canvasData = cropper.value.getCanvasData()
     const cropBoxData = cropper.value.getCropBoxData()
-    const baseScale = Math.max(
+    const minScale = Math.max(
       cropBoxData.width / canvasData.naturalWidth,
       cropBoxData.height / canvasData.naturalHeight,
     )
-    cropper.value.zoomTo(baseScale * value)
+    cropper.value.zoomTo(minScale * value)
     zoom.value = value
-
-    // const { width, height, naturalWidth, naturalHeight } = cropper.value.getCanvasData()
-    // zoom.value = Math.min(width / naturalWidth, height / naturalHeight)
-    // cropper.value.zoomTo(baseScale * value)
   }
   // apply rotation. rotate 90 deg
   const setRotation = (): void => {
@@ -107,29 +115,42 @@ export const useCropt = ({
   let isClamping = false
   // clamp image. make sure the image fills the crop area
   const clampImage = (): void => {
-    if (!cropper.value || isClamping) return
+    if (!cropper.value || isClamping || !sourceRef.value) return
     const canvasData = cropper.value.getCanvasData()
     const cropBoxData = cropper.value.getCropBoxData()
     // grab canvas data to modify
     let { left, top, width, height } = canvasData
+    // minimum scale to fill the crop box in the current orientation. minimum is always 1
+    const minScale = Math.max(
+      tilt.value === 'portrait'
+        ? cropBoxData.height / canvasData.naturalHeight
+        : cropBoxData.width / canvasData.naturalWidth,
+      tilt.value === 'portrait'
+        ? cropBoxData.width / canvasData.naturalWidth
+        : cropBoxData.height / canvasData.naturalHeight,
+    )
     // ensure canvas scale can fill the crop box
     if (width < cropBoxData.width || height < cropBoxData.height) {
       const scale = Math.max(cropBoxData.width / width, cropBoxData.height / height)
       width *= scale
       height *= scale
-      // track zoom // @todo improve zoom tracking
-      const baseScale = Math.max(
-        cropBoxData.width / canvasData.naturalWidth,
-        cropBoxData.height / canvasData.naturalHeight,
-      )
-      zoom.value = scale / baseScale
     }
+    // ensure max scroll is the limit
+    else if (width / (canvasData.naturalWidth * minScale) > maxZoom) {
+      const scale = (canvasData.naturalWidth * minScale * maxZoom) / width
+      width *= scale
+      height *= scale
+    }
+    // store new zoom
+    zoom.value = width / (canvasData.naturalWidth * minScale)
     // ensure position sticks to the edges of the crop box
     left = Math.min(cropBoxData.left, Math.max(left, cropBoxData.left + cropBoxData.width - width))
     top = Math.min(cropBoxData.top, Math.max(top, cropBoxData.top + cropBoxData.height - height))
     // open flag, apply changes, close flag
     isClamping = true
     cropper.value.setCanvasData({ left, top, width, height })
+    const cropperData = cropper.value.getData(true)
+    sourceRef.value.crop.value = cropperData
     isClamping = false
   }
   // create new cropper on source change
@@ -179,8 +200,17 @@ export const useCropt = ({
       })
     })
     // initialize cropper
+    tilt.value = cropperImage.width > cropperImage.height ? 'landscape' : 'portrait'
+    // const cropperData = sourceRef.value?.crop.value
     setZoom(1)
-    setAspectRatio(-1, 'landscape')
+    setAspectRatio(-1)
+
+    // if (cropperData) {
+    //   setAspectRatio(cropperData.width / cropperData.height)
+    // } else {
+    //   tilt.value = 'landscape'
+    //   setZoom(1)
+    // }
     // remove cropper on unwatch
     onCleanup(() => {
       cropper.value?.destroy()
@@ -192,10 +222,12 @@ export const useCropt = ({
   return {
     container,
     aspectRatio,
-    aspectRatioUnchanged,
     zoom,
+    tilt,
     setAspectRatio,
     setZoom,
+    setTilt,
     setRotation,
+    maxZoom,
   }
 }

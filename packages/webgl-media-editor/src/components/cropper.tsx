@@ -15,13 +15,21 @@ const ASPECT_9_16 = 0.5625
 
 export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> = (props) => {
   const editor = toValue(props.editor)
-  const { aspectRatio, aspectRatioUnchanged, setAspectRatio, setRotation, container, zoom, setZoom } =
-    useCropt({
-      editor,
-      sourceIndex: toValue(props.sourceIndex),
-    })
+  const {
+    aspectRatio,
+    tilt,
+    setAspectRatio,
+    setTilt,
+    setRotation,
+    container,
+    zoom,
+    setZoom,
+  } = useCropt({
+    editor,
+    sourceIndex: toValue(props.sourceIndex),
+  })
 
-  const tilt: Ref<'portrait' | 'landscape'> = ref('portrait')
+  // const tilt: Ref<'portrait' | 'landscape'> = ref('portrait')
 
   const ratios = [
     {
@@ -44,7 +52,6 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
     //   label: '16:9',
     // },
   ]
-  
 
   // const duplicatedRatio = ratios.find((item) => item.value === originalAspectRatio.value)
 
@@ -57,17 +64,16 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             class={styles['miru--button']}
             type="button"
             onClick={() => {
-              tilt.value = tilt.value === 'portrait' ? 'landscape' : 'portrait'
-              setAspectRatio(aspectRatio.value, tilt.value)
+              setTilt(tilt.value === 'landscape' ? 'portrait' : 'landscape')
             }}
-            disabled={() => aspectRatio.value === 1 / aspectRatio.value}
+            // disabled={() => aspectRatio.value === 1 / aspectRatio.value}
           >
-            {()=>{
-                if(tilt.value === 'portrait'){
-                  return  <IconTablerDeviceMobile class={styles['miru--button__icon']} />
-                }
-                return  <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} />
-              }}
+            {() => {
+              if (tilt.value === 'portrait') {
+                return <IconTablerDeviceMobile class={styles['miru--button__icon']} />
+              }
+              return <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} />
+            }}
             {/* <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} /> */}
             <span class={styles['miru--button__label']}>
               {() => tilt.value[0].toUpperCase() + tilt.value.slice(1)}
@@ -83,11 +89,11 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
                 type="radio"
                 name="image-crop"
                 value="Original"
-                checked={() => aspectRatioUnchanged.value}
-                onClick={() => setAspectRatio(-1, tilt.value)}
+                checked={() => aspectRatio.value === -1}
+                onClick={() => setAspectRatio(-1)}
               />
               <IconTablerCircleOff class={styles['miru--button__icon']} />
-              <span class={styles['miru--button__label']}>Original</span>
+              <span class={styles['miru--button__label']}>Original: {()=>aspectRatio.value}</span>
             </label>
 
             {ratios.map(({ value, Icon, label }) => (
@@ -99,8 +105,8 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
                   type="radio"
                   name="image-crop"
                   value={label}
-                  // checked={() => aspectRatio.value === value}
-                  onClick={() => setAspectRatio(value, tilt.value)}
+                  checked={() => aspectRatio.value === value || 1 / aspectRatio.value === value}
+                  onClick={() => setAspectRatio(value)}
                 />
                 <Icon class={styles['miru--button__icon']} />
                 <span class={styles['miru--button__label']}>{label}</span>
