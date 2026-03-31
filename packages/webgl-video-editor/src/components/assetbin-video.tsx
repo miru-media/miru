@@ -1,6 +1,6 @@
 import { useEditor } from "./utils"
 import { MediaAsset } from "../assets/media-asset"
-import { ref } from "fine-jsx"
+import { effect, ref } from "fine-jsx"
 import { useI18n } from "shared/utils"
 
 export const AssetBinVideo = () => {
@@ -13,6 +13,15 @@ export const AssetBinVideo = () => {
     }
 
     const assets = ref<MediaAsset[]>(getVideoAssets())
+
+    effect((onCleanup) => {
+        const assetsUpdate = () => (assets.value = getVideoAssets())
+        const assetCreateListener = editor.doc.assets.on('asset:create', assetsUpdate)
+
+        onCleanup(() => {
+            assetCreateListener()
+        })
+    })
 
     return (
         <div>
