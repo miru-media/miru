@@ -93,7 +93,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
                 onClick={() => setAspectRatio(-1)}
               />
               <IconTablerCircleOff class={styles['miru--button__icon']} />
-              <span class={styles['miru--button__label']}>Original: {()=>aspectRatio.value}</span>
+              <span class={styles['miru--button__label']}>Original</span>
             </label>
 
             {ratios.map(({ value, Icon, label }) => (
