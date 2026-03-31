@@ -81,7 +81,7 @@ export const useCropt = ({
     setZoom(zoomForSnapping)
     clampImage()
     // track unchanged status
-    aspectRatio.value = isOrig? -1 : value
+    aspectRatio.value = isOrig ? -1 : value
   }
   // set tilt > turns cropper sideways
   const setTilt = (value: 'landscape' | 'portrait'): void => {
@@ -156,19 +156,38 @@ export const useCropt = ({
   // create new cropper on source change
   watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {
     if (source == null || original == null) return
-    // create canvas element & append to container
-
-    // create canvas element & append to container
-    const cropperImage = document.createElement('canvas')
-    setObjectSize(cropperImage, original)
-    const context = cropperImage.getContext('2d')
-    if (!context) return
-    drawImage(context, original, 0, 0)
+    // create canvas element from one of the allowed types
+    let cropperImage: HTMLImageElement | HTMLCanvasElement
+    const originalUrl =
+      original instanceof Blob
+        ? URL.createObjectURL(original)
+        : original instanceof Image
+          ? original.currentSrc
+          : '' // < triggers else
+    if (originalUrl) {
+      cropperImage = new Image()
+      cropperImage.src = originalUrl
+    } else {
+      cropperImage = document.createElement('canvas')
+      const context = cropperImage.getContext('2d')
+      if (!context) return
+      setObjectSize(cropperImage, original)
+      drawImage(context, original, 0, 0)
+    }
+    // append to container
     cropperImage.setAttribute('style', 'visibility:hidden;width:100%')
     container.appendChild(cropperImage)
+    // // create canvas element & append to container
+    // const cropperImage = document.createElement('canvas')
+    // setObjectSize(cropperImage, original)
+    // const context = cropperImage.getContext('2d')
+    // if (!context) return
+    // drawImage(context, original, 0, 0)
+    // cropperImage.setAttribute('style', 'visibility:hidden;width:100%')
+    // container.appendChild(cropperImage)
     // create cropper
     cropper.value = await new Promise<Cropper>((resolve) => {
-      const cropperInstance = new Cropper(cropperImage, {
+      const cropperInstance = new Cropper(cropperImage as never, {
         guides: true,
         center: true,
         movable: true,
