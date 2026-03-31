@@ -29,7 +29,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
   const currentSource = computed(
     (): ImageSourceInternal | undefined => sources.value[currentSourceIndex.value],
   )
-  const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? -1)
+  const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? '')
   const scope = getCurrentScope()
   if (scope == null) throw new Error(`[webgl-media-editor] must be run in scope`)
 
@@ -62,7 +62,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
     {
       view: EditorView.Filter,
       Icon: IconTablerWand,
-      active: () => effectOfCurrentSource.value !== -1 && (currentSource.value?.intensity.value ?? 0) !== 0,
+      active: () => effectOfCurrentSource.value !== '' && (currentSource.value?.intensity.value ?? 0) !== 0,
       label: 'Filter',
     },
   ]
