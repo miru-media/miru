@@ -109,56 +109,81 @@
       }
       /* SLIDER THUMB, SEPARATED BECAUSE COMBINING THEM DESTROYS WEBKIT SETTING */
       &::-webkit-slider-thumb {
-        background-color: var(--background-stronger);
-        border-color: var(--background-softer);
+        background-color: var(--background-accent);
+        border-color: transparent;
+        /* border-color: var(--background-softer); */
+        /* box-shadow: -1000px 0 0 1000px red; */
       }
       &::-moz-range-thumb {
-        background-color: var(--background-stronger);
-        border-color: var(--background-softer);
+        background-color: var(--background-accent);
+        border-color: transparent;
+        /* background-color: var(--background-stronger);
+        border-color: var(--background-softer); */
       }
-      &[zero]::-webkit-slider-thumb {
+      /* &[zero]::-webkit-slider-thumb {
         background-color: var(--background-mid);
         border-color: var(--background-softer);
       }
       &[zero]::-moz-range-thumb {
         background-color: var(--background-mid);
         border-color: var(--background-softer);
-      }
+      } */
       /* GRADIENT COLORS */
       &::-webkit-slider-runnable-track {
         --g0: var(--background-soft);
-        --g1: var(--background-soft);
+        --g1: var(--background-accent);
       }
       &::-moz-range-track {
         --g0: var(--background-soft);
-        --g1: var(--background-soft);
-      }
-      &:hover::-webkit-slider-runnable-track {
-        --g0: var(--background-soft);
-        --g1: var(--background-mid);
-      }
-      &:hover::-moz-range-track {
-        --g0: var(--background-soft);
-        --g1: var(--background-mid);
+        --g1: var(--background-accent);
       }
       /* CENTERED SLIDER TRACK */
       &::-webkit-slider-runnable-track {
-        background: linear-gradient(90deg, var(--g1) 0%, var(--g0) 50%, var(--g1) 100%);
+        /* background: linear-gradient(90deg, var(--g1) 0%, var(--g0) 50%, var(--g1) 100%); */
+        background: linear-gradient(
+          90deg,
+          var(--g0) 0%,
+          var(--g0) min(50%, var(--input-value)),
+          var(--g1) min(50%, var(--input-value)),
+          var(--g1) max(50%, var(--input-value)),
+          var(--g0) max(50%, var(--input-value)),
+          var(--g0) 100%
+        );
       }
       &::-moz-range-track {
-        background: linear-gradient(90deg, var(--g1) 0%, var(--g0) 50%, var(--g1) 100%);
+        background: linear-gradient(
+          90deg,
+          var(--g0) 0%,
+          var(--g0) min(50%, var(--input-value)),
+          var(--g1) min(50%, var(--input-value)),
+          var(--g1) max(50%, var(--input-value)),
+          var(--g0) max(50%, var(--input-value)),
+          var(--g0) 100%
+        );
       }
       /* SLIDER TRACK NOT CENTERED */
       &:not([iscentered])::-webkit-slider-runnable-track {
-        background: linear-gradient(90deg, var(--g0) 0%, var(--g1) 100%);
+        background: linear-gradient(
+          90deg,
+          var(--g1) 0%,
+          var(--g1) var(--input-value),
+          var(--g0) calc(var(--input-value) + 0.1%),
+          var(--g0) 100%
+        );
       }
       &:not([iscentered])::-moz-range-track {
-        background: linear-gradient(90deg, var(--g0) 0%, var(--g1) 100%);
+        background: linear-gradient(
+          90deg,
+          var(--g1) 0%,
+          var(--g1) var(--input-value),
+          var(--g0) calc(var(--input-value) + 0.1%),
+          var(--g0) 100%
+        );
       }
     }
     /* SLIDER TICKS */
     datalist + div > span {
-      background-color: var(--background-softer);
+      background-color: var(--background-mid);
     }
     /* VALUE LABEL */
     input + label {

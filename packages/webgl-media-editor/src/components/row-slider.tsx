@@ -3,6 +3,8 @@ import { toValue } from 'fine-jsx'
 
 import styles from '../css/index.module.css'
 
+const percentageMultiplier = 100 
+
 export const RowSlider: Component<{
   [key: string]: unknown
   value: number
@@ -13,13 +15,14 @@ export const RowSlider: Component<{
 }> = ({ label, value, Icon, ticks, zeroPoint, ...inputProps }) => (
   <p class={[styles['miru--menu__row'], styles['miru--menu__slider-row']]}>
     <Icon class={styles['miru--button__icon']} aria-disabled />
-    <label id={'row_slider_' + toValue(label) + '_arialabel'} class={styles['miru--slider-label']}>
+    <label id={`row_slider_${  toValue(label)  }_arialabel`} class={styles['miru--slider-label']}>
       {label}
     </label>
     <input
       type="range"
       step="any"
       class={styles['miru--slider']}
+      style={()=>`--input-value:${((toValue(value) - toValue(ticks)[0]) / (toValue(ticks)[toValue(ticks).length - 1] - toValue(ticks)[0])) * percentageMultiplier}%`}
       {...inputProps}
       // value_current={value}
       zero={() => (toValue(value) === toValue(zeroPoint) ? '' : null)}
@@ -29,7 +32,7 @@ export const RowSlider: Component<{
       iscentered={toValue(ticks)[0] < 0 ? '' : null}
       value={value}
       role="slider"
-      aria-labelledby={'row_slider_' + toValue(label) + '_arialabel'}
+      aria-labelledby={`row_slider_${  toValue(label)  }_arialabel`}
     />
     <datalist id={`row_slider_ticks_${toValue(label)}`}>
       {toValue(ticks).map((tick) => (
@@ -37,13 +40,14 @@ export const RowSlider: Component<{
       ))}
     </datalist>
     <div>
-      {toValue(ticks).slice(1,-1).map((tick) => {
-        const ticksV = toValue(ticks)
-        const percentageMultiplier = 100
-        const min = ticksV[0]
-        const max = ticksV[ticksV.length - 1]
-        return <span style={`left: ${((tick - min) / (max - min)) * percentageMultiplier}%`} tick={tick} />
-      })}
+      {toValue(ticks)
+        .slice(1, -1)
+        .map((tick) => {
+          const ticksV = toValue(ticks)
+          const min = ticksV[0]
+          const max = ticksV[ticksV.length - 1]
+          return <span style={`left: ${((tick - min) / (max - min)) * percentageMultiplier}%`} tick={tick} />
+        })}
     </div>
     <label
       class={[
