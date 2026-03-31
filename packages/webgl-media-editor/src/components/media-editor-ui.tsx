@@ -92,7 +92,12 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
   return (
     <div class={styles['miru--main']}>
       {/* VIEWS */}
-      <div class={styles['miru--center']}>{() => views[currentView.value]?.()}</div>
+      <div class={styles['miru--center']} hidden={() => currentView.value !== EditorView.Crop && true}>
+        {() => views.crop?.()}
+      </div>
+      <div class={styles['miru--center']} hidden={() => currentView.value === EditorView.Crop && true}>
+        {() => currentView.value !== EditorView.Crop && views[currentView.value]?.()}
+      </div>
       {/* MAIN BUTTONS */}
       <p class={styles['miru--menu']}>
         <div class={styles['miru--menu__row']} role="tablist" aria-label="Image Settings">
@@ -100,9 +105,9 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
             <button
               role="tab"
               aria-selected={() => currentView.value === view}
-              aria-controls={'tab-' + view}
+              aria-controls={`tab-${view}`}
               tabindex={() => (tabs[mainTabId.value].view === view ? 0 : -1)}
-              id={'tab-button-' + view}
+              id={`tab-button-${view}`}
               type="button"
               class={() => [
                 styles['miru--button'],
