@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { EnvironmentModuleNode, Plugin } from 'vite'
 
 /**
  * https://github.com/vitejs/vite/discussions/8825#discussioncomment-4284803
@@ -8,7 +8,7 @@ import type { Plugin } from 'vite'
 export const cssModuleHmr = (): Plugin => {
   /** Use stable css names in dev mode */
   let counter = 0
-  const map = new Map<string, number>()
+  const cssFileIdMap = new Map<string, number>()
 
   return {
     name: 'dev:css-module-hmr',
@@ -17,18 +17,41 @@ export const cssModuleHmr = (): Plugin => {
     config(config) {
       if (config.css?.modules === false) return
 
+      // generate a stable CSS name by adding a suffix associated with the module id
       const generateScopedName = (name: string, filename: string): string => {
-        if (!map.has(filename)) this.info(filename)
-        if (!map.has(filename)) map.set(filename, (counter += 1))
-        return `${name}_${map.get(filename)}`
+        if (!cssFileIdMap.has(filename)) cssFileIdMap.set(filename, (counter += 1))
+
+        return `${name}_${cssFileIdMap.get(filename)}`
       }
 
       return { css: { modules: { generateScopedName } } }
     },
     transform(code, id) {
-      if (!map.has(id)) return
-
+      if (!cssFileIdMap.has(id)) return
+      // self-accepting module
+      // https://vite.dev/guide/api-hmr#hot-accept-cb
       return `${code};import.meta.hot.accept()`
+    },
+    hotUpdate(ctx) {
+      const updated = new Set<EnvironmentModuleNode>(ctx.modules)
+
+      ctx.modules.forEach((mod) => {
+        // mark updated root CSS modules as self-accepting
+        if (mod.id && cssFileIdMap.has(mod.id)) {
+          mod.isSelfAccepting = true
+        }
+        // for CSS files that are only @imported by CSS modules
+        else if (!mod.id && Array.from(mod.importers).every(({ id }) => !!id && cssFileIdMap.has(id))) {
+          // set the CSS modules as accepting the updated dependency and add them to the list of HMR updates
+          mod.importers.forEach((importer) => {
+            importer.acceptedHmrDeps.add(mod)
+            importer.isSelfAccepting = true
+            updated.add(importer)
+          })
+        }
+      })
+
+      return Array.from(updated)
     },
   }
 }

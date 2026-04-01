@@ -46,5 +46,3 @@ backButton.addEventListener('click', onClickBack)
 fileInput.addEventListener('input', onInputFile)
 cancelButton.addEventListener('click', onClickCancel)
 downloadButton.addEventListener('click', onClickDownload)
-
-import.meta.hot?.accept()
