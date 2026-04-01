@@ -100,7 +100,7 @@ export const useCropt = ({
       cropBoxData.width / canvasData.naturalWidth,
       cropBoxData.height / canvasData.naturalHeight,
     )
-    cropper.value.zoomTo(minScale * value)
+    cropper.value.zoomTo(minScale * value, getCenter(cropper.value.getContainerData()))
     zoom.value = value
   }
   // apply rotation. rotate 90 deg
@@ -144,8 +144,12 @@ export const useCropt = ({
     // store new zoom
     zoom.value = width / (canvasData.naturalWidth * minScale)
     // ensure position sticks to the edges of the crop box
-    left = Math.min(cropBoxData.left, Math.max(left, cropBoxData.left + cropBoxData.width - width))
-    top = Math.min(cropBoxData.top, Math.max(top, cropBoxData.top + cropBoxData.height - height))
+    const cropBoxRight = cropBoxData.left + cropBoxData.width
+    const cropBoxBottom = cropBoxData.top + cropBoxData.height
+    // const imageRight = left + width
+    // const imageBottom = top + height
+    left = Math.min(cropBoxData.left, Math.max(left, cropBoxRight - width))
+    top = Math.min(cropBoxData.top, Math.max(top, cropBoxBottom - height))
     // open flag, apply changes, close flag
     isClamping = true
     cropper.value.setCanvasData({ left, top, width, height })
@@ -177,14 +181,6 @@ export const useCropt = ({
     // append to container
     cropperImage.setAttribute('style', 'visibility:hidden;width:100%')
     container.appendChild(cropperImage)
-    // // create canvas element & append to container
-    // const cropperImage = document.createElement('canvas')
-    // setObjectSize(cropperImage, original)
-    // const context = cropperImage.getContext('2d')
-    // if (!context) return
-    // drawImage(context, original, 0, 0)
-    // cropperImage.setAttribute('style', 'visibility:hidden;width:100%')
-    // container.appendChild(cropperImage)
     // create cropper
     cropper.value = await new Promise<Cropper>((resolve) => {
       const cropperInstance = new Cropper(cropperImage as never, {
@@ -211,9 +207,6 @@ export const useCropt = ({
           resolve(cropperInstance)
         },
         crop() {
-          clampImage()
-        },
-        zoom() {
           clampImage()
         },
       })
