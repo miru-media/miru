@@ -189,7 +189,7 @@ export const useCropt = ({
         movable: true,
         rotatable: true,
         scalable: true,
-        zoomOnTouch: true,
+        zoomOnTouch: false,
         zoomOnWheel: false,
         dragMode: 'move',
         cropBoxMovable: false,
