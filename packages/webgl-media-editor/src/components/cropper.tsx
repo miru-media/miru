@@ -1,7 +1,7 @@
 import 'cropperjs/dist/cropper.css'
 
-import type { Component, Ref } from 'fine-jsx'
-import { ref, toValue } from 'fine-jsx'
+import type { Component } from 'fine-jsx'
+import { toValue } from 'fine-jsx'
 
 import type { InputEvent } from 'shared/types'
 
@@ -23,6 +23,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
     setRotation,
     container,
     zoom,
+    rotation,
     setZoom,
   } = useCropt({
     editor,
@@ -116,7 +117,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
 
           <button class={styles['miru--button']} type="button" onClick={setRotation}>
             <IconTablerRotateClockwise class={styles['miru--button__icon']} />
-            <span class={styles['miru--button__label']}>Rotate</span>
+            <span class={styles['miru--button__label']} aria-label={()=>`Rotate, current rotation: ${rotation.value} degrees`}>Rotate</span>
           </button>
         </p>
         <RowSlider
