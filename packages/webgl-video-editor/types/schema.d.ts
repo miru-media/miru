@@ -58,6 +58,7 @@ export interface MediaAsset extends BaseAsset<'media:av'> {
   mimeType: string
   duration: number
   size: number
+  thumbnail?: string
   audio?: {
     codec: string
     duration: Rational

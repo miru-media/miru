@@ -31,7 +31,10 @@ export const AssetBinVideo = () => {
                     <p>{t('assetbin_media_empty')}</p>
                 ) : (
                     assets.value.map((asset) => (
-                        <h3>{asset.name}</h3>
+                        <div>
+                            <h3>{asset.name}</h3>
+                            <img src={asset.thumbnail}/>
+                        </div>
                     ))
                 )
             }

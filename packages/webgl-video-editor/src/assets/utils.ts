@@ -9,6 +9,16 @@ const getRational = (track: Mb.InputTrack, value: number): Rational => {
   return Rational.fromDecimal(value, timeResolution)
 }
 
+const getVideoThumbnailDataUrl = async (videoTrack: Mb.InputVideoTrack): Promise<string | undefined> => {
+  const sink = new Mb.CanvasSink(videoTrack, {width: 320})
+  const timestamp = await videoTrack.getFirstTimestamp()
+  const wrappedCanvas = await sink.getCanvas(timestamp)
+  if (!wrappedCanvas) return
+  const canvas = wrappedCanvas.canvas
+  if(canvas instanceof HTMLCanvasElement) return canvas.toDataURL('image/jpeg, 0.75')
+  return
+}
+
 export const getMediaAssetInfo = async (
   id: string,
   source: string | Blob | File,
@@ -57,6 +67,15 @@ export const getMediaAssetInfo = async (
   if (video?.codec === null) throw new Error(`[webgl-video-editor] Couldn't get media video codec.`)
   if (audio?.codec === null) throw new Error(`[webgl-audio-editor] Couldn't get media audio codec.`)
 
+  let thumbnail: string | undefined
+  if (video) {
+    try {
+      thumbnail = await getVideoThumbnailDataUrl(video)
+    } catch {
+      thumbnail = undefined
+    }
+  }
+
   return {
     id,
     type: 'asset:media:av',
@@ -64,6 +83,7 @@ export const getMediaAssetInfo = async (
     name,
     color: CLIP_COLORS[Math.abs(stringHashCode(id)) % CLIP_COLORS.length],
     size,
+    thumbnail,
     audio: audio
       ? {
           codec: audio.codec,
