@@ -15,7 +15,7 @@ const getVideoThumbnailDataUrl = async (videoTrack: Mb.InputVideoTrack): Promise
   const wrappedCanvas = await sink.getCanvas(timestamp)
   if (!wrappedCanvas) return
   const canvas = wrappedCanvas.canvas
-  if(canvas instanceof HTMLCanvasElement) return canvas.toDataURL('image/jpeg, 0.75')
+  if(canvas instanceof HTMLCanvasElement) return canvas.toDataURL('image/jpeg', 0.75)
   return
 }
 
@@ -67,12 +67,12 @@ export const getMediaAssetInfo = async (
   if (video?.codec === null) throw new Error(`[webgl-video-editor] Couldn't get media video codec.`)
   if (audio?.codec === null) throw new Error(`[webgl-audio-editor] Couldn't get media audio codec.`)
 
-  let thumbnail: string | undefined
+  let thumbnailUri: string | undefined
   if (video) {
     try {
-      thumbnail = await getVideoThumbnailDataUrl(video)
+      thumbnailUri = await getVideoThumbnailDataUrl(video)
     } catch {
-      thumbnail = undefined
+      thumbnailUri = undefined
     }
   }
 
@@ -83,7 +83,7 @@ export const getMediaAssetInfo = async (
     name,
     color: CLIP_COLORS[Math.abs(stringHashCode(id)) % CLIP_COLORS.length],
     size,
-    thumbnail,
+    thumbnailUri,
     audio: audio
       ? {
           codec: audio.codec,

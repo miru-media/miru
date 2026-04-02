@@ -44,7 +44,6 @@ export interface MediaAsset extends BaseAsset<'media:av'> {
   mimeType: string
   duration: number
   size: number
-  thumbnail?: string
   audio?: {
     codec: string
     duration: Rational
@@ -62,6 +61,7 @@ export interface MediaAsset extends BaseAsset<'media:av'> {
     firstTimestamp: Rational
   }
   uri?: string
+  thumbnailUri?: string
 }
 
 export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {
