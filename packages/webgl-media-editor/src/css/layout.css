@@ -163,3 +163,9 @@ fieldset label,
     border-radius: 0 var(--roundness-button) var(--roundness-button) 0;
   }
 }
+
+/* [role="tablist"]:has([role="tab"]:focus-visible) */
+fieldset:has(input[type="radio"]:focus-visible) {
+  margin: 2px;
+  height: calc(100% - 5px);
+}

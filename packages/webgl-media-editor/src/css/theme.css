@@ -38,7 +38,7 @@
     color: var(--text-strong);
     /* RADIO BUTTON GROUP HIGHLIGHTING */
     &:has([role="tab"]:focus-visible) {
-      border: var(--outline-focus) !important;
+      outline: var(--outline-focus) !important;
     }
     /* TAB BUTTON */
     & > [role="tab"] {
@@ -67,7 +67,7 @@
     color: var(--text-strong);
     /* RADIO BUTTON GROUP HIGHLIGHTING */
     &:has(input[type="radio"]:focus-visible) {
-      border: var(--outline-focus) !important;
+      outline: var(--outline-focus) !important;
     }
     /* RADIO BUTTON */
     label {
