@@ -165,7 +165,7 @@ export const TransformControls = () => {
   })
 
   return (
-    <svg class={styles.transformControls} style={editor.selection?.isVideo() ? 'display:none' : ''}>
+    <svg class={styles.transformControls}>
       <g ref={container}>
         {() => {
           const clip = editor.selection
