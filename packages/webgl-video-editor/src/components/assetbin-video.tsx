@@ -33,7 +33,7 @@ export const AssetBinVideo = () => {
                     assets.value.map((asset) => (
                         <div>
                             <h3>{asset.name}</h3>
-                            <img src={asset.thumbnail}/>
+                            <img src={asset.thumbnailUri}/>
                         </div>
                     ))
                 )
