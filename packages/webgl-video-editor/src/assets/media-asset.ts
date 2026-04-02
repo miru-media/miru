@@ -9,6 +9,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
   name?: string
   readonly duration: number
   readonly mimeType: string
+  readonly thumbnail?: string
   readonly audio: Schema.MediaAsset['audio']
   readonly video: Schema.MediaAsset['video']
   readonly color: Schema.MediaAsset['color']
@@ -57,6 +58,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
     this.name = init.name
     this.mimeType = init.mimeType
     this.duration = init.duration
+    this.thumbnail = init.thumbnail
     this.audio = init.audio
     this.video = init.video
     this.uri = init.uri
@@ -105,6 +107,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
       mimeType: this.mimeType,
       duration: this.duration,
       size: this.size,
+      thumbnail: this.thumbnail,
       audio: this.audio,
       video: this.video,
       uri: this.uri,
