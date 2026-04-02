@@ -50,6 +50,7 @@ export const RowSlider: Component<{
         })}
     </div>
     <label
+      aria-hidden="true"
       class={[
         styles['miru--slider-label'],
         () => toValue(value) !== toValue(zeroPoint) && styles['miru--enabled'],
