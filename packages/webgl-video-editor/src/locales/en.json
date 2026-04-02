@@ -32,6 +32,7 @@
   "info": "Info",
   "media": "Media",
   "assetbin_media_empty": "It's empty here, trying uploading some video!",
+  "assetbin_media_close": "Close the media bin",
   "error_cannot_set_content": "Couldn't set document content",
   "error_no_webcodecs": "Your browser doesn't have the WebCodec APIs needed to export videos!",
   "error_cannot_export": "Your browser can't export videos in the formats that we use.",

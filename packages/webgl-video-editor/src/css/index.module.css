@@ -3,6 +3,7 @@
 @import url('./viewport.module.css');
 @import url('./timeline.module.css');
 @import url('./filter-menu.module.css');
+@import url('./assetbin.module.css');
 
 .videoEditor {
   display: flex;
