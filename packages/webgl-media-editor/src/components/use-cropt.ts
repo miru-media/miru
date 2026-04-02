@@ -12,6 +12,7 @@ interface UseCroptReturn {
   aspectRatio: Ref<number>
   zoom: Ref<number>
   tilt: Ref<'portrait' | 'landscape'>
+  rotation: Ref<number>
   setAspectRatio: (value: number) => void
   setZoom: (value: number) => void
   setTilt: (value: 'portrait' | 'landscape') => void
@@ -39,6 +40,8 @@ export const useCropt = ({
   container.className = styles['miru--cropper-container']
   // current aspect ratio
   const aspectRatio = ref(-1)
+  // current rotation
+  const rotation = ref(0)
   // zoom. tracking handled via setZoom
   const zoom = ref(NaN)
   // tilt of the image tracker for toggling crop buttons and getting initial tilt
@@ -110,6 +113,7 @@ export const useCropt = ({
     // track rotation in source ref
     const cropperData = cropper.value.getData(true)
     sourceRef.value.crop.value = cropperData
+    rotation.value = sourceRef.value.crop.value.rotate
   }
   // clamping flag to avoid recursive calls from cropper crop() or zoom()
   let isClamping = false
@@ -235,6 +239,7 @@ export const useCropt = ({
     container,
     aspectRatio,
     zoom,
+    rotation,
     tilt,
     setAspectRatio,
     setZoom,
