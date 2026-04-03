@@ -10,9 +10,10 @@
     grid-template-columns: repeat(auto-fit, minmax(6.25rem, 7.95rem));
     justify-content: center;
     justify-items: center;
-    max-height: 240px;
+    max-height: 15rem;
     overflow-y: auto;
     overflow: scroll;
+    margin-top: 0.5rem;
 }
 
 .assetbinHeader {
@@ -33,4 +34,22 @@
     width: 7.938rem;
     height: 5.313rem;
     border-radius: 0.5rem;
+}
+
+.assetbinUploadContainer {
+    display: flex;
+    justify-content: center;
+}
+
+.assetbinUpload {
+    background-color: var(--primary-bg);
+    cursor: pointer;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    max-width: 22rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    width: 20rem;
 }

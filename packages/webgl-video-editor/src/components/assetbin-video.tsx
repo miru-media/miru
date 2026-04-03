@@ -4,6 +4,8 @@ import { effect, ref } from "fine-jsx"
 import { useI18n } from "shared/utils"
 import styles from "../css/index.module.css"
 import { Button } from "shared/components/button"
+import { ACCEPT_VIDEO_FILE_TYPES } from "#constants"
+import type { InputEvent } from "shared/types"
 
 export const AssetBinVideo = () => {
     const editor = useEditor()
@@ -29,6 +31,18 @@ export const AssetBinVideo = () => {
         editor.activeAssetBin = null
     }
 
+    const onInputVideoFile = async (event: InputEvent) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        try{
+            await editor.createMediaAsset(file)
+        } catch {
+            // eslint-disable-next-line no-alert -- TODO
+            alert(t('error_cannot_play_type'))
+        }
+    }
+
     return (
         <div class={styles.assetbin}>
             <div class={styles.assetbinHeader}>
@@ -40,6 +54,18 @@ export const AssetBinVideo = () => {
                     <div class="bulma-icon i-tabler:x"/>
                 </Button>
                 <h2 class={styles.textGreat}>{t('media')}</h2>
+            </div>
+            <div class={styles.assetbinUploadContainer}>
+                <label class={[styles.assetbinUpload, styles.textBodyBold]}>
+                    <input 
+                        type="file"
+                        accept={ACCEPT_VIDEO_FILE_TYPES}
+                        hidden
+                        onInput={(event: InputEvent) => void onInputVideoFile(event)}
+                    />
+                    <div class="bulma-icon i-tabler:upload"/>
+                    <span>{t('assetbin_media_upload')}</span>
+                </label>
             </div>
             <div class={styles.assetbinAssetsContainer}>
                 {()=>
