@@ -24,7 +24,6 @@ export const RowSlider: Component<{
       class={styles['miru--slider']}
       style={()=>`--input-value:${((toValue(value) - toValue(ticks)[0]) / (toValue(ticks)[toValue(ticks).length - 1] - toValue(ticks)[0])) * percentageMultiplier}%`}
       {...inputProps}
-      // value_current={value}
       zero={() => (toValue(value) === toValue(zeroPoint) ? '' : null)}
       min={toValue(ticks)[0]}
       max={toValue(ticks)[toValue(ticks).length - 1]}

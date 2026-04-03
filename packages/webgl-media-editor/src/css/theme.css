@@ -111,14 +111,10 @@
       &::-webkit-slider-thumb {
         background-color: var(--background-accent);
         border-color: transparent;
-        /* border-color: var(--background-softer); */
-        /* box-shadow: -1000px 0 0 1000px red; */
       }
       &::-moz-range-thumb {
         background-color: var(--background-accent);
         border-color: transparent;
-        /* background-color: var(--background-stronger);
-        border-color: var(--background-softer); */
       }
       /* &[zero]::-webkit-slider-thumb {
         background-color: var(--background-mid);

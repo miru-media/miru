@@ -112,7 +112,6 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
               class={() => [
                 styles['miru--button'],
                 currentView.value === view && styles['miru--acc'],
-                // mainTabId.value === index && styles['miru--hov'],
                 active() && styles['miru--enabled'],
               ]}
               onClick={() => (currentView.value = view)}

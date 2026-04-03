@@ -48,8 +48,6 @@
     border: 2px solid;
     box-sizing: border-box;
   }
-
-
 }
 
 .miru--slider-label {
@@ -89,19 +87,12 @@ datalist + div {
   margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
   overflow: visible;
 
-  /* :root input:not(:hover) ~ & , */
-  :root input[zero] ~ & {
-    display: none !important;
-  }
-
   & > span {
     position: absolute;
     display: block;
     width: 2px;
     height: 100%;
-
     padding: 0;
     transform: translateX(-50%);
   }
 }
-

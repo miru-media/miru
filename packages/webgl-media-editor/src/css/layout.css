@@ -131,7 +131,7 @@
 
 /* For WebKit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 40px; /* Set to a large value */
+  width: 40px;
 }
 
 fieldset {

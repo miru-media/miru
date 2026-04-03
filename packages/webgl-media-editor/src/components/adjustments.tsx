@@ -65,15 +65,6 @@ export const AdjustmentsView = ({
           </>
         ))}
       </div>
-      {/* <RowSlider
-              label="test"
-              Icon={IconTablerDropletHalfFilled.Icon}
-              ticks={[-1, 0, 1]}
-              zeroPoint={0}
-              value={toRef(() => source.value?.adjustments.value?.saturation ?? 0)}
-              onInput={(event: InputEvent) => onInputSlider(event, "saturation")}
-              onChange={(event: InputEvent) => onChangeSlider(event, "saturation")}
-            /> */}
     </>
   )
 }
