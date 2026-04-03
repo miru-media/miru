@@ -9,52 +9,30 @@ import styles from '../css/index.module.css'
 import type { MediaEditor } from '../media-editor.ts'
 
 import { RowSlider } from './row-slider.jsx'
-import { useCropt } from './use-cropt.ts'
+import { useCrop } from './use-crop.ts'
 
 const ASPECT_9_16 = 0.5625
 
 export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> = (props) => {
   const editor = toValue(props.editor)
-  const {
-    aspectRatio,
-    tilt,
-    setAspectRatio,
-    setTilt,
-    setRotation,
-    container,
-    zoom,
-    rotation,
-    setZoom,
-  } = useCropt({
-    editor,
-    sourceIndex: toValue(props.sourceIndex),
-  })
-
-  // const tilt: Ref<'portrait' | 'landscape'> = ref('portrait')
+  const { aspectRatio, tilt, setAspectRatio, setTilt, setRotation, container, zoom, rotation, setZoom } =
+    useCrop({
+      editor,
+      sourceIndex: toValue(props.sourceIndex),
+    })
 
   const ratios = [
     {
       value: ASPECT_9_16,
-      // tilt: 'portrait' as const,
       Icon: IconTablerCropLandscape,
-      // Icon: IconTablerCropPortrait,
       label: '16:9',
     },
     {
       value: 1,
       Icon: IconTablerCrop_1_1,
-      // tilt: 'portrait' as const,
       label: '1:1',
     },
-    // {
-    //   value: ASPECT_9_16,
-    //   // tilt: 'landscape' as const,
-    //   Icon: IconTablerCropLandscape,
-    //   label: '16:9',
-    // },
   ]
-
-  // const duplicatedRatio = ratios.find((item) => item.value === originalAspectRatio.value)
 
   return (
     <>
@@ -67,7 +45,6 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             onClick={() => {
               setTilt(tilt.value === 'landscape' ? 'portrait' : 'landscape')
             }}
-            // disabled={() => aspectRatio.value === 1 / aspectRatio.value}
           >
             {() => {
               if (tilt.value === 'portrait') {
@@ -75,7 +52,6 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
               }
               return <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} />
             }}
-            {/* <IconTablerDeviceMobileRotated class={styles['miru--button__icon']} /> */}
             <span class={styles['miru--button__label']}>
               {() => tilt.value[0].toUpperCase() + tilt.value.slice(1)}
             </span>
@@ -84,7 +60,6 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
           {/* IF USING FIELDSET INSIDE A ROW, PASS OPTIONS AMOUT FOR PROPER SIZING */}
           <fieldset style="--options-amt:3" role="radiogroup" aria-labelledby="ratio-label">
             <legend id="ratio-label">Aspect Ratio</legend>
-            {/* <p class="miru--menu__group"> */}
             <label class={styles['miru--button']}>
               <input
                 type="radio"
@@ -100,7 +75,6 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             {ratios.map(({ value, Icon, label }) => (
               <label
                 class={styles['miru--button']}
-                // disabled={() => (duplicatedRatio?.value === value ? true : null)}
               >
                 <input
                   type="radio"
@@ -117,7 +91,12 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
 
           <button class={styles['miru--button']} type="button" onClick={setRotation}>
             <IconTablerRotateClockwise class={styles['miru--button__icon']} />
-            <span class={styles['miru--button__label']} aria-label={()=>`Rotate, current rotation: ${rotation.value} degrees`}>Rotate</span>
+            <span
+              class={styles['miru--button__label']}
+              aria-label={() => `Rotate, current rotation: ${rotation.value} degrees`}
+            >
+              Rotate
+            </span>
           </button>
         </p>
         <RowSlider
