@@ -10,6 +10,9 @@
     grid-template-columns: repeat(auto-fit, minmax(6.25rem, 7.95rem));
     justify-content: center;
     justify-items: center;
+    max-height: 240px;
+    overflow-y: auto;
+    overflow: scroll;
 }
 
 .assetbinHeader {
