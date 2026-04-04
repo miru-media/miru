@@ -1,6 +1,6 @@
 import { useEditor } from "./utils"
 import { MediaAsset } from "../assets/media-asset"
-import { effect, ref } from "fine-jsx"
+import { computed, effect, ref } from "fine-jsx"
 import { useI18n } from "shared/utils"
 import styles from "../css/index.module.css"
 import { Button } from "shared/components/button"
@@ -17,6 +17,13 @@ export const AssetBinVideo = () => {
     }
 
     const assets = ref<MediaAsset[]>(getVideoAssets())
+    const assetSearchQuery = ref('')
+
+    const assetsFiltered = computed(() => {
+        const query = assetSearchQuery.value.trim().toLowerCase()
+        if ( query === '') return assets.value
+        return assets.value.filter((asset) => (asset.name ?? '').toLowerCase().includes(query))
+    })
 
     effect((onCleanup) => {
         const assetsUpdate = () => (assets.value = getVideoAssets())
@@ -32,7 +39,7 @@ export const AssetBinVideo = () => {
     }
 
     const onInputVideoFile = async (event: InputEvent) => {
-        const file = event.target.files?.[0]
+        const file = (event.target as HTMLInputElement).files?.[0]
         if (!file) return
 
         try{
@@ -41,6 +48,10 @@ export const AssetBinVideo = () => {
             // eslint-disable-next-line no-alert -- TODO
             alert(t('error_cannot_play_type'))
         }
+    }
+
+    const onSearchInput = (event: InputEvent) => {
+        assetSearchQuery.value = (event.target as HTMLInputElement).value
     }
 
     return (
@@ -55,7 +66,7 @@ export const AssetBinVideo = () => {
                 </Button>
                 <h2 class={styles.textGreat}>{t('media')}</h2>
             </div>
-            <div class={styles.assetbinUploadContainer}>
+            <div class={styles.assetbinInputContainer}>
                 <label class={[styles.assetbinUpload, styles.textBodyBold]}>
                     <input 
                         type="file"
@@ -66,20 +77,28 @@ export const AssetBinVideo = () => {
                     <div class="bulma-icon i-tabler:upload"/>
                     <span>{t('assetbin_media_upload')}</span>
                 </label>
+                <input
+                    type="search"
+                    value={() => assetSearchQuery.value}
+                    onInput={onSearchInput}
+                    class={styles.assetbinSearch}
+                    placeholder={t('assetbin_media_search_placeholder')}
+                />
             </div>
             <div class={styles.assetbinAssetsContainer}>
-                {()=>
-                    assets.value.length === 0 ? (
-                        <p>{t('assetbin_media_empty')}</p>
-                    ) : (
-                        assets.value.map((asset) => (
-                            <div class={styles.assetbinAsset}>
-                                <img src={asset.thumbnailUri} />
-                                <span class={styles.textBodySmall}>{asset.name}</span>
-                            </div>
-                        ))
-                    )
-                }
+                {() => {
+                    if (assets.value.length === 0) {
+                        return <p class={styles.textBodySmall}>{t('assetbin_media_empty')}</p>
+                    } else if (assetsFiltered.value.length === 0){
+                        return <p class={styles.textBodySmall}>{t('assetbin_media_search_empty')}</p>
+                    }
+                    return assetsFiltered.value.map((asset) => (
+                        <div class={styles.assetbinAsset}>
+                            <img src={asset.thumbnailUri} />
+                            <span class={styles.textBodySmall}>{asset.name}</span>
+                        </div>
+                    ))
+                }}
             </div>
         </div>
     )

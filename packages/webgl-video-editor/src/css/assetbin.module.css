@@ -36,9 +36,10 @@
     border-radius: 0.5rem;
 }
 
-.assetbinUploadContainer {
+.assetbinInputContainer {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 .assetbinUpload {
@@ -52,4 +53,13 @@
     padding: 0.5rem;
     border-radius: 0.25rem;
     width: 20rem;
+}
+
+.assetbinSearch {
+    width: 20rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+}
+.assetbinSearch:focus {
+    outline: 0;
 }
