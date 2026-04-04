@@ -32,6 +32,8 @@
   "info": "Info",
   "media": "Medien",
   "assetbin_media_empty": "Hier ist nichts zu sehen, versuch mal, ein Video hochzuladen!",
+  "assetbin_media_search_empty": "Keine Suchergebnisse :(",
+  "assetbin_media_search_placeholder": "Nach Medien suchen",
   "assetbin_media_upload": "Medien hochladen",
   "assetbin_media_close": "Medienfach schließen",
   "error_cannot_set_content": "Der Filminhalt konnte nicht gespeichert werden",

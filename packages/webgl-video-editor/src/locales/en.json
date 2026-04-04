@@ -32,6 +32,8 @@
   "info": "Info",
   "media": "Media",
   "assetbin_media_empty": "It's empty here, trying uploading some video!",
+  "assetbin_media_search_empty": "No search results :(",
+  "assetbin_media_search_placeholder": "Search for media",
   "assetbin_media_upload": "Upload media",
   "assetbin_media_close": "Close the media bin",
   "error_cannot_set_content": "Couldn't set document content",
