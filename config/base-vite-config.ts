@@ -30,7 +30,7 @@ export const extendViteConfig = (config: UserConfig): UserConfig => {
         rules: [
           {
             match:
-              /\b(?:https:\/\/(?:github\.com\/miru-media|upload\.wikimedia\.org|storage\.googleapis\.com\/mediapipe-models|commondatastorage\.googleapis\.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|hdr|gltf|glb|task))(?=[`'")\]])/giu,
+              /\b(?:https:\/\/(?:github\.com\/miru-media|upload\.wikimedia\.org|storage\.googleapis\.com\/mediapipe-models|commondatastorage\.googleapis\.com\/gtv-videos-bucket)\/.*?\.(?:webm|mp4|mp3|jpg|png|webp|hdr|gltf|glb|task))(?=[`'")\]])/giu,
           },
         ],
       }),
