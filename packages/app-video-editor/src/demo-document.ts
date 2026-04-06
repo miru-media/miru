@@ -1,9 +1,13 @@
 import turtle from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/turtle-PaulsAdventures-pixabay.mp4'
+import turtleThumbnail from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/turtle-PaulsAdventures-pixabay.mp4.webp'
 import underwaterAudio from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/underwater-ambience-freesound_community-pixabay.mp3'
 import waveBreaking from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/wave-breaking-EclipseChasers-pixabay.mp4'
+import waveBreakingThumbnail from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/wave-breaking-EclipseChasers-pixabay.mp4.webp'
 import wavesAudio from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-breaking-Dia_Pazon-pixabay.mp3'
 import waves from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-MustaKor-pixabay.mp4'
+import wavesThumbnail from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-MustaKor-pixabay.mp4.webp'
 import wavesRocks from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-rocks-McPix22-pixabay.mp4'
+import wavesRocksThumbnail from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-rocks-McPix22-pixabay.mp4.webp'
 import { uid } from 'uid'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 import type { Schema } from 'webgl-video-editor'
@@ -20,6 +24,7 @@ const assets = {
     mimeType: 'video/mp4',
     name: `Ocean bird's eye view`,
     uri: waves,
+    thumbnailUri: wavesThumbnail,
     size: 18996712,
     duration: 7.007,
     audio: {
@@ -45,6 +50,7 @@ const assets = {
     mimeType: 'video/mp4',
     name: 'Rocky shore',
     uri: wavesRocks,
+    thumbnailUri: wavesRocksThumbnail,
     size: 21942942,
     duration: 7.007,
     video: {
@@ -63,6 +69,7 @@ const assets = {
     mimeType: 'video/mp4',
     name: 'Wave breaking',
     uri: waveBreaking,
+    thumbnailUri: waveBreakingThumbnail,
     size: 5384631,
     duration: 10,
     video: {
@@ -81,6 +88,7 @@ const assets = {
     mimeType: 'video/mp4',
     name: 'Turtle swimming',
     uri: turtle,
+    thumbnailUri: turtleThumbnail,
     size: 8293675,
     duration: 10,
     video: {
