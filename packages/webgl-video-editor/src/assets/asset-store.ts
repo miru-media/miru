@@ -2,7 +2,7 @@ import { uid } from 'uid'
 
 import type * as pub from '../../types/core.d.ts'
 import type { Schema } from '../../types/core.d.ts'
-import { AssetCreateEvent } from '../events.ts'
+import { AssetCreateEvent, AssetDeleteEvent } from '../events.ts'
 import { FileSystemStorage } from '../storage/file-system-storage.ts'
 
 import { HttpAssetLoader } from './http-asset-loader.ts'
@@ -105,9 +105,11 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   }
 
   async delete(key: string): Promise<void> {
+    const asset = this.getAsset(key)
     await this.fileStorage.delete(key)
-    this.getAsset(key)?.dispose()
+    asset?.dispose()
     this.#map.delete(key)
+    if (asset) this.#emit(new AssetDeleteEvent(asset))
   }
 
   async createMediaAsset(source: Blob | string): Promise<pub.MediaAsset> {
