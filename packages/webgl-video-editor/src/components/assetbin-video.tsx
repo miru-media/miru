@@ -6,6 +6,7 @@ import styles from "../css/index.module.css"
 import { Button } from "shared/components/button"
 import { ACCEPT_VIDEO_FILE_TYPES } from "#constants"
 import type { InputEvent } from "shared/types"
+import { AssetBinVideoPreview } from "./assetbin-video-preview"
 
 export const AssetBinVideo = () => {
     const editor = useEditor()
@@ -18,6 +19,7 @@ export const AssetBinVideo = () => {
 
     const assets = ref<MediaAsset[]>(getVideoAssets())
     const assetSearchQuery = ref('')
+    const activeVideo = ref<MediaAsset | undefined>()
 
     const assetsFiltered = computed(() => {
         const query = assetSearchQuery.value.trim().toLowerCase()
@@ -28,9 +30,11 @@ export const AssetBinVideo = () => {
     effect((onCleanup) => {
         const assetsUpdate = () => (assets.value = getVideoAssets())
         const assetCreateListener = editor.doc.assets.on('asset:create', assetsUpdate)
+        const assetDeleteListener = editor.doc.assets.on('asset:delete', assetsUpdate)
 
         onCleanup(() => {
             assetCreateListener()
+            assetDeleteListener()
         })
     })
 
@@ -71,6 +75,7 @@ export const AssetBinVideo = () => {
                     <input 
                         type="file"
                         accept={ACCEPT_VIDEO_FILE_TYPES}
+                        aria-label={t('assetbin_media_upload')}
                         hidden
                         onInput={(event: InputEvent) => void onInputVideoFile(event)}
                     />
@@ -83,6 +88,7 @@ export const AssetBinVideo = () => {
                     onInput={onSearchInput}
                     class={styles.assetbinSearch}
                     placeholder={t('assetbin_media_search_placeholder')}
+                    aria-label={t('assetbin_media_search_placeholder')}
                 />
             </div>
             <div class={styles.assetbinAssetsContainer}>
@@ -93,13 +99,20 @@ export const AssetBinVideo = () => {
                         return <p class={styles.textBodySmall}>{t('assetbin_media_search_empty')}</p>
                     }
                     return assetsFiltered.value.map((asset) => (
-                        <div class={styles.assetbinAsset}>
+                        <button
+                            type="button" 
+                            class={styles.assetbinAsset}
+                            onClick={() => {
+                                activeVideo.value = asset
+                            }}
+                        >
                             <img src={asset.thumbnailUri} />
                             <span class={styles.textBodySmall}>{asset.name}</span>
-                        </div>
+                        </button>
                     ))
                 }}
             </div>
+            <AssetBinVideoPreview activeVideo={activeVideo}/>
         </div>
     )
 }

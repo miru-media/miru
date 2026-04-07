@@ -63,3 +63,33 @@
 .assetbinSearch:focus {
     outline: 0;
 }
+
+.assetbinDialogue {
+    background-color: var(--gray);
+    color: var(--white);
+    max-width: 40rem;
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+}
+
+.dialogueButtonContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+}
+
+.assetbinCreateClip {
+    background-color: var(--blue);
+}
+
+.assetbinButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+}
+
+.assetbinDeleteVideo {
+   background-color: var(--red-dark);
+}
