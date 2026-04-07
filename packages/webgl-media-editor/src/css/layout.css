@@ -47,9 +47,9 @@
   padding: var(--gap-preview);
 
   &[hidden] {
+    max-width: 0 !important;
+    max-height: 0 !important;
     opacity: 0 !important;
-    max-height: 0px !important;
-    max-width: 0px !important;
   }
 
   & > canvas {
@@ -71,35 +71,37 @@
   .miru--menu__row > fieldset {
     position: relative;
     display: grid;
-    gap: var(--gap-default);
+    grid-column: span var(--options-amt);
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
+    gap: var(--gap-default);
     align-items: center;
     justify-content: space-around;
     height: var(--height-menu-row);
     overflow-y: hidden;
-    grid-column: span var(--options-amt);
   }
 
   .miru--menu__row--scroll {
     display: flex;
-    height: var(--height-menu-row-scroll);
     width: 100%;
+    height: var(--height-menu-row-scroll);
   }
+
   .miru--menu__row--scroll > div {
     display: flex;
-    height: var(--height-menu-row-scroll);
     width: auto;
+    height: var(--height-menu-row-scroll);
+    padding-right: 50%;
+    padding-bottom: var(--gap-default);
+    padding-left: 50%;
     overflow: scroll hidden !important;
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory !important;
-    padding-bottom: var(--gap-default);
-    padding-left: 50%;
-    padding-right: 50%;
   }
+
   .miru--menu__row--scroll > div > label {
-    width: 4rem;
     flex-shrink: 0;
+    width: 4rem;
     scroll-snap-align: center;
   }
 
@@ -137,8 +139,8 @@
 fieldset {
   min-inline-size: min-content !important;
   min-inline-size: 0 !important;
-  border: 0;
   padding: 0;
+  border: 0;
 
   legend {
     display: none !important;
@@ -146,26 +148,29 @@ fieldset {
 }
 
 fieldset,
-[role="tablist"] {
+[role='tablist'] {
   border-radius: var(--roundness-button);
 }
 
 fieldset label,
-[role="tab"] {
+[role='tab'] {
   outline: none !important;
+
   &:not(:first-of-type, :last-of-type) {
     border-radius: 0;
   }
+
   &:first-of-type {
     border-radius: var(--roundness-button) 0 0 var(--roundness-button);
   }
+
   &:last-of-type {
     border-radius: 0 var(--roundness-button) var(--roundness-button) 0;
   }
 }
 
 /* [role="tablist"]:has([role="tab"]:focus-visible) */
-fieldset:has(input[type="radio"]:focus-visible) {
-  margin: 2px;
+fieldset:has(input[type='radio']:focus-visible) {
   height: calc(100% - 5px);
+  margin: 2px;
 }

@@ -1,6 +1,6 @@
 /* MODULE BUTTON */
 .host {
-  &[show-labels="false"] .miru--button:has(.miru--button__icon) {
+  &[show-labels='false'] .miru--button:has(.miru--button__icon) {
     .miru--button__label {
       display: none;
     }
@@ -47,7 +47,7 @@
   }
 
   /* BUTTON WITH RADIO INPUT */
-  &[disabled]:has(input[type="radio"]) {
+  &[disabled]:has(input[type='radio']) {
     text-decoration: line-through;
     opacity: 0.4;
   }
@@ -61,6 +61,7 @@
     width: calc(var(--height-menu-row-scroll) - 1rem);
     height: 100%;
     border: 2px solid transparent;
+
     canvas {
       flex-grow: 1;
       width: 100%;
@@ -86,7 +87,7 @@
   }
 
   /* MENU RADIO BUTTON */
-  input[type="radio"] {
+  input[type='radio'] {
     position: absolute;
     top: 0;
     left: 0;
@@ -107,14 +108,14 @@
     display: block;
     width: 0.5rem;
     height: 0.5rem;
-    content: "";
+    content: '';
     border-radius: 50%;
   }
 }
 
 /* TAB BUTTON GROUP HIGHLIGHTING */
-.miru--menu__row:has([role="tab"]:focus-visible) {
-  [role="tab"] {
+.miru--menu__row:has([role='tab']:focus-visible) {
+  [role='tab'] {
     outline: 4px auto -webkit-focus-ring-color;
   }
 }

@@ -18,17 +18,17 @@
   color-scheme: light dark;
 
   /* FOCUS */
-  --outline-focus: 4px solid light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
+  --outline-focus: 4px solid light-dark(hsl(220deg 5% 2%), hsl(0deg 0% 100%));
 
   /* FONT COLORS */
-  --text-soft: light-dark(hsl(0, 0%, 100%), hsl(220, 5%, 2%));
-  --text-strong: light-dark(hsl(220, 5%, 2%), hsl(0, 0%, 100%));
+  --text-soft: light-dark(hsl(0deg 0% 100%), hsl(220deg 5% 2%));
+  --text-strong: light-dark(hsl(220deg 5% 2%), hsl(0deg 0% 100%));
 
   /* BACKGROUND COLORS */
-  --background-accent: light-dark(hsl(216, 79%, 50%), hsl(216, 79%, 50%));
-  --background-softer: light-dark(hsl(204, 0%, 80%), hsl(204, 5%, 2%));
-  --background-soft: light-dark(hsl(204, 5%, 70%), hsl(204, 5%, 15%));
-  --background-mid: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 37%));
-  --background-strong: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 60%));
-  --background-stronger: light-dark(hsl(204, 0%, 55%), hsl(0, 0%, 75%));
+  --background-accent: light-dark(hsl(216deg 79% 50%), hsl(216deg 79% 50%));
+  --background-softer: light-dark(hsl(204deg 0% 80%), hsl(204deg 5% 2%));
+  --background-soft: light-dark(hsl(204deg 5% 70%), hsl(204deg 5% 15%));
+  --background-mid: light-dark(hsl(204deg 0% 55%), hsl(0deg 0% 37%));
+  --background-strong: light-dark(hsl(204deg 0% 55%), hsl(0deg 0% 60%));
+  --background-stronger: light-dark(hsl(204deg 0% 55%), hsl(0deg 0% 75%));
 }

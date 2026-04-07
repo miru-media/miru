@@ -73,9 +73,7 @@ export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> =
             </label>
 
             {ratios.map(({ value, Icon, label }) => (
-              <label
-                class={styles['miru--button']}
-              >
+              <label class={styles['miru--button']}>
                 <input
                   type="radio"
                   name="image-crop"

@@ -9,8 +9,8 @@
   --theme-contrast: 0.9; /* 0...1 where 0 means low contrast; 1 means high contrast, black-n-white in fact */
 
   /* Fonts */
-  --font-text: "Inter Variable", arial, sans-serif;
-  --font-mono: "JetBrains Mono", "Courier New", courier, monospace;
+  --font-text: 'Inter Variable', arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', courier, monospace;
 
   /* Font sizes */
   --font-size-s: 13.75px;
@@ -136,7 +136,8 @@
   */
   --color-background-l: calc(0.35 - 0.35 * pow(var(--theme-contrast), 4));
   --color-background: oklch(
-    from var(--color-accent) var(--color-background-l) calc(var(--color-background-l) * 0.3 * var(--theme-saturation)) h
+    from var(--color-accent) var(--color-background-l)
+      calc(var(--color-background-l) * 0.3 * var(--theme-saturation)) h
   );
   --color-background-blur: oklch(from var(--color-background) l c h / 90%);
   --color-text-primary-l: calc(0.7 + 0.3 * pow(var(--theme-contrast), 0.8));
@@ -598,7 +599,11 @@ section {
 
 .promo-cta {
   margin-bottom: var(--space-section);
-  background-image: linear-gradient(135deg, var(--color-gradient-promo-start), var(--color-gradient-promo-end));
+  background-image: linear-gradient(
+    135deg,
+    var(--color-gradient-promo-start),
+    var(--color-gradient-promo-end)
+  );
   border-radius: 16px;
 }
 
@@ -817,7 +822,7 @@ img:where([width][height]) {
   height: auto;
 }
 
-img:where([src$=".svg"]) {
+img:where([src$='.svg']) {
   width: 100%;
   max-width: none;
   height: auto;
@@ -855,10 +860,11 @@ iframe {
 /* custom */
 
 :root {
-  --font-text: "Liberation Sans", -apple-system, system-ui, sans-serif;
+  --font-text: 'Liberation Sans', -apple-system, system-ui, sans-serif;
   --font-mono:
-    consolas, menlo, monaco, andale mono wt, andale mono, lucida console, lucida sans typewriter, dejavu sans mono,
-    bitstream vera sans mono, liberation mono, nimbus mono l, courier new, courier, monospace;
+    consolas, menlo, monaco, andale mono wt, andale mono, lucida console, lucida sans typewriter,
+    dejavu sans mono, bitstream vera sans mono, liberation mono, nimbus mono l, courier new, courier,
+    monospace;
 }
 
 .theme-dark .light-only,
@@ -881,9 +887,11 @@ iframe {
   height: 100dvh;
 }
 
-:focus-visible, label:has([type="file"]:focus-visible){
+:focus-visible,
+label:has([type='file']:focus-visible) {
   outline: 4px solid white;
 }
-label:has([type="file"]:focus-visible) [type="file"]:focus-visible{
+
+label:has([type='file']:focus-visible) [type='file']:focus-visible {
   outline: none;
 }

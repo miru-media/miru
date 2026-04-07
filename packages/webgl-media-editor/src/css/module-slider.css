@@ -6,24 +6,24 @@
 
 /* SLIDER */
 .miru--slider {
+  z-index: 1;
   justify-self: center;
   width: 100%;
   height: calc(100% - 2 * var(--gap-default));
-  background-clip: content-box;
-
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  cursor: pointer;
-  z-index: 1;
 
   overflow: hidden;
+
+  appearance: none;
+  cursor: pointer;
+  background: transparent;
+  background-clip: content-box;
 
   /* Track */
   &::-webkit-slider-runnable-track {
     height: var(--height-slider);
     border-radius: var(--roundness-button);
   }
+
   &::-moz-range-track {
     height: var(--height-slider);
     border-radius: var(--roundness-button);
@@ -31,43 +31,43 @@
 
   /* Thumb */
   &::-webkit-slider-thumb {
+    box-sizing: border-box;
+    width: var(--width-slider-thumb);
+    height: var(--width-slider-thumb);
+    margin-top: calc(var(--width-slider-thumb) * -0.5 + 3px);
     appearance: none;
-    -webkit-appearance: none;
-    width: var(--width-slider-thumb);
-    height: var(--width-slider-thumb);
-    border-radius: 50%;
-    margin-top: calc(var(--width-slider-thumb) * -0.5 + 3px);
     border: 2px solid;
-    box-sizing: border-box;
+    border-radius: 50%;
   }
+
   &::-moz-range-thumb {
+    box-sizing: border-box;
     width: var(--width-slider-thumb);
     height: var(--width-slider-thumb);
-    border-radius: 50%;
     margin-top: calc(var(--width-slider-thumb) * -0.5 + 3px);
     border: 2px solid;
-    box-sizing: border-box;
+    border-radius: 50%;
   }
 }
 
 .miru--slider-label {
+  position: relative;
   justify-self: center;
   width: 5rem;
   overflow: hidden;
   text-align: center;
-  position: relative;
 
   /* ENABLED MARKER */
   &.miru--enabled::after {
     position: absolute;
     top: 0;
     right: 0.75rem;
+    z-index: 999;
     display: block;
     width: 0.35rem;
     height: 0.35rem;
-    content: "";
+    content: '';
     border-radius: 50%;
-    z-index: 999;
   }
 }
 
@@ -76,16 +76,16 @@ datalist {
 }
 
 datalist + div {
-  pointer-events: none;
   position: absolute;
-  z-index: 1;
   top: calc(50% - var(--height-slider) / 2 -2px);
+  z-index: 1;
   display: block !important;
   grid-column: 3 / -3;
   width: calc(100% - 2 * var(--gap-default) - var(--width-slider-thumb));
   height: calc(var(--height-slider) + 4px);
   margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
   overflow: visible;
+  pointer-events: none;
 
   & > span {
     position: absolute;

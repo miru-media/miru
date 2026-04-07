@@ -3,7 +3,7 @@ import { toValue } from 'fine-jsx'
 
 import styles from '../css/index.module.css'
 
-const percentageMultiplier = 100 
+const percentageMultiplier = 100
 
 export const RowSlider: Component<{
   [key: string]: unknown
@@ -15,14 +15,16 @@ export const RowSlider: Component<{
 }> = ({ label, value, Icon, ticks, zeroPoint, ...inputProps }) => (
   <p class={[styles['miru--menu__row'], styles['miru--menu__slider-row']]}>
     <Icon class={styles['miru--button__icon']} aria-disabled />
-    <label id={`row_slider_${  toValue(label)  }_arialabel`} class={styles['miru--slider-label']}>
+    <label id={`row_slider_${toValue(label)}_arialabel`} class={styles['miru--slider-label']}>
       {label}
     </label>
     <input
       type="range"
       step="any"
       class={styles['miru--slider']}
-      style={()=>`--input-value:${((toValue(value) - toValue(ticks)[0]) / (toValue(ticks)[toValue(ticks).length - 1] - toValue(ticks)[0])) * percentageMultiplier}%`}
+      style={() =>
+        `--input-value:${((toValue(value) - toValue(ticks)[0]) / (toValue(ticks)[toValue(ticks).length - 1] - toValue(ticks)[0])) * percentageMultiplier}%`
+      }
       {...inputProps}
       zero={() => (toValue(value) === toValue(zeroPoint) ? '' : null)}
       min={toValue(ticks)[0]}
@@ -31,7 +33,7 @@ export const RowSlider: Component<{
       iscentered={toValue(ticks)[0] < 0 ? '' : null}
       value={value}
       role="slider"
-      aria-labelledby={`row_slider_${  toValue(label)  }_arialabel`}
+      aria-labelledby={`row_slider_${toValue(label)}_arialabel`}
     />
     <datalist id={`row_slider_ticks_${toValue(label)}`}>
       {toValue(ticks).map((tick) => (

@@ -3,13 +3,12 @@
   background-color: var(--background-softer);
 
   /* SCROLLBARS [ter] */
-  & {
-    ::-webkit-scrollbar-thumb {
-      background-color: var(--background-soft);
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--background-soft);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   /* PREVIEW [ter] */
@@ -23,10 +22,12 @@
     :global .cropper-view-box {
       outline-color: var(--text-strong);
     }
+
     /* AROUND CROP BOX */
     :global .cropper-drag-box {
       background-color: var(--background-soft) !important;
     }
+
     /* GUIDES */
     :global .cropper-dashed {
       border-color: var(--text-strong);
@@ -34,29 +35,34 @@
   }
 
   /* TAB GROUP [pri] */
-  [role="tablist"] {
+  [role='tablist'] {
     color: var(--text-strong);
+
     /* RADIO BUTTON GROUP HIGHLIGHTING */
-    &:has([role="tab"]:focus-visible) {
+    &:has([role='tab']:focus-visible) {
       outline: var(--outline-focus) !important;
     }
+
     /* TAB BUTTON */
-    & > [role="tab"] {
+    & > [role='tab'] {
       /* ENABLED DOT */
       &.miru--enabled::after {
         background-color: var(--text-strong);
       }
+
       /* ACTIVE BUTTON */
-      &[aria-selected="true"] {
+      &[aria-selected='true'] {
         background-color: var(--background-accent) !important;
       }
+
       /* INACTIVE BUTTON */
-      &:not([aria-selected="true"]) {
+      &:not([aria-selected='true']) {
         background-color: var(--background-soft) !important;
       }
+
       /* INACTIVE BUTTON HOOVER OR FOCUS */
-      &:not([aria-selected="true"]):hover,
-      &:not([aria-selected="true"]):focus-visible {
+      &:not([aria-selected='true']):hover,
+      &:not([aria-selected='true']):focus-visible {
         background-color: var(--background-strong) !important;
       }
     }
@@ -65,20 +71,24 @@
   /* RADIO GROUP [sec] */
   fieldset {
     color: var(--text-strong);
+
     /* RADIO BUTTON GROUP HIGHLIGHTING */
-    &:has(input[type="radio"]:focus-visible) {
+    &:has(input[type='radio']:focus-visible) {
       outline: var(--outline-focus) !important;
     }
+
     /* RADIO BUTTON */
     label {
       /* ACTIVE BUTTON */
       &:has(input:checked) {
         background-color: var(--background-mid) !important;
       }
+
       /* INACTIVE BUTTON */
       &:not(:has(input:checked)) {
         background-color: var(--background-soft) !important;
       }
+
       /* INACTIVE BUTTON HOOVER, hover class for filter scroll pseudo hover */
       &:not(:has(input:checked)):hover,
       &:not(:has(input:checked)).miru--hov {
@@ -96,26 +106,31 @@
         background-color: transparent;
         border-color: transparent;
       }
+
       &::-moz-range-thumb {
         background-color: transparent;
         border-color: transparent;
       }
     }
+
     /* SLIDER */
     input {
       /* KEYBOARD FOCUS */
       &:focus-visible {
         outline: var(--outline-focus) !important;
       }
+
       /* SLIDER THUMB, SEPARATED BECAUSE COMBINING THEM DESTROYS WEBKIT SETTING */
       &::-webkit-slider-thumb {
         background-color: var(--background-accent);
         border-color: transparent;
       }
+
       &::-moz-range-thumb {
         background-color: var(--background-accent);
         border-color: transparent;
       }
+
       /* &[zero]::-webkit-slider-thumb {
         background-color: var(--background-mid);
         border-color: var(--background-softer);
@@ -124,15 +139,18 @@
         background-color: var(--background-mid);
         border-color: var(--background-softer);
       } */
+
       /* GRADIENT COLORS */
       &::-webkit-slider-runnable-track {
         --g0: var(--background-soft);
         --g1: var(--background-accent);
       }
+
       &::-moz-range-track {
         --g0: var(--background-soft);
         --g1: var(--background-accent);
       }
+
       /* CENTERED SLIDER TRACK */
       &::-webkit-slider-runnable-track {
         /* background: linear-gradient(90deg, var(--g1) 0%, var(--g0) 50%, var(--g1) 100%); */
@@ -146,6 +164,7 @@
           var(--g0) 100%
         );
       }
+
       &::-moz-range-track {
         background: linear-gradient(
           90deg,
@@ -157,6 +176,7 @@
           var(--g0) 100%
         );
       }
+
       /* SLIDER TRACK NOT CENTERED */
       &:not([iscentered])::-webkit-slider-runnable-track {
         background: linear-gradient(
@@ -167,6 +187,7 @@
           var(--g0) 100%
         );
       }
+
       &:not([iscentered])::-moz-range-track {
         background: linear-gradient(
           90deg,
@@ -177,10 +198,12 @@
         );
       }
     }
+
     /* SLIDER TICKS */
     datalist + div > span {
       background-color: var(--background-mid);
     }
+
     /* VALUE LABEL */
     input + label {
       /* ENABLED DOT */
@@ -191,17 +214,18 @@
   }
 
   /* DEFAULT GROUP [ter] */
-  .miru--menu__row:not([role="tablist"], fieldset, .miru--menu__slider-row) {
+  .miru--menu__row:not([role='tablist'], fieldset, .miru--menu__slider-row) {
     color: var(--text-strong);
+
     /* BUTTON */
     & > .miru--button {
       /* BUTTON */
-      & {
-        background-color: var(--background-softer);
-      }
+      background-color: var(--background-softer);
+
       /* BUTTON HOVER */
       &:hover {
         background-color: var(--background-soft) !important;
+
         /* color: var(--text-soft); */
       }
     }
