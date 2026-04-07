@@ -8,6 +8,7 @@
     display: grid;
     gap: 0.5rem;
     grid-template-columns: repeat(auto-fit, minmax(6.25rem, 7.95rem));
+    align-items: start;
     justify-content: center;
     justify-items: center;
     max-height: 15rem;

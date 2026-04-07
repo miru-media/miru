@@ -46,16 +46,16 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     }
 
     const isVideoInUse = computed(() => {
-        if (!activeVideo.value) return false
+        if (!activeVideo.value) return true
         let activeClip = false
         editor.doc.nodes.forEach((node) => {
-            if (node.type !== 'clip') return
+            if (!node.isClip()) return
             if (node.mediaRef.assetId === activeVideo.value?.id) activeClip = true
         })
         return activeClip
     })
 
-    const deleteLabel = computed(() => isVideoInUse.value ? t('assetbin_delete_video_disabled') : t('assetbin_delete_video'))
+    const deleteLabel = computed(() => isVideoInUse.value ? t('asset_bin_delete_video_disabled') : t('asset_bin_delete_video'))
 
     const deleteVideo = async () => {
         if(!activeVideo.value || isVideoInUse.value || isDeleting.value || !dialogRef.value) return
@@ -93,18 +93,18 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
                     label={deleteLabel}
                 >
                     <div class={[styles.assetbinButton]}>
-                        <span>{t('assetbin_delete_video')}</span>
+                        <span>{t('asset_bin_delete_video')}</span>
                         <div class="bulma-icon i-tabler:trash"/>
                     </div>
                 </Button>
                 <Button
                     onClick={createClip}
                     disabled={() => isDeleting.value}
-                    label={t('assetbin_media_create_clip')}
+                    label={t('asset_bin_media_create_clip')}
                     class={[styles.assetbinCreateClip, styles.textBodyBold]}
                 >
                     <div class={styles.assetbinButton}>
-                        <span>{t('assetbin_media_create_clip')}</span>
+                        <span>{t('asset_bin_media_create_clip')}</span>
                         <div class="bulma-icon i-tabler:circle-plus" />
                     </div>
                 </Button>
