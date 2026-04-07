@@ -18,7 +18,7 @@ import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 import { provideEditor } from './utils.ts'
-import { AssetBinVideo } from './assetbin-video.tsx'
+import { AssetBinVideo } from './asset-bin-video.tsx'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor

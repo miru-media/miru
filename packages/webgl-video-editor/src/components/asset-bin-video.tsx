@@ -6,7 +6,7 @@ import styles from "../css/index.module.css"
 import { Button } from "shared/components/button"
 import { ACCEPT_VIDEO_FILE_TYPES } from "#constants"
 import type { InputEvent } from "shared/types"
-import { AssetBinVideoPreview } from "./assetbin-video-preview"
+import { AssetBinVideoPreview } from "./asset-bin-video-preview"
 
 export const AssetBinVideo = () => {
     const editor = useEditor()
@@ -63,7 +63,7 @@ export const AssetBinVideo = () => {
             <div class={styles.assetbinHeader}>
                 <Button
                 onClick={closeAssetbin}
-                label={t('assetbin_media_close')}
+                label={t('asset_bin_media_close')}
                 class={styles.textGreat}
                 >
                     <div class="bulma-icon i-tabler:x"/>
@@ -75,28 +75,28 @@ export const AssetBinVideo = () => {
                     <input 
                         type="file"
                         accept={ACCEPT_VIDEO_FILE_TYPES}
-                        aria-label={t('assetbin_media_upload')}
+                        aria-label={t('asset_bin_media_upload')}
                         hidden
                         onInput={(event: InputEvent) => void onInputVideoFile(event)}
                     />
                     <div class="bulma-icon i-tabler:upload"/>
-                    <span>{t('assetbin_media_upload')}</span>
+                    <span>{t('asset_bin_media_upload')}</span>
                 </label>
                 <input
                     type="search"
                     value={() => assetSearchQuery.value}
                     onInput={onSearchInput}
                     class={styles.assetbinSearch}
-                    placeholder={t('assetbin_media_search_placeholder')}
-                    aria-label={t('assetbin_media_search_placeholder')}
+                    placeholder={t('asset_bin_media_search_placeholder')}
+                    aria-label={t('asset_bin_media_search_placeholder')}
                 />
             </div>
             <div class={styles.assetbinAssetsContainer}>
                 {() => {
                     if (assets.value.length === 0) {
-                        return <p class={styles.textBodySmall}>{t('assetbin_media_empty')}</p>
+                        return <p class={styles.textBodySmall}>{t('asset_bin_media_empty')}</p>
                     } else if (assetsFiltered.value.length === 0){
-                        return <p class={styles.textBodySmall}>{t('assetbin_media_search_empty')}</p>
+                        return <p class={styles.textBodySmall}>{t('asset_bin_media_search_empty')}</p>
                     }
                     return assetsFiltered.value.map((asset) => (
                         <button
@@ -106,7 +106,10 @@ export const AssetBinVideo = () => {
                                 activeVideo.value = asset
                             }}
                         >
-                            <img src={asset.thumbnailUri} />
+                            <img 
+                                src={asset.thumbnailUri} 
+                                alt={asset.name}
+                            />
                             <span class={styles.textBodySmall}>{asset.name}</span>
                         </button>
                     ))
