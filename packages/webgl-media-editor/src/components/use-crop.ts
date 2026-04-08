@@ -1,6 +1,7 @@
 import Cropper from 'cropperjs'
 import { computed, type Ref, ref, toValue, watch } from 'fine-jsx'
 
+import { EditorView } from 'shared/types.ts'
 import { centerTo, drawImage, getCenter, setObjectSize } from 'shared/utils'
 
 import styles from '../css/index.module.css'
@@ -18,14 +19,17 @@ interface UseCropReturn {
   setTilt: (value: 'portrait' | 'landscape') => void
   setRotation: (value: number) => void
   maxZoom: number
+  maximizeCropBox: () => void
 }
 
 export const useCrop = ({
   editor,
   sourceIndex,
+  currentView
 }: {
   editor: MediaEditor
   sourceIndex: number
+  currentView: Ref<EditorView>
 }): UseCropReturn => {
   // cropper instance
   const cropper = ref<Cropper>()
@@ -48,9 +52,10 @@ export const useCrop = ({
   const tilt = ref('portrait' as 'portrait' | 'landscape')
   // apply crop. (on -1 crop full image) apply & store crop
   const cropperPaddingFactor = 0.9
-  const setAspectRatio = (value: number): void => {
+  const setAspectRatio = (ratio: number): void => {
     if (!sourceRef.value || !cropper.value) return
-    const isOrig = value === -1
+    const isOrig = ratio === -1
+    let value = ratio
     // set original aspect ratio if wanted
     if (isOrig) {
       const { naturalWidth, naturalHeight } = cropper.value.getImageData()
@@ -67,18 +72,7 @@ export const useCrop = ({
     const cropperData = cropper.value.getData(true)
     sourceRef.value.crop.value = cropperData
     // recenter cropbox. necessary bc with zoom & crop the cropbox can end up not centered
-    const { width, height } = cropper.value.getContainerData()
-
-    const containerRatio = width / height
-    const newBox = centerTo(
-      {
-        width: value > containerRatio ? width * cropperPaddingFactor : height * value * cropperPaddingFactor,
-        height:
-          value > containerRatio ? (width * cropperPaddingFactor) / value : height * cropperPaddingFactor,
-      },
-      getCenter({ width, height }),
-    )
-    cropper.value.setCropBoxData(newBox)
+    maximizeCropBox()
     // make sure image fits. minimize image to force resize on clamp
     const zoomForSnapping = 1
     setZoom(zoomForSnapping)
@@ -115,11 +109,49 @@ export const useCrop = ({
     sourceRef.value.crop.value = cropperData
     rotation.value = sourceRef.value.crop.value.rotate
   }
+  // maximizeCropBox
+  const maximizeCropBox = (): void => {
+    if (!cropper.value || isClamping || !sourceRef.value) return
+    // make sure crop box is displayed centered and as big as possible. move canvas to preserve current crop
+    const containerData = cropper.value.getContainerData()
+    if (containerData.width > 0 && containerData.height > 0) {
+      const containerRatio = containerData.width / containerData.height
+      const cropBoxRatio = cropper.value.getCropBoxData().width / cropper.value.getCropBoxData().height
+      const newBox = centerTo(
+        {
+          width:
+            cropBoxRatio > containerRatio
+              ? containerData.width * cropperPaddingFactor
+              : containerData.height * cropBoxRatio * cropperPaddingFactor,
+          height:
+            cropBoxRatio > containerRatio
+              ? (containerData.width * cropperPaddingFactor) / cropBoxRatio
+              : containerData.height * cropperPaddingFactor,
+        },
+        getCenter({ width: containerData.width, height: containerData.height }),
+      )
+      const oldBox = cropper.value.getCropBoxData()
+      const canvasBefore = cropper.value.getCanvasData()
+      isClamping = true
+      cropper.value.setCropBoxData(newBox)
+      const scale = newBox.width / oldBox.width
+      cropper.value.setCanvasData({
+        width: canvasBefore.width * scale,
+        height: canvasBefore.height * scale,
+        left: newBox.left + (canvasBefore.left - oldBox.left) * scale,
+        top: newBox.top + (canvasBefore.top - oldBox.top) * scale,
+      })
+      isClamping = false
+    }
+  }
   // clamping flag to avoid recursive calls from cropper crop() or zoom()
   let isClamping = false
   // clamp image. make sure the image fills the crop area
   const clampImage = (): void => {
     if (!cropper.value || isClamping || !sourceRef.value) return
+    // make sure crop box is displayed centered and as big as possible. move canvas to preserve current crop
+    maximizeCropBox()
+    // recenter cropbox. necessary bc with zoom & crop the cropbox can end up not centered
     const canvasData = cropper.value.getCanvasData()
     const cropBoxData = cropper.value.getCropBoxData()
     // grab canvas data to modify
@@ -159,6 +191,15 @@ export const useCrop = ({
     sourceRef.value.crop.value = cropperData
     isClamping = false
   }
+  // resize cropper when visible again
+  watch([currentView], ()=>{
+    if(!cropper.value || currentView.value !== EditorView.Crop) return
+    const cropperInstance = cropper.value as unknown as Record<string, () => void>;
+    setTimeout(() => {
+      cropperInstance.onResize();
+      maximizeCropBox()
+    }, 10);
+  })
   // create new cropper on source change
   watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {
     if (source == null || original == null) return
@@ -215,16 +256,8 @@ export const useCrop = ({
     })
     // initialize cropper
     tilt.value = cropperImage.width > cropperImage.height ? 'landscape' : 'portrait'
-    // const cropperData = sourceRef.value?.crop.value
     setZoom(1)
     setAspectRatio(-1)
-
-    // if (cropperData) {
-    //   setAspectRatio(cropperData.width / cropperData.height)
-    // } else {
-    //   tilt.value = 'landscape'
-    //   setZoom(1)
-    // }
     // remove cropper on unwatch
     onCleanup(() => {
       cropper.value?.destroy()
@@ -244,5 +277,6 @@ export const useCrop = ({
     setTilt,
     setRotation,
     maxZoom,
+    maximizeCropBox,
   }
 }

@@ -1,9 +1,9 @@
 import 'cropperjs/dist/cropper.css'
 
-import type { Component } from 'fine-jsx'
+import type { Component, Ref } from 'fine-jsx'
 import { toValue } from 'fine-jsx'
 
-import type { InputEvent } from 'shared/types'
+import type { EditorView, InputEvent } from 'shared/types'
 
 import styles from '../css/index.module.css'
 import type { MediaEditor } from '../media-editor.ts'
@@ -13,12 +13,17 @@ import { useCrop } from './use-crop.ts'
 
 const ASPECT_9_16 = 0.5625
 
-export const CropView: Component<{ editor: MediaEditor; sourceIndex: number }> = (props) => {
+export const CropView: Component<{
+  editor: MediaEditor
+  sourceIndex: number
+  currentView: Ref<EditorView>
+}> = (props) => {
   const editor = toValue(props.editor)
   const { aspectRatio, tilt, setAspectRatio, setTilt, setRotation, container, zoom, rotation, setZoom } =
     useCrop({
       editor,
       sourceIndex: toValue(props.sourceIndex),
+      currentView: props.currentView
     })
 
   const ratios = [
