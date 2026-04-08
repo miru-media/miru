@@ -173,7 +173,6 @@ fieldset label,
   }
 }
 
-/* [role="tablist"]:has([role="tab"]:focus-visible) */
 fieldset:has(input[type='radio']:focus-visible) {
   height: calc(100% - 5px);
   margin: 2px;

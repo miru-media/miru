@@ -3,7 +3,7 @@ import { toValue } from 'fine-jsx'
 
 import styles from '../css/index.module.css'
 
-const percentageMultiplier = 100
+const PERCENTAGE_MULTIPLIER = 100
 
 export const RowSlider: Component<{
   [key: string]: unknown
@@ -23,14 +23,14 @@ export const RowSlider: Component<{
       step="any"
       class={styles['miru--slider']}
       style={() =>
-        `--input-value:${((toValue(value) - toValue(ticks)[0]) / (toValue(ticks)[toValue(ticks).length - 1] - toValue(ticks)[0])) * percentageMultiplier}%`
+        `--input-value:${((toValue(value) - toValue(ticks)[0]) / (toValue(ticks)[toValue(ticks).length - 1] - toValue(ticks)[0])) * PERCENTAGE_MULTIPLIER}%`
       }
       {...inputProps}
       zero={() => (toValue(value) === toValue(zeroPoint) ? '' : null)}
       min={toValue(ticks)[0]}
       max={toValue(ticks)[toValue(ticks).length - 1]}
       list={`row_slider_ticks_${toValue(label)}`}
-      iscentered={toValue(ticks)[0] < 0 ? '' : null}
+      data-is-centered={toValue(ticks)[0] < 0 ? '' : null}
       value={value}
       role="slider"
       aria-labelledby={`row_slider_${toValue(label)}_arialabel`}
@@ -47,7 +47,7 @@ export const RowSlider: Component<{
           const ticksV = toValue(ticks)
           const min = ticksV[0]
           const max = ticksV[ticksV.length - 1]
-          return <span style={`left: ${((tick - min) / (max - min)) * percentageMultiplier}%`} tick={tick} />
+          return <span style={`left: ${((tick - min) / (max - min)) * PERCENTAGE_MULTIPLIER}%`} tick={tick} />
         })}
     </div>
     <label

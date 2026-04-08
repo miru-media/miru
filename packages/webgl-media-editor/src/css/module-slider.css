@@ -4,6 +4,55 @@
   pointer-events: none;
 }
 
+.miru--menu__row:has(.miru--slider) {
+  .miru--slider-label {
+    position: relative;
+    justify-self: center;
+    width: 5rem;
+    overflow: hidden;
+    text-align: center;
+
+    /* ENABLED MARKER */
+    &.miru--enabled::after {
+      position: absolute;
+      top: 0;
+      right: 0.75rem;
+      z-index: 999;
+      display: block;
+      width: 0.35rem;
+      height: 0.35rem;
+      content: '';
+      border-radius: 50%;
+    }
+  }
+
+  datalist {
+    display: none !important;
+  }
+
+  datalist + div {
+    position: absolute;
+    top: calc(50% - var(--height-slider) / 2 -2px);
+    z-index: 1;
+    display: block !important;
+    grid-column: 3 / -3;
+    width: calc(100% - 2 * var(--gap-default) - var(--width-slider-thumb));
+    height: calc(var(--height-slider) + 4px);
+    margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
+    overflow: visible;
+    pointer-events: none;
+
+    & > span {
+      position: absolute;
+      display: block;
+      width: 2px;
+      height: 100%;
+      padding: 0;
+      transform: translateX(-50%);
+    }
+  }
+}
+
 /* SLIDER */
 .miru--slider {
   z-index: 1;
@@ -47,52 +96,5 @@
     margin-top: calc(var(--width-slider-thumb) * -0.5 + 3px);
     border: 2px solid;
     border-radius: 50%;
-  }
-}
-
-.miru--slider-label {
-  position: relative;
-  justify-self: center;
-  width: 5rem;
-  overflow: hidden;
-  text-align: center;
-
-  /* ENABLED MARKER */
-  &.miru--enabled::after {
-    position: absolute;
-    top: 0;
-    right: 0.75rem;
-    z-index: 999;
-    display: block;
-    width: 0.35rem;
-    height: 0.35rem;
-    content: '';
-    border-radius: 50%;
-  }
-}
-
-datalist {
-  display: none !important;
-}
-
-datalist + div {
-  position: absolute;
-  top: calc(50% - var(--height-slider) / 2 -2px);
-  z-index: 1;
-  display: block !important;
-  grid-column: 3 / -3;
-  width: calc(100% - 2 * var(--gap-default) - var(--width-slider-thumb));
-  height: calc(var(--height-slider) + 4px);
-  margin: var(--gap-default) calc(var(--gap-default) + var(--width-slider-thumb) / 2) !important;
-  overflow: visible;
-  pointer-events: none;
-
-  & > span {
-    position: absolute;
-    display: block;
-    width: 2px;
-    height: 100%;
-    padding: 0;
-    transform: translateX(-50%);
   }
 }

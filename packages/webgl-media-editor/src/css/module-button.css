@@ -9,10 +9,10 @@
       margin-bottom: 0 !important;
     }
   }
-}
 
-*:focus-visible {
-  outline-offset: -4px;
+  *:focus-visible {
+    outline-offset: -4px;
+  }
 }
 
 /* BUTTON */

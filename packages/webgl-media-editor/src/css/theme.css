@@ -178,7 +178,7 @@
       }
 
       /* SLIDER TRACK NOT CENTERED */
-      &:not([iscentered])::-webkit-slider-runnable-track {
+      &:not([data-is-centered])::-webkit-slider-runnable-track {
         background: linear-gradient(
           90deg,
           var(--g1) 0%,
@@ -188,7 +188,7 @@
         );
       }
 
-      &:not([iscentered])::-moz-range-track {
+      &:not([data-is-centered])::-moz-range-track {
         background: linear-gradient(
           90deg,
           var(--g1) 0%,
