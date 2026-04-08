@@ -34,14 +34,15 @@
     height: 100%;
     min-height: 0;
   }
+
   /* CROPPER IS ONLY HIDDEN */
   &[hidden]:has(.miru--cropper-container) {
-    overflow: hidden !important;
     position: fixed !important;
-    opacity: 0 !important;
+    overflow: hidden !important;
     pointer-events: none !important;
-    display: block !important;
+    opacity: 0 !important;
     z-index: -1;
+    display: block !important;
   }
 }
 
@@ -151,12 +152,12 @@ fieldset {
 }
 
 fieldset,
-[role="tablist"] {
+[role='tablist'] {
   border-radius: var(--roundness-button);
 }
 
 fieldset label,
-[role="tab"] {
+[role='tab'] {
   outline: none !important;
 
   &:not(:first-of-type, :last-of-type) {
@@ -173,7 +174,7 @@ fieldset label,
 }
 
 /* [role="tablist"]:has([role="tab"]:focus-visible) */
-fieldset:has(input[type="radio"]:focus-visible) {
+fieldset:has(input[type='radio']:focus-visible) {
   height: calc(100% - 5px);
   margin: 2px;
 }
