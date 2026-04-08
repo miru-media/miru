@@ -38,10 +38,10 @@
   /* CROPPER IS ONLY HIDDEN */
   &[hidden]:has(.miru--cropper-container) {
     position: fixed !important;
+    z-index: -1;
     overflow: hidden !important;
     pointer-events: none !important;
     opacity: 0 !important;
-    z-index: -1;
     display: block !important;
   }
 }
