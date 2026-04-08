@@ -14,13 +14,10 @@ npm install webgl-media-editor
 <div>
   <!-- after importing the library, these <media-editor-*> custom elements will be defined -->
 
-  <!-- show a preview of the fist image being edited -->
-  <media-editor-preview sourceIndex="0"></media-editor-preview>
-  <!-- show a menu of filters to apply to the first image -->
-  <media-editor-filter-menu sourceIndex="0"></media-editor-filter-menu>
-
-  <media-editor-preview sourceIndex="1"></media-editor-preview>
-  <media-editor-filter-menu sourceIndex="1"></media-editor-filter-menu>
+  <!-- show a preview of the image being edited -->
+  <media-editor-preview></media-editor-preview>
+  <!-- show a menu of filters to apply to the image -->
+  <media-editor-filter-menu></media-editor-filter-menu>
 
   <button id="export" type="buton">Export</button>
 </div>
@@ -37,31 +34,25 @@ for (const element of mediaEditorElements) {
   element.editor = editor
 }
 
-// the editor manages a gallery of images, give it an array of sources to edit
-editor.setSources(['photo-0.jpg', 'photo-1.jpg'])
+// give the editor the URL of an image to load and edit
+editor.setSource('photo.jpg')
 
 // you can edit programatically
-editor.setEditState(
-  // the index of the source image to edit
-  0,
-  {
-    // index of effect. -1 to apply no effect
-    effect: 2,
-    // the intensity of the effect from 0 to 1
-    intensity: 0.75,
-    // optional adjustments to apply. adjustment values go from -1 to 1
-    adjustments: { brightness: 0, contrast: 0.25, saturation: 0.3 },
-    // optional crop
-    crop: { x: 10, y: 10, width: 200, height: 200, rotate: 90 },
-  },
-)
+editor.setEditState({
+  // index of effect. -1 to apply no effect
+  effect: 2,
+  // the intensity of the effect from 0 to 1
+  intensity: 0.75,
+  // optional adjustments to apply. adjustment values go from -1 to 1
+  adjustments: { brightness: 0, contrast: 0.25, saturation: 0.3 },
+  // optional crop
+  crop: { x: 10, y: 10, width: 200, height: 200, rotate: 90 },
+})
 
 document.getElementById('export').addEventListener('click', async () => {
-  const image0 = await editor.toBlob(0)
-  const image1 = await editor.toBlob(1)
+  const blob = await editor.toBlob()
 
-  window.open(URL.createObjectURL(image0))
-  window.open(URL.createObjectURL(image1))
+  window.open(URL.createObjectURL(blob))
 })
 ```
 

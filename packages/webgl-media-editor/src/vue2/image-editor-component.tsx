@@ -18,7 +18,7 @@ interface VueInstance {
   assetsPath?: string
   editStates: ImageEditState[]
   scope: EffectScope
-  thumbnailUrls: string[]
+  thumbnailUrl: string
 
   $el: HTMLElement
   $props: { editStates?: ImageEditState[] }
@@ -43,10 +43,10 @@ export default {
       () =>
         new MediaEditor({
           effects: () => this._effects.value,
-          onEdit: (index, state) => this.$emit('edit', { index, ...state }),
-          onRenderPreview: (sourceIndex: number, previewUrl) => {
-            this.thumbnailUrls.splice(sourceIndex, 1, previewUrl)
-            this.$emit('render', this.thumbnailUrls)
+          onEdit: (state) => this.$emit('edit', state),
+          onRenderPreview: (previewUrl) => {
+            this.thumbnailUrl = previewUrl
+            this.$emit('render', this.thumbnailUrl)
           },
         }),
     )
@@ -59,35 +59,30 @@ export default {
   destroyed(this: VueInstance) {
     this.scope.stop()
     this.editor = undefined as never
-    this.thumbnailUrls.forEach(URL.revokeObjectURL.bind(URL))
+    URL.revokeObjectURL(this.thumbnailUrl)
   },
   render(h: (...args: unknown[]) => unknown) {
     return h('div')
   },
   methods: {
-    async toBlob(this: VueInstance, sourceIndex: number, options?: { type: string; quality?: number }) {
-      return await this.editor.toBlob(sourceIndex, options ?? {})
+    async toBlob(this: VueInstance, options?: { type: string; quality?: number }) {
+      return await this.editor.toBlob(options ?? {})
     },
-    async renderPreviewTo(
-      this: VueInstance,
-      sourceIndex: number,
-      context: ImageBitmapRenderingContext | Context2D,
-    ) {
-      await unwrap(this.editor).renderPreviewTo(sourceIndex, context)
+    async renderPreviewTo(this: VueInstance, context: ImageBitmapRenderingContext | Context2D) {
+      await unwrap(this.editor).renderPreviewTo(context)
     },
   },
   watch: {
     sources: {
-      handler(this: VueInstance, value?: ImageSourceOption[], prev?: ImageSourceOption[]) {
-        if (value && prev && (value === prev || value.every((v, i) => prev[i] === v))) return
-        unwrap(this.editor).setSources(value ?? [])
+      handler(this: VueInstance, value?: ImageSourceOption) {
+        unwrap(this.editor).setSource(value)
       },
       immediate: true,
       deep: true,
     },
     editStates: {
-      handler(this: VueInstance, value: ImageEditState[]) {
-        unwrap(this.editor).editStatesIn.value = value
+      handler(this: VueInstance, value: ImageEditState) {
+        unwrap(this.editor).setEditState(value)
       },
       immediate: true,
     },

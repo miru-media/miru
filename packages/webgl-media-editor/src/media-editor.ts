@@ -11,8 +11,8 @@ export interface MediaEditorOptions {
   effects: Ref<EffectDefinition[]>
   renderer?: Renderer
   manualUpdate?: boolean
-  onRenderPreview: (index: number) => unknown
-  onEdit: (index: number, state: ImageEditState) => unknown
+  onRenderPreview: () => unknown
+  onEdit: (state: ImageEditState) => unknown
 }
 
 export class MediaEditor {
@@ -21,12 +21,11 @@ export class MediaEditor {
   readonly #adjustColorEffect: Effect
   manualUpdate: boolean
 
-  sourceInputs: ImageSourceOption[] = []
-  sources = ref<ImageSourceInternal[]>([])
-  editStatesIn = ref<(ImageEditState | undefined)[]>()
+  sourceInput?: ImageSourceOption
+  readonly source = ref<ImageSourceInternal>()
   readonly #effectsIn: Ref<EffectDefinition[]>
   readonly effects = ref(new Map<string, Effect>())
-  readonly #isLoadingSource = computed(() => this.sources.value.some((s) => s.isLoading))
+  readonly #isLoadingSource = computed(() => this.source.value?.isLoading === true)
   readonly #isLoadingEffects = computed(() =>
     Array.from(this.effects.value.values()).some((e) => e.isLoading),
   )
@@ -34,15 +33,15 @@ export class MediaEditor {
   readonly #onRenderPreview: MediaEditorOptions['onRenderPreview']
   readonly #onEdit: MediaEditorOptions['onEdit']
 
-  get isLoadingSource() {
+  get isLoadingSource(): boolean {
     return this.#isLoadingSource.value
   }
 
-  get isLoadingEffects() {
+  get isLoadingEffects(): boolean {
     return this.#isLoadingEffects.value
   }
 
-  get isLoading() {
+  get isLoading(): boolean {
     return this.#isLoading.value
   }
 
@@ -62,10 +61,6 @@ export class MediaEditor {
     this.#onRenderPreview = options.onRenderPreview
     this.#onEdit = options.onEdit
 
-    watch([this.sources, this.editStatesIn], ([sources, states]) => {
-      states?.forEach((state, index) => state && sources[index]?.setState(state))
-    })
-
     watch([this.#effectsIn], ([effects]) => {
       this.#scope
         .run(() => this.#loadEffects((effects as EffectDefinition[] | undefined) ?? []))
@@ -74,64 +69,49 @@ export class MediaEditor {
     })
   }
 
-  setSources(sourceOptions: ImageSourceOption[]) {
-    const prevSources = this.sources.value
-    const prevSourcesByOption = this.sourceInputs.reduce((acc, so, i) => {
-      if (!acc.has(so)) acc.set(so, [])
-      const list = acc.get(so)!
-      list.push(prevSources[i])
-      return acc
-    }, new Map<ImageSourceOption, ImageSourceInternal[]>())
+  setSource(sourceOption: ImageSourceOption | undefined): void {
+    this.source.value?.dispose()
+    if (sourceOption == null) {
+      this.source.value = undefined
+      return
+    }
 
-    const newSources = new Set<ImageSourceInternal>()
+    const newSource = this.scopeRun(
+      () =>
+        new ImageSourceInternal({
+          sourceOption,
+          thumbnailSize: ref({ width: 300, height: 300 }),
+          renderer: this.renderer,
+          effects: this.effects,
+          adjustColorOp: this.#adjustColorEffect.ops[0],
+          manualUpdate: this.manualUpdate,
+          onRenderPreview: () => this.#onRenderPreview(),
+          onEdit: (state) => this.#onEdit(state),
+        }),
+    )
 
-    this.#scope.run(() => {
-      sourceOptions.forEach((sourceOption, sourceIndex) => {
-        newSources.add(
-          prevSourcesByOption.get(sourceOption)?.shift() ??
-            new ImageSourceInternal({
-              sourceOption,
-              thumbnailSize: ref({ width: 300, height: 300 }),
-              renderer: this.renderer,
-              effects: this.effects,
-              adjustColorOp: this.#adjustColorEffect.ops[0],
-              manualUpdate: this.manualUpdate,
-              onRenderPreview: () => this.#onRenderPreview(sourceIndex),
-              onEdit: (state) => this.#onEdit(sourceIndex, state),
-            }),
-        )
-      })
-    })
-
-    this.sources.value = Array.from(newSources)
-    this.sourceInputs = sourceOptions
-
-    prevSources.forEach((s) => {
-      if (!newSources.has(s)) s.dispose()
-    })
-    prevSources.length = 0
-    prevSourcesByOption.clear()
+    this.source.value = newSource
+    this.sourceInput = sourceOption
   }
 
-  async renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
-    await this.sources.value[sourceIndex]?.drawPreview(context)
+  setEditState(state: ImageEditState): void {
+    this.source.value?.setState(state)
   }
 
-  async toBlob(
-    sourceIndex: number,
-    { type = 'image/jpeg', quality = DEFAULT_EXPORT_QUALITY }: ImageEncodeOptions = {},
-  ) {
-    if (sourceIndex < 0 || sourceIndex >= this.sources.value.length)
-      throw new Error(`[webgl-media-editor] No image at index ${sourceIndex}`)
+  async renderPreviewTo(context: ImageBitmapRenderingContext | Context2D) {
+    await this.source.value?.drawPreview(context)
+  }
 
-    const source = this.sources.value[sourceIndex]
+  async toBlob({ type = 'image/jpeg', quality = DEFAULT_EXPORT_QUALITY }: ImageEncodeOptions = {}) {
+    const source = this.source.value
+    if (!source) throw new Error(`[webgl-media-editor] Missing source image`)
 
     source.drawFullSize()
 
     return await this.renderer.toBlob({ type, quality })
   }
 
-  async #loadEffects(definitions: EffectDefinition[]) {
+  async #loadEffects(definitions: EffectDefinition[]): Promise<void> {
     this.effects.value.forEach((effect) => effect.dispose())
     this.effects.value.clear()
 
@@ -151,13 +131,21 @@ export class MediaEditor {
   watch: typeof watch = (source, callback) => this.#scope.run(() => watch(source, callback))
   watchEffect: typeof effect = (callback) => this.#scope.run(() => effect(callback))
 
-  scopeRun<T>(callback: () => T) {
+  scopeRun<T>(callback: () => T): T {
     return this.#scope.run(callback)
   }
 
-  dispose() {
+  dispose(): void {
     this.renderer.dispose()
-    this.#effectsIn.value.length = this.sourceInputs.length = 0
+    this.source.value?.dispose()
+    this.source.value = undefined
+    this.effects.value.forEach((e) => e.dispose())
+    this.effects.value.clear()
+    this.#effectsIn.value.length = 0
     this.renderer = undefined as never
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
   }
 }

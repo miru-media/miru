@@ -11,15 +11,15 @@ interface MediaEditorProps {
   effects?: EffectDefinition[] | (() => EffectDefinition[])
   renderer?: Renderer
   manualUpdate?: boolean
-  onRenderPreview?: (sourceIndex: number, previewUrl: string) => unknown
-  onEdit?: (index: number, state: ImageEditState) => unknown
+  onRenderPreview?: (previewUrl: string) => unknown
+  onEdit?: (state: ImageEditState) => unknown
 }
 
 export const editorMap = new WeakMap<MediaEditor, MediaEditor_>()
 
 export class MediaEditor {
   #editor: MediaEditor_
-  #thumbnailUrls: string[] = []
+  #thumbnailUrl = ''
 
   constructor(props: MediaEditorProps) {
     const scope = createEffectScope()
@@ -31,15 +31,16 @@ export class MediaEditor {
         effects: toRef(props.effects ?? getDefaultFilterDefinitions()),
         renderer: props.renderer,
         manualUpdate: props.manualUpdate,
-        onRenderPreview: async (sourceIndex) => {
-          const source = this.#editor.sources.value[sourceIndex]
+        onRenderPreview: async () => {
+          const source = this.#editor.source.value
+          if (!source) return
 
-          URL.revokeObjectURL(this.#thumbnailUrls[sourceIndex])
+          URL.revokeObjectURL(this.#thumbnailUrl)
 
           const url = URL.createObjectURL(await canvasToBlob(source.context.canvas))
-          this.#thumbnailUrls[sourceIndex] = url
+          this.#thumbnailUrl = url
 
-          props.onRenderPreview?.(sourceIndex, url)
+          props.onRenderPreview?.(url)
         },
         onEdit: props.onEdit ?? (() => undefined),
       })
@@ -48,19 +49,19 @@ export class MediaEditor {
     editorMap.set(this, this.#editor)
   }
 
-  setSources(sources: ImageSourceOption[]) {
-    this.#editor.setSources([...sources])
+  setSources(source: ImageSourceOption) {
+    this.#editor.setSource(source)
   }
 
-  setEditState(sourceIndex: number, state: ImageEditState) {
-    const source = this.#editor.sources.value[sourceIndex]
+  setEditState(state: ImageEditState) {
+    const source = this.#editor.source.value
 
-    source.setState(state)
-    source.drawPreview().catch(() => undefined)
+    source?.setState(state)
+    source?.drawPreview().catch(() => undefined)
   }
 
-  async toBlob(sourceIndex: number, options?: ImageEncodeOptions): Promise<Blob> {
-    return await this.#editor.toBlob(sourceIndex, options)
+  async toBlob(options?: ImageEncodeOptions): Promise<Blob> {
+    return await this.#editor.toBlob(options)
   }
 }
 

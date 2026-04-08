@@ -25,28 +25,28 @@ export class MediaEditorElement extends HTMLElementOrStub {
   #disconnectTimeout?: ReturnType<typeof setTimeout>
   readonly #view = ref(EditorView.Crop)
 
-  get sources(): ImageSourceOption[] {
-    return this.#editor.sourceInputs
+  get source(): ImageSourceOption | undefined {
+    return this.#editor.sourceInput
   }
-  set sources(value: ImageSourceOption[] | undefined) {
-    this.#editor.setSources(value ?? [])
-  }
-
-  get editStates() {
-    return this.#editor.sources.value.map((source) => source.getState())
-  }
-  set editStates(states: ImageEditState[]) {
-    this.#editor.editStatesIn.value = states
+  set source(value: ImageSourceOption | null | undefined) {
+    this.#editor.setSource(value ?? undefined)
   }
 
-  get effects() {
+  get editState(): ImageEditState | undefined {
+    return this.#editor.source.value?.getState()
+  }
+  set editState(state: ImageEditState | null | undefined) {
+    this.#editor.setEditState(state ?? { effect: undefined, intensity: 1 })
+  }
+
+  get effects(): EffectDefinition[] {
     return this.#effects.value
   }
   set effects(value: EffectDefinition[] | null | undefined) {
     this.#effects.value = value ?? []
   }
 
-  get view() {
+  get view(): EditorView {
     return this.#view.value
   }
   set view(value: EditorView | null | undefined) {
@@ -54,7 +54,7 @@ export class MediaEditorElement extends HTMLElementOrStub {
     this.#view.value = value
   }
 
-  get isLoading() {
+  get isLoading(): boolean {
     return this.#editor.isLoading
   }
 
@@ -65,48 +65,48 @@ export class MediaEditorElement extends HTMLElementOrStub {
       () =>
         new MediaEditor({
           effects: this.#effects,
-          onEdit: (index, state) => this.#dispatchEvent('miruedit', { index, ...state }),
+          onEdit: (state) => this.#dispatchEvent('miruedit', state),
           onRenderPreview: () => undefined,
         }),
     )
     this.#effects.value = getDefaultFilterDefinitions(import.meta.env.ASSETS_PATH)
   }
 
-  attributeChangedCallback(name: ObservedAttr, _oldValue: string | null, newValue: string | null) {
+  attributeChangedCallback(name: ObservedAttr, _oldValue: string | null, newValue: string | null): void {
     const value = newValue ?? ''
 
     if (name === 'sources') {
       if (value.trimStart().startsWith('[')) {
         try {
-          this.sources = JSON.parse(value)
+          this.source = JSON.parse(value)
           return
         } catch {
           //
         }
       }
 
-      this.sources = value ? [value] : []
+      this.source = value
     } else if (name === 'effects') this.#effects.value = value && JSON.parse(value)
     else if (name === 'assetsPath') this.#effects.value = getDefaultFilterDefinitions(value || undefined)
     else this[name] = value as any
   }
 
-  connectedCallback() {
+  connectedCallback(): void {
     clearTimeout(this.#disconnectTimeout)
 
     this.#unmount ??= this.#scope.run(() =>
       renderComponentTo(MediaEditorUI, { editor: this.#editor, view: this.#view }, this),
     )
   }
-  disconnectedCallback() {
+  disconnectedCallback(): void {
     if (this.#unmount) this.#disconnectTimeout = setTimeout(this.#unmount, UNMOUNT_TIMEOUT_MS)
   }
 
-  #dispatchEvent(type: string, detail: unknown) {
+  #dispatchEvent(type: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(type, { detail }))
   }
 
-  async ready() {
+  async ready(): Promise<void> {
     if (!this.isLoading) return
 
     await new Promise<void>((resolve) => {
@@ -121,26 +121,30 @@ export class MediaEditorElement extends HTMLElementOrStub {
     })
   }
 
-  async toBlob(sourceIndex: number, options?: ImageEncodeOptions) {
-    return await this.#editor.toBlob(sourceIndex, options ?? {})
+  async toBlob(options?: ImageEncodeOptions): Promise<Blob> {
+    return await this.#editor.toBlob(options ?? {})
   }
-  async renderPreviewTo(sourceIndex: number, context: ImageBitmapRenderingContext | Context2D) {
-    await this.#editor.renderPreviewTo(sourceIndex, context)
+  async renderPreviewTo(context: ImageBitmapRenderingContext | Context2D): Promise<void> {
+    await this.#editor.renderPreviewTo(context)
   }
 
-  async download(
-    sourceIndex: number,
-    { filename = 'edited.jpeg', type = 'image/jpeg', quality = DEFAULT_EXPORT_QUALITY } = {},
-  ) {
+  async download({
+    filename = 'edited.jpeg',
+    type = 'image/jpeg',
+    quality = DEFAULT_EXPORT_QUALITY,
+  } = {}): Promise<void> {
     const editor = this.#editor
 
-    const blob = await editor.toBlob(sourceIndex, { type, quality })
+    const blob = await editor.toBlob({ type, quality })
     downloadBlob(blob, filename)
-    return true
   }
 
-  dispose() {
+  dispose(): void {
     this.#editor.dispose()
     this.#unmount?.()
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
   }
 }

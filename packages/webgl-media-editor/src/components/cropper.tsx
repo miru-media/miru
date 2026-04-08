@@ -15,14 +15,12 @@ const ASPECT_9_16 = 0.5625
 
 export const CropView: Component<{
   editor: MediaEditor
-  sourceIndex: number
   inactive?: boolean
 }> = (props) => {
   const editor = toValue(props.editor)
   const { aspectRatio, tilt, setAspectRatio, setTilt, setRotation, container, zoom, rotation, setZoom } =
     useCrop({
       editor,
-      sourceIndex: toValue(props.sourceIndex),
       inactive: toRef(props.inactive),
     })
 

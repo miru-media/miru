@@ -11,7 +11,14 @@ import {
 import type { Context2D, CropState, Renderer, RendererDrawOptions, RendererEffectOp } from 'webgl-effects'
 
 import type { Effect } from 'reactive-effects/effect'
-import type { AdjustmentsState, ImageEditState, ImageSourceOption, Size, SyncImageSource } from 'shared/types'
+import type {
+  AdjustmentsState,
+  ImageEditState,
+  ImageSource,
+  ImageSourceOption,
+  Size,
+  SyncImageSource,
+} from 'shared/types'
 import {
   createDisplayContext,
   devSlowDown,
@@ -44,7 +51,8 @@ interface ImageSourceInternalOptions {
 export class ImageSourceInternal {
   #renderer: Renderer
   #texture: WebGLTexture
-  readonly #original = ref<SyncImageSource>()
+  readonly #original = ref<ImageSource>()
+  readonly #originalSync = ref<SyncImageSource>()
   readonly #rotated = ref<SyncImageSource>()
   readonly #previewSize = ref<Size>({ width: 1, height: 1 })
   readonly #thumbnailSize!: Ref<Size>
@@ -83,6 +91,9 @@ export class ImageSourceInternal {
 
   get original() {
     return this.#original.value
+  }
+  get originalSync() {
+    return this.#originalSync.value
   }
 
   get rotated() {
@@ -158,15 +169,16 @@ export class ImageSourceInternal {
     })
 
     const sourceOption = normalizeSourceOption(sourceOption_)
+    this.#original.value = sourceOption.source
 
     if (isSyncSource(sourceOption.source)) {
       const fullSizeImage = sourceOption.source
 
       if (devSlowDown) {
         devSlowDown()
-          .then(() => (this.#original.value = fullSizeImage))
+          .then(() => (this.#originalSync.value = fullSizeImage))
           .catch(() => undefined)
-      } else this.#original.value = fullSizeImage
+      } else this.#originalSync.value = fullSizeImage
     } else {
       const { promise } = loadAsyncImageSource(
         sourceOption.source,
@@ -176,7 +188,7 @@ export class ImageSourceInternal {
 
       ;(devSlowDown ? devSlowDown(promise) : promise)
         .then((decoded) => {
-          this.#original.value = decoded
+          this.#originalSync.value = decoded
         })
         .catch((error: unknown) => {
           this.#error.value = error
@@ -186,11 +198,11 @@ export class ImageSourceInternal {
     this.#scope.run(() => {
       // rotate the original image
       watch(
-        [this.pausePreview, this.#error, this.#original, () => this.crop.value?.rotate ?? 0],
+        [this.pausePreview, this.#error, this.#originalSync, () => this.crop.value?.rotate ?? 0],
         ([paused, error]) => {
           if (error != null) {
             this.#isLoading.value = false
-            this.#original.value = this.#rotated.value = undefined
+            this.#originalSync.value = this.#rotated.value = undefined
             return
           }
 
@@ -225,7 +237,7 @@ export class ImageSourceInternal {
       onScopeDispose(() => {
         renderer.deleteTexture(this.#texture)
         this.#renderer = undefined as never
-        this.#original.value = this.#rotated.value = undefined
+        this.#originalSync.value = this.#rotated.value = undefined
         this.#texture = this.context = this.onRenderPreview = undefined as never
       })
     })
@@ -242,7 +254,7 @@ export class ImageSourceInternal {
   }
 
   #rotateOriginal() {
-    const original = this.#original.value
+    const original = this.#originalSync.value
     const rotation = this.crop.value?.rotate ?? 0
 
     const load = (image: SyncImageSource) => {

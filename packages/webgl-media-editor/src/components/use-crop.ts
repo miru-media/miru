@@ -1,10 +1,9 @@
 import Cropper from 'cropperjs'
-import { computed, type Ref, ref, toRef, toValue, watch } from 'fine-jsx'
+import { type Ref, ref, toRef, toValue, watch } from 'fine-jsx'
 
 import { centerTo, drawImage, getCenter, setObjectSize } from 'shared/utils'
 
 import styles from '../css/index.module.css'
-import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
 interface UseCropReturn {
@@ -23,11 +22,9 @@ interface UseCropReturn {
 
 export const useCrop = ({
   editor,
-  sourceIndex,
   inactive,
 }: {
   editor: MediaEditor
-  sourceIndex: number
   inactive?: Ref<boolean | undefined>
 }): UseCropReturn => {
   // cropper instance
@@ -35,9 +32,8 @@ export const useCrop = ({
   // maximum zoom allowed. used for gesture zoom limit
   const maxZoom = 2
   // image source
-  const sourceRef = computed(
-    (): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)],
-  )
+  const sourceRef = editor.source
+
   // dom element hosting the cropper & <img>
   const container = document.createElement('div')
   container.className = styles['miru--cropper-container']
@@ -210,7 +206,7 @@ export const useCrop = ({
         : original instanceof Image
           ? original.currentSrc
           : '' // < triggers else
-    if (originalUrl) {
+    if (originalUrl || typeof original === 'string' || original instanceof Blob) {
       cropperImage = new Image()
       cropperImage.src = originalUrl
     } else {

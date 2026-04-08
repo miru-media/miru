@@ -12,8 +12,8 @@ const cancelButton = document.getElementById('cancel-button') as HTMLButtonEleme
 let inputFile: File | undefined
 
 const toggleEmptyState = () => {
-  editor.sources = []
-  editor.editStates = []
+  editor.source = undefined
+  editor.editState = undefined
   document.getElementById('empty-state')?.classList.toggle('hidden')
   document.getElementById('editor-container')?.classList.toggle('hidden')
 }
@@ -25,12 +25,12 @@ const onInputFile = (event: Event): void => {
 
   toggleEmptyState()
   inputFile = file
-  editor.sources = [file]
+  editor.source = file
   target.value = ''
 }
 
 const onClickDownload = (): void => {
-  void editor.toBlob(0).then((blob) => downloadBlob(blob, `edit-${inputFile?.name ?? ''}`))
+  void editor.toBlob().then((blob) => downloadBlob(blob, `edit-${inputFile?.name ?? ''}`))
 }
 
 const onClickBack = (): void => {

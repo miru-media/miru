@@ -14,45 +14,24 @@ import { MediaEditor, unwrap } from '../wrapper.ts'
 export { MediaEditor }
 
 export class MediaEditorPreviewElement extends HTMLElementOrStub {
-  static observedAttributes = ['source-index']
-  readonly #sourceIndex = ref(0)
+  static observedAttributes = ['show-preview', 'show-slider']
   #editor?: MediaEditor
-  get sourceIndex() {
-    return this.#sourceIndex.value
-  }
-
-  set sourceIndex(value: number) {
-    this.#sourceIndex.value = value
-  }
 
   get editor() {
     return this.#editor
   }
   set editor(editor: MediaEditor | undefined) {
     this.#editor = editor
-    if (editor)
-      renderComponentTo(SourcePreview, { editor: unwrap(editor), sourceIndex: this.sourceIndex }, this)
-  }
-
-  attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-    if (name === 'source-index') this.sourceIndex = parseInt(newValue ?? '0', 10) || 0
+    if (editor) renderComponentTo(SourcePreview, { editor: unwrap(editor) }, this)
   }
 }
 
 export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
   static observedAttributes = ['source-index']
-  readonly #sourceIndex = ref(0)
   readonly #showPreview = ref(false)
   readonly #showIntensity = ref(true)
   #editor?: MediaEditor
   #unmount?: () => void
-
-  get sourceIndex() {
-    return this.#sourceIndex.value
-  }
-  set sourceIndex(value: number) {
-    this.#sourceIndex.value = value
-  }
 
   get showPreview() {
     return this.#showPreview.value
@@ -84,7 +63,6 @@ export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
       FilterView,
       {
         editor: unwrap(editor),
-        sourceIndex: this.#sourceIndex,
         showPreviews: this.#showPreview,
         showIntensity: this.#showIntensity,
         onChange: (id, intensity) =>
@@ -95,8 +73,7 @@ export class MediaEditorFilterMenuElement extends HTMLElementOrStub {
   }
 
   attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-    if (name === 'source-index') this.sourceIndex = parseInt(newValue ?? '0', 10) || 0
-    else if (name === 'show-preview') this.showPreview = newValue !== null
+    if (name === 'show-preview') this.showPreview = newValue !== null
     else if (name === 'show-slider') this.showIntensity = newValue !== null
   }
 }

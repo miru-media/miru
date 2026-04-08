@@ -1,9 +1,8 @@
-import { computed, type MaybeRefOrGetter, toRef, toValue } from 'fine-jsx'
+import { type MaybeRefOrGetter, toRef, toValue } from 'fine-jsx'
 
 import type { AdjustmentsState, InputEvent } from 'shared/types'
 
 import styles from '../css/index.module.css'
-import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
 import { RowSlider } from './row-slider.jsx'
@@ -11,15 +10,12 @@ import { SourcePreview } from './source-preview.jsx'
 
 export const AdjustmentsView = ({
   editor,
-  sourceIndex,
   showPreviews,
 }: {
   editor: MediaEditor
-  sourceIndex: MaybeRefOrGetter<number>
   showPreviews?: MaybeRefOrGetter<boolean | undefined>
 }) => {
-  const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
-  const { sources } = editor
+  const { source } = editor
 
   const sliders = [
     { key: 'brightness' as const, label: 'Brightness', Icon: IconTablerSun },
@@ -46,10 +42,7 @@ export const AdjustmentsView = ({
 
   return (
     <>
-      {() =>
-        toValue(showPreviews) === true &&
-        sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
-      }
+      {() => toValue(showPreviews) === true && <SourcePreview editor={editor} />}
       <div id="tab-adjust" role="tabpanel" aria-labelledby="tab-button-adjust" class={styles['miru--menu']}>
         {sliders.map((item) => (
           <>

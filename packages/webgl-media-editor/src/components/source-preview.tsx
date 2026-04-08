@@ -1,24 +1,20 @@
-import { computed, type MaybeRefOrGetter, toValue } from 'fine-jsx'
+import { type MaybeRefOrGetter, toValue } from 'fine-jsx'
 
 import { useEventListener } from 'shared/utils'
 
 import styles from '../css/index.module.css'
-import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
 export const SourcePreview = ({
   editor,
-  sourceIndex,
   style = '',
   onClick,
 }: {
   editor: MaybeRefOrGetter<MediaEditor>
-  sourceIndex: MaybeRefOrGetter<number>
   style?: MaybeRefOrGetter<string>
   onClick?: (event: Event) => unknown
 }) => {
-  const { sources } = toValue(editor)
-  const source = computed((): ImageSourceInternal | undefined => sources.value[toValue(sourceIndex)])
+  const { source } = toValue(editor)
 
   if (onClick) useEventListener(() => source.value?.context.canvas, 'click', onClick)
 

@@ -1,9 +1,8 @@
-import { computed, getCurrentScope, type MaybeRefOrGetter, ref, type Ref, toRef } from 'fine-jsx'
+import { computed, getCurrentScope, ref, type Ref, toRef } from 'fine-jsx'
 
 import { EditorView } from 'shared/types'
 
 import styles from '../css/index.module.css'
-import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
 import { AdjustmentsView } from './adjustments.jsx'
@@ -13,7 +12,6 @@ import { FilterView } from './filter.jsx'
 export interface MediaEditorUIProps {
   editor: MediaEditor
   view: Ref<EditorView>
-  sourceIndex?: MaybeRefOrGetter<number>
 }
 
 /**
@@ -24,39 +22,29 @@ export interface MediaEditorUIProps {
 export const MediaEditorUI = (props: MediaEditorUIProps) => {
   const { editor, view: currentView } = props
 
-  const { sources } = editor
-  const currentSourceIndex = toRef(props.sourceIndex ?? ref(0))
-  const currentSource = computed(
-    (): ImageSourceInternal | undefined => sources.value[currentSourceIndex.value],
-  )
-  const effectOfCurrentSource = computed(() => currentSource.value?.effect.value ?? '')
+  const { source } = editor
+  const effectOfCurrentSource = computed(() => source.value?.effect.value ?? '')
   const scope = getCurrentScope()
   if (scope == null) throw new Error(`[webgl-media-editor] must be run in scope`)
 
   const hasAdjustment = computed(() => {
-    const adjustments = currentSource.value?.adjustments.value
+    const adjustments = source.value?.adjustments.value
     return adjustments && !!(adjustments.brightness || adjustments.contrast || adjustments.saturation)
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
     [EditorView.Crop]: () => (
-      <CropView
-        editor={editor}
-        sourceIndex={currentSourceIndex}
-        inactive={toRef(() => currentView.value === EditorView.Crop)}
-      />
+      <CropView editor={editor} inactive={toRef(() => currentView.value === EditorView.Crop)} />
     ),
-    [EditorView.Adjust]: () => (
-      <AdjustmentsView editor={editor} sourceIndex={currentSourceIndex} showPreviews />
-    ),
-    [EditorView.Filter]: () => <FilterView editor={editor} sourceIndex={currentSourceIndex} showPreviews />,
+    [EditorView.Adjust]: () => <AdjustmentsView editor={editor} showPreviews />,
+    [EditorView.Filter]: () => <FilterView editor={editor} showPreviews />,
   }
 
   const tabs = [
     {
       view: EditorView.Crop,
       Icon: IconTablerCrop,
-      active: () => !!currentSource.value?.crop.value,
+      active: () => !!source.value?.crop.value,
       label: 'Crop',
     },
     {
@@ -68,7 +56,7 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
     {
       view: EditorView.Filter,
       Icon: IconTablerWand,
-      active: () => effectOfCurrentSource.value !== '' && (currentSource.value?.intensity.value ?? 0) !== 0,
+      active: () => effectOfCurrentSource.value !== '' && (source.value?.intensity.value ?? 0) !== 0,
       label: 'Filter',
     },
   ]

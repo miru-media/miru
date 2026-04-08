@@ -6,8 +6,6 @@ import { MediaEditor, type MediaEditor_, unwrap } from '../wrapper.ts'
 export interface VueInstance {
   editor: MediaEditor
   scope: EffectScope
-  sourceIndex: number
-  _sourceIndex: Ref<number>
   _extraProps: Record<string, Ref>
 
   $el: HTMLElement
@@ -18,7 +16,6 @@ export interface VueInstance {
 
 interface WrappedComponentProps {
   editor: MediaEditor_
-  sourceIndex: Ref<number>
   showAllSources?: boolean | undefined
 }
 
@@ -30,12 +27,10 @@ export const wrap = (
   name,
   props: {
     editor: { type: MediaEditor, required: true },
-    sourceIndex: { type: Number, default: 0 },
     ...extraProps,
   },
   beforeCreate(this: VueInstance) {
     this.scope = createEffectScope()
-    this._sourceIndex = ref(0)
 
     if (extraProps) {
       this._extraProps = Object.fromEntries(
@@ -49,7 +44,6 @@ export const wrap = (
         Component,
         {
           editor: unwrap(this.editor),
-          sourceIndex: this._sourceIndex,
           showAllSources: false,
           ...this._extraProps,
         },
@@ -61,12 +55,6 @@ export const wrap = (
     return h('div')
   },
   watch: {
-    sourceIndex: {
-      handler(this: VueInstance, value: number) {
-        this._sourceIndex.value = value
-      },
-      immediate: true,
-    },
     ...(extraProps &&
       Object.fromEntries(
         Object.entries(extraProps).map(([key]) => [

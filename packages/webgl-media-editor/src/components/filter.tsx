@@ -1,8 +1,7 @@
-import { computed, type MaybeRefOrGetter, ref, toValue, watch } from 'fine-jsx'
+import { type MaybeRefOrGetter, ref, toValue, watch } from 'fine-jsx'
 
 import { Effect } from 'reactive-effects/effect'
 
-import type { ImageSourceInternal } from '../image-source-internal.ts'
 import type { MediaEditor } from '../media-editor.ts'
 
 import { SourcePreview } from './source-preview.jsx'
@@ -10,18 +9,16 @@ import { WebglEffectsMenu, type WebglEffectsMenuExpose } from './webgl-effects-m
 
 export const FilterView = ({
   editor,
-  sourceIndex,
   showPreviews,
   showIntensity,
   onChange,
 }: {
   editor: MediaEditor
-  sourceIndex: MaybeRefOrGetter<number>
   showPreviews?: MaybeRefOrGetter<boolean | undefined>
   showIntensity?: MaybeRefOrGetter<boolean | undefined>
   onChange?: (effectId: string | undefined, intensity: number) => void
 }) => {
-  const source = computed((): ImageSourceInternal | undefined => editor.sources.value[toValue(sourceIndex)])
+  const { source } = editor
   const menu = ref<WebglEffectsMenuExpose>()
 
   // scroll to selected filter on source change
@@ -50,10 +47,7 @@ export const FilterView = ({
 
   return (
     <>
-      {() =>
-        toValue(showPreviews) === true &&
-        editor.sources.value.map((_source, index) => <SourcePreview editor={editor} sourceIndex={index} />)
-      }
+      {() => toValue(showPreviews) === true && <SourcePreview editor={editor} />}
       <WebglEffectsMenu
         sourceTexture={() => source.value?.texture}
         sourceSize={() => source.value?.rotated ?? EMPTY_SIZE}
