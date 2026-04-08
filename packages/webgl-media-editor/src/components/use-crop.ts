@@ -1,7 +1,6 @@
 import Cropper from 'cropperjs'
-import { computed, type Ref, ref, toValue, watch } from 'fine-jsx'
+import { computed, type Ref, ref, toRef, toValue, watch } from 'fine-jsx'
 
-import { EditorView } from 'shared/types.ts'
 import { centerTo, drawImage, getCenter, setObjectSize } from 'shared/utils'
 
 import styles from '../css/index.module.css'
@@ -25,11 +24,11 @@ interface UseCropReturn {
 export const useCrop = ({
   editor,
   sourceIndex,
-  currentView
+  inactive,
 }: {
   editor: MediaEditor
   sourceIndex: number
-  currentView: Ref<EditorView>
+  inactive?: Ref<boolean | undefined>
 }): UseCropReturn => {
   // cropper instance
   const cropper = ref<Cropper>()
@@ -192,13 +191,13 @@ export const useCrop = ({
     isClamping = false
   }
   // resize cropper when visible again
-  watch([currentView], ()=>{
-    if(!cropper.value || currentView.value !== EditorView.Crop) return
-    const cropperInstance = cropper.value as unknown as Record<string, () => void>;
+  watch([toRef(inactive)], ([isInactive]) => {
+    if (!cropper.value || toValue(isInactive)) return
+    const cropperInstance = cropper.value as unknown as Record<string, () => void>
     setTimeout(() => {
-      cropperInstance.onResize();
+      cropperInstance.onResize()
       maximizeCropBox()
-    }, 10);
+    }, 10)
   })
   // create new cropper on source change
   watch([sourceRef, () => sourceRef.value?.original], async ([source, original], _prev, onCleanup) => {

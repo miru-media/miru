@@ -39,7 +39,13 @@ export const MediaEditorUI = (props: MediaEditorUIProps) => {
   })
 
   const views: Partial<Record<EditorView, () => JSX.Element>> = {
-    [EditorView.Crop]: () => <CropView editor={editor} sourceIndex={currentSourceIndex} currentView={currentView} />,
+    [EditorView.Crop]: () => (
+      <CropView
+        editor={editor}
+        sourceIndex={currentSourceIndex}
+        inactive={toRef(() => currentView.value === EditorView.Crop)}
+      />
+    ),
     [EditorView.Adjust]: () => (
       <AdjustmentsView editor={editor} sourceIndex={currentSourceIndex} showPreviews />
     ),
