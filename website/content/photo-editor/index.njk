@@ -19,7 +19,7 @@ title: Miru photo editor
         <label id="file-button" class="button primary">
           <div class="i-tabler:photo text-2rem"></div>
           Choose an image
-          <input id="file-input" type="file" accept="image/*" class="max-w-0" hidden="hidden" />
+          <input id="file-input" type="file" accept="image/*" class="max-w-0" />
         </label>
       </div>
     </div>
@@ -39,3 +39,17 @@ title: Miru photo editor
   </div>
 </div>
 <script type="module" src="./index.ts"></script>
+<style>
+
+body{
+  overflow: hidden !important;
+}
+
+.fullscreen-app {
+  height: 100mvh;
+  
+  .h-full {
+    height: calc(100% - 50px);
+  }
+}
+</style>

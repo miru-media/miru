@@ -56,36 +56,4 @@
     background: transparent;
     border: none;
   }
-
-  .miru--slider {
-    overflow: hidden;
-    appearance: none;
-    touch-action: none;
-    cursor: pointer;
-
-    &:focus {
-      outline: none;
-    }
-
-    &::-moz-range-track {
-      height: 100%;
-    }
-
-    &::-moz-range-thumb {
-      height: 100%;
-      border: none;
-      border-radius: 0;
-    }
-
-    &::-moz-range-progress {
-      height: 100%;
-    }
-  }
-
-  .miru--slider::-webkit-slider-thumb {
-    width: 0.35rem;
-    height: 200px;
-    margin-top: -80px;
-    appearance: none;
-  }
 }

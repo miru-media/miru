@@ -451,7 +451,8 @@ section {
       background-color: var(--color-border-level-2);
     }
 
-    &.active {
+    &.active,
+    &:active {
       background-color: var(--color-border-level-3);
     }
 
@@ -884,4 +885,13 @@ iframe {
 
 .fullscreen-app {
   height: 100dvh;
+}
+
+:focus-visible,
+label:has([type='file']:focus-visible) {
+  outline: 4px solid white;
+}
+
+label:has([type='file']:focus-visible) [type='file']:focus-visible {
+  outline: none;
 }

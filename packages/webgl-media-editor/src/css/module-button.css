@@ -9,6 +9,10 @@
       margin-bottom: 0 !important;
     }
   }
+
+  *:focus-visible {
+    outline-offset: -4px;
+  }
 }
 
 /* BUTTON */
@@ -24,10 +28,6 @@
   &[disabled] {
     pointer-events: none;
     opacity: 0.8;
-  }
-
-  &:focus-visible {
-    outline-offset: -4px;
   }
 
   &.miru--mark-disabled {
@@ -46,6 +46,12 @@
     font-size: var(--size-button-icon);
   }
 
+  /* BUTTON WITH RADIO INPUT */
+  &[disabled]:has(input[type='radio']) {
+    text-decoration: line-through;
+    opacity: 0.4;
+  }
+
   /* BUTTON WITH CANVAS */
   &:has(canvas) {
     box-sizing: border-box;
@@ -54,7 +60,6 @@
     flex-direction: column;
     width: calc(var(--height-menu-row-scroll) - 1rem);
     height: 100%;
-
     border: 2px solid transparent;
 
     canvas {
@@ -63,34 +68,31 @@
       height: 1rem;
       object-fit: cover;
     }
+  }
 
-    /* BUTTON ACTIVE AND HOVER */
-    &.miru--acc {
-      border: 2px solid;
-    }
-
-    &.miru--hov:not(.miru--acc) {
-      border: 2px solid;
-    }
-
-    /* &:not(.miru--hov):not(.miru--acc) canvas{
-        height: calc(100% - 1.75rem) ;
-        flex-grow: 0;
-      } */
+  /* LABEL AS BUTTON */
+  &:is(label) {
+    align-content: center;
   }
 
   /* BUTTON LABEL */
   .miru--button__label {
     margin: auto;
     margin-top: 0.2em;
-
-    /* margin-left: .2em;
-    margin-right: .2em; */
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
     white-space: nowrap;
     pointer-events: none;
+  }
+
+  /* MENU RADIO BUTTON */
+  input[type='radio'] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
   }
 
   &:has(canvas) .miru--button__label {
@@ -108,5 +110,12 @@
     height: 0.5rem;
     content: '';
     border-radius: 50%;
+  }
+}
+
+/* TAB BUTTON GROUP HIGHLIGHTING */
+.miru--menu__row:has([role='tab']:focus-visible) {
+  [role='tab'] {
+    outline: 4px auto -webkit-focus-ring-color;
   }
 }

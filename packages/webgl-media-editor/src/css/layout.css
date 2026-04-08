@@ -33,10 +33,16 @@
     width: 100%;
     height: 100%;
     min-height: 0;
+  }
 
-    .cropper-drag-box {
-      opacity: 1;
-    }
+  /* CROPPER IS ONLY HIDDEN */
+  &[hidden]:has(.miru--cropper-container) {
+    position: fixed !important;
+    z-index: -1;
+    display: block !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
   }
 }
 
@@ -62,40 +68,60 @@
 .miru--menu {
   display: flex;
   flex-direction: column;
+  padding: var(--gap-default);
 
   /* MENU BUTTON ROW */
-  .miru--menu__row {
+  .miru--menu__row,
+  .miru--menu__row > fieldset {
     position: relative;
     display: grid;
+    grid-column: span var(--options-amt);
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
+    gap: var(--gap-default);
     align-items: center;
     justify-content: space-around;
     height: var(--height-menu-row);
     overflow-y: hidden;
   }
 
-  .miru--menu__slider-row {
-    grid-template-columns: 1fr 4fr 1fr;
+  .miru--menu__row--scroll {
+    display: flex;
+    width: 100%;
+    height: var(--height-menu-row-scroll);
   }
 
-  /* MENU BUTTON ROW SCROLLABLE */
-  .miru--menu__row--scroll {
-    grid-auto-columns: 1fr;
-    gap: var(--gap-default);
-    justify-content: unset;
+  .miru--menu__row--scroll > div {
+    display: flex;
+    width: auto;
     height: var(--height-menu-row-scroll);
-    padding-top: var(--gap-default);
     padding-right: 50%;
-    padding-bottom: calc(0.5rem + var(--gap-default)) !important;
+    padding-bottom: var(--gap-default);
     padding-left: 50%;
     overflow: scroll hidden !important;
     scroll-behavior: smooth;
-    scroll-snap-type: x proximity;
+    scroll-snap-type: x mandatory !important;
+  }
 
-    .miru--button {
-      flex-shrink: 0;
-      scroll-snap-align: center;
+  .miru--menu__row--scroll > div > label {
+    flex-shrink: 0;
+    width: 4rem;
+    scroll-snap-align: center;
+  }
+
+  .miru--menu__slider-row {
+    grid-template-columns: 2.5rem 5rem 1fr 5rem 2.5rem;
+
+    svg {
+      justify-self: center;
+    }
+
+    label {
+      text-align: right;
+    }
+
+    svg + label {
+      text-align: left;
     }
   }
 }
@@ -111,5 +137,43 @@
 
 /* For WebKit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 40px; /* Set to a large value */
+  width: 40px;
+}
+
+fieldset {
+  min-inline-size: min-content !important;
+  min-inline-size: 0 !important;
+  padding: 0;
+  border: 0;
+
+  legend {
+    display: none !important;
+  }
+}
+
+fieldset,
+[role='tablist'] {
+  border-radius: var(--roundness-button);
+}
+
+fieldset label,
+[role='tab'] {
+  outline: none !important;
+
+  &:not(:first-of-type, :last-of-type) {
+    border-radius: 0;
+  }
+
+  &:first-of-type {
+    border-radius: var(--roundness-button) 0 0 var(--roundness-button);
+  }
+
+  &:last-of-type {
+    border-radius: 0 var(--roundness-button) var(--roundness-button) 0;
+  }
+}
+
+fieldset:has(input[type='radio']:focus-visible) {
+  height: calc(100% - 5px);
+  margin: 2px;
 }

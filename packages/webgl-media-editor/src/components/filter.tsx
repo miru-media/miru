@@ -73,7 +73,6 @@ export const FilterView = ({
           onChange?.(id, intensity)
         }}
       />
-      {/* spacer */}
       <div />
     </>
   )

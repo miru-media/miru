@@ -49,20 +49,17 @@ const EffectItem = (props: {
   })
 
   return (
-    <button
-      type="button"
-      data-id={id}
-      class={[
-        styles['miru--button'],
-        styles['miru--filter-preview'],
-        () => isActive() && styles['miru--acc'],
-        className,
-      ]}
-      onClick={onClick}
-    >
+    <label data-id={id} class={[styles['miru--button'], styles['miru--filter-preview'], className]}>
+      <input
+        type="radio"
+        name="image-filter"
+        value={props.effect.name}
+        checked={() => isActive()}
+        onClick={onClick}
+      />
       <canvas ref={canvas} />
       <span class={styles['miru--button__label']}>{props.effect.name}</span>
-    </button>
+    </label>
   )
 }
 
@@ -228,48 +225,54 @@ export const WebglEffectsMenu = (props: {
     renderer.deleteTexture(fb.texture)
   })
 
-  return (
-    <div class={[styles['miru--menu'], props.class]}>
-      <p
-        ref={container}
-        class={[styles['miru--menu__row'], styles['miru--menu__row--scroll']]}
-        onScroll={onScroll}
-      >
-        {() =>
-          [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(([id, effect], thumbnailIndex) => (
-            <>
-              <EffectItem
-                effect={effect}
-                id={id || ''}
-                imageData={imageData}
-                thumbnailIndex={thumbnailIndex}
-                size={props.thumbnailSize}
-                isActive={() => currentEffect.value === id}
-                onClick={() => onClickFilter(id)}
-                class={[
-                  () => scrolledEffectId.value === id && styles['miru--hov'],
-                  () =>
-                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                    styles['miru--loading'],
-                ]}
-              ></EffectItem>
-            </>
-          ))
-        }
-      </p>
+  const fxArray = [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)]
 
-      {() =>
-        (toValue(showIntensity) ?? true) &&
-        RowSlider({
-          label: 'Intensity',
-          min: 0,
-          max: 1,
-          value: toRef(props.intensity),
-          onInput: onInputIntensity,
-          onChange: onInputIntensity,
-          disabled: () => !currentEffect.value,
-        })
-      }
+  return (
+    <div
+      id="tab-filter"
+      role="tabpanel"
+      aria-labelledby="tab-button-filter"
+      class={[styles['miru--menu'], props.class]}
+    >
+      <fieldset class={[styles['miru--menu__row--scroll']]} role="radiogroup" aria-labelledby="filters-label">
+        <legend id="filters-label">Image Filters</legend>
+        <div ref={container} onScroll={onScroll}>
+          {() =>
+            fxArray.map(([id, effect], thumbnailIndex) => (
+              <>
+                <EffectItem
+                  effect={effect}
+                  id={id || ''}
+                  imageData={imageData}
+                  thumbnailIndex={thumbnailIndex}
+                  size={props.thumbnailSize}
+                  isActive={() => currentEffect.value === id}
+                  onClick={() => onClickFilter(id)}
+                  class={[
+                    () => scrolledEffectId.value === id && styles['miru--hov'],
+                    () =>
+                      ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                      styles['miru--loading'],
+                  ]}
+                ></EffectItem>
+              </>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      {() => (
+        <RowSlider
+          label="Intensity"
+          Icon={IconTablerCircleOff}
+          ticks={[0, 1]}
+          zeroPoint={0}
+          value={toRef(props.intensity)}
+          onInput={onInputIntensity}
+          onChange={(e: Event) => e.preventDefault()}
+          disabled={() => toValue(showIntensity) ?? !currentEffect.value}
+        />
+      )}
     </div>
   )
 }

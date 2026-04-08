@@ -39,4 +39,6 @@ declare global {
   const IconTablerVolumeOff: typeof import('~icons/tabler/volume-off.jsx')['default']
   const IconTablerVolume_3: typeof import('~icons/tabler/volume-3.jsx')['default']
   const IconTablerWand: typeof import('~icons/tabler/wand.jsx')['default']
+  const IconTablerDeviceMobile: typeof import('~icons/tabler/device-mobile.jsx')['default']
+  const IconTablerDeviceMobileRotated: typeof import('~icons/tabler/device-mobile-rotated.jsx')['default']
 }
