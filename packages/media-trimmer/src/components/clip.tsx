@@ -2,14 +2,14 @@ import { computed, ref } from 'fine-jsx'
 
 import { useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math'
+import { ARROW_KEY_DELTA_S } from 'shared/video/constants.ts'
+import { formatDuration } from 'shared/video/utils.ts'
 
 import styles from '../media-trimmer.module.css'
 import type { TrimmerUiContext } from '../trimmer-ui-context.ts'
 
 const MIN_CLIP_DURATION_S = 0.25
 const MIN_CLIP_WIDTH_PX = 1
-const ARROW_KEY_DELTA_S = 0.25
-
 export const Clip = ({ context }: { context: TrimmerUiContext }) => {
   const { state } = context
   const resizeLeft = ref<HTMLElement>()
@@ -27,7 +27,7 @@ export const Clip = ({ context }: { context: TrimmerUiContext }) => {
   const downCoords = { x: 0, y: 0 }
   const initialTime = { start: 0, duration: 0 }
 
-  const onPointerDown = (event: PointerEvent) => {
+  const onPointerDown = (event: PointerEvent): void => {
     if (!!isResizing.value || event.button !== 0) return
     const handle = event.currentTarget as HTMLElement
 
@@ -41,16 +41,19 @@ export const Clip = ({ context }: { context: TrimmerUiContext }) => {
     handle.setPointerCapture(event.pointerId)
     isResizing.value = handle === resizeLeft.value ? 'left' : 'right'
     event.stopPropagation()
+    event.preventDefault()
   }
-  const onPointerMove = (event: PointerEvent) => {
+  const onPointerMove = (event: PointerEvent): void => {
     if (!isResizing.value) return
 
     const deltaS = (event.pageX - downCoords.x) / context.pixelsPerSecond.value
 
     changeEdgeBy(isResizing.value, deltaS)
+    event.stopPropagation()
   }
-  const onLostPointer = () => {
+  const onLostPointer = (event: PointerEvent): void => {
     isResizing.value = undefined
+    event.stopPropagation()
   }
 
   const changeEdgeBy = (edge: 'left' | 'right', deltaS: number): void => {
@@ -90,8 +93,10 @@ export const Clip = ({ context }: { context: TrimmerUiContext }) => {
 
       switch (event.code) {
         case 'ArrowLeft':
-        case 'ArrowRight': {
-          const deltaS = ARROW_KEY_DELTA_S * (event.code === 'ArrowLeft' ? -1 : 1)
+        case 'ArrowRight':
+        case 'ArrowUp':
+        case 'ArrowDown': {
+          const deltaS = ARROW_KEY_DELTA_S * (event.code === 'ArrowLeft' || event.code === 'ArrowUp' ? -1 : 1)
           const { start, end } = state.value
           initialTime.start = start
           initialTime.duration = end - start
@@ -117,6 +122,7 @@ export const Clip = ({ context }: { context: TrimmerUiContext }) => {
           <div
             ref={resizeLeft}
             class={styles.clipResizeLeft}
+            ariaValueText={() => formatDuration(state.value.start, 'long')}
             ariaValueNow={() => state.value.start}
             ariaValueMin={0}
             ariaValueMax={() => state.value.end}
@@ -127,6 +133,7 @@ export const Clip = ({ context }: { context: TrimmerUiContext }) => {
           <div
             ref={resizeRight}
             class={styles.clipResizeRight}
+            ariaValueText={() => formatDuration(state.value.end, 'long')}
             ariaValueNow={() => state.value.end}
             ariaValueMin={() => state.value.start}
             ariaValueMax={() => context.mediaDuration.value}

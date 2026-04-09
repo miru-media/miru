@@ -40,7 +40,7 @@ export const PlaybackControls = ({ context }: { context: TrimmerUiContext }) => 
               {() => (context.state.value.mute ? <IconTablerVolumeOff /> : <IconTablerVolume />)}
             </Button>
           ) : (
-            <Button disabled onClick={() => undefined}>
+            <Button disabled onClick={() => undefined} label="No audio track">
               <IconTablerVolume_3 />
             </Button>
           )

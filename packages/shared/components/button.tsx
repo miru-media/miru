@@ -19,7 +19,7 @@ export const Button = ({
     class: () => [className, styles.button],
     onClick,
     ...(tag === 'button' ? { type: 'button' } : { role: 'button' }),
-    title: label,
+    title: label ?? '',
     'aria-label': label,
     ...props,
   }

@@ -96,6 +96,7 @@ if (!import.meta.env.SSR) {
 
 <template>
   <div class="video-editor-app">
+    <Settings v-if="editorRef" :editor="editorRef" :onCloseProject v-model:name="name" />
     <VideoEditorUI
       ref="editorRef"
       :sync
@@ -106,7 +107,6 @@ if (!import.meta.env.SSR) {
     >
       <Toolbar v-if="editorRef" :editor="editorRef" />
     </VideoEditorUI>
-    <Settings v-if="editorRef" :editor="editorRef" :onCloseProject v-model:name="name" />
     <IntroModal />
   </div>
 </template>
@@ -141,14 +141,6 @@ if (!import.meta.env.SSR) {
   --primary-bg-05: #17171788;
 
   color-scheme: dark;
-
-  &:has(.bulma-modal:open, .bulma-modal.open) {
-    color: red;
-    :global(& .button.overlay, & .video-editor .button.overlay) {
-      visibility: hidden;
-      display: none;
-    }
-  }
 }
 
 .video-editor {

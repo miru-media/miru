@@ -148,23 +148,27 @@ const { DurationFormat } = Intl as unknown as {
   DurationFormat?: new (...args: unknown[]) => { format: (...args: unknown[]) => string }
 }
 
-export const formatDuration = (durationS: number, languages = navigator.languages) => {
+export const formatDuration = (
+  durationS: number,
+  style: Intl.NumberFormatOptions['unitDisplay'] = 'narrow',
+  languages = navigator.languages,
+) => {
   const secondsFormat = new Intl.NumberFormat(languages, {
     style: 'unit',
     unit: 'second',
-    unitDisplay: 'narrow',
+    unitDisplay: style,
   })
   if (!durationS) return secondsFormat.format(0)
 
   const seconds = Math.trunc(durationS % 60)
   const minutes = Math.trunc(durationS / 60)
 
-  if (DurationFormat) return new DurationFormat(languages, { style: 'narrow' }).format({ minutes, seconds })
+  if (DurationFormat) return new DurationFormat(languages, { style }).format({ minutes, seconds })
 
   const minutesFormat = new Intl.NumberFormat(languages, {
     style: 'unit',
     unit: 'minute',
-    unitDisplay: 'narrow',
+    unitDisplay: style,
   })
 
   if (!seconds) return minutesFormat.format(minutes)

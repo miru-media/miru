@@ -34,7 +34,12 @@ export const extendViteConfig = (config: UserConfig): UserConfig => {
           },
         ],
       }),
-      icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'miru-icon' }),
+      icons({
+        compiler: 'jsx',
+        jsx: 'preact',
+        defaultClass: 'miru-icon',
+        transform: (svg) => svg.replace('<svg', '<svg role="presentation"'),
+      }),
       unocss({
         presets: [
           presetWind3({ dark: { dark: '.theme-dark', light: '.theme-light' } }),

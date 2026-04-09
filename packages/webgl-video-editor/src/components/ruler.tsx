@@ -62,7 +62,7 @@ export const Ruler = () => {
 
         let durationText = formattedDurations.get(timeS)
         if (!durationText) {
-          formattedDurations.set(timeS, (durationText = formatDuration(timeS, languages.value)))
+          formattedDurations.set(timeS, (durationText = formatDuration(timeS, 'narrow', languages.value)))
           if (formattedDurations.size > nLabels * 2) {
             const [[key]] = formattedDurations
             formattedDurations.delete(key)

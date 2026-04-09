@@ -118,3 +118,10 @@ const onInputFile = (event: Event) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+media-trimmer {
+  --clip-selected-color-accent: hsl(216deg 79% 50%);
+  --clip-selected-color-text: white;
+}
+</style>

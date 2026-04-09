@@ -48,9 +48,13 @@ const onChange = (event: CustomEvent<{ effect: string | undefined; intensity: nu
 const texture = editor.effectRenderer.createTexture()
 const isLoadingTexture = ref(true)
 const img = new Image()
+const MAX_THUMBNAIL_SIZE = { width: 200, height: 200 }
+const thumbnailSize = ref(MAX_THUMBNAIL_SIZE)
+
 useEventListener(img, 'load', () => {
   isLoadingTexture.value = false
   editor.effectRenderer.loadImage(texture, img)
+  thumbnailSize.value = fit(img, MAX_THUMBNAIL_SIZE)
 })
 
 img.src = sampleImage
@@ -72,13 +76,12 @@ watch(
     ref="menu"
     :sourceTexture="texture"
     :sourceSize="img"
-    :thumbnailSize="fit(img, { width: 200, height: 200 })"
+    :thumbnailSize
     :renderer="editor.effectRenderer"
     :effects="effects"
     :effect="editor.selection?.effects?.[0]?.assetId"
     :intensity="editor.selection?.effects?.[0]?.intensity ?? 1"
     :loading="isLoadingTexture"
     @change="onChange"
-    class="filters-menu"
   />
 </template>

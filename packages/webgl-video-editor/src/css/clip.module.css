@@ -2,11 +2,17 @@
   :scope {
     --clip-height: 2.75rem;
     --clip-resize-handle-width: 1.5rem;
+    --clip-selected-color-accent: var(--yellow);
+    --clip-selected-color-text: var(--black);
   }
 }
 
 .clip {
   height: var(--clip-height);
+
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 .clip.isSelected {
@@ -23,7 +29,6 @@
   left: var(--clip-box-left);
   width: calc(var(--clip-box-right) - var(--clip-box-left));
   height: var(--clip-height);
-  overflow: hidden;
   cursor: pointer;
   user-select: none;
 
@@ -77,12 +82,11 @@
 .clipControls {
   position: absolute;
   inset: 0;
-  overflow: hidden;
   pointer-events: none;
-  border-color: var(--yellow);
+  border-color: var(--clip-selected-color-accent);
   border-style: solid;
   border-width: 0.125rem;
-  border-radius: 0.5rem;
+  border-radius: calc(0.5rem + 0.125rem);
   opacity: 0;
 }
 
@@ -100,18 +104,20 @@
   justify-content: center;
   width: var(--clip-resize-handle-width);
   height: 100%;
-  color: black;
+  color: var(--clip-selected-color-text);
   touch-action: none;
   cursor: ew-resize;
-  background-color: var(--yellow);
+  background-color: var(--clip-selected-color-accent);
 }
 
 .clipResizeLeft {
   left: 0;
+  border-radius: 0.5rem 0 0 0.5rem;
 }
 
 .clipResizeRight {
   right: 0;
+  border-radius: 0 0.5rem 0.5rem 0;
 }
 
 .clip.isSelected.canResizeLeft .clipResizeLeft,

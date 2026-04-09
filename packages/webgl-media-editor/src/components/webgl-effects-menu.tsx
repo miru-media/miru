@@ -57,7 +57,7 @@ const EffectItem = (props: {
         checked={() => isActive()}
         onClick={onClick}
       />
-      <canvas ref={canvas} />
+      <canvas ref={canvas} role="presentation" />
       <span class={styles['miru--button__label']}>{props.effect.name}</span>
     </label>
   )
@@ -67,7 +67,7 @@ export interface WebglEffectsMenuExpose {
   scrollToEffect: (filterId: string | undefined, scrollBehaviour?: ScrollBehavior) => void
 }
 
-export const WebglEffectsMenu = (props: {
+export interface WebglEffectsMenuProps {
   ref?: Ref<WebglEffectsMenuExpose | undefined> | ((value: WebglEffectsMenuExpose | undefined) => void)
   sourceTexture: MaybeRefOrGetter<WebGLTexture>
   sourceSize: MaybeRefOrGetter<Size>
@@ -82,8 +82,52 @@ export const WebglEffectsMenu = (props: {
   loading?: MaybeRefOrGetter<boolean>
   class?: unknown
   onChange: (effectId: string | undefined, intensity: number) => void
-}) => {
+}
+
+const getMenuPropsAndAttrs = (props: WebglEffectsMenuProps & Record<string, unknown>) => {
+  const {
+    ref,
+    sourceTexture,
+    sourceSize,
+    thumbnailSize,
+    crop,
+    renderer,
+    effects,
+    effect,
+    intensity,
+    prependOps,
+    showIntensity,
+    loading,
+    class: className,
+    onChange,
+    ...attrs
+  } = props
+
+  return {
+    props: {
+      ref,
+      sourceTexture,
+      sourceSize,
+      thumbnailSize,
+      crop,
+      renderer,
+      effects,
+      effect,
+      intensity,
+      prependOps,
+      showIntensity,
+      loading,
+      class: className,
+      onChange,
+    },
+    attrs,
+  }
+}
+
+export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, unknown>) => {
+  const { props, attrs } = getMenuPropsAndAttrs(props_)
   const { renderer, showIntensity, onChange } = props
+
   const currentEffect = computed(() => toValue(props.effect) ?? '')
 
   const container = ref<HTMLElement>()
@@ -227,35 +271,34 @@ export const WebglEffectsMenu = (props: {
 
   const fxArray = [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)]
 
+  const stopPropagaion = (event: Event): void => event.stopPropagation()
+
   return (
-    <div
-      id="tab-filter"
-      role="tabpanel"
-      aria-labelledby="tab-button-filter"
-      class={[styles['miru--menu'], props.class]}
-    >
-      <fieldset class={[styles['miru--menu__row--scroll']]} role="radiogroup" aria-labelledby="filters-label">
-        <legend id="filters-label">Image Filters</legend>
+    <div {...attrs} class={[styles['miru--menu'], props.class]}>
+      <fieldset
+        class={[styles['miru--menu__row--scroll']]}
+        role="radiogroup"
+        onInput={stopPropagaion}
+        onChange={stopPropagaion}
+      >
+        <legend>Image Filters</legend>
         <div ref={container} onScroll={onScroll}>
           {() =>
             fxArray.map(([id, effect], thumbnailIndex) => (
-              <>
-                <EffectItem
-                  effect={effect}
-                  id={id || ''}
-                  imageData={imageData}
-                  thumbnailIndex={thumbnailIndex}
-                  size={props.thumbnailSize}
-                  isActive={() => currentEffect.value === id}
-                  onClick={() => onClickFilter(id)}
-                  class={[
-                    () => scrolledEffectId.value === id && styles['miru--hov'],
-                    () =>
-                      ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                      styles['miru--loading'],
-                  ]}
-                ></EffectItem>
-              </>
+              <EffectItem
+                effect={effect}
+                id={id || ''}
+                imageData={imageData}
+                thumbnailIndex={thumbnailIndex}
+                size={props.thumbnailSize}
+                isActive={() => currentEffect.value === id}
+                onClick={() => onClickFilter(id)}
+                class={() => [
+                  scrolledEffectId.value === id && styles['miru--hov'],
+                  ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                    styles['miru--loading'],
+                ]}
+              ></EffectItem>
             ))
           }
         </div>
@@ -269,7 +312,7 @@ export const WebglEffectsMenu = (props: {
           zeroPoint={0}
           value={toRef(props.intensity)}
           onInput={onInputIntensity}
-          onChange={(e: Event) => e.preventDefault()}
+          onChange={onInputIntensity}
           disabled={() => toValue(showIntensity) ?? !currentEffect.value}
         />
       )}

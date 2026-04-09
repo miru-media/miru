@@ -66,6 +66,9 @@ export const FilterView = ({
           $source.intensity.value = intensity
           onChange?.(id, intensity)
         }}
+        id="tab-filter"
+        role="tabpanel"
+        aria-labelledby="tab-button-filter"
       />
       <div />
     </>

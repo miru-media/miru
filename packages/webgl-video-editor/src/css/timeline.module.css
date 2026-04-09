@@ -46,7 +46,7 @@
 }
 
 .timePillRight {
-  opacity: 0.5;
+  opacity: 0.675;
 }
 
 .timePillDrop {
@@ -77,6 +77,7 @@
   flex-direction: column;
   width: calc(var(--timeline-width) + var(--editor-width));
   min-height: calc(var(--clip-height) * 2.5);
+  padding-top: 0.25rem;
   padding-bottom: 1rem;
   padding-left: calc(var(--editor-width) / 2);
   overflow: hidden auto;

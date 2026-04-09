@@ -135,45 +135,47 @@
   }
 }
 
-/* For WebKit browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 40px;
-}
-
-fieldset {
-  min-inline-size: min-content !important;
-  min-inline-size: 0 !important;
-  padding: 0;
-  border: 0;
-
-  legend {
-    display: none !important;
-  }
-}
-
-fieldset,
-[role='tablist'] {
-  border-radius: var(--roundness-button);
-}
-
-fieldset label,
-[role='tab'] {
-  outline: none !important;
-
-  &:not(:first-of-type, :last-of-type) {
-    border-radius: 0;
+.host {
+  /* For WebKit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 40px;
   }
 
-  &:first-of-type {
-    border-radius: var(--roundness-button) 0 0 var(--roundness-button);
+  fieldset {
+    min-inline-size: min-content !important;
+    min-inline-size: 0 !important;
+    padding: 0;
+    border: 0;
+
+    legend {
+      display: none !important;
+    }
   }
 
-  &:last-of-type {
-    border-radius: 0 var(--roundness-button) var(--roundness-button) 0;
+  fieldset,
+  [role='tablist'] {
+    border-radius: var(--roundness-button);
   }
-}
 
-fieldset:has(input[type='radio']:focus-visible) {
-  height: calc(100% - 5px);
-  margin: 2px;
+  fieldset label,
+  [role='tab'] {
+    outline: none !important;
+
+    &:not(:first-of-type, :last-of-type) {
+      border-radius: 0;
+    }
+
+    &:first-of-type {
+      border-radius: var(--roundness-button) 0 0 var(--roundness-button);
+    }
+
+    &:last-of-type {
+      border-radius: 0 var(--roundness-button) var(--roundness-button) 0;
+    }
+  }
+
+  fieldset:has(input[type='radio']:focus-visible) {
+    height: calc(100% - 5px);
+    margin: 2px;
+  }
 }

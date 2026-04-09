@@ -1,4 +1,4 @@
-import '../../css/bulma-config.scss'
+import 'virtual:uno.css'
 
 import { setupApp } from 'app-video-editor'
 import { createApp } from 'vue'

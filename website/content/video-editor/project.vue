@@ -44,11 +44,12 @@ const showConnectionToggle = import.meta.env.DEV
     v-model:name="name"
   />
   <button
+    aria-label="(dev) toggle collaboration connection"
+    title="(dev) toggle collaboration connection"
     v-if="showConnectionToggle"
-    :class="[
-      'absolute top-0 right-0 m-1rem w-1rem h-1rem rounded-full',
-      isConnected ? 'bg-#0b0' : 'bg-white',
-    ]"
+    class="absolute top-0 right-0 p-0.5rem"
     @click="toggleConnection"
-  />
+  >
+    <div :class="['inline-block w-1rem h-1rem rounded-full', isConnected ? 'bg-#0b0' : 'bg-white']" />
+  </button>
 </template>

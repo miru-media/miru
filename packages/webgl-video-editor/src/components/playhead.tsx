@@ -1,6 +1,7 @@
 import { computed, ref } from 'fine-jsx'
 
 import { useElementSize } from 'shared/utils'
+import { useCursor } from 'shared/video/use-cursor.ts'
 import { splitTime } from 'shared/video/utils'
 
 import styles from '../css/index.module.css'
@@ -13,6 +14,14 @@ export const Playhead = (): JSX.Element => {
   const size = useElementSize(root)
 
   const timeParts = computed(() => splitTime(editor.doc.currentTime))
+  const cursorProps = useCursor(
+    {
+      currentTime: () => editor.currentTime,
+      mediaDuration: () => editor.doc.duration,
+      seekTo: editor.seekTo.bind(editor),
+    },
+    root,
+  )
 
   return (
     <>
@@ -21,7 +30,7 @@ export const Playhead = (): JSX.Element => {
         class={styles.timelinePlayhead}
         style={() => `--time-pill-width: ${size.value.width}px`}
       >
-        <span class={[styles.timePill, styles.textBodySmall, styles.numeric]}>
+        <span class={[styles.timePill, styles.textBodySmall, styles.numeric]} {...cursorProps}>
           <span>
             {() => timeParts.value.hours}:{() => timeParts.value.minutes}
           </span>
@@ -29,7 +38,7 @@ export const Playhead = (): JSX.Element => {
             {() => timeParts.value.seconds}.{() => timeParts.value.subSeconds}
           </span>
 
-          <svg class={styles.timePillDrop} viewBox="0 0 16 8" fill="none">
+          <svg class={styles.timePillDrop} viewBox="0 0 16 8" fill="none" role="presentation">
             <path
               d="M7.99282 8C7.99282 8 10.3614 0 15.3381 0C20.3147 0 -4.57808 0 0.753127 0C6.08433 0 7.99282 8 7.99282 8Z"
               fill="currentColor"

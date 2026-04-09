@@ -36,18 +36,12 @@ watch(currentLocale, updateContent)
 </script>
 
 <template>
-  <dialog
-    ref="dialog"
-    class="video-editor-info-modal bulma-modal prose dark:prose-invert"
-    @close="onCloseDialog"
-    @cancel="onCloseDialog"
-    style="color: var(--bulma-body-color)"
-  >
-    <content-component v-if="ContentComponent" class="bulma-modal-card">
-      <template #header="{ title }">
-        <div class="not-prose bulma-columns bulma-is-vcentered">
-          <div class="bulma-column">
-            <h1 class="prose-lg dark:prose-invert title" :aria-label="'Miru | ' + title">
+  <dialog ref="dialog" class="dialog" @close="onCloseDialog" @cancel="onCloseDialog">
+    <div class="dialog-content prose dark:prose-invert">
+      <content-component v-if="ContentComponent">
+        <template #header="{ title }">
+          <div class="not-prose title">
+            <h1 class="prose-lg dark:prose-invert" :aria-label="'Miru | ' + title">
               <picture>
                 <source
                   srcset="../../../website/content/media/logo/white-logo.svg"
@@ -57,40 +51,46 @@ watch(currentLocale, updateContent)
               </picture>
               {{ title }}
             </h1>
-          </div>
-          <div class="bulma-column">
             <img src="../../../website/content/media/illustrations/2.svg" class="illustration" alt="" />
           </div>
-        </div>
-      </template>
-      <template #confirm="{ text }">
-        <footer class="bulma-modal-card-foot !justify-end">
-          <button class="button primary" @click="() => dialog?.close()">
-            {{ text }}
-          </button>
-        </footer>
-      </template>
-    </content-component>
+        </template>
+        <template #confirm="{ text }">
+          <footer>
+            <button class="button primary" @click="() => dialog?.close()">
+              {{ text }}
+            </button>
+          </footer>
+        </template>
+      </content-component>
+    </div>
   </dialog>
 </template>
 
 <style scoped>
-.video-editor-info-modal {
-  color-scheme: dark light;
-  align-items: stretch;
+.dialog {
+  border: none;
+  border-radius: 1rem;
+  padding: 2rem 2rem 0;
 
   &:focus {
     outline: none;
   }
 
+  &::backdrop {
+    background-color: #000a;
+  }
+}
+
+.dialog-content {
+  color-scheme: dark light;
+  position: relative;
+  flex-direction: column;
+  background-color: inherit;
+  align-items: stretch;
+
   .title {
     text-align: center;
     align-items: center;
-  }
-
-  .bulma-modal-card-body {
-    border-start-start-radius: var(--bulma-modal-card-head-radius);
-    border-start-end-radius: var(--bulma-modal-card-head-radius);
   }
 
   .logo {
@@ -106,9 +106,20 @@ watch(currentLocale, updateContent)
     margin-top: -1rem;
   }
 
-  .task-list {
+  :global(.task-list li) {
+    padding: 0;
     list-style: none;
-    margin-inline-start: 1em;
+    margin: 0;
+  }
+
+  footer {
+    display: flex;
+    position: sticky;
+    background-color: inherit;
+    /* 0px left a gap in firefox  */
+    bottom: -1px;
+    justify-content: end;
+    padding: 2rem 0;
   }
 }
 </style>

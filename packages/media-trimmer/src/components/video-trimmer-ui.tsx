@@ -2,9 +2,10 @@ import { effect, h, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
 import * as Mb from 'mediabunny'
 
 import { useEventListener } from 'shared/utils'
-import { clamp } from 'shared/utils/math'
+import { clamp } from 'shared/utils/math.ts'
+import { useCursor } from 'shared/video/use-cursor.ts'
+import { useScrubber } from 'shared/video/use-scrubber.ts'
 
-import { useScrubber } from '../composables/use-scrubber.ts'
 import styles from '../media-trimmer.module.css'
 import { TrimmerUiContext } from '../trimmer-ui-context.ts'
 import type { LoadInfo, TrimState } from '../types/ui'
@@ -22,10 +23,12 @@ export const VideoTrimmerUI = (props: {
 }) => {
   let url = ''
   const scrubberContainer = ref<HTMLElement>()
+  const scrubberCursor = ref<HTMLElement>()
   const context = new TrimmerUiContext(toRef(props.state), scrubberContainer, props.onChange)
   const root = ref<HTMLElement>()
 
-  useScrubber(context, scrubberContainer)
+  useScrubber(context, scrubberContainer, scrubberCursor)
+  const cursorProps = useCursor(context, scrubberCursor)
 
   useEventListener(root, 'keydown', (event: KeyboardEvent) => {
     if (event.code === 'Space' && !(event.ctrlKey || event.altKey || event.shiftKey || event.metaKey)) {
@@ -142,7 +145,7 @@ export const VideoTrimmerUI = (props: {
             ) : context.mediaDuration.value ? (
               <>
                 <Clip context={context} />
-                <div class={styles.cursor} />
+                <div ref={scrubberCursor} {...cursorProps} class={styles.cursor} />
               </>
             ) : (
               <div class={styles.clip} />

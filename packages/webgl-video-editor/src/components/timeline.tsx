@@ -89,7 +89,7 @@ export const Timeline = ({
                   <label class={[styles.button, styles.trackButton]}>
                     <input
                       type="file"
-                      hidden
+                      class={styles.srOnly}
                       accept={ACCEPT_VIDEO_FILE_TYPES}
                       onInput={(event: InputEvent) => onInputClipFile(event, doc.timeline.head)}
                     />

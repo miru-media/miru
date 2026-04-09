@@ -19,52 +19,57 @@ const emit = defineEmits<{
 
 <template>
   <div class="root prose-lg dark:prose-invert">
-    <div class="bulma-columns columns-container">
-      <div class="bulma-column">
-        <h1 class="text-center mb-4">Projects</h1>
-        <ul class="project-list">
-          <li v-for="doc of props.docs" :key="doc.id" class="project-list-item">
-            <a :href="doc.url" class="project-card" @click="(event) => emit('open', doc, event)">
-              <div>{{ doc.name }}</div>
-              <div class="text-[0.75em]">{{ new Date(doc.createdAt).toLocaleString() }}</div>
-            </a>
-            <button class="project-delete" @click="() => emit('delete', doc.id)">
-              <div class="i-tabler:trash" />
-              <div class="sr-only">{{ $t('delete') }}</div>
-            </button>
-          </li>
-        </ul>
+    <div class="column">
+      <div class="flex gap-1rem flex-col">
+        <img
+          alt="Video editing illustration"
+          src="../../../website/content/media/illustrations/2.svg"
+          class="<md:hidden max-w-20rem m-auto"
+        />
+        <button @click="() => emit('create')" class="button tertiary">
+          <div class="i-tabler:plus" />
+          {{ $t('create_empty_project') }}
+        </button>
+        <button @click="() => emit('create', 'Example', demoDoc)" class="button primary">
+          <div class="i-tabler:plus" />
+          {{ $t('create_example_project') }}
+        </button>
       </div>
-      <div class="bulma-column">
-        <div class="flex gap-1rem flex-col">
-          <img
-            alt="Video editing illustration"
-            src="../../../website/content/media/illustrations/2.svg"
-            class="<md:hidden max-w-20rem m-auto"
-          />
-          <button @click="() => emit('create')" class="create-button">
-            <div class="i-tabler:plus" />
-            {{ $t('create_empty_project') }}
+    </div>
+    <div class="column">
+      <h1 class="text-center mb-4">Projects</h1>
+      <ul class="project-list">
+        <li v-for="doc of props.docs" :key="doc.id" class="project-list-item">
+          <a :href="doc.url" class="project-card" @click="(event) => emit('open', doc, event)">
+            <div>{{ doc.name }}</div>
+            <div class="text-[0.75em]">{{ new Date(doc.createdAt).toLocaleString() }}</div>
+          </a>
+          <button class="button tertiary" @click="() => emit('delete', doc.id)">
+            <div class="i-tabler:trash" />
+            <div class="sr-only">{{ $t('delete') }}</div>
           </button>
-          <button @click="() => emit('create', 'Example', demoDoc)" class="create-button">
-            <div class="i-tabler:plus" />
-            {{ $t('create_example_project') }}
-          </button>
-        </div>
-      </div>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
 <style scoped>
 .root {
+  display: flex;
   color-scheme: dark;
   color: var(--white-3);
   padding-top: 1rem;
+  justify-content: stretch;
+  gap: 2rem;
+
+  @media (width < 768px) {
+    flex-direction: column;
+  }
 }
 
-.columns-container {
-  margin: 0;
+.column {
+  flex-grow: 1;
 }
 
 .project-list {
@@ -84,8 +89,7 @@ const emit = defineEmits<{
   font-size: 1.5rem;
 }
 
-.project-card,
-.create-button {
+.project-card {
   display: flex;
   gap: 0.675rem;
   flex-grow: 1;
@@ -96,30 +100,15 @@ const emit = defineEmits<{
   text-decoration: none;
 }
 
-.create-button {
-  align-items: center;
-  justify-content: center;
-  border-style: dashed;
-  border-width: 0.1875rem;
-  font-size: 1.25rem;
-  background-color: rgb(255 255 255 / 3%);
-}
-
 .project-card {
   flex-direction: column;
   border-style: solid;
   background-color: rgb(29 107 228 / 10%);
   border-color: rgb(29 107 228 / 40%);
-
-  outline-color: rgb(29 107 228);
 }
 
 .project-delete {
   border-radius: 0.25rem;
   font-size: 1.75rem;
-
-  &:focus-visible {
-    outline: solid currentColor;
-  }
 }
 </style>

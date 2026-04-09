@@ -46,6 +46,8 @@ export const Clip = ({
 
   return (
     <div
+      tabindex="0"
+      onFocus={() => editor.select(clip)}
       class={() => [
         styles.clip,
         isSelected() && [styles.isSelected, editor.drag.isDragging.value && styles.isDragging],

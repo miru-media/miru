@@ -10,3 +10,5 @@ export const ReadyState = {
   HAVE_FUTURE_DATA: 4,
 } as const
 export type ReadyState = (typeof ReadyState)[keyof typeof ReadyState]
+
+export const ARROW_KEY_DELTA_S = 0.25
