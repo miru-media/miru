@@ -17,7 +17,6 @@ let settings: Y.Map<any>
 
 const clipInit = makeVideoClip({
   id: 'test-clip',
-  clipType: 'video',
   name: 'test clip',
   mediaRef: { assetId: 'unknown' },
   transition: undefined,

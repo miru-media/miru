@@ -154,11 +154,11 @@ export class VideoEditor implements pub.VideoEditor {
 
   addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {
     const { duration } = asset
+    const { trackType } = track
 
     const init: Schema.AnyClip = {
       id: this.generateId(),
-      type: 'clip',
-      clipType: track.trackType,
+      type: `clip:${trackType}`,
       mediaRef: { assetId: asset.id },
       sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
       duration: Rational.fromDecimal(duration, this.doc.frameRate),

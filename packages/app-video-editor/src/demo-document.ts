@@ -147,8 +147,7 @@ demoDoc.timeline.children.push(
     children: [
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'video',
+        type: 'clip:video',
         name: assets.waves.name,
         sourceStart: { value: 90000, rate: 30000 },
         duration: { value: 90000, rate: 30000 },
@@ -158,8 +157,7 @@ demoDoc.timeline.children.push(
       },
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'video',
+        type: 'clip:video',
         name: assets.wavesRocks.name,
         sourceStart: { value: 60000, rate: 30000 },
         duration: { value: 120000, rate: 30000 },
@@ -169,8 +167,7 @@ demoDoc.timeline.children.push(
       },
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'video',
+        type: 'clip:video',
         name: assets.waveBreaking.name,
         sourceStart: { value: 38400, rate: 12800 },
         duration: { value: 38400, rate: 12800 },
@@ -180,8 +177,7 @@ demoDoc.timeline.children.push(
       },
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'video',
+        type: 'clip:video',
         name: assets.turtle.name,
         sourceStart: { value: 33484, rate: 15360 },
         duration: { value: 76800, rate: 15360 },
@@ -191,8 +187,7 @@ demoDoc.timeline.children.push(
       },
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'video',
+        type: 'clip:video',
         name: assets.waves.name,
         sourceStart: { value: 30000, rate: 30000 },
         duration: { value: 60000, rate: 30000 },
@@ -209,8 +204,7 @@ demoDoc.timeline.children.push(
     children: [
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'audio',
+        type: 'clip:audio',
         name: assets.wavesAudio.name,
         sourceStart: { value: 23275, rate: 1225 },
         duration: { value: 12250, rate: 1225 },
@@ -218,8 +212,7 @@ demoDoc.timeline.children.push(
       },
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'audio',
+        type: 'clip:audio',
         name: assets.underwaterAudio.name,
         sourceStart: { value: 0, rate: 125 },
         duration: { value: 625, rate: 125 },
@@ -227,8 +220,7 @@ demoDoc.timeline.children.push(
       },
       {
         id: uid(),
-        type: 'clip',
-        clipType: 'audio',
+        type: 'clip:audio',
         name: assets.wavesAudio.name,
         sourceStart: { value: 19600, rate: 1225 },
         duration: { value: 2450, rate: 1225 },

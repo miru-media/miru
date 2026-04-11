@@ -16,7 +16,7 @@ import { MediaElementState } from './media-element-state.ts'
 import type { PlaybackDocument } from './playback-document.ts'
 
 export class PlaybackClip extends NodeView<PlaybackDocument, pub.AnyClip> {
-  readonly mediaElement = createHiddenMediaElement(this.original.clipType)
+  readonly mediaElement = createHiddenMediaElement(this.original.isAudio() ? 'audio' : 'video')
   readonly mediaTime = ref(0)
   readonly #scope = createEffectScope()
   readonly mediaState = new MediaElementState(this.#scope, this.mediaElement)

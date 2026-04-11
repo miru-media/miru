@@ -11,7 +11,8 @@ import { VueAudioClip, VueGap, VueTimeline, VueTrack, VueVideoClip } from './vue
 export interface VueTypeMap {
   timeline: VueTimeline
   track: VueTrack
-  clip: VueVideoClip | VueAudioClip
+  'clip:video': VueVideoClip
+  'clip:audio': VueAudioClip
   gap: VueGap
 }
 
@@ -66,11 +67,12 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
       case 'track':
         view = new VueTrack(this, original)
         break
-      case 'clip': {
-        const clip = original as unknown as pub.AnyClip
-        view = clip.isVideo() ? new VueVideoClip(this, clip) : new VueAudioClip(this, clip)
+      case 'clip:video':
+        view = new VueVideoClip(this, original)
         break
-      }
+      case 'clip:audio':
+        view = new VueAudioClip(this, original)
+        break
       case 'gap':
         view = new VueGap(this, original)
     }

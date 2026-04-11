@@ -89,7 +89,7 @@ const track = (node: pub.Track) => {
       start_time: new Rational(0, frameRate).toOTIO(),
     },
     kind: node.isAudio() ? 'Audio' : 'Video',
-    children: node.children.map((child) => (child.type === 'clip' ? anyClip(child) : gap(child))),
+    children: node.children.map((child) => (child.isClip() ? anyClip(child) : gap(child))),
   }
 }
 const trackChild = <T extends pub.AnyTrackChild, TO extends string>(node: T, schemaName: TO) => {
@@ -165,6 +165,6 @@ const videoClip = (node: pub.VideoClip) => {
   return otio
 }
 
-const anyClip = (node: pub.AnyClip) => (node.clipType === 'audio' ? audioClip(node) : videoClip(node))
+const anyClip = (node: pub.AnyClip) => (node.isAudio() ? audioClip(node) : videoClip(node))
 
 const gap = (node: pub.Gap) => trackChild(node, 'Gap.1')

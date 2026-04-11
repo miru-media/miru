@@ -12,7 +12,8 @@ import { EditClip, EditGap, EditView } from './edit-nodes.ts'
 export interface ViewTypeMap {
   timeline: EditView.Timeline
   track: EditView.Track
-  clip: EditView.VideoClip | EditView.AudioClip
+  'clip:video': EditView.VideoClip
+  'clip:audio': EditView.AudioClip
   gap: EditView.Gap
 }
 

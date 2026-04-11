@@ -73,6 +73,18 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
 
     const { ytree, settings, ydoc } = initYjsRoot(ydocOrMap)
 
+    // update ndoes with old 'clip' type
+    {
+      const allIds: string[] = []
+      ytree.getAllDescendants(YTREE_ROOT_KEY, allIds)
+      allIds.forEach((id) => {
+        const ynode = ytree.getNodeValueFromKey(id) as Y.Map<any>
+        if ((ynode as any)?.get == null) return
+        const type: string = ynode.get('type')
+        if (type === 'clip') ynode.set('type', `clip:${ynode.get('clipType')}`)
+      })
+    }
+
     ydoc.on('destroy', this.dispose.bind(this))
 
     this.ydoc = ydoc

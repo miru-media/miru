@@ -18,7 +18,8 @@ const PLAY_EVENT = new PlaybackPlayEvent()
 const PAUSE_EVENT = new PlaybackPauseEvent()
 
 interface ViewTypeMap {
-  clip: PlaybackClip
+  'clip:video': PlaybackClip
+  'clip:audio': PlaybackClip
 }
 
 export class PlaybackDocument extends DocumentView<ViewTypeMap> {

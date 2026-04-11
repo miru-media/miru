@@ -91,27 +91,25 @@ export interface AudioPlaceholderRef {
 }
 
 export interface BaseClip<
-  T extends 'audio' | 'video' = 'audio' | 'video',
   TPlaceholder extends VideoPlaceholderRef | AudioPlaceholderRef = any,
 > extends TrackChild {
-  type: 'clip'
-  clipType: T
+  type: `clip:${string}`
   sourceStart: Rational
   mediaRef?: MediaAssetRef | TPlaceholder
   transition?: { assetId: string; duration: Rational }
 }
 
-export interface VideoClip extends BaseClip<'video', VideoPlaceholderRef> {
+export interface VideoClip extends BaseClip<VideoPlaceholderRef> {
+  type: 'clip:video'
   translate?: { x: number; y: number }
   rotate?: number
   scale?: { x: number; y: number }
 }
 
-export interface AudioClip extends BaseClip<'audio', AudioPlaceholderRef> {
+export interface AudioClip extends BaseClip<AudioPlaceholderRef> {
+  type: 'clip:audio'
   volume?: number
 }
-
-export type AnyClip = VideoClip | AudioClip
 
 export interface Gap extends TrackChild {
   type: 'gap'
@@ -128,7 +126,16 @@ export interface SerializedTrack extends Track {
 export type SerializedClip = VideoClip | AudioClip
 export type SerializedGap = Gap
 
-export type AnyNode = Timeline | Track | AnyClip | Gap
+export interface NodeSchemasByType {
+  timeline: Timeline
+  track: Track
+  'clip:video': VideoClip
+  'clip:audio': AudioClip
+  gap: Gap
+}
+
+export type AnyNode = NodeSchemasByType[keyof NodeSchemasByType]
+export type AnyClip = NodeSchemasByType[Extract<keyof NodeSchemasByType, `clip:${string}`>]
 export type AnyNodeSerializedSchema = SerializedTimeline | SerializedTrack | SerializedClip | SerializedGap
 
 export interface SerializedDocument extends DocumentSettings {

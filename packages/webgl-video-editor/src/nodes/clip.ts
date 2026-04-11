@@ -14,8 +14,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   extends TrackChild<T>
   implements pub.Clip<T>
 {
-  declare readonly type: 'clip'
-  abstract clipType: T['clipType']
+  declare readonly: T['type']
   declare children: undefined
 
   declare sourceStart: Rational
@@ -69,8 +68,6 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
       equal: (a, b) => a?.assetId === b?.assetId,
     })
     this._defineReactive('sourceStart', init.sourceStart, { transform: Rational.from })
-
-    this.clipType = init.clipType
 
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())
@@ -143,7 +140,6 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   toJSON(): Pick<T, keyof Schema.BaseClip> {
     return {
       ...super.toJSON(),
-      clipType: this.clipType,
       sourceStart: this.sourceStart,
       mediaRef: this.mediaRef,
       duration: this.duration,

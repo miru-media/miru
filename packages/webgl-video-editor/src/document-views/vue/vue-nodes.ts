@@ -147,7 +147,6 @@ abstract class VueClip<T extends pub.AnyClip> extends VueTrackChild<T> implement
   declare readonly presentationTime: T['presentationTime']
   declare readonly expectedMediaTime: T['expectedMediaTime']
   declare readonly isInClipTime: T['isInClipTime']
-  declare readonly clipType: T['clipType']
   declare readonly sourceStart: T['sourceStart']
   declare readonly mediaRef: T['mediaRef']
 
@@ -180,7 +179,6 @@ export class VueVideoClip extends VueClip<pub.VideoClip> implements pub.VideoCli
     ;(['translate', 'rotate', 'scale', 'effects'] as const).forEach((key) =>
       _vueWritable(this, original, key),
     )
-    _vuePlainReadonly(this, original, 'clipType')
   }
 }
 

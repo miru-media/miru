@@ -175,7 +175,8 @@ export interface TrackChild extends BaseNode {
   readonly nextClip?: AnyClip | undefined
 }
 
-export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip<T['clipType']> {
+export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip {
+  type: T['type']
   name: string
   sourceStart: Rational
   readonly isReady: boolean
@@ -205,12 +206,13 @@ export interface Gap extends TrackChild, Schema.Gap {
 export interface NodesByType {
   timeline: Timeline
   track: Track
-  clip: VideoClip | AudioClip
+  'clip:video': VideoClip
+  'clip:audio': AudioClip
   gap: Gap
 }
 
 export type AnyNode = NodesByType[keyof NodesByType]
-export type AnyClip = NodesByType['clip']
+export type AnyClip = NodesByType[Extract<keyof NodesByType, `clip:${string}`>]
 export type AnyTrackChild = AnyClip | Gap
 export type AnyParentNode = Timeline | Track
 export type AnyVideoNode = Timeline | Track | VideoClip

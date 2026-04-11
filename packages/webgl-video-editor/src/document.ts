@@ -117,15 +117,11 @@ export class Document implements pub.Document {
       case 'track':
         node = new Track(this, init)
         break
-      case 'clip':
-        switch (init.clipType) {
-          case 'video':
-            node = new VideoClip(this, init)
-            break
-          case 'audio':
-            node = new AudioClip(this, init)
-            break
-        }
+      case 'clip:video':
+        node = new VideoClip(this, init)
+        break
+      case 'clip:audio':
+        node = new AudioClip(this, init)
         break
       case 'gap':
         node = new Gap(this, init)

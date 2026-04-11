@@ -38,7 +38,7 @@ exports[`OTIO export is as expected 1`] = `
             "metadata": {
               "Miru": {
                 "id": "clip-0-0",
-                "type": "clip",
+                "type": "clip:video",
               },
             },
             "name": "",
@@ -73,7 +73,7 @@ exports[`OTIO export is as expected 1`] = `
             "metadata": {
               "Miru": {
                 "id": "clip-0-1",
-                "type": "clip",
+                "type": "clip:video",
               },
             },
             "name": "",
@@ -149,7 +149,7 @@ exports[`OTIO export is as expected 1`] = `
             "metadata": {
               "Miru": {
                 "id": "clip-1-0",
-                "type": "clip",
+                "type": "clip:audio",
               },
             },
             "name": "",

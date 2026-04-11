@@ -11,11 +11,9 @@ const pointsAreEqual = (a?: Point, b?: Point): boolean =>
   (!a && !b) || (!!a && !!b && a.x === b.x && a.y === b.y)
 
 export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
-  declare clipType: 'video'
-
-  declare translate: { x: number; y: number }
+  declare translate: Point
   declare rotate: number
-  declare scale: { x: number; y: number }
+  declare scale: Point
   declare effects: pub.VideoClip['effects']
 
   protected _init(init: Schema.VideoClip): void {

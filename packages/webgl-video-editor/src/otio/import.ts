@@ -65,18 +65,14 @@ const trackChild = <TO extends Otio.Clip | Otio.Gap, TT extends (Schema.AnyClip 
   duration: plainRational(item.source_range.duration),
 })
 
-const clip = <T extends Otio.Clip, TT extends Schema.AnyClip['clipType']>(
-  item: T,
-  clipType: TT,
-): Schema.BaseClip<TT> => ({
-  ...trackChild(item, 'clip'),
-  clipType,
+const clip = <T extends Otio.Clip, TT extends Schema.AnyClip['type']>(item: T, type: TT) => ({
+  ...trackChild(item, type),
   sourceStart: plainRational(item.source_range.start_time),
   mediaRef: item.media_reference.metadata.Miru,
 })
 
 const audioClip = (item: Otio.Clip): Schema.AudioClip => {
-  const json: Schema.AudioClip = clip(item, 'audio')
+  const json: Schema.AudioClip = clip(item, 'clip:audio')
   const effects: Schema.AudioClip['effects'] = []
 
   item.effects.forEach((effect) => {
@@ -91,7 +87,7 @@ const audioClip = (item: Otio.Clip): Schema.AudioClip => {
 }
 
 const videoClip = (item: Otio.Clip): Schema.VideoClip => {
-  const json: Schema.VideoClip = clip(item, 'video')
+  const json: Schema.VideoClip = clip(item, 'clip:video')
 
   const transform = item.effects.find((e: any) => e.effect_name === 'SpatialTransformEffect')
 

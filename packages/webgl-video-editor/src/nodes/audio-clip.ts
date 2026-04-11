@@ -4,8 +4,6 @@ import type * as pub from '#core'
 import { Clip } from './clip.ts'
 
 export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
-  declare clipType: 'audio'
-
   declare volume: number
   declare enabled: boolean
 

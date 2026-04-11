@@ -107,6 +107,13 @@ export class LocalSync implements core.VideoEditorDocumentSync {
       ? (JSON.parse(savedJson) as core.Schema.SerializedDocument)
       : createInitialDocument()
 
+    // update ndoes with old 'clip' type
+    content.timeline.children.forEach(({ trackType, children }) =>
+      children.forEach((node) => {
+        if ((node.type as string) === 'clip') node.type = `clip:${trackType}`
+      }),
+    )
+
     this.doc.importFromJson(content)
   }
 

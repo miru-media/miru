@@ -1,7 +1,10 @@
 import type { Schema } from '#core'
 import type { Base } from '#schema'
 
-const makeBase = <T extends string>(id: string, type: T): Omit<Base, 'type'> & { type: T } => ({
+const makeBase = <T extends Schema.AnyNode['type']>(
+  id: string,
+  type: T,
+): Omit<Base, 'type'> & { type: T } => ({
   id,
   type,
   name: '',
@@ -26,9 +29,8 @@ export const makeTrack = (
   children,
 })
 
-const makeBaseClip = <T extends Schema.BaseClip['clipType']>(id: string, clipType: T) => ({
-  ...makeBase(id, 'clip'),
-  clipType,
+const makeBaseClip = <T extends Schema.AnyClip['type']>(id: string, type: T) => ({
+  ...makeBase(id, type),
   sourceStart: { value: 0, rate: 1 },
   duration: { value: 1, rate: 1 },
 })
@@ -38,7 +40,7 @@ export const makeVideoClip = (
     id: string
   },
 ): Schema.VideoClip => ({
-  ...makeBaseClip(init.id, 'video'),
+  ...makeBaseClip(init.id, 'clip:video'),
   ...init,
 })
 
@@ -47,7 +49,7 @@ export const makeAudioClip = (
     id: string
   },
 ): Schema.AudioClip => ({
-  ...makeBaseClip(init.id, 'audio'),
+  ...makeBaseClip(init.id, 'clip:audio'),
   ...init,
 })
 

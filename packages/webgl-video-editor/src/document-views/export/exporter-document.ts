@@ -26,7 +26,8 @@ interface AvAssetEntry {
 }
 
 interface ViewTypeMap {
-  clip: ExportClip
+  'clip:video': ExportClip
+  'clip:audio': ExportClip
 }
 
 let decoderAudioContext: OfflineAudioContext | undefined
@@ -86,17 +87,17 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
   }
 
   #prepareClip(exportClip: ExportClip): void {
-    const { asset, clipType, time: clipTime } = exportClip.original
+    const { original } = exportClip
+    const { asset, time: clipTime } = original
     const { source: sourceStart, duration } = clipTime
     const sourceEnd = sourceStart + duration
 
-    if (!asset?.blob)
-      throw new Error(`[webgl-video-editor]: missing asset "${exportClip.original.mediaRef?.assetId}"`)
+    if (!asset?.blob) throw new Error(`[webgl-video-editor]: missing asset "${original.mediaRef?.assetId}"`)
 
     let sourceEntry = this.sources.get(asset.id)
 
     if (sourceEntry) {
-      sourceEntry.isAudioOnly &&= clipType === 'audio'
+      sourceEntry.isAudioOnly &&= original.isAudio()
     } else {
       const input = new Mb.Input({
         formats: Mb.ALL_FORMATS,
@@ -109,7 +110,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
         input,
         video: null,
         audio: null,
-        isAudioOnly: clipType === 'audio',
+        isAudioOnly: original.isAudio(),
         consumers: 0,
       }
       this.sources.set(asset.id, sourceEntry)
