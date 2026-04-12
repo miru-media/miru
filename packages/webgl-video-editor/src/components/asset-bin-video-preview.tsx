@@ -89,7 +89,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
                 <Button
                     disabled={() => isDeleting.value || isVideoInUse.value}
                     onClick={deleteVideo}
-                    class={[styles.assetbinDeleteVideo, styles.textBodyBold]}
+                    class={[styles.assetbinDelete, styles.textBodyBold]}
                     label={deleteLabel}
                 >
                     <div class={[styles.assetbinButton]}>

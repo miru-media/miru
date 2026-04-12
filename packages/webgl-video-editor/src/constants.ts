@@ -18,6 +18,7 @@ export type SourceNodeState = (typeof SourceNodeState)[keyof typeof SourceNodeSt
 
 export const AssetBin = {
   video: 'video',
+  audio: 'audio',
   fonts: 'fonts'
 } as const
 export type AssetBin = ((typeof AssetBin)[keyof typeof AssetBin]) | null
