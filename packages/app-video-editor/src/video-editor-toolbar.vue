@@ -90,6 +90,16 @@ useEventListener(
 
       <button
         class="toolbar-button"
+        @click="() => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)"
+      >
+        <div
+          :class="editor.activeAssetBin === AssetBin.audio ? 'icon i-tabler-music-search' : 'icon i-tabler-music'"
+        />
+        {{ $t('music') }}
+      </button>
+      
+      <button
+        class="toolbar-button"
         @click="() => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)"
       >
         <div
