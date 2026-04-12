@@ -269,8 +269,6 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
     renderer.deleteTexture(fb.texture)
   })
 
-  const fxArray = [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)]
-
   const stopPropagaion = (event: Event): void => event.stopPropagation()
 
   return (
@@ -284,22 +282,24 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
         <legend>Image Filters</legend>
         <div ref={container} onScroll={onScroll}>
           {() =>
-            fxArray.map(([id, effect], thumbnailIndex) => (
-              <EffectItem
-                effect={effect}
-                id={id || ''}
-                imageData={imageData}
-                thumbnailIndex={thumbnailIndex}
-                size={props.thumbnailSize}
-                isActive={() => currentEffect.value === id}
-                onClick={() => onClickFilter(id)}
-                class={() => [
-                  scrolledEffectId.value === id && styles['miru--hov'],
-                  ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
-                    styles['miru--loading'],
-                ]}
-              ></EffectItem>
-            ))
+            [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(
+              ([id, effect], thumbnailIndex) => (
+                <EffectItem
+                  effect={effect}
+                  id={id || ''}
+                  imageData={imageData}
+                  thumbnailIndex={thumbnailIndex}
+                  size={props.thumbnailSize}
+                  isActive={() => currentEffect.value === id}
+                  onClick={() => onClickFilter(id)}
+                  class={() => [
+                    scrolledEffectId.value === id && styles['miru--hov'],
+                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                      styles['miru--loading'],
+                  ]}
+                />
+              ),
+            )
           }
         </div>
       </fieldset>

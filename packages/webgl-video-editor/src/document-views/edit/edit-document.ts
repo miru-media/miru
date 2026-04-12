@@ -163,7 +163,6 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   }
 
   dispose(): void {
-    this.doc.dispose()
     super.dispose()
   }
 }

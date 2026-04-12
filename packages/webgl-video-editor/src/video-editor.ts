@@ -51,6 +51,7 @@ export class VideoEditor implements pub.VideoEditor {
 
   canvas = document.createElement('canvas')
   isDisposed = false
+  readonly #ownsDoc: boolean
 
   get isPaused(): boolean {
     return this.playback.isPaused
@@ -117,6 +118,7 @@ export class VideoEditor implements pub.VideoEditor {
     const { sync, assets } = options
     const doc = new EditDocument(sync?.doc ?? new Document({ assets }))
 
+    this.#ownsDoc = !sync
     this.sync = sync
     this.doc = doc
     ;({ drag: this.drag, resize: this.resize } = useClipDragResize(this))
@@ -318,7 +320,7 @@ export class VideoEditor implements pub.VideoEditor {
 
     this.playback.renderView.dispose()
     this.playback.dispose()
-    this.doc.dispose()
+    if (this.#ownsDoc) this.doc.dispose()
   }
 
   [Symbol.dispose](): void {
