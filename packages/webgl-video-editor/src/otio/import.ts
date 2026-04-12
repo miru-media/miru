@@ -53,7 +53,13 @@ const track = (item: Otio.Track): Schema.SerializedTrack => {
     ...baseNode(item, 'track'),
     trackType,
     children: item.children.map((child) =>
-      child.OTIO_SCHEMA === 'Gap.1' ? gap(child) : (trackType === 'audio' ? audioClip : videoClip)(child),
+      child.OTIO_SCHEMA === 'Gap.1'
+        ? gap(child)
+        : trackType === 'audio'
+          ? audioClip(child)
+          : child.metadata.Miru?.type === 'clip:video'
+            ? videoClip(child)
+            : textClip(child),
     ),
   }
 }
@@ -88,14 +94,32 @@ const audioClip = (item: Otio.Clip): Schema.AudioClip => {
 
 const videoClip = (item: Otio.Clip): Schema.VideoClip => {
   const json: Schema.VideoClip = clip(item, 'clip:video')
+  applyTransformEffect(json, item)
+  return json
+}
 
+const textClip = (item: Otio.Clip): Schema.TextClip => {
+  const metadata = item.metadata.Miru as unknown as Schema.TextClip
+  const json: Schema.TextClip = {
+    content: metadata.content,
+    fontFamily: metadata.fontFamily,
+    fontSize: metadata.fontSize,
+    fontWeight: metadata.fontWeight,
+    inlineSize: metadata.inlineSize,
+    fill: metadata.fill,
+    stroke: metadata.stroke,
+    ...clip(item, 'clip:text'),
+  }
+  applyTransformEffect(json, item)
+  return json
+}
+
+const gap = (item: Otio.Gap): Schema.SerializedGap => trackChild(item, 'gap')
+
+const applyTransformEffect = (json: Partial<Schema.TransformProps>, item: Otio.Clip): void => {
   const transform = item.effects.find((e: any) => e.effect_name === 'SpatialTransformEffect')
 
   json.translate = transform?.translate
   json.rotate = transform?.rotate
   json.scale = transform?.scale
-
-  return json
 }
-
-const gap = (item: Otio.Gap): Schema.SerializedGap => trackChild(item, 'gap')

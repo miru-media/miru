@@ -7,7 +7,7 @@ import { Rational } from 'shared/utils/math.ts'
 import { ParentNode } from './parent-node.ts'
 
 export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild> implements pub.Track {
-  type = 'track' as const
+  declare readonly type: 'track'
 
   trackType!: 'video' | 'audio'
 

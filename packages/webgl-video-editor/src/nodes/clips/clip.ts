@@ -6,16 +6,18 @@ import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 import { rangeContainsTime } from 'shared/video/utils.ts'
 
-import { VIDEO_PREPLAY_TIME_S } from '../constants.ts'
+import { VIDEO_PREPLAY_TIME_S } from '../../constants.ts'
+import { TrackChild } from '../track-child.ts'
 
-import { TrackChild } from './track-child.ts'
+const pointsAreEqual = (a?: Schema.Point, b?: Schema.Point): boolean =>
+  (!a && !b) || (!!a && !!b && a.x === b.x && a.y === b.y)
 
 export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   extends TrackChild<T>
   implements pub.Clip<T>
 {
-  declare readonly: T['type']
-  declare children: undefined
+  declare readonly type: T['type']
+  declare readonly children: undefined
 
   declare sourceStart: Rational
   declare private _asset: Ref<pub.MediaAsset | undefined>
@@ -89,6 +91,12 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     )
   }
 
+  _initTransformProps<T extends Schema.AnyVideoClip>(this: Clip<T>, init: T): void {
+    this._defineReactive('translate', init.translate, { equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } })
+    this._defineReactive('rotate', init.rotate, { defaultValue: 0 })
+    this._defineReactive('scale', init.scale, { equal: pointsAreEqual, defaultValue: { x: 1, y: 1 } })
+  }
+
   _computeTimeRational(): ClipTimeRational {
     const prevTime = this.prev?.timeRational
     const start = prevTime ? prevTime.end : Rational.ZERO
@@ -145,5 +153,18 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
       duration: this.duration,
       transition: this.transition,
     }
+  }
+
+  _transformToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.TransformProps>>>(
+    this: Clip<T> & Schema.TransformProps,
+  ): Partial<Schema.TransformProps> {
+    const { translate, rotate, scale } = this
+    const transform: Partial<Schema.TransformProps> = {}
+
+    if (translate.x !== 0 || translate.y !== 0) transform.translate = translate
+    if (rotate !== 0) transform.rotate = rotate
+    if (scale.x !== 1 || scale.y !== 1) transform.scale = scale
+
+    return transform
   }
 }

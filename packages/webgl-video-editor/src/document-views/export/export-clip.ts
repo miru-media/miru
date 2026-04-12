@@ -15,7 +15,7 @@ export interface InitOptions {
   audioBuffer?: AudioBuffer
 }
 
-export class ExportClip extends NodeView<ExportDocument, pub.AnyClip> {
+export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> {
   renderClip = this.docView.renderView._getNode(this.original)
   readonly videoEffect: VideoEffectAsset | undefined
 
@@ -44,7 +44,7 @@ export class ExportClip extends NodeView<ExportDocument, pub.AnyClip> {
     return this.original.isReady && this.videoIsReady && this.renderClip?.isReady.value !== false
   }
 
-  constructor(exportView: ExportDocument, original: pub.AnyClip) {
+  constructor(exportView: ExportDocument, original: pub.AnyMediaClip) {
     super(exportView, original)
 
     this.targetFrameDurationUs = 1e6 / exportView.doc.frameRate
@@ -207,9 +207,41 @@ export class ExportClip extends NodeView<ExportDocument, pub.AnyClip> {
     return data.timestamp <= sourceTimeUs && sourceTimeUs < data.timestamp + data.duration
   }
 
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isExportMediaClip(): this is ExportMediaClip {
+    return true
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
+
   dispose(): void {
     void this.audioSamples?.return(null)
     void this.videoSamples?.return(null)
     this.currentVideoFrame?.close()
+  }
+}
+
+export class ExportNonMediaVideoClip extends NodeView<
+  ExportDocument,
+  Exclude<pub.AnyVideoClip, pub.AnyMediaClip>
+> {
+  renderClip = this.docView.renderView._getNode(this.original)
+
+  get isReady(): boolean {
+    return this.original.isReady
+  }
+
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  whenReady(): void {
+    throw new Error('TODO: load font asset')
+  }
+
+  isExportMediaClip(): this is ExportMediaClip {
+    return false
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
+
+  updateVisibility(): void {
+    if (this.original.isInClipTime) this.renderClip.pixiNode.visible ||= true
+    else this.renderClip.pixiNode.visible &&= false
   }
 }

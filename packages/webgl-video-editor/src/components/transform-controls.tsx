@@ -10,7 +10,6 @@ import * as Pixi from 'pixi.js'
 import type { VideoClip } from '#core'
 
 import styles from '../css/index.module.css'
-import { getClipTransformMatrix } from '../utils.ts'
 
 import { useEditor } from './utils.ts'
 
@@ -20,9 +19,9 @@ export const TransformControls = () => {
   const editor = useEditor()
   const container = ref<SVGElement>()
 
-  const clipMediaSize = computed(() => {
-    const clip = editor.selection
-    return clip?.isVideo() && clip.asset?.video ? clip.asset.video : { width: 0, height: 0 }
+  const clipSize = computed(() => {
+    const renderClip = editor.playback.renderView._getNode(editor.selection)
+    return renderClip?.getSize() ?? { width: 0, height: 0 }
   })
   const clipProps = computed((): Pick<VideoClip, 'translate' | 'rotate' | 'scale'> => {
     const clip = editor.selection
@@ -32,9 +31,9 @@ export const TransformControls = () => {
   const rotateZoomMatrix = computed(() => {
     const { zoom } = editor
     const { rotate } = clipProps.value
-    const mediaSize = clipMediaSize.value
-    const halfWidth = mediaSize.width / 2
-    const halfHeight = mediaSize.height / 2
+    const size = clipSize.value
+    const halfWidth = size.width / 2
+    const halfHeight = size.height / 2
 
     return new Pixi.Matrix()
       .translate(-halfWidth, -halfHeight)
@@ -52,7 +51,7 @@ export const TransformControls = () => {
         const clip = clipProps.value
 
         const { x, y } = clip.translate
-        const { width, height } = clipMediaSize.value
+        const { width, height } = clipSize.value
         return { left: x, top: y, right: x + width, bottom: y + height }
       },
     }).draggable({
@@ -94,7 +93,7 @@ export const TransformControls = () => {
           resizeStart.pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
           resizeStart.translate = clip.translate
           const { scale } = clip
-          const mediaSize = clipMediaSize.value
+          const mediaSize = clipSize.value
           resizeStart.size = { width: mediaSize.width * scale.x, height: mediaSize.height * scale.y }
           edges = Object.fromEntries(
             (event.target.dataset.edges ?? '').split(' ').map((edge) => [edge, true]),
@@ -103,7 +102,7 @@ export const TransformControls = () => {
         move(event: ResizeEvent) {
           const clip = clipProps.value
 
-          const mediaSize = clipMediaSize.value
+          const mediaSize = clipSize.value
           const startSize = resizeStart.size
           const pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
           const dx = (pointer.x - resizeStart.pointer.x) * (edges.left ? -1 : edges.right ? 1 : 0)
@@ -131,15 +130,16 @@ export const TransformControls = () => {
     })
   })
 
-  const clipMatrix = computed(() => {
-    const clip = editor.selection
-    if (!clip?.isVideo()) return new Pixi.Matrix()
-
-    return getClipTransformMatrix(clip, false).scale(editor.zoom, editor.zoom)
-  })
+  const clipMatrix = computed(
+    () =>
+      editor.playback.renderView
+        ._getNode(editor.selection)
+        ?.matrix.value.clone()
+        .scale(editor.zoom, editor.zoom) ?? new Pixi.Matrix(),
+  )
 
   const boxPoints = computed(() => {
-    const { width, height } = clipMediaSize.value
+    const { width, height } = clipSize.value
 
     const matrix = clipMatrix.value
     return (
@@ -153,7 +153,7 @@ export const TransformControls = () => {
   })
 
   const rotateLine = computed(() => {
-    const halfWidth = clipMediaSize.value.width / 2
+    const halfWidth = clipSize.value.width / 2
     const matrix = clipMatrix.value
     const clipScale = editor.selection?.isVideo() ? editor.selection.scale : { x: 1, y: 1 }
     const { zoom } = editor
@@ -169,7 +169,7 @@ export const TransformControls = () => {
       <g ref={container}>
         {() => {
           const clip = editor.selection
-          if (!clip?.isVideo() || !clip.isInClipTime || !clip.asset?.video) return
+          if (!clip?.isVideo() || !clip.isInClipTime) return
 
           const { start: rotateStart, end: rotateEnd } = rotateLine.value
           const points = boxPoints.value

@@ -27,10 +27,10 @@ export const Clip = ({
   const mainContainer = ref<HTMLElement>()
 
   const clipColor = computed(() =>
-    editor.playback._getNode(clip).everHadEnoughData
+    (editor.playback._getNode(clip)?.everHadEnoughData ?? true)
       ? (clip.color ??
         clip.asset?.color ??
-        CLIP_COLORS[Math.abs(stringHashCode(clip.asset?.id ?? '')) % CLIP_COLORS.length])
+        CLIP_COLORS[Math.abs(stringHashCode(clip.asset?.id ?? clip.id)) % CLIP_COLORS.length])
       : DISABLED_COLOR,
   )
 
@@ -67,7 +67,9 @@ export const Clip = ({
         class={styles.clipBox}
         onClick={() => editor.select(clip, false)}
       >
-        <span class={styles.clipName}>{clip.name || (clip.asset?.name ?? '')}</span>
+        <span class={styles.clipName}>
+          {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
+        </span>
         <div class={styles.clipControls}>
           <div class={styles.clipResizeLeft}>
             <IconTablerChevronLeft />

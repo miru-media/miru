@@ -5,7 +5,6 @@ import { Clip } from './clip.ts'
 
 export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
   declare volume: number
-  declare enabled: boolean
 
   protected _init(init: Schema.AudioClip): void {
     super._init(init)
@@ -13,10 +12,14 @@ export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
     this._defineReactive('volume', init.volume, { defaultValue: 1 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- --
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isMediaClip(): this is AudioClip {
+    return true
+  }
   isAudio(): this is AudioClip {
     return true
   }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.AudioClip {
     const { volume } = this

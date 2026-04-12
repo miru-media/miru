@@ -80,7 +80,7 @@ export const VideoEditorUI = (props: {
               {() =>
                 doc.timeline.children.map((track) =>
                   track.children.map((clip) => {
-                    if (!clip.isClip()) return null
+                    if (!clip.isMediaClip()) return null
 
                     const playbackClip = playback._getNode(clip)
                     const { mediaState } = playbackClip

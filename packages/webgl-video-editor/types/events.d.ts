@@ -103,7 +103,7 @@ export class PlaybackSeekEvent extends Event {
 export declare class CanvasEvent<T extends string> extends Event {
   readonly type: `canvas:${T}`
   readonly canvasEventType: T
-  readonly node?: pub.VideoClip
-  constructor(type: T, node: pub.VideoClip | undefined)
+  readonly node?: pub.AnyVideoClip
+  constructor(type: T, node: pub.AnyVideoClip | undefined)
   clone(node?: pub.VideoClip): this
 }

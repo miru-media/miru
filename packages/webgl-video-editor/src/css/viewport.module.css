@@ -11,6 +11,7 @@
   composes: viewportOverlay;
   overflow: visible;
   pointer-events: none;
+  touch-action: none;
   fill: var(--yellow);
   stroke: var(--yellow);
   stroke-width: 0.1875rem;

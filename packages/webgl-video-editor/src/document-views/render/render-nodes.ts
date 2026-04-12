@@ -1,6 +1,8 @@
 import { computed, ref, toRef } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
+import type { Size } from 'shared/types.ts'
+
 import type * as pub from '../../../types/core'
 import { getClipTransformMatrix } from '../../utils.ts'
 import { NodeView } from '../node-view.ts'
@@ -8,8 +10,11 @@ import { NodeView } from '../node-view.ts'
 import { MiruFilter } from './pixi-miru-filter.ts'
 import type { RenderDocument } from './render-document.ts'
 
+type AnyVideoParentNode = Extract<pub.AnyParentNode, pub.AnyVideoNode>
+export type AnyRenderClip = RenderVideoClip | RenderTextClip
+
 abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<RenderDocument, T> {
-  abstract readonly container: Pixi.Container
+  abstract readonly pixiNode: Pixi.Container | Pixi.Text
 
   get prevVideo(): pub.AnyVideoNode | undefined {
     for (let other = this.original.prev; other; other = other.prev) if (other.isVideo()) return other
@@ -27,41 +32,50 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
     return this._visualIndex.value
   }
 
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isMediaView(): this is RenderVideoClip {
+    return false
+  }
+  isTextView(): this is RenderTextClip {
+    return false
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
+
   _update<Key extends keyof T>(key: Key, _oldValue: T[Key]): void {
-    if (key === 'enabled') this.container.visible = this.original.enabled
+    if (key === 'enabled') this.pixiNode.visible = this.original.enabled
   }
 
   /** @internal */
-  _move(parent: RenderNodeView<pub.AnyVideoNode> | undefined): void {
-    if (parent) parent.container.addChildAt(this.container, this._visualIndex.value)
-    else this.container.removeFromParent()
+  _move(parent: RenderNodeView<AnyVideoParentNode> | undefined): void {
+    if (parent) parent.pixiNode.addChildAt(this.pixiNode, this._visualIndex.value)
+    else this.pixiNode.removeFromParent()
   }
 
   dispose(): void {
     super.dispose()
-    this.container.destroy()
-    this.container.removeAllListeners()
+    this.pixiNode.destroy()
+    this.pixiNode.removeAllListeners()
   }
 }
 
 export class RenderTimeline extends RenderNodeView<pub.Timeline> {
-  readonly container = new Pixi.Container()
+  readonly pixiNode = new Pixi.Container()
 }
 
 export class RenderTrack extends RenderNodeView<pub.Track> {
-  readonly container = new Pixi.Container()
+  readonly pixiNode = new Pixi.Container()
 }
 
 export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
-  readonly container = new Pixi.Sprite({
+  readonly pixiNode = new Pixi.Sprite({
     visible: false,
     texture: new Pixi.Texture(new Pixi.ImageSource({})),
   })
-  readonly sprite = this.container
-  readonly spriteFilters = ref<MiruFilter[]>([])
+  readonly sprite = this.pixiNode
+  readonly pixiFilters = ref<MiruFilter[]>([])
 
-  readonly isReady = computed(() => !this.spriteFilters.value.some((f) => f.isLoading))
-  matrix = computed(() => getClipTransformMatrix(this.original, this.docView.applyVideoRotation))
+  readonly isReady = computed(() => !this.pixiFilters.value.some((f) => f.isLoading))
+  matrix = computed(() => getClipTransformMatrix(this, this.docView.applyVideoRotation))
 
   constructor(renderView: RenderDocument, original: pub.VideoClip) {
     super(renderView, original)
@@ -73,14 +87,27 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
     this._update('effects', [])
   }
 
+  getSize(): Size | undefined {
+    const { asset } = this.original
+    return asset?.video
+  }
+
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isMediaView(): this is RenderVideoClip {
+    return true
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
+
   /** @internal */
   _update<Key extends keyof pub.VideoClip>(key: Key, oldValue: pub.VideoClip[Key]): void {
+    super._update(key, oldValue)
+
     switch (key) {
       case 'translate':
       case 'rotate':
       case 'scale':
       case 'mediaRef':
-        this.sprite.setFromMatrix(getClipTransformMatrix(this.original, this.docView.applyVideoRotation))
+        this.pixiNode.setFromMatrix(this.matrix.value)
         break
       case 'effects':
         {
@@ -95,11 +122,11 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
           )
             return
 
-          const oldFilters = this.spriteFilters.value
+          const oldFilters = this.pixiFilters.value
           oldFilters.forEach((filter) => filter.destroy())
           oldFilters.length = 0
 
-          const spriteFilters: MiruFilter[] = (this.spriteFilters.value = [])
+          const pixiFilters: MiruFilter[] = (this.pixiFilters.value = [])
 
           newEffects.forEach((newFilter, index) => {
             const filterAsset = original.doc.assets.getAsset<pub.VideoEffectAsset>(newFilter.assetId)
@@ -111,12 +138,12 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
               const filter = new MiruFilter(op, intensityRef)
 
               filter.sprites.forEach((sprite) => void this.docView.stage.addChild(sprite))
-              spriteFilters.push(filter)
+              pixiFilters.push(filter)
             })
           })
 
           // must be assigned after the array is filled
-          this.sprite.filters = spriteFilters
+          this.sprite.filters = pixiFilters
         }
         break
       default:
@@ -128,8 +155,79 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
     super.dispose()
     texture.destroy(true)
 
-    const { spriteFilters } = this
-    spriteFilters.value.forEach((f) => f.destroy())
-    spriteFilters.value.length = 0
+    const { pixiFilters } = this
+    pixiFilters.value.forEach((f) => f.destroy())
+    pixiFilters.value.length = 0
+  }
+}
+
+export class RenderTextClip extends RenderNodeView<pub.TextClip> {
+  readonly pixiNode = new Pixi.Text({
+    text: this.original.content,
+    style: this.#getPixiTextStyle(),
+  })
+  readonly pixiFilters = ref<MiruFilter[]>([])
+  readonly isReady = ref(true)
+  matrix = computed(() => getClipTransformMatrix(this, false))
+
+  constructor(renderView: RenderDocument, original: pub.TextClip) {
+    super(renderView, original)
+    this.pixiNode.setFromMatrix(this.matrix.value)
+  }
+
+  getSize(): Size {
+    return {
+      width: this.original.inlineSize,
+      height: Pixi.CanvasTextMetrics.measureText(this.original.content, this.pixiNode.style).height,
+    }
+  }
+
+  #getPixiTextStyle(): Pixi.TextStyleOptions {
+    const { original } = this
+    return {
+      fontFamily: original.fontFamily,
+      fontSize: original.fontSize,
+      fontWeight: original.fontWeight.toString() as any,
+      fontStyle: original.fontStyle,
+      align: original.align,
+      wordWrapWidth: original.inlineSize,
+      fill: original.fill,
+      stroke: original.stroke,
+      wordWrap: true,
+    }
+  }
+
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  isTextView(): this is RenderTextClip {
+    return true
+  }
+  /* eslint-enable @typescript-eslint/class-methods-use-this */
+
+  _update<Key extends keyof pub.TextClip>(key: Key): void {
+    switch (key) {
+      case 'translate':
+      case 'rotate':
+      case 'scale':
+        this.pixiNode.setFromMatrix(this.matrix.value)
+        break
+      case 'content':
+        this.pixiNode.text = this.original.content
+        break
+      case 'fontFamily':
+      case 'fontSize':
+      case 'fontWeight':
+      case 'inlineSize':
+      case 'fill':
+      case 'stroke': {
+        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'inlineSize' | 'fill' | 'stroke' = key
+        const value = this.original[key_] as any
+        const { style } = this.pixiNode
+
+        if (key_ === 'inlineSize') style.wordWrapWidth = value
+        else style[key_] = value
+        break
+      }
+      default:
+    }
   }
 }

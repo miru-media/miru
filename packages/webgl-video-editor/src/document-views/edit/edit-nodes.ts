@@ -27,15 +27,16 @@ export namespace EditView {
   export type Track = ProxyOf<pub.Track>
   export type VideoClip = EditClip<pub.VideoClip> & ProxyOf<pub.VideoClip>
   export type AudioClip = EditClip<pub.AudioClip> & ProxyOf<pub.AudioClip>
+  export type TextClip = EditClip<pub.TextClip> & ProxyOf<pub.TextClip>
   export type Gap = EditGap & ProxyOf<pub.Gap>
-  export type AnyTrackChild = VideoClip | AudioClip | Gap
+  export type AnyClip = VideoClip | AudioClip | TextClip
+  export type AnyTrackChild = AnyClip | Gap
 }
 
 export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
   static BOUND_METHODS = new Set<KeyofUnion<AnyNode | NodeView<EditDocument, any>>>([
     'delete',
     'dispose',
-    'getSnapshot',
     'move',
     'remove',
   ])

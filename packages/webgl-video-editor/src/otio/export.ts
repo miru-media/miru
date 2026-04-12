@@ -33,7 +33,7 @@ export namespace Otio {
   }
   export type TimelineStack = ReturnType<typeof timelineStack>
   export type Track = ReturnType<typeof track>
-  export type Clip = ReturnType<typeof baseClip>
+  export type Clip = ReturnType<typeof mediaClip>
   export type Gap = ReturnType<typeof gap>
 }
 
@@ -89,7 +89,11 @@ const track = (node: pub.Track) => {
       start_time: new Rational(0, frameRate).toOTIO(),
     },
     kind: node.isAudio() ? 'Audio' : 'Video',
-    children: node.children.map((child) => (child.isClip() ? anyClip(child) : gap(child))),
+    children: node.children.map((child) => {
+      if (child.isMediaClip()) return child.isVideo() ? videoClip(child) : audioClip(child)
+      if (child.isTextClip()) return textClip(child)
+      return gap(child)
+    }),
   }
 }
 const trackChild = <T extends pub.AnyTrackChild, TO extends string>(node: T, schemaName: TO) => {
@@ -105,7 +109,7 @@ const trackChild = <T extends pub.AnyTrackChild, TO extends string>(node: T, sch
   }
 }
 
-const baseClip = <T extends pub.AnyClip>(node: T) => {
+const mediaClip = <T extends pub.AnyClip>(node: T) => {
   const { asset } = node
 
   return {
@@ -129,7 +133,7 @@ const baseClip = <T extends pub.AnyClip>(node: T) => {
 }
 
 const audioClip = (node: pub.AudioClip) => {
-  const otio = baseClip(node)
+  const otio = mediaClip(node)
 
   otio.effects.unshift({
     OTIO_SCHEMA: 'Effect.1',
@@ -143,7 +147,37 @@ const audioClip = (node: pub.AudioClip) => {
 }
 
 const videoClip = (node: pub.VideoClip) => {
-  const otio = baseClip(node)
+  const otio = mediaClip(node)
+  addTransformEffect(otio, node)
+  return otio
+}
+
+const textClip = (node: pub.TextClip) => {
+  const otio = {
+    ...trackChild(node, 'Clip.1'),
+    media_reference: {
+      OTIO_SCHEMA: 'ExternalReference.1',
+      metadata: {
+        Miru: {
+          fontFamily: node.fontFamily,
+          fontSize: node.fontSize,
+          fontWeight: node.fontWeight,
+          fill: node.fill,
+          stroke: node.stroke,
+        },
+      },
+      name: '',
+      available_range: null,
+      target_url: null,
+    },
+  }
+  addTransformEffect(otio, node)
+  return otio
+}
+
+const gap = (node: pub.Gap) => trackChild(node, 'Gap.1')
+
+const addTransformEffect = (otio: Otio.BaseItem, node: Schema.TransformProps): void => {
   const json = otio.metadata.Miru as Partial<Schema.VideoClip>
 
   if (!!json.translate || !!(json.rotate ?? 0) || !!json.scale) {
@@ -161,10 +195,4 @@ const videoClip = (node: pub.VideoClip) => {
       filter: 'cubic',
     })
   }
-
-  return otio
 }
-
-const anyClip = (node: pub.AnyClip) => (node.isAudio() ? audioClip(node) : videoClip(node))
-
-const gap = (node: pub.Gap) => trackChild(node, 'Gap.1')

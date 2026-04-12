@@ -2,7 +2,7 @@ import { computed, ref, type Ref } from 'fine-jsx'
 
 import type { Schema } from '#core'
 import type * as pub from '#core'
-import type { NodeSnapshot, NonReadonly } from '#internal'
+import type { NonReadonly } from '#internal'
 
 import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
 
@@ -109,13 +109,6 @@ export abstract class BaseNode<
 
   protected abstract _init(init: T): void
 
-  getSnapshot(): NodeSnapshot<T extends Schema.AnyNode ? T : any> {
-    return {
-      node: this.toJSON() as T extends Schema.AnyNode ? T : any,
-      position: this.parent && { parentId: this.parent.id, index: this.#index.value },
-    }
-  }
-
   move(position: pub.ChildNodePosition | undefined) {
     const parentId = position?.parentId
     if (parentId === this.parent?.id && (!position || position.index === this.index)) return
@@ -166,6 +159,12 @@ export abstract class BaseNode<
   isClip(): this is pub.AnyClip {
     return false
   }
+  isMediaClip(): this is pub.AnyMediaClip {
+    return false
+  }
+  isTextClip(): this is pub.TextClip {
+    return false
+  }
   isGap(): this is pub.Gap {
     return false
   }
@@ -182,7 +181,7 @@ export abstract class BaseNode<
     this.doc.emit(event)
   }
 
-  protected _defineReactive<Key extends keyof T>(
+  _defineReactive<Key extends keyof T>(
     key: Extract<Exclude<Key, 'id' | 'type'>, string>,
     initialValue: T[Key],
     options: {

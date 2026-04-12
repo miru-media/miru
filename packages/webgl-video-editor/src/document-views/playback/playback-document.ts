@@ -11,6 +11,7 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import type { RenderDocument } from '../render/render-document.ts'
 
 import { PlaybackClip } from './playback-clip.ts'
+import { PlaybackMediaClip } from './playback-media-clip.ts'
 
 const CLIP_STALLED_DELAY_MS = 100
 const UPDATE_EVENT = new PlaybackUpdateEvent()
@@ -18,8 +19,8 @@ const PLAY_EVENT = new PlaybackPlayEvent()
 const PAUSE_EVENT = new PlaybackPauseEvent()
 
 interface ViewTypeMap {
-  'clip:video': PlaybackClip
-  'clip:audio': PlaybackClip
+  'clip:video': PlaybackMediaClip<pub.VideoClip>
+  'clip:audio': PlaybackMediaClip<pub.AudioClip>
 }
 
 export class PlaybackDocument extends DocumentView<ViewTypeMap> {
@@ -116,7 +117,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
     let view
 
-    if (original.isClip()) view = new PlaybackClip(this, original)
+    if (original.isMediaClip()) view = new PlaybackMediaClip(this, original)
+    else if (original.isTextClip()) view = new PlaybackClip(this, original)
     else view = undefined
 
     return view as ViewType<ViewTypeMap, T>

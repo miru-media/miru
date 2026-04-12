@@ -14,11 +14,12 @@ const BASE_METHOD_KEYS = [
   'isTimeline',
   'isTrack',
   'isClip',
+  'isMediaClip',
+  'isTextClip',
   'isGap',
   'isVideo',
   'isAudio',
   'toJSON',
-  'getSnapshot',
 ] satisfies MethodKey<pub.BaseNode>[]
 
 abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, T> implements pub.BaseNode {
@@ -41,11 +42,12 @@ abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, 
   declare isTrack: T['isTrack']
   declare isTrackChild: T['isTrackChild']
   declare isClip: T['isClip']
+  declare isMediaClip: T['isMediaClip']
+  declare isTextClip: T['isTextClip']
   declare isGap: T['isGap']
   declare isVideo: T['isVideo']
   declare isAudio: T['isAudio']
   declare toJSON: T['toJSON']
-  declare getSnapshot: T['getSnapshot']
 
   constructor(docView: VueDocument, original: any) {
     super(docView, original)
@@ -80,7 +82,6 @@ abstract class VueParentNode<T extends pub.AnyParentNode>
 {
   declare _unlinkChild: never
   declare _positionChildAt: never
-  getSnapshot = this.original.getSnapshot.bind(this.original)
 
   declare readonly head: T['head']
   declare readonly tail: T['tail']
@@ -189,6 +190,43 @@ export class VueAudioClip extends VueClip<pub.AudioClip> implements pub.AudioCli
   constructor(docView: VueDocument, original: pub.AudioClip) {
     super(docView, original)
     _vueWritable(this, original, 'volume')
+  }
+}
+
+export class VueTextClip extends VueClip<pub.TextClip> implements pub.TextClip {
+  declare readonly content: pub.TextClip['content']
+  declare readonly fontFamily: pub.TextClip['fontFamily']
+  declare readonly fontSize: pub.TextClip['fontSize']
+  declare readonly fontWeight: pub.TextClip['fontWeight']
+  declare readonly fontStyle: pub.TextClip['fontStyle']
+  declare readonly align: pub.TextClip['align']
+  declare readonly inlineSize: pub.TextClip['inlineSize']
+  declare readonly fill: pub.TextClip['fill']
+  declare readonly stroke: pub.TextClip['stroke']
+
+  declare readonly translate: pub.TextClip['translate']
+  declare readonly rotate: pub.TextClip['rotate']
+  declare readonly scale: pub.TextClip['scale']
+
+  constructor(docView: VueDocument, original: pub.TextClip) {
+    super(docView, original)
+    ;(
+      [
+        'translate',
+        'rotate',
+        'scale',
+        'content',
+        'fontFamily',
+        'fontSize',
+        'fontWeight',
+        'fontStyle',
+        'align',
+        'inlineSize',
+        'fill',
+        'stroke',
+        'effects',
+      ] as const
+    ).forEach((key) => _vueWritable(this, original, key))
   }
 }
 

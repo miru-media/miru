@@ -1,6 +1,6 @@
 import type { Ref } from 'fine-jsx'
 
-import type { AudioClip, ChildNodePosition, Gap, Schema, Timeline, Track, VideoClip } from '#core'
+import type { Schema } from '#core'
 
 import type { EditView } from '../src/document-views/edit/edit-nodes.ts'
 
@@ -11,23 +11,11 @@ export interface SchemaTypes {
   'asset:effect:video': Schema.VideoEffectAsset
 }
 
-export interface NodeSnapshot<T extends Schema.AnyNode = Schema.AnyNode> {
-  node: T
-  position?: ChildNodePosition
-}
-
 export interface MediaElementInfo {
   duration: number
   hasAudio: boolean
   width: number
   height: number
-}
-
-export interface NodesByType {
-  timeline: Timeline
-  track: Track
-  clip: VideoClip | AudioClip
-  gap: Gap
 }
 
 declare module './core' {
@@ -50,11 +38,5 @@ export interface ClipDrag {
 export interface ClipResize {
   docDuration: Ref<number>
   isResizing: Ref<boolean>
-  clips:
-    | [
-        prev?: EditView.VideoClip | EditView.AudioClip,
-        self: EditView.VideoClip | EditView.AudioClip,
-        next?: EditView.VideoClip | EditView.AudioClip,
-      ]
-    | undefined
+  clips: [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip] | undefined
 }

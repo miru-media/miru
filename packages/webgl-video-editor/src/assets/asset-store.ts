@@ -5,6 +5,7 @@ import type { Schema } from '../../types/core.d.ts'
 import { AssetCreateEvent } from '../events.ts'
 import { FileSystemStorage } from '../storage/file-system-storage.ts'
 
+import { FontAsset } from './font-asset.ts'
 import { HttpAssetLoader } from './http-asset-loader.ts'
 import { MediaAsset } from './media-asset.ts'
 import { getMediaAssetInfo } from './utils.ts'
@@ -44,6 +45,10 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
         this.getOrCreateFile(asset, source ?? ('uri' in init ? init.uri : undefined))
           .then(asset.setBlob.bind(asset))
           .catch(asset.setError.bind(asset))
+        break
+
+      case 'asset:font':
+        asset = new FontAsset(init, this)
         break
 
       case 'asset:effect:video':

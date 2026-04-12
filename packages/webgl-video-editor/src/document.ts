@@ -9,6 +9,7 @@ import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
 import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
+import { TextClip } from './nodes/clips/text-clip.ts'
 import { Timeline } from './nodes/timeline.ts'
 import { Track } from './nodes/track.ts'
 
@@ -122,6 +123,9 @@ export class Document implements pub.Document {
         break
       case 'clip:audio':
         node = new AudioClip(this, init)
+        break
+      case 'clip:text':
+        node = new TextClip(this, init)
         break
       case 'gap':
         node = new Gap(this, init)

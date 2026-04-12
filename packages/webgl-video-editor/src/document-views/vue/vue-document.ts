@@ -6,13 +6,14 @@ import type * as pub from '#core'
 import { DocumentView, type ViewType } from '../document-view.ts'
 
 import { _vuePlainReadonly, _vueWritable } from './utils.ts'
-import { VueAudioClip, VueGap, VueTimeline, VueTrack, VueVideoClip } from './vue-nodes.ts'
+import { VueAudioClip, VueGap, VueTextClip, VueTimeline, VueTrack, VueVideoClip } from './vue-nodes.ts'
 
 export interface VueTypeMap {
   timeline: VueTimeline
   track: VueTrack
   'clip:video': VueVideoClip
   'clip:audio': VueAudioClip
+  'clip:text': VueTextClip
   gap: VueGap
 }
 
@@ -72,6 +73,9 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
         break
       case 'clip:audio':
         view = new VueAudioClip(this, original)
+        break
+      case 'clip:text':
+        view = new VueTextClip(this, original)
         break
       case 'gap':
         view = new VueGap(this, original)

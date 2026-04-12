@@ -14,6 +14,7 @@ export interface ViewTypeMap {
   track: EditView.Track
   'clip:video': EditView.VideoClip
   'clip:audio': EditView.AudioClip
+  'clip:text': EditView.TextClip
   gap: EditView.Gap
 }
 

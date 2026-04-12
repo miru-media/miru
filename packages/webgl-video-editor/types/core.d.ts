@@ -85,6 +85,12 @@ export interface Document extends Schema.DocumentSettings {
   activeClipIsStalled: Ref<boolean>
 
   createNode: <T extends Schema.AnyNode>(init: T) => NodesByType[T['type']]
+
+  /**
+   * Seek to the given time of the video.
+   *
+   * @param time The seek time in seconds.
+   */
   seekTo: (time: number) => void
   _setCurrentTime: (time: number) => void
   importFromJson: (content: Schema.SerializedDocument) => void
@@ -123,11 +129,12 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   isTrack: () => this is Track
   isTrackChild: () => this is AnyTrackChild
   isClip: () => this is AnyClip
+  isMediaClip: () => this is AnyMediaClip
+  isTextClip: () => this is TextClip
   isGap: () => this is Gap
-  isVideo: () => this is Timeline | Track | VideoClip
-  isAudio: () => this is Timeline | Track | AudioClip
+  isVideo: () => this is AnyVideoNode
+  isAudio: () => this is AnyAudioNode
   toJSON: () => any
-  getSnapshot: () => NodeSnapshot<T extends Schema.AnyNode ? T : any>
   delete: () => void
   dispose: () => void
   [Symbol.dispose]: () => void
@@ -187,16 +194,20 @@ export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.Base
   readonly isInClipTime: boolean
 }
 
-export interface VideoClip extends Clip<Schema.VideoClip>, Schema.VideoClip {
-  translate: { x: number; y: number }
-  rotate: number
-  scale: { x: number; y: number }
+export interface VideoClip
+  extends Clip<Schema.VideoClip>, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
   effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
 }
 export interface AudioClip extends Clip<Schema.AudioClip>, Schema.AudioClip {
   volume: number
   toJSON: () => Schema.AudioClip
+}
+export interface TextClip
+  extends Clip<Schema.TextClip>, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  fontWeight: number
+  fontStyle: Schema.FontStyle
+  toJSON: () => Schema.TextClip
 }
 
 export interface Gap extends TrackChild, Schema.Gap {
@@ -208,17 +219,25 @@ export interface NodesByType {
   track: Track
   'clip:video': VideoClip
   'clip:audio': AudioClip
+  'clip:text': TextClip
   gap: Gap
 }
 
 export type AnyNode = NodesByType[keyof NodesByType]
 export type AnyClip = NodesByType[Extract<keyof NodesByType, `clip:${string}`>]
+export type AnyMediaClip = VideoClip | AudioClip
+export type AnyVideoClip = VideoClip | TextClip
 export type AnyTrackChild = AnyClip | Gap
 export type AnyParentNode = Timeline | Track
-export type AnyVideoNode = Timeline | Track | VideoClip
+export type AnyVideoNode = Timeline | Track | VideoClip | TextClip
 export type AnyAudioNode = Timeline | Track | AudioClip
 
-export interface MediaAsset extends Readonly<Schema.MediaAsset> {
+interface BaseAsset extends Schema.BaseAsset {
+  dispose: () => void
+  [Symbol.dispose]: () => void
+}
+
+export interface MediaAsset extends BaseAsset, Readonly<Schema.MediaAsset> {
   readonly blob?: Blob
   readonly blobUrl?: string
   readonly isLoading: boolean
@@ -226,22 +245,23 @@ export interface MediaAsset extends Readonly<Schema.MediaAsset> {
   setBlob: (blob: Blob | undefined) => void
   setError: (error: unknown) => void
   toJSON: () => Schema.MediaAsset
-  dispose: () => void
-  [Symbol.dispose]: () => void
   /** @internal */
   _refreshObjectUrl: () => Promise<void>
 }
 
-export interface VideoEffectAsset extends Readonly<Schema.VideoEffectAsset> {
+export interface VideoEffectAsset extends BaseAsset, Readonly<Schema.VideoEffectAsset> {
   readonly raw: EffectDefinition
   toJSON: () => Schema.VideoEffectAsset
-  dispose: () => void
-  [Symbol.dispose]: () => void
+}
+
+export interface FontAsset extends BaseAsset, Schema.FontAsset {
+  toJSON: () => Schema.FontAsset
 }
 
 export interface AssetsByType {
   'asset:media:av': MediaAsset
   'asset:effect:video': VideoEffectAsset
+  'asset:font': FontAsset
 }
 
 export type AnyAsset = AssetsByType[keyof AssetsByType]
@@ -297,12 +317,6 @@ export interface VideoEditor {
     /** Play the video. */
     pause: () => void
 
-    /**
-     * Seek to the given time of the video.
-     *
-     * @param time The time of the video to seek to in seconds.
-     */
-
     /** @internal */
     stats: any
   }
@@ -317,6 +331,11 @@ export interface VideoEditor {
   /** Select the given track item */
   select: (clip: AnyTrackChild | undefined) => void
 
+  /**
+   * Seek to the given time of the video.
+   *
+   * @param time The seek time in seconds.
+   */
   seekTo: (time: number) => void
 
   /**

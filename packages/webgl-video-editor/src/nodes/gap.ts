@@ -6,10 +6,10 @@ import type * as pub from '../../types/core.d.ts'
 import { TrackChild } from './track-child.ts'
 
 export class Gap extends TrackChild<Schema.Gap> implements pub.Gap {
-  type = 'gap' as const
-  declare children: undefined
-  declare effects: never
-  declare color: undefined
+  declare readonly type: 'gap'
+  declare readonly children: undefined
+  declare readonly effects: never
+  declare readonly color: undefined
 
   declare readonly transition: undefined
 

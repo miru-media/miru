@@ -11,7 +11,7 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import { RenderDocument, type RenderDocumentOptions } from '../render/render-document.ts'
 
 import { AVEncoder } from './av-encoder.ts'
-import { ExportClip } from './export-clip.ts'
+import { ExportMediaClip, ExportNonMediaVideoClip } from './export-clip.ts'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -26,15 +26,16 @@ interface AvAssetEntry {
 }
 
 interface ViewTypeMap {
-  'clip:video': ExportClip
-  'clip:audio': ExportClip
+  'clip:video': ExportMediaClip
+  'clip:audio': ExportMediaClip
+  'clip:text': ExportNonMediaVideoClip
 }
 
 let decoderAudioContext: OfflineAudioContext | undefined
 
 export class ExportDocument extends DocumentView<ViewTypeMap> {
   renderView: RenderDocument
-  clips: ExportClip[] = []
+  clips: (ExportMediaClip | ExportNonMediaVideoClip)[] = []
   sources = new Map<string, AvAssetEntry>()
   avEncoder!: AVEncoder
   hasAudio = false
@@ -78,15 +79,22 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
     let view
 
-    if (original.isClip()) {
-      view = new ExportClip(this, original)
-      this.#prepareClip(view)
+    if (original.isMediaClip()) {
+      view = new ExportMediaClip(this, original)
+    } else if (original.isClip()) {
+      view = new ExportNonMediaVideoClip(this, original)
     } else view = undefined
+
+    if (view) this.#prepareClip(view)
 
     return view as ViewType<ViewTypeMap, T>
   }
 
-  #prepareClip(exportClip: ExportClip): void {
+  #prepareClip(exportClip: ExportMediaClip | ExportNonMediaVideoClip): void {
+    this.clips.push(exportClip)
+
+    if (!exportClip.original.isMediaClip()) return
+
     const { original } = exportClip
     const { asset, time: clipTime } = original
     const { source: sourceStart, duration } = clipTime
@@ -119,7 +127,6 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     sourceEntry.consumers += 1
     sourceEntry.start = Math.min(sourceEntry.start, sourceStart)
     sourceEntry.end = Math.max(sourceEntry.end, sourceEnd)
-    this.clips.push(exportClip)
   }
 
   async #prepareSource(entry_: AvAssetEntry): Promise<void> {
@@ -164,7 +171,9 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
 
     await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
 
-    this.clips.forEach((clip) => clip.init(this.sources.get(clip.original.asset!.id)!))
+    this.clips.forEach((clip) => {
+      if (clip.isExportMediaClip()) clip.init(this.sources.get(clip.original.asset!.id)!)
+    })
 
     const durationUs = duration * 1e6
 
@@ -209,7 +218,9 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
       await Promise.all(
         this.clips.map(async (exportClip) => {
           if (!exportClip.original.isVideo()) return
-          await exportClip.seekVideo()
+
+          if (exportClip.isExportMediaClip()) await exportClip.seekVideo()
+          else exportClip.updateVisibility()
           if (!exportClip.isReady) await exportClip.whenReady(this._abort.signal)
         }),
       )
@@ -245,6 +256,8 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
 
     await Promise.all(
       this.clips.map(async (exportClip) => {
+        if (!exportClip.isExportMediaClip()) return
+
         const { time: clipTime } = exportClip.original
         await exportClip.seekAudio(clipTime.start)
 

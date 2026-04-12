@@ -156,9 +156,9 @@ export class PlaybackSeekEvent extends Event implements pub.PlaybackSeekEvent {
 export class CanvasEvent<T extends string> extends Event implements pub.CanvasEvent<T> {
   declare readonly type: `canvas:${T}`
   readonly canvasEventType: T
-  readonly node?: pub.VideoClip
+  readonly node?: pub.AnyVideoClip
 
-  constructor(type: T, node: pub.VideoClip | undefined) {
+  constructor(type: T, node: pub.AnyVideoClip | undefined) {
     super(`canvas:${type}`)
     this.canvasEventType = type
     this.node = node

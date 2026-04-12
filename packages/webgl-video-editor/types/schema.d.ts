@@ -1,9 +1,23 @@
 import type { EffectDefinition } from 'webgl-effects'
 
+export interface Point {
+  x: number
+  y: number
+}
+
 export interface Rational {
   value: number
   rate: number
 }
+
+export interface TransformProps {
+  translate: Point
+  rotate: number
+  scale: Point
+}
+
+export type FontStyle = 'normal' | 'italic' | 'oblique'
+export type TextAlign = 'left' | 'center' | 'right' | 'justify'
 
 interface Base {
   id: string
@@ -67,7 +81,20 @@ export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Omit<Effect
   name: string
 }
 
-export type AnyAssetSchema = MediaAsset | VideoEffectAsset
+export interface FontAsset extends BaseAsset<'font'> {
+  name: string
+  family: string
+  weight?: number
+  style?: string
+}
+
+export interface AssetSchemasByType {
+  'asset:media:av': MediaAsset
+  'asset:effect:video': VideoEffectAsset
+  'asset:font': FontAsset
+}
+
+export type AnyAssetSchema = AssetSchemasByType[keyof AssetSchemasByType]
 
 export interface Track extends Base {
   type: 'track'
@@ -91,7 +118,7 @@ export interface AudioPlaceholderRef {
 }
 
 export interface BaseClip<
-  TPlaceholder extends VideoPlaceholderRef | AudioPlaceholderRef = any,
+  TPlaceholder extends VideoPlaceholderRef | AudioPlaceholderRef | undefined = any,
 > extends TrackChild {
   type: `clip:${string}`
   sourceStart: Rational
@@ -99,11 +126,8 @@ export interface BaseClip<
   transition?: { assetId: string; duration: Rational }
 }
 
-export interface VideoClip extends BaseClip<VideoPlaceholderRef> {
+export interface VideoClip extends BaseClip<VideoPlaceholderRef>, Partial<TransformProps> {
   type: 'clip:video'
-  translate?: { x: number; y: number }
-  rotate?: number
-  scale?: { x: number; y: number }
 }
 
 export interface AudioClip extends BaseClip<AudioPlaceholderRef> {
@@ -111,6 +135,19 @@ export interface AudioClip extends BaseClip<AudioPlaceholderRef> {
   volume?: number
 }
 
+export interface TextClip extends BaseClip<undefined>, Partial<TransformProps> {
+  type: 'clip:text'
+  content: string
+  fontFamily: string
+  fontSize: number
+  fontWeight?: number
+  fontStyle?: FontStyle
+  align?: TextAlign
+  inlineSize: number
+  fill?: string
+  stroke?: string
+  mediaRef?: undefined
+}
 export interface Gap extends TrackChild {
   type: 'gap'
 }
@@ -123,7 +160,7 @@ export interface SerializedTrack extends Track {
   children: (SerializedClip | SerializedGap)[]
 }
 
-export type SerializedClip = VideoClip | AudioClip
+export type SerializedClip = AnyClip
 export type SerializedGap = Gap
 
 export interface NodeSchemasByType {
@@ -132,13 +169,25 @@ export interface NodeSchemasByType {
   'clip:video': VideoClip
   'clip:audio': AudioClip
   gap: Gap
+  'clip:text': TextClip
+}
+
+export interface SerializedNodeSchemasByType {
+  timeline: SerializedTimeline
+  track: SerializedTrack
+  'clip:video': VideoClip
+  'clip:audio': AudioClip
+  gap: Gap
+  'clip:text': TextClip
 }
 
 export type AnyNode = NodeSchemasByType[keyof NodeSchemasByType]
 export type AnyClip = NodeSchemasByType[Extract<keyof NodeSchemasByType, `clip:${string}`>]
-export type AnyNodeSerializedSchema = SerializedTimeline | SerializedTrack | SerializedClip | SerializedGap
+export type AnyMediaClip = VideoClip | AudioClip
+export type AnyVideoClip = VideoClip | TextClip
+export type AnyNodeSerializedSchema = SerializedNodeSchemasByType[keyof SerializedNodeSchemasByType]
 
 export interface SerializedDocument extends DocumentSettings {
-  assets: (MediaAsset | VideoEffectAsset)[]
+  assets: AnyAssetSchema[]
   timeline: SerializedTimeline
 }

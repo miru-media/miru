@@ -1,23 +1,30 @@
 import * as Pixi from 'pixi.js'
 
-import type * as pub from '../types/core.d.ts'
+import type { AnyRenderClip } from './document-views/render/render-nodes.ts'
 
-export const getClipTransformMatrix = (clip: pub.VideoClip, withVideoRotation: boolean): Pixi.Matrix => {
-  const { scale, asset } = clip
-  if (!asset?.video) return new Pixi.Matrix()
+export const getClipTransformMatrix = (
+  renderClip: AnyRenderClip,
+  withVideoRotation: boolean,
+): Pixi.Matrix => {
+  const size = renderClip.getSize()
+  if (!size) return new Pixi.Matrix()
 
-  const { width, height, rotation: videoRotation } = asset.video
+  const clip = renderClip.original
+  const { scale } = clip
+  const mediaRotation = clip.isMediaClip() ? (clip.asset?.video?.rotation ?? 0) : 0
+
+  const { width, height } = size
   const { resolution } = clip.doc
 
   const matrix = new Pixi.Matrix()
 
-  if (withVideoRotation && videoRotation !== 0) {
-    const rads = (videoRotation * Math.PI) / 180
+  if (withVideoRotation && mediaRotation !== 0) {
+    const rads = (mediaRotation * Math.PI) / 180
     matrix.rotate(rads)
 
     matrix.translate(
-      videoRotation === 180 || videoRotation === 90 ? width : 0,
-      videoRotation === 180 || videoRotation === 270 ? height : 0,
+      mediaRotation === 180 || mediaRotation === 90 ? width : 0,
+      mediaRotation === 180 || mediaRotation === 270 ? height : 0,
     )
   }
 
