@@ -59,8 +59,8 @@ export const AssetBinVideo = () => {
     }
 
     return (
-        <div class={styles.assetbin}>
-            <div class={styles.assetbinHeader}>
+        <div class={styles.assetBin}>
+            <div class={styles.assetBinHeader}>
                 <Button
                 onClick={closeAssetbin}
                 label={t('asset_bin_media_close')}
@@ -70,8 +70,8 @@ export const AssetBinVideo = () => {
                 </Button>
                 <h2 class={styles.textGreat}>{t('media')}</h2>
             </div>
-            <div class={styles.assetbinInputContainer}>
-                <label class={[styles.assetbinUpload, styles.textBodyBold]}>
+            <div class={styles.assetBinInputContainer}>
+                <label class={[styles.assetBinUpload, styles.textBodyBold]}>
                     <input 
                         type="file"
                         accept={ACCEPT_VIDEO_FILE_TYPES}
@@ -86,12 +86,12 @@ export const AssetBinVideo = () => {
                     type="search"
                     value={() => assetSearchQuery.value}
                     onInput={onSearchInput}
-                    class={styles.assetbinSearch}
+                    class={styles.assetBinSearch}
                     placeholder={t('asset_bin_media_search_placeholder')}
                     aria-label={t('asset_bin_media_search_placeholder')}
                 />
             </div>
-            <div class={styles.assetbinAssetsContainer}>
+            <div class={styles.assetBinAssetsContainer}>
                 {() => {
                     if (assets.value.length === 0) {
                         return <p class={styles.textBodySmall}>{t('asset_bin_media_empty')}</p>
@@ -101,7 +101,7 @@ export const AssetBinVideo = () => {
                     return assetsFiltered.value.map((asset) => (
                         <button
                             type="button" 
-                            class={styles.assetbinAsset}
+                            class={[styles.assetBinAsset, styles.assetBinSanitize]}
                             onClick={() => {
                                 activeVideo.value = asset
                             }}

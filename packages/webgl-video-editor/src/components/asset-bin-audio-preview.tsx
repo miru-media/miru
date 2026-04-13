@@ -66,15 +66,15 @@ export const AssetBinAudioPreview = (props: {
     }
 
     return (
-        <div class={styles.assetbinAudioAssetContainer}>
-            <div class={styles.assetbinAudioAssetHeader}>
-                <div class={styles.assetbinAudioAssetMeta}>
+        <div class={styles.assetBinAudioAssetContainer}>
+            <div class={styles.assetBinAudioAssetHeader}>
+                <div class={styles.assetBinAudioAssetMeta}>
                     <button
-                        class={styles.assetbinAudioThumbnailContainer}
+                        class={[styles.assetBinAudioThumbnailContainer, styles.assetBinSanitize]}
                         aria-label={() => (isPlaying.value ? t('Pause') : t('Pause'))}
                         onClick={togglePlayback}
                     >
-                        <div class={styles.assetbinAudioThumbnail}>
+                        <div class={styles.assetBinAudioThumbnail}>
                             { asset.thumbnailUri && (
                                 <img
                                     src={asset.thumbnailUri}
@@ -83,28 +83,28 @@ export const AssetBinAudioPreview = (props: {
                             )
                             }
                         </div>
-                        <div class={styles.assetbinAudioThumbnailOverlay}>
+                        <div class={styles.assetBinAudioThumbnailOverlay}>
                             { () => (
                                 <div class={['bulma-icon', isPlaying.value ? 'i-tabler:player-pause-filled' : 'i-tabler:player-play-filled']} />
                             )}
                         </div>
                     </button>
-                    <div class={styles.assetbinAudioText}>
+                    <div class={styles.assetBinAudioText}>
                         <span class={styles.textBody}>{asset.name}</span>
                         <span>{ () => formatTime(asset.duration, false)}</span>
                     </div>
                 </div>
-                <div class={styles.assetbinAudioButtonContainer}>
+                <div class={styles.assetBinAudioButtonContainer}>
                     <Button
                         onClick={deleteAudio}
                         disabled={() => isAudioInUse.value}
-                        class={styles.assetbinDelete}
+                        class={styles.assetBinDelete}
                         label={() => (isAudioInUse.value ? t('asset_bin_delete_music_disabled') : t('asset_bin_delete_music'))}
                     >
                         <div class="bulma-icon i-tabler:trash" />
                     </Button>
                     <Button
-                        class={styles.assetbinCreateClip}
+                        class={styles.assetBinCreateClip}
                         onClick={createClip}
                         label={t('asset_bin_music_create_clip')}
                     >
@@ -116,7 +116,7 @@ export const AssetBinAudioPreview = (props: {
                 ref={audioRef} 
                 src={audioSrc}
                 style={() => (isPlaying.value ? '' : 'display:none')}
-                class={styles.assetbinAudioPlayer}
+                class={styles.assetBinAudioPlayer}
                 onEnded={() => (isPlaying.value = false)}
                 onPause={(e: Event) => {
                     if (!(e.target as HTMLAudioElement).seeking) {

@@ -57,8 +57,8 @@ export const AssetBinAudio = () => {
     }
 
     return (
-        <div class={styles.assetbin}>
-            <div class={styles.assetbinHeader}>
+        <div class={styles.assetBin}>
+            <div class={styles.assetBinHeader}>
                 <Button
                 onClick={closeAssetbin}
                 label={t('asset_bin_music_close')}
@@ -68,8 +68,8 @@ export const AssetBinAudio = () => {
                 </Button>
                 <h2 class={styles.textGreat}>{t('music')}</h2>
             </div>
-           <div class={styles.assetbinInputContainer}>
-                <label class={[styles.assetbinUpload, styles.textBodyBold]}>
+           <div class={styles.assetBinInputContainer}>
+                <label class={[styles.assetBinUpload, styles.textBodyBold]}>
                     <input 
                         type="file"
                         accept={ACCEPT_AUDIO_FILE_TYPES}
@@ -84,12 +84,12 @@ export const AssetBinAudio = () => {
                     type="search"
                     value={() => assetSearchQuery.value}
                     onInput={onSearchInput}
-                    class={styles.assetbinSearch}
+                    class={styles.assetBinSearch}
                     placeholder={t('asset_bin_music_search_placeholder')}
                     aria-label={t('asset_bin_music_search_placeholder')}
                 />
             </div>
-            <div class={styles.assetbinAudioPreviewContainer}>
+            <div class={styles.assetBinAudioPreviewContainer}>
                 {() => {
                     if (assets.value.length === 0) {
                         return <p class={styles.textBodySmall}>{t('asset_bin_music_empty')}</p>

@@ -73,7 +73,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     
     return(
         <dialog
-            class={styles.assetbinDialogue}
+            class={styles.assetBinDialogue}
             ref={dialogRef}
             closedby="any"
             onClose={closeDialogue}
@@ -89,10 +89,10 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
                 <Button
                     disabled={() => isDeleting.value || isVideoInUse.value}
                     onClick={deleteVideo}
-                    class={[styles.assetbinDelete, styles.textBodyBold]}
+                    class={[styles.assetBinDelete, styles.textBodyBold]}
                     label={deleteLabel}
                 >
-                    <div class={[styles.assetbinButton]}>
+                    <div class={[styles.assetBinButton]}>
                         <span>{t('asset_bin_delete_video')}</span>
                         <div class="bulma-icon i-tabler:trash"/>
                     </div>
@@ -101,9 +101,9 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
                     onClick={createClip}
                     disabled={() => isDeleting.value}
                     label={t('asset_bin_media_create_clip')}
-                    class={[styles.assetbinCreateClip, styles.textBodyBold]}
+                    class={[styles.assetBinCreateClip, styles.textBodyBold]}
                 >
-                    <div class={styles.assetbinButton}>
+                    <div class={styles.assetBinButton}>
                         <span>{t('asset_bin_media_create_clip')}</span>
                         <div class="bulma-icon i-tabler:circle-plus" />
                     </div>

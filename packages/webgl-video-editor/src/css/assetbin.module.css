@@ -1,10 +1,10 @@
-.assetbin {
+.assetBin {
     padding: 0.75rem;
     background-color: var(--gray);
     border-radius: 1.5rem 1.5rem 0rem 0rem;
 }
 
-.assetbinAssetsContainer {
+.assetBinAssetsContainer {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: repeat(auto-fit, minmax(6.25rem, 7.95rem));
@@ -17,33 +17,33 @@
     margin-top: 0.5rem;
 }
 
-.assetbinHeader {
+.assetBinHeader {
     display: flex;
     align-items: center;
     position: relative;
     padding-bottom: 1rem;
 }
 
-.assetbinHeader h2 {
+.assetBinHeader h2 {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     margin: 0;
 }
 
-.assetbinAsset img {
+.assetBinAsset img {
     width: 7.938rem;
     height: 5.313rem;
     border-radius: 0.5rem;
 }
 
-.assetbinInputContainer {
+.assetBinInputContainer {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.assetbinUpload {
+.assetBinUpload {
     background-color: var(--primary-bg);
     cursor: pointer;
     display: flex;
@@ -56,20 +56,21 @@
     width: 20rem;
 }
 
-.assetbinSearch {
+.assetBinSearch {
     width: 20rem;
     padding: 0.5rem;
     border-radius: 0.75rem;
 }
-.assetbinSearch:focus {
+.assetBinSearch:focus {
     outline: 0;
 }
 
-.assetbinDialogue {
+.assetBinDialogue {
     background-color: var(--gray);
     color: var(--white);
     max-width: 40rem;
     border-radius: 0.75rem;
+    border: none;
     padding: 0.5rem;
 }
 
@@ -79,11 +80,11 @@
     margin-top: 0.5rem;
 }
 
-.assetbinCreateClip {
+.assetBinCreateClip {
     background-color: var(--blue);
 }
 
-.assetbinButton {
+.assetBinButton {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -91,21 +92,21 @@
     padding: 0.5rem;
 }
 
-.assetbinDelete {
+.assetBinDelete {
    background-color: var(--red-dark);
 }
 
-.assetbinAudioAssetHeader {
+.assetBinAudioAssetHeader {
     display: flex;
     justify-content: space-between;
 }
 
-.assetbinAudioAssetMeta {
+.assetBinAudioAssetMeta {
     display: flex;
     gap: 0.5rem;
 }
 
-.assetbinAudioPreviewContainer {
+.assetBinAudioPreviewContainer {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -116,16 +117,16 @@
     padding-top: 0.5rem;
 }
 
-.assetbinAudioAssetContainer {
+.assetBinAudioAssetContainer {
     width: 20rem;
     max-width: 40rem;
 }
 
-.assetbinAudioThumbnailContainer {
+.assetBinAudioThumbnailContainer {
     position: relative;
 }
 
-.assetbinAudioThumbnail {
+.assetBinAudioThumbnail {
     width: 4rem;
     height: 4rem;
     display: flex;
@@ -136,7 +137,7 @@
     /* border: 0.063rem solid var(--gray); */
 }
 
-.assetbinAudioThumbnailOverlay {
+.assetBinAudioThumbnailOverlay {
     position: absolute;
     display: flex;
     justify-content: center;
@@ -144,17 +145,28 @@
     inset: 0;
 }
 
-.assetbinAudioText {
+.assetBinAudioText {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
 
-.assetbinAudioButtonContainer {
+.assetBinAudioButtonContainer {
     display:flex;
     gap: 0.5rem;
 }
 
-.assetbinAudioPlayer {
+.assetBinAudioPlayer {
     width: 100%;
+}
+
+.assetBinSanitize {
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+
+    &:hover {
+        background-color: transparent;
+    }
 }
