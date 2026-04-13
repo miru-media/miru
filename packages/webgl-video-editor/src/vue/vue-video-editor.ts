@@ -51,7 +51,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       ),
       activeAssetBin: toVue(
         () => editor.activeAssetBin,
-        (value) => (editor.activeAssetBin = value)
+        (value) => (editor.activeAssetBin = value),
       ),
 
       seekTo: editor.seekTo.bind(editor),

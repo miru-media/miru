@@ -9,17 +9,17 @@ import { provideI18n, Rational } from 'shared/utils'
 import { ReadyState } from 'shared/video/constants.ts'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
-import { EXPORT_VIDEO_CODECS, AssetBin } from '../constants.ts'
+import { AssetBin, EXPORT_VIDEO_CODECS } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { PlaybackDocument } from '../document-views/playback/playback-document.ts'
 
+import { AssetBinAudio } from './asset-bin-audio.jsx'
+import { AssetBinVideo } from './asset-bin-video.jsx'
 import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 import { provideEditor } from './utils.ts'
-import { AssetBinVideo } from './asset-bin-video.tsx'
-import { AssetBinAudio } from './asset-bin-audio.tsx'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor

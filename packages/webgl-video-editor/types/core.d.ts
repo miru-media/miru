@@ -2,8 +2,8 @@
 import type { Ref } from 'fine-jsx'
 import type { EffectDefinition, Renderer } from 'webgl-effects'
 
+import type { AssetBin } from '../src/constants.ts'
 import type { VideoEditor as VideoEditorInternal } from '../src/video-editor.ts'
-import type { AssetBin } from '../src/constants'
 
 import type {
   AssetCreateEvent,
@@ -297,7 +297,7 @@ export interface VideoEditor {
   tracks: Track[]
 
   /** The state of the asset bin ui */
-  activeAssetBin : AssetBin
+  activeAssetBin: AssetBin
 
   /** The webgl-effects Renderer instance */
   readonly effectRenderer: Renderer

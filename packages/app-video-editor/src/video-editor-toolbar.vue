@@ -90,20 +90,28 @@ useEventListener(
 
       <button
         class="toolbar-button"
-        @click="() => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)
+        "
       >
         <div
-          :class="editor.activeAssetBin === AssetBin.audio ? 'icon i-tabler-music-search' : 'icon i-tabler-music'"
+          :class="
+            editor.activeAssetBin === AssetBin.audio ? 'icon i-tabler-music-search' : 'icon i-tabler-music'
+          "
         />
         {{ $t('music') }}
       </button>
-      
+
       <button
         class="toolbar-button"
-        @click="() => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)
+        "
       >
         <div
-          :class="editor.activeAssetBin === AssetBin.video ? 'icon i-tabler-folder-filled' : 'icon i-tabler-folder'"
+          :class="
+            editor.activeAssetBin === AssetBin.video ? 'icon i-tabler-folder-filled' : 'icon i-tabler-folder'
+          "
         />
         {{ $t('media') }}
       </button>

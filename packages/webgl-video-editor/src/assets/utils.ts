@@ -1,6 +1,6 @@
 import * as Mb from 'mediabunny'
 
-import { CLIP_COLORS } from '#constants'
+import { CLIP_COLORS, THUMBNAIL_QUALITY } from '#constants'
 import type * as Schema from '#schema'
 import { Rational, stringHashCode } from 'shared/utils/index.ts'
 
@@ -9,31 +9,29 @@ const getRational = (track: Mb.InputTrack, value: number): Rational => {
   return Rational.fromDecimal(value, timeResolution)
 }
 
-const blobToDataUrl = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject)=> {
+const blobToDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(reader.result as string)
     reader.onerror = reject
     reader.readAsDataURL(blob)
   })
-}
 
-const getAudioCoverArtDataUrl = async(input: Mb.Input): Promise<string | undefined> => {
+const getAudioCoverArtDataUrl = async (input: Mb.Input): Promise<string | undefined> => {
   const tags = await input.getMetadataTags()
   const cover = tags.images?.find((img) => img.kind === 'coverFront') ?? tags.images?.[0]
   if (!cover) return undefined
-  const blob = new Blob([cover.data.slice().buffer], {type: cover.mimeType})
+  const blob = new Blob([cover.data.slice().buffer], { type: cover.mimeType })
   return await blobToDataUrl(blob)
 }
 
 const getVideoThumbnailDataUrl = async (videoTrack: Mb.InputVideoTrack): Promise<string | undefined> => {
-  const sink = new Mb.CanvasSink(videoTrack, {width: 320})
+  const sink = new Mb.CanvasSink(videoTrack, { width: 320 })
   const timestamp = await videoTrack.getFirstTimestamp()
   const wrappedCanvas = await sink.getCanvas(timestamp)
   if (!wrappedCanvas) return
-  const canvas = wrappedCanvas.canvas
-  if(canvas instanceof HTMLCanvasElement) return canvas.toDataURL('image/jpeg', 0.75)
-  return
+  const { canvas } = wrappedCanvas
+  if (canvas instanceof HTMLCanvasElement) return canvas.toDataURL('image/jpeg', THUMBNAIL_QUALITY)
 }
 
 export const getMediaAssetInfo = async (
@@ -91,7 +89,7 @@ export const getMediaAssetInfo = async (
     } catch {
       thumbnailUri = undefined
     }
-  } else if(audio) {
+  } else if (audio) {
     try {
       thumbnailUri = await getAudioCoverArtDataUrl(input)
     } catch {
