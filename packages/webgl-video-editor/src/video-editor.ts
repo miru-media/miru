@@ -13,6 +13,7 @@ import { Rational, remap0 } from 'shared/utils/math'
 import type * as pub from '../types/webgl-video-editor'
 
 import { useClipDragResize } from './components/utils.ts'
+import type { AssetBin } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
 import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { ExportDocument } from './document-views/export/exporter-document.ts'
@@ -86,6 +87,14 @@ export class VideoEditor implements pub.VideoEditor {
   }
   set _showStats(value) {
     this.#showStats.value = value
+  }
+
+  readonly #activeAssetBin = ref<AssetBin>(null)
+  get activeAssetBin(): AssetBin {
+    return this.#activeAssetBin.value
+  }
+  set activeAssetBin(value: AssetBin) {
+    this.#activeAssetBin.value = value
   }
 
   readonly #exportResult = ref<ExportResult>()

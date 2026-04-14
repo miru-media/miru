@@ -2,6 +2,7 @@
 @import url('./clip.module.css');
 @import url('./viewport.module.css');
 @import url('./timeline.module.css');
+@import url('./assetbin.module.css');
 
 .videoEditor {
   display: flex;

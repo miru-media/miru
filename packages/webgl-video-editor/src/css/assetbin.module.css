@@ -1,0 +1,173 @@
+.assetBin {
+  padding: 0.75rem;
+  background-color: var(--gray);
+  border-radius: 1.5rem 1.5rem 0 0;
+}
+
+.assetBinAssetsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.25rem, 7.95rem));
+  gap: 0.5rem;
+  place-items: start center;
+  justify-content: center;
+  max-height: 15rem;
+  margin-top: 0.5rem;
+  overflow: scroll;
+  overflow-y: auto;
+}
+
+.assetBinHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+}
+
+.assetBinHeader h2 {
+  position: absolute;
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+.assetBinAsset img {
+  width: 7.938rem;
+  height: 5.313rem;
+  border-radius: 0.5rem;
+}
+
+.assetBinInputContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.assetBinUpload {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 20rem;
+  max-width: 22rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  background-color: var(--primary-bg);
+  border-radius: 0.25rem;
+}
+
+.assetBinSearch {
+  width: 20rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+}
+
+.assetBinSearch:focus {
+  outline: 0;
+}
+
+.assetBinDialogue {
+  max-width: 40rem;
+  padding: 0.5rem;
+  color: var(--white);
+  background-color: var(--gray);
+  border: none;
+  border-radius: 0.75rem;
+}
+
+.dialogueButtonContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.assetBinCreateClip {
+  background-color: var(--blue);
+}
+
+.assetBinButton {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.assetBinDelete {
+  background-color: var(--red-dark);
+}
+
+.assetBinAudioAssetHeader {
+  display: flex;
+  justify-content: space-between;
+}
+
+.assetBinAudioAssetMeta {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.assetBinAudioPreviewContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  max-height: 15rem;
+  padding-top: 0.5rem;
+  overflow: scroll;
+  overflow-y: auto;
+}
+
+.assetBinAudioAssetContainer {
+  width: 20rem;
+  max-width: 40rem;
+}
+
+.assetBinAudioThumbnailContainer {
+  position: relative;
+}
+
+.assetBinAudioThumbnail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  background-color: var(--blue);
+  border-radius: 0.25rem;
+
+  /* border: 0.063rem solid var(--gray); */
+}
+
+.assetBinAudioThumbnailOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assetBinAudioText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.assetBinAudioButtonContainer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.assetBinAudioPlayer {
+  width: 100%;
+}
+
+.assetBinSanitize {
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+
+  &:hover {
+    background-color: transparent;
+  }
+}

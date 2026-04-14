@@ -13,6 +13,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
   readonly video: Schema.MediaAsset['video']
   readonly color: Schema.MediaAsset['color']
   readonly metadata: Schema.MediaAsset['metadata']
+  readonly thumbnailUri?: string
 
   blob?: Blob
   readonly #blobUrl = ref('')
@@ -60,6 +61,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
     this.audio = init.audio
     this.video = init.video
     this.uri = init.uri
+    this.thumbnailUri = init.thumbnailUri
     this.color = init.color
     this.metadata = init.metadata
   }
@@ -108,6 +110,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
       audio: this.audio,
       video: this.video,
       uri: this.uri,
+      thumbnailUri: this.thumbnailUri,
       color: this.color,
       metadata: this.metadata,
     }

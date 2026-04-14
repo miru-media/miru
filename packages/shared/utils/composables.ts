@@ -5,6 +5,7 @@ import {
   type MaybeRefOrGetter,
   onScopeDispose,
   provide,
+  type Ref,
   ref,
   toRef,
   toValue,
@@ -163,3 +164,29 @@ export const provideI18n = (options: I18nOptions) => {
 }
 
 export const useI18n = () => inject<ReturnType<typeof createI18n>>('i18n')!
+
+/**
+ * Wraps an async function to track when it's been called and is pending a result.
+ *
+ * @param callback Original async function
+ * @returns An array for destructuring the wrapped callback function and an `isPending: Ref<boolean>`.
+ * @throws {Error} Throws if the method is called while a result is pending.
+ */
+export const useAsyncCallback = <TArgs extends unknown[]>(
+  callback: (...args: TArgs) => Promise<unknown>,
+): [fn: typeof callback, isPending: Ref<boolean>] => {
+  const isPending = ref(false)
+  const fn: typeof callback = async (...args) => {
+    if (isPending.value) throw new Error('Already pending')
+    isPending.value = true
+
+    try {
+      return await callback(...args)
+    } finally {
+      // eslint-disable-next-line require-atomic-updates -- false positive
+      isPending.value = false
+    }
+  }
+
+  return [fn, isPending]
+}

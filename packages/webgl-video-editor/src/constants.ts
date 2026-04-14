@@ -16,6 +16,13 @@ export const SourceNodeState = {
 } as const
 export type SourceNodeState = (typeof SourceNodeState)[keyof typeof SourceNodeState]
 
+export const AssetBin = {
+  video: 'video',
+  audio: 'audio',
+  fonts: 'fonts',
+} as const
+export type AssetBin = (typeof AssetBin)[keyof typeof AssetBin] | null
+
 export const VIDEO_PREPLAY_TIME_S = 2
 export const MEDIA_SYNC_INTERVAL_MS = 500
 export const MEDIA_SYNC_TOLERANCE_S = 0.3
@@ -42,3 +49,5 @@ export const CLIP_COLORS = [
   '#03ad70', // green
   '#1ed291', // green-light
 ]
+
+export const THUMBNAIL_QUALITY = 0.75
