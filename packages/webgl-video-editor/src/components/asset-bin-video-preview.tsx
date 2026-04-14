@@ -2,7 +2,7 @@ import { computed, effect, ref, type Ref } from 'fine-jsx'
 
 import type { Track } from '#core'
 import { Button } from 'shared/components/button'
-import { useI18n } from 'shared/utils'
+import { useAsyncCallback, useI18n } from 'shared/utils'
 
 import type { MediaAsset } from '../assets/media-asset.ts'
 import styles from '../css/index.module.css'
@@ -14,12 +14,10 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
   const dialogRef = ref<HTMLDialogElement>()
   const editor = useEditor()
   const { t } = useI18n()
-  const isDeleting = ref(false)
 
   const videoSrc = computed(() => {
     if (!activeVideo.value) return ''
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- required to avoid undefined
-    return activeVideo.value.blobUrl || activeVideo.value.uri || ''
+    return activeVideo.value.blobUrl || (activeVideo.value.uri ?? '')
   })
 
   effect(() => {
@@ -64,21 +62,16 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     isVideoInUse.value ? t('asset_bin_delete_video_disabled') : t('asset_bin_delete_video'),
   )
 
-  const deleteVideo = async () => {
-    if (!activeVideo.value || isVideoInUse.value || isDeleting.value || !dialogRef.value) return
-
-    isDeleting.value = true
+  const [deleteVideo, isDeleting] = useAsyncCallback(async () => {
+    if (!activeVideo.value || isVideoInUse.value || !dialogRef.value) return
     try {
       await editor.doc.assets.delete(activeVideo.value.id)
       dialogRef.value.close()
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_delete_video'))
-    } finally {
-      // eslint-disable-next-line require-atomic-updates -- guarded with initial return
-      isDeleting.value = false
     }
-  }
+  })
 
   return (
     <dialog class={styles.assetBinDialogue} ref={dialogRef} closedby="any" onClose={closeDialogue}>

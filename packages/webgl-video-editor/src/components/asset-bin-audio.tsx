@@ -31,12 +31,12 @@ export const AssetBinAudio = () => {
     const assetsUpdate = () => {
       assets.value = getAudioAssets()
     }
-    const assetCreateListener = editor.doc.assets.on('asset:create', assetsUpdate)
-    const assetDeleteListener = editor.doc.assets.on('asset:delete', assetsUpdate)
+    const assetCreateOff = editor.doc.assets.on('asset:create', assetsUpdate)
+    const assetDeleteOff = editor.doc.assets.on('asset:delete', assetsUpdate)
 
     onCleanup(() => {
-      assetCreateListener()
-      assetDeleteListener()
+      assetCreateOff()
+      assetDeleteOff()
     })
   })
 

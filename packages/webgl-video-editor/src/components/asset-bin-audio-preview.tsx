@@ -2,7 +2,7 @@ import { computed, ref } from 'fine-jsx'
 
 import type { Track } from '#core'
 import { Button } from 'shared/components/button'
-import { useI18n } from 'shared/utils'
+import { useAsyncCallback, useI18n } from 'shared/utils'
 import { formatTime } from 'shared/video/utils'
 
 import type { MediaAsset } from '../assets/media-asset.ts'
@@ -14,12 +14,10 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
   const { asset } = props
   const editor = useEditor()
   const { t } = useI18n()
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- required to avoid undefined
-  const audioSrc: string = asset.blobUrl || asset.uri || ''
+  const audioSrc: string = asset.blobUrl || (asset.uri ?? '')
 
   const audioRef = ref<HTMLAudioElement>()
   const isPlaying = ref(false)
-  const isDeleting = ref(false)
 
   const togglePlayback = async () => {
     if (!audioRef.value) return
@@ -42,22 +40,17 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
     return activeClip
   })
 
-  const deleteAudio = async () => {
-    if (isAudioInUse.value || isDeleting.value) return
-    isDeleting.value = true
+  const [deleteAudio, isDeleting] = useAsyncCallback(async () => {
+    if (isAudioInUse.value) return
     try {
       await editor.doc.assets.delete(asset.id)
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_delete_music'))
-    } finally {
-      // eslint-disable-next-line require-atomic-updates -- guarded with initial return
-      isDeleting.value = false
     }
-  }
+  })
 
   const createClip = () => {
-    if (isDeleting.value) return
     try {
       const track: Track =
         editor.tracks.find((track) => track.trackType === 'audio') ?? editor.addTrack('audio')
@@ -110,8 +103,9 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
             <div class="bulma-icon i-tabler:trash" />
           </Button>
           <Button
-            class={styles.assetBinCreateClip}
             onClick={createClip}
+            disabled={() => isDeleting.value}
+            class={styles.assetBinCreateClip}
             label={t('asset_bin_music_create_clip')}
           >
             <div class="bulma-icon i-tabler:circle-plus" />
