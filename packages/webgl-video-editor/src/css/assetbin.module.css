@@ -53,6 +53,7 @@
   cursor: pointer;
   background-color: var(--primary-bg);
   border-radius: 0.25rem;
+  border: none;
 }
 
 .assetBinSearch {
