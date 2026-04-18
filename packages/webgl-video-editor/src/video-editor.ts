@@ -239,7 +239,7 @@ export class VideoEditor implements pub.VideoEditor {
     })
   }
 
-  addTrack(trackType: 'video' | 'audio'): pub.Track {
+  addTrack(trackType: 'text'| 'video' | 'audio'): pub.Track {
     const { doc } = this
 
     return this._transact(() => {

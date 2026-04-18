@@ -15,7 +15,7 @@ export const AssetBinFonts = () => {
 
     const createClip = () => {
         try {
-            const track: Track = editor.tracks.find((track) => track.trackType === 'video') ?? editor.addTrack('video')
+            const track: Track = editor.tracks.find((track) => track.trackType === 'text') ?? editor.addTrack('text')
             const clip = editor._transact(() => {
                 const clip = editor.doc.createNode({
                     id: editor.generateId(),
