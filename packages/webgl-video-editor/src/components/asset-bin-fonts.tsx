@@ -23,7 +23,7 @@ export const AssetBinFonts = () => {
                     sourceStart: Rational.fromDecimal(0, editor.doc.frameRate),
                     duration: Rational.fromDecimal(3, editor.doc.frameRate),
                     content: 'hello world',
-                    fontFamily: 'Ariel',
+                    fontFamily: 'Arial',
                     fontSize: 96,
                     inlineSize: editor.doc.resolution.width,
                     fill: '#ffffff',

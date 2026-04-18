@@ -46,9 +46,17 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
   }
 
   /** @internal */
-  _move(parent: RenderNodeView<AnyVideoParentNode> | undefined): void {
-    if (parent) parent.pixiNode.addChildAt(this.pixiNode, this._visualIndex.value)
-    else this.pixiNode.removeFromParent()
+  _move(parent: RenderNodeView<AnyVideoParentNode> | undefined, originalIndex?: number): void {
+    if (!parent) {
+        this.pixiNode.removeFromParent()
+        return
+    }
+
+    const index = parent.original.isTimeline()
+      ? Math.min(Math.max(0, originalIndex ?? 0), parent.pixiNode.children.length)
+      : this._visualIndex.value
+
+    parent.pixiNode.addChildAt(this.pixiNode, index)
   }
 
   dispose(): void {

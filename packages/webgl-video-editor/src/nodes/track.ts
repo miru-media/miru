@@ -50,10 +50,7 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
     return true
   }
   isVideo(): this is Track {
-    return this.trackType === 'video'
-  }
-  isText(): this is Track {
-    return this.trackType === 'text'
+    return this.trackType === 'video' || this.trackType === 'text'
   }
   isAudio(): this is Track {
     return this.trackType === 'audio'
