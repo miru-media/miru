@@ -53,6 +53,13 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
       original.doc.on('playback:update', this.#onPlaybackUpdate.bind(this, renderClip), {
         signal: this._disposeAbort.signal,
       })
+
+      if (this.original.isTextClip()) {
+        void this.docView.renderView.whenRendererIsReady.then(() => {
+          if (this.isDisposed) return
+          this.docView._updateAndRender(false)
+        })
+      }
     }
   }
 
