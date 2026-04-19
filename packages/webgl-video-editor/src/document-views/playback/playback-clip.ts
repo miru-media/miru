@@ -65,6 +65,19 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
     void renderClip.pixiFilters.value
     void renderClip.matrix.value
 
+    if (this.original.isTextClip()) {
+      const text = this.original
+      void text.content
+      void text.fontFamily
+      void text.fontSize
+      void text.fontWeight
+      void text.fontStyle
+      void text.align
+      void text.inlineSize
+      void text.fill
+      void text.stroke
+    }
+
     if (this.shouldRender) pixiNode.visible ||= true
     else pixiNode.visible &&= false
   }
