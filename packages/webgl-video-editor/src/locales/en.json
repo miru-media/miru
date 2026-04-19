@@ -50,6 +50,7 @@
   "fonts": "Text",
   "asset_bin_fonts_close": "Close the text bin",
   "asset_bin_fonts_add": "Add text",
+  "asset_bin_fonts_select_family": "Choose a font family",
   "error_cannot_set_content": "Couldn't set document content",
   "error_no_webcodecs": "Your browser doesn't have the WebCodec APIs needed to export videos!",
   "error_cannot_export": "Your browser can't export videos in the formats that we use.",

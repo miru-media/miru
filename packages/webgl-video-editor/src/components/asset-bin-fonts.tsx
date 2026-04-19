@@ -3,11 +3,15 @@ import styles from '../css/index.module.css'
 import { useEditor } from './utils'
 import { Rational, useI18n } from 'shared/utils'
 import type { Track } from '#core'
+import { computed } from 'fine-jsx'
+import { DEFAULT_FONT_FAMILY, FONT_FAMILIES } from '#constants'
 
 
 export const AssetBinFonts = () => {
     const editor = useEditor()
     const { t } = useI18n()
+
+    const activeTextClip = computed(() => (editor.selection?.isTextClip() ? editor.selection : undefined))
 
     const closeAssetbin = () => {
       editor.activeAssetBin = null
@@ -23,7 +27,7 @@ export const AssetBinFonts = () => {
                     sourceStart: Rational.fromDecimal(0, editor.doc.frameRate),
                     duration: Rational.fromDecimal(3, editor.doc.frameRate),
                     content: 'hello world',
-                    fontFamily: 'Arial',
+                    fontFamily: DEFAULT_FONT_FAMILY,
                     fontSize: 96,
                     inlineSize: editor.doc.resolution.width,
                     fill: '#ffffff',
@@ -43,6 +47,13 @@ export const AssetBinFonts = () => {
         }
     }
 
+    const onFontFamilyChange = (event: InputEvent) => {
+        const clip = activeTextClip.value
+        if (!clip) return
+        const value = (event.target as HTMLSelectElement).value
+        editor._transact(() => { clip.fontFamily = value })
+    }
+
     return (
         <div class={styles.assetBin}>
             <div class={styles.assetBinHeader}>
@@ -56,6 +67,24 @@ export const AssetBinFonts = () => {
                     <div class="bulma-icon i-tabler:circle-plus" />
                     <span>{t('asset_bin_fonts_add')}</span>
                 </button>
+                <div class={styles.assetBinFontsContainer}>
+                    {() => {
+                        const clip = activeTextClip.value
+                        return clip && (
+                            <select 
+                                value={() => clip.fontFamily}
+                                onInput={onFontFamilyChange}
+                                aria-label={t('asset_bin_fonts_select_family')}
+                            >
+                                {FONT_FAMILIES.map((family) => (
+                                    <option value={family}>
+                                        {family}
+                                    </option>
+                                ))}
+                            </select>
+                        )
+                    }}
+                </div>
             </div>
         </div>
     )

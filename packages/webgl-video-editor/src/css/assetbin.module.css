@@ -172,3 +172,9 @@
     background-color: transparent;
   }
 }
+
+.assetBinFontsContainer {
+  margin-top: 0.5rem;
+  width: 20rem;
+  max-width: 40rem;
+}
