@@ -231,3 +231,14 @@
  color: var(--yellow);
  background-color: rgb(from var(--white) r g b / 10%);
 }
+
+.assetBinTextAlignContainer {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  background-color: var(--primary-bg);
+  border-radius: 0.25rem;
+  width: fit-content;
+  padding: 0.25rem;
+}

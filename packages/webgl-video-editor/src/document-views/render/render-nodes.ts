@@ -225,14 +225,16 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       case 'fontSize':
       case 'fontWeight':
       case 'fontStyle':
+      case 'align':
       case 'inlineSize':
       case 'fill':
       case 'stroke': {
-        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'inlineSize' | 'fill' | 'stroke' = key
+        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'align' | 'inlineSize' | 'fill' | 'stroke' = key
         const value = this.original[key_] as any
         const { style } = this.pixiNode
 
         if (key_ === 'inlineSize') style.wordWrapWidth = value
+        else if (key_ === 'align') style.align = value
         else style[key_] = value
         break
       }

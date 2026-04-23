@@ -74,6 +74,12 @@ export const AssetBinFonts = () => {
         editor._transact(() => { clip.fontStyle = clip.fontStyle === 'italic' ? 'normal' : 'italic'})
     }
 
+    const onTextAlignChange = (align: 'left' | 'center' | 'right') => {
+        const clip = activeTextClip.value
+        if (!clip) return
+        editor._transact(() => { clip.align = align })
+    }
+
     return (
         <div class={styles.assetBin}>
             <div class={styles.assetBinHeader}>
@@ -135,6 +141,32 @@ export const AssetBinFonts = () => {
                                             <div class="bulma-icon i-tabler:italic" />
                                         </button>
                                     </div>
+                                </div>
+                                <div class={styles.assetBinTextAlignContainer}>
+                                    <button
+                                        type="button"
+                                        onClick={() => onTextAlignChange('left')}
+                                        class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'left' && styles.assetBinFontsStyleButtonActive]}
+                                        aria-label={t('asset_bin_fonts_align_left')}
+                                    >
+                                        <div class="bulma-icon i-tabler:align-left"/>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onTextAlignChange('center')}
+                                        class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'center' && styles.assetBinFontsStyleButtonActive]}
+                                        aria-label={t('asset_bin_fonts_align_center')}
+                                    >
+                                        <div class="bulma-icon i-tabler:align-center"/>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onTextAlignChange('right')}
+                                        class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'right' && styles.assetBinFontsStyleButtonActive]}
+                                        aria-label={t('asset_bin_fonts_align_right')}
+                                    >
+                                        <div class="bulma-icon i-tabler:align-right"/>
+                                    </button>
                                 </div>
                             </>
                         )
