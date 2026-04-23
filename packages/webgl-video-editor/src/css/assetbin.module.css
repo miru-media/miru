@@ -167,10 +167,6 @@
   cursor: pointer;
   background-color: transparent;
   border: none;
-
-  &:hover {
-    background-color: transparent;
-  }
 }
 
 .assetBinFontsContainer {
@@ -188,6 +184,7 @@
 
 .assetBinFontsSize {
   display: flex;
+  align-items: center;
 }
 
 .assetBinFontsSizeInput {
@@ -203,4 +200,34 @@
 
 .assetBinFontSizeUnit {
   flex-shrink: 0;
+}
+
+.assetBinFontsPropContainer {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.assetBinFontsStyle {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  background-color: var(--primary-bg);
+  border-radius: 0.25rem;
+}
+
+.assetBinFontsStyleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.assetBinFontsStyleButtonActive {
+ color: var(--yellow);
+ background-color: rgb(from var(--white) r g b / 10%);
 }

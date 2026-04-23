@@ -224,10 +224,11 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       case 'fontFamily':
       case 'fontSize':
       case 'fontWeight':
+      case 'fontStyle':
       case 'inlineSize':
       case 'fill':
       case 'stroke': {
-        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'inlineSize' | 'fill' | 'stroke' = key
+        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'inlineSize' | 'fill' | 'stroke' = key
         const value = this.original[key_] as any
         const { style } = this.pixiNode
 

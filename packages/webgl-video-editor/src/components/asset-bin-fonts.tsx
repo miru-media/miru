@@ -4,7 +4,7 @@ import { useEditor } from './utils'
 import { Rational, useI18n } from 'shared/utils'
 import type { Track } from '#core'
 import { computed } from 'fine-jsx'
-import { DEFAULT_FONT_FAMILY, FONT_FAMILIES } from '#constants'
+import { DEFAULT_FONT_FAMILY, FONT_FAMILIES, FONT_WEIGHT_BOLD, FONT_WEIGHT_NORMAL } from '#constants'
 
 
 export const AssetBinFonts = () => {
@@ -62,6 +62,18 @@ export const AssetBinFonts = () => {
         editor._transact(() => { clip.fontSize = value})
     }
 
+    const onFontWeightToggle = () => {
+        const clip = activeTextClip.value
+        if (!clip) return
+        editor._transact(() => { clip.fontWeight = clip.fontWeight >= FONT_WEIGHT_BOLD ? FONT_WEIGHT_NORMAL : FONT_WEIGHT_BOLD })
+    }
+
+    const onFontstyleToggle = () => {
+        const clip = activeTextClip.value
+        if (!clip) return
+        editor._transact(() => { clip.fontStyle = clip.fontStyle === 'italic' ? 'normal' : 'italic'})
+    }
+
     return (
         <div class={styles.assetBin}>
             <div class={styles.assetBinHeader}>
@@ -92,17 +104,37 @@ export const AssetBinFonts = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <div class={styles.assetBinFontsSize}>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        step="1"
-                                        value={() => String(clip.fontSize)}
-                                        onInput={onFontSizeChange}
-                                        aria-label={t('asset_bin_fonts_size')}
-                                        class={styles.assetBinFontsSizeInput}
-                                    />
-                                    <span class={styles.assetBinFontsSizeUnit}>px</span>
+                                <div class={styles.assetBinFontsPropContainer}>
+                                    <div class={styles.assetBinFontsSize}>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            value={() => String(clip.fontSize)}
+                                            onInput={onFontSizeChange}
+                                            aria-label={t('asset_bin_fonts_size')}
+                                            class={styles.assetBinFontsSizeInput}
+                                        />
+                                        <span class={styles.assetBinFontsSizeUnit}>px</span>
+                                    </div>
+                                    <div class={styles.assetBinFontsStyle}>
+                                        <button
+                                            type="button"
+                                            onClick={onFontWeightToggle}
+                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive ]}
+                                            aria-label={t('asset_bin_fonts_bold')}
+                                        >
+                                            <div class="bulma-icon i-tabler:bold" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={onFontstyleToggle}
+                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
+                                            aria-label={t('asset_bin_fonts_italic')}
+                                        >
+                                            <div class="bulma-icon i-tabler:italic" />
+                                        </button>
+                                    </div>
                                 </div>
                             </>
                         )
