@@ -54,6 +54,14 @@ export const AssetBinFonts = () => {
         editor._transact(() => { clip.fontFamily = value })
     }
 
+    const onFontSizeChange = (event: InputEvent) => {
+        const clip = activeTextClip.value
+        if (!clip) return
+        const value = Number((event.target as HTMLInputElement).value)
+        if (!Number.isFinite(value) || value <= 0) return
+        editor._transact(() => { clip.fontSize = value})
+    }
+
     return (
         <div class={styles.assetBin}>
             <div class={styles.assetBinHeader}>
@@ -71,17 +79,32 @@ export const AssetBinFonts = () => {
                     {() => {
                         const clip = activeTextClip.value
                         return clip && (
-                            <select 
-                                value={() => clip.fontFamily}
-                                onInput={onFontFamilyChange}
-                                aria-label={t('asset_bin_fonts_select_family')}
-                            >
-                                {FONT_FAMILIES.map((family) => (
-                                    <option value={family}>
-                                        {family}
-                                    </option>
-                                ))}
-                            </select>
+                            <>
+                                <select 
+                                    value={() => clip.fontFamily}
+                                    onInput={onFontFamilyChange}
+                                    aria-label={t('asset_bin_fonts_select_family')}
+                                    class={styles.assetBinFontsSelect}
+                                >
+                                    {FONT_FAMILIES.map((family) => (
+                                        <option value={family}>
+                                            {family}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div class={styles.assetBinFontsSize}>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value={() => String(clip.fontSize)}
+                                        onInput={onFontSizeChange}
+                                        aria-label={t('asset_bin_fonts_size')}
+                                        class={styles.assetBinFontsSizeInput}
+                                    />
+                                    <span class={styles.assetBinFontsSizeUnit}>px</span>
+                                </div>
+                            </>
                         )
                     }}
                 </div>
