@@ -57,6 +57,8 @@
   "asset_bin_fonts_align_left": "Align text left",
   "asset_bin_fonts_align_center": "Align text center",
   "asset_bin_fonts_align_right": "Align text right",
+  "asset_bin_fonts_text_settings": "Text Settings",
+  "asset_bin_fonts_color_settings": "Color",
   "error_cannot_set_content": "Couldn't set document content",
   "error_no_webcodecs": "Your browser doesn't have the WebCodec APIs needed to export videos!",
   "error_cannot_export": "Your browser can't export videos in the formats that we use.",

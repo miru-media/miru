@@ -242,3 +242,10 @@
   width: fit-content;
   padding: 0.25rem;
 }
+
+.assetBinSettingsSection {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--primary-bg);
+  border-radius: 0.25rem;
+}

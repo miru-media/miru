@@ -4,7 +4,7 @@ import { useEditor } from './utils'
 import { Rational, useI18n } from 'shared/utils'
 import type { Track } from '#core'
 import { computed } from 'fine-jsx'
-import { DEFAULT_FONT_FAMILY, FONT_FAMILIES, FONT_WEIGHT_BOLD, FONT_WEIGHT_NORMAL } from '#constants'
+import { DEFAULT_FILL_COLOR, DEFAULT_FONT_FAMILY, FONT_FAMILIES, FONT_WEIGHT_BOLD, FONT_WEIGHT_NORMAL } from '#constants'
 
 
 export const AssetBinFonts = () => {
@@ -80,6 +80,16 @@ export const AssetBinFonts = () => {
         editor._transact(() => { clip.align = align })
     }
 
+    const onFillColorChange = (event: InputEvent) => {
+        const clip = activeTextClip.value
+        if (!clip) return
+        const color = (event.target as HTMLInputElement).value
+        editor._transact(() => {
+            clip.fill = color
+            clip.stroke = color
+        })
+    }
+
     return (
         <div class={styles.assetBin}>
             <div class={styles.assetBinHeader}>
@@ -98,75 +108,87 @@ export const AssetBinFonts = () => {
                         const clip = activeTextClip.value
                         return clip && (
                             <>
-                                <select 
-                                    value={() => clip.fontFamily}
-                                    onInput={onFontFamilyChange}
-                                    aria-label={t('asset_bin_fonts_select_family')}
-                                    class={styles.assetBinFontsSelect}
-                                >
-                                    {FONT_FAMILIES.map((family) => (
-                                        <option value={family}>
-                                            {family}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div class={styles.assetBinFontsPropContainer}>
-                                    <div class={styles.assetBinFontsSize}>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            value={() => String(clip.fontSize)}
-                                            onInput={onFontSizeChange}
-                                            aria-label={t('asset_bin_fonts_size')}
-                                            class={styles.assetBinFontsSizeInput}
-                                        />
-                                        <span class={styles.assetBinFontsSizeUnit}>px</span>
+                                <div class={styles.assetBinSettingsSection}>
+                                    <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_text_settings')}</h3>
+                                    <select 
+                                        value={() => clip.fontFamily}
+                                        onInput={onFontFamilyChange}
+                                        aria-label={t('asset_bin_fonts_select_family')}
+                                        class={styles.assetBinFontsSelect}
+                                    >
+                                        {FONT_FAMILIES.map((family) => (
+                                            <option value={family}>
+                                                {family}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div class={styles.assetBinFontsPropContainer}>
+                                        <div class={styles.assetBinFontsSize}>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                value={() => String(clip.fontSize)}
+                                                onInput={onFontSizeChange}
+                                                aria-label={t('asset_bin_fonts_size')}
+                                                class={styles.assetBinFontsSizeInput}
+                                            />
+                                            <span class={styles.assetBinFontsSizeUnit}>px</span>
+                                        </div>
+                                        <div class={styles.assetBinFontsStyle}>
+                                            <button
+                                                type="button"
+                                                onClick={onFontWeightToggle}
+                                                class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive ]}
+                                                aria-label={t('asset_bin_fonts_bold')}
+                                            >
+                                                <div class="bulma-icon i-tabler:bold" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={onFontstyleToggle}
+                                                class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
+                                                aria-label={t('asset_bin_fonts_italic')}
+                                            >
+                                                <div class="bulma-icon i-tabler:italic" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class={styles.assetBinFontsStyle}>
+                                    <div class={styles.assetBinTextAlignContainer}>
                                         <button
                                             type="button"
-                                            onClick={onFontWeightToggle}
-                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive ]}
-                                            aria-label={t('asset_bin_fonts_bold')}
+                                            onClick={() => onTextAlignChange('left')}
+                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'left' && styles.assetBinFontsStyleButtonActive]}
+                                            aria-label={t('asset_bin_fonts_align_left')}
                                         >
-                                            <div class="bulma-icon i-tabler:bold" />
+                                            <div class="bulma-icon i-tabler:align-left"/>
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={onFontstyleToggle}
-                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
-                                            aria-label={t('asset_bin_fonts_italic')}
+                                            onClick={() => onTextAlignChange('center')}
+                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'center' && styles.assetBinFontsStyleButtonActive]}
+                                            aria-label={t('asset_bin_fonts_align_center')}
                                         >
-                                            <div class="bulma-icon i-tabler:italic" />
+                                            <div class="bulma-icon i-tabler:align-center"/>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onTextAlignChange('right')}
+                                            class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'right' && styles.assetBinFontsStyleButtonActive]}
+                                            aria-label={t('asset_bin_fonts_align_right')}
+                                        >
+                                            <div class="bulma-icon i-tabler:align-right"/>
                                         </button>
                                     </div>
                                 </div>
-                                <div class={styles.assetBinTextAlignContainer}>
-                                    <button
-                                        type="button"
-                                        onClick={() => onTextAlignChange('left')}
-                                        class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'left' && styles.assetBinFontsStyleButtonActive]}
-                                        aria-label={t('asset_bin_fonts_align_left')}
-                                    >
-                                        <div class="bulma-icon i-tabler:align-left"/>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onTextAlignChange('center')}
-                                        class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'center' && styles.assetBinFontsStyleButtonActive]}
-                                        aria-label={t('asset_bin_fonts_align_center')}
-                                    >
-                                        <div class="bulma-icon i-tabler:align-center"/>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onTextAlignChange('right')}
-                                        class={[styles.assetBinSanitize, styles.assetBinFontsStyleButton, clip.align === 'right' && styles.assetBinFontsStyleButtonActive]}
-                                        aria-label={t('asset_bin_fonts_align_right')}
-                                    >
-                                        <div class="bulma-icon i-tabler:align-right"/>
-                                    </button>
+                                <div class={styles.assetBinSettingsSection}>
+                                    <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_color_settings')}</h3>
+                                    <input
+                                        type="color"
+                                        value={() => clip.fill || DEFAULT_FILL_COLOR }
+                                        onInput={onFillColorChange}
+                                        aria-label={t('asset_bin_fonts_color_settings')}
+                                    />
                                 </div>
                             </>
                         )

@@ -60,5 +60,6 @@ export const FONT_FAMILIES = [
   'Courier New'
 ]
 export const DEFAULT_FONT_FAMILY = FONT_FAMILIES[0]
+export const DEFAULT_FILL_COLOR = '#ffffff'
 export const FONT_WEIGHT_NORMAL = 400
 export const FONT_WEIGHT_BOLD = 700
