@@ -46,9 +46,17 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
   }
 
   /** @internal */
-  _move(parent: RenderNodeView<AnyVideoParentNode> | undefined): void {
-    if (parent) parent.pixiNode.addChildAt(this.pixiNode, this._visualIndex.value)
-    else this.pixiNode.removeFromParent()
+  _move(parent: RenderNodeView<AnyVideoParentNode> | undefined, originalIndex?: number): void {
+    if (!parent) {
+      this.pixiNode.removeFromParent()
+      return
+    }
+
+    const index = parent.original.isTimeline()
+      ? Math.min(Math.max(0, originalIndex ?? 0), parent.pixiNode.children.length)
+      : this._visualIndex.value
+
+    parent.pixiNode.addChildAt(this.pixiNode, index)
   }
 
   dispose(): void {
@@ -216,14 +224,25 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       case 'fontFamily':
       case 'fontSize':
       case 'fontWeight':
+      case 'fontStyle':
+      case 'align':
       case 'inlineSize':
       case 'fill':
       case 'stroke': {
-        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'inlineSize' | 'fill' | 'stroke' = key
+        const key_:
+          | 'fontFamily'
+          | 'fontSize'
+          | 'fontWeight'
+          | 'fontStyle'
+          | 'align'
+          | 'inlineSize'
+          | 'fill'
+          | 'stroke' = key
         const value = this.original[key_] as any
         const { style } = this.pixiNode
 
         if (key_ === 'inlineSize') style.wordWrapWidth = value
+        else if (key_ === 'align') style.align = value
         else style[key_] = value
         break
       }

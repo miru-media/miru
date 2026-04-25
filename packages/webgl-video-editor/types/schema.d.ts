@@ -99,7 +99,7 @@ export type AnyAssetSchema = AssetSchemasByType[keyof AssetSchemasByType]
 
 export interface Track extends Base {
   type: 'track'
-  trackType: 'audio' | 'video'
+  trackType: 'text' | 'audio' | 'video'
 }
 
 export interface TrackChild extends Base {

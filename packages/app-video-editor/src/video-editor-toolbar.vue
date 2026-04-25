@@ -116,6 +116,22 @@ useEventListener(
         {{ $t('media') }}
       </button>
 
+      <button
+        class="toolbar-button"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.fonts ? null : AssetBin.fonts)
+        "
+      >
+        <div
+          :class="
+            editor.activeAssetBin === AssetBin.fonts
+              ? 'icon i-tabler-file-typography-filled'
+              : 'icon i-tabler-file-typography'
+          "
+        />
+        {{ $t('fonts') }}
+      </button>
+
       <button class="toolbar-button" @click="() => editor.export()">
         <div class="icon i-tabler-download" />
         {{ $t('export') }}
