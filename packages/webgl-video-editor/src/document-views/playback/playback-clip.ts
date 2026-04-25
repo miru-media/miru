@@ -74,11 +74,9 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
             () => {
               if (this.isDisposed) return
               this.docView._updateAndRender(false)
-            }
-
+            },
           )
         })
-
 
         void this.docView.renderView.whenRendererIsReady.then(() => {
           if (this.isDisposed) return

@@ -52,8 +52,8 @@
   padding: 0.5rem;
   cursor: pointer;
   background-color: var(--primary-bg);
-  border-radius: 0.25rem;
   border: none;
+  border-radius: 0.25rem;
 }
 
 .assetBinSearch {
@@ -170,16 +170,16 @@
 }
 
 .assetBinFontsContainer {
-  margin-top: 0.5rem;
   width: 20rem;
   max-width: 40rem;
+  margin-top: 0.5rem;
 }
 
 .assetBinFontsSelect {
   width: 100%;
   padding: 0.5rem;
-  border-radius: 0.25rem;
   border: none;
+  border-radius: 0.25rem;
 }
 
 .assetBinFontsSize {
@@ -190,8 +190,8 @@
 .assetBinFontsSizeInput {
   width: 100%;
   padding: 0.5rem;
-  border-radius: 0.25rem;
   border: none;
+  border-radius: 0.25rem;
 
   &:focus {
     outline: none;
@@ -203,17 +203,17 @@
 }
 
 .assetBinFontsPropContainer {
-  margin-top: 0.5rem;
   display: flex;
   justify-content: space-between;
+  margin-top: 0.5rem;
 }
 
 .assetBinFontsStyle {
   display: flex;
+  flex-shrink: 0;
   flex-direction: row;
   gap: 0.25rem;
   align-items: center;
-  flex-shrink: 0;
   padding: 0.25rem;
   background-color: var(--primary-bg);
   border-radius: 0.25rem;
@@ -228,24 +228,24 @@
 }
 
 .assetBinFontsStyleButtonActive {
- color: var(--yellow);
- background-color: rgb(from var(--white) r g b / 10%);
+  color: var(--yellow);
+  background-color: rgb(from var(--white) r g b / 10%);
 }
 
 .assetBinTextAlignContainer {
   display: flex;
   gap: 0.25rem;
   align-items: center;
+  width: fit-content;
+  padding: 0.25rem;
   margin-top: 0.5rem;
   background-color: var(--primary-bg);
   border-radius: 0.25rem;
-  width: fit-content;
-  padding: 0.25rem;
 }
 
 .assetBinSettingsSection {
-  margin-top: 0.5rem;
   padding: 0.5rem;
+  margin-top: 0.5rem;
   background-color: var(--primary-bg);
   border-radius: 0.25rem;
 }

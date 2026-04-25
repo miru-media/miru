@@ -48,8 +48,8 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
   /** @internal */
   _move(parent: RenderNodeView<AnyVideoParentNode> | undefined, originalIndex?: number): void {
     if (!parent) {
-        this.pixiNode.removeFromParent()
-        return
+      this.pixiNode.removeFromParent()
+      return
     }
 
     const index = parent.original.isTimeline()
@@ -229,7 +229,15 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       case 'inlineSize':
       case 'fill':
       case 'stroke': {
-        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle' | 'align' | 'inlineSize' | 'fill' | 'stroke' = key
+        const key_:
+          | 'fontFamily'
+          | 'fontSize'
+          | 'fontWeight'
+          | 'fontStyle'
+          | 'align'
+          | 'inlineSize'
+          | 'fill'
+          | 'stroke' = key
         const value = this.original[key_] as any
         const { style } = this.pixiNode
 

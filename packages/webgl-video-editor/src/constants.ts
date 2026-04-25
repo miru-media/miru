@@ -52,13 +52,7 @@ export const CLIP_COLORS = [
 
 export const THUMBNAIL_QUALITY = 0.75
 
-export const FONT_FAMILIES = [
-  'Arial',
-  'Helvetica',
-  'Times New Roman',
-  'Georgia',
-  'Courier New'
-]
+export const FONT_FAMILIES = ['Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Courier New']
 export const DEFAULT_FONT_FAMILY = FONT_FAMILIES[0]
 export const DEFAULT_FILL_COLOR = '#ffffff'
 export const FONT_WEIGHT_NORMAL = 400

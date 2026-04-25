@@ -115,7 +115,7 @@ useEventListener(
         />
         {{ $t('media') }}
       </button>
-      
+
       <button
         class="toolbar-button"
         @click="
@@ -124,7 +124,9 @@ useEventListener(
       >
         <div
           :class="
-            editor.activeAssetBin === AssetBin.fonts ? 'icon i-tabler-file-typography-filled' : 'icon i-tabler-file-typography'
+            editor.activeAssetBin === AssetBin.fonts
+              ? 'icon i-tabler-file-typography-filled'
+              : 'icon i-tabler-file-typography'
           "
         />
         {{ $t('fonts') }}

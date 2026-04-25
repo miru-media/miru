@@ -157,7 +157,7 @@ export interface Timeline extends ParentNode<Track>, Schema.Timeline {
   toJSON: () => Schema.Timeline
 }
 
-type TrackType = 'text' |  'video' | 'audio'
+type TrackType = 'text' | 'video' | 'audio'
 
 export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly trackType: TrackType
