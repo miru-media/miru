@@ -14,6 +14,7 @@ import styles from '../css/index.module.css'
 import type { PlaybackDocument } from '../document-views/playback/playback-document.ts'
 
 import { AssetBinAudio } from './asset-bin-audio.jsx'
+import { AssetBinFonts } from './asset-bin-fonts.jsx'
 import { AssetBinVideo } from './asset-bin-video.jsx'
 import { PlaybackControls } from './playback-controls.jsx'
 import { SecondaryToolbar } from './secondary-toolbar.jsx'
@@ -71,6 +72,7 @@ export const VideoEditorUI = (props: {
       <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
       {() => editor.activeAssetBin === AssetBin.video && <AssetBinVideo />}
       {() => editor.activeAssetBin === AssetBin.audio && <AssetBinAudio />}
+      {() => editor.activeAssetBin === AssetBin.fonts && <AssetBinFonts />}
       <div class={styles.slot}>{props.children?.default}</div>
       <progress
         style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}

@@ -167,6 +167,8 @@ export class VideoEditor implements pub.VideoEditor {
     const { duration } = asset
     const { trackType } = track
 
+    if (trackType === 'text') throw new Error('Cannot create media clip from text')
+
     const init: Schema.AnyClip = {
       id: this.generateId(),
       type: `clip:${trackType}`,
@@ -239,7 +241,7 @@ export class VideoEditor implements pub.VideoEditor {
     })
   }
 
-  addTrack(trackType: 'video' | 'audio'): pub.Track {
+  addTrack(trackType: 'text' | 'video' | 'audio'): pub.Track {
     const { doc } = this
 
     return this._transact(() => {

@@ -30,7 +30,7 @@ export class TextClip extends Clip<Schema.TextClip> implements pub.TextClip {
     this._defineReactive('align', init.align, { defaultValue: 'left' })
     this._defineReactive('inlineSize', init.inlineSize)
     this._defineReactive('fill', init.fill)
-    this._defineReactive('stroke', init.fill)
+    this._defineReactive('stroke', init.stroke)
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */

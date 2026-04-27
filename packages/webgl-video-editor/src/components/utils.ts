@@ -165,12 +165,12 @@ export const useClipDragResize = (editor: VideoEditor): { drag: ClipDrag; resize
               if (!clip) return { left: 0, right: 0, top: 0, bottom: 0 }
 
               const { time, prev } = clip
-              const mediaDuration = clip.asset?.duration ?? 0
+              const mediaDuration = clip.asset?.duration
               const minStartTime = Math.max(
-                time.end - mediaDuration,
+                mediaDuration == null ? 0 : time.end - mediaDuration,
                 Math.max(0, prev ? prev.time.start + 1 / clip.doc.frameRate : 0),
               )
-              const maxEndTime = time.start + mediaDuration
+              const maxEndTime = mediaDuration == null ? Infinity : time.start + mediaDuration
 
               return {
                 left: editor.secondsToPixels(minStartTime),

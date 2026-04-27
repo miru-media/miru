@@ -9,7 +9,7 @@ import { ParentNode } from './parent-node.ts'
 export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild> implements pub.Track {
   declare readonly type: 'track'
 
-  trackType!: 'video' | 'audio'
+  trackType!: 'text' | 'video' | 'audio'
 
   get firstClip(): pub.AnyClip | undefined {
     const { head } = this
@@ -50,7 +50,7 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
     return true
   }
   isVideo(): this is Track {
-    return this.trackType === 'video'
+    return this.trackType === 'video' || this.trackType === 'text'
   }
   isAudio(): this is Track {
     return this.trackType === 'audio'
