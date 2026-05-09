@@ -12,3 +12,5 @@ export const ReadyState = {
 export type ReadyState = (typeof ReadyState)[keyof typeof ReadyState]
 
 export const ARROW_KEY_DELTA_S = 0.25
+
+export const FEAT_ASSET_BIN = import.meta.env.DEV

@@ -33,9 +33,22 @@ export const AssetBinFonts = () => {
 
   const createClip = () => {
     try {
-      const track: Track =
-        editor.tracks.find((track) => track.trackType === 'text') ?? editor.addTrack('text')
-      const clip = editor._transact(() => {
+      let firstVideoTrack: Track | undefined
+      let targetTrack: Track | undefined
+
+      // use the first video track only if there are multiple video tracks in the timeline
+      for (const track of editor.tracks) {
+        if (track.isVideo()) {
+          if (firstVideoTrack) {
+            targetTrack = firstVideoTrack
+            break
+          } else firstVideoTrack = track
+        }
+      }
+      // otherwise create and use a new track
+      targetTrack ??= editor.addTrack('video')
+
+      editor._transact(() => {
         const clip = editor.doc.createNode({
           id: editor.generateId(),
           type: 'clip:text',
@@ -52,11 +65,10 @@ export const AssetBinFonts = () => {
           scale: { x: 1, y: 1 },
           rotate: 0,
         })
-        clip.move({ parentId: track.id, index: track.clipCount })
-        return clip
-      })
 
-      editor.select(clip)
+        clip.move({ parentId: targetTrack.id, index: targetTrack.clipCount })
+        editor.select(clip)
+      })
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_create_clip'))

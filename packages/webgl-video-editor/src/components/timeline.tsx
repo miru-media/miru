@@ -49,7 +49,8 @@ export const Timeline = ({
     if (!file) return
 
     try {
-      editor.addClip(track ?? editor.addTrack('video'), await editor.createMediaAsset(file))
+      const asset = await editor.createMediaAsset(file)
+      editor.addClip(track ?? editor.getTrackForMedia(asset), asset)
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
@@ -91,7 +92,7 @@ export const Timeline = ({
                       type="file"
                       class={styles.srOnly}
                       accept={ACCEPT_VIDEO_FILE_TYPES}
-                      onInput={(event: InputEvent) => onInputClipFile(event, doc.timeline.head)}
+                      onInput={(event: InputEvent) => onInputClipFile(event, undefined)}
                     />
                     <span class={styles.textBody}>{t('click_add_clip')}</span>
                   </label>

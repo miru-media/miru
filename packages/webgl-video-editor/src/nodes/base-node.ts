@@ -54,6 +54,19 @@ export abstract class BaseNode<
     this.#next.value = other
   }
 
+  get prevVideo() {
+    for (let other = this.prev; other; other = other.prev) if (other.isVideo()) return other
+  }
+  get nextVideo() {
+    for (let other = this.next; other; other = other.next) if (other.isVideo()) return other
+  }
+  get prevAudio() {
+    for (let other = this.prev; other; other = other.prev) if (other.isAudio()) return other
+  }
+  get nextAudio() {
+    for (let other = this.next; other; other = other.next) if (other.isAudio()) return other
+  }
+
   protected readonly _abort = new AbortController()
   isDisposed = false
 

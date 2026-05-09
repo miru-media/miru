@@ -24,7 +24,7 @@ export type NonMethodKey<T extends pub.AnyNode | pub.Document> = Extract<keyof T
 function toVueNodePropRef<T extends pub.AnyNode | pub.Document>(
   docView: VueDocument,
   original: T,
-  key: NonMethodKey<T>,
+  key: keyof T,
 ): Vue.Ref<T, never> {
   return toVue(() => docView._getNode((original as Record<typeof key, any>)[key]))
 }
@@ -32,7 +32,7 @@ function toVueNodePropRef<T extends pub.AnyNode | pub.Document>(
 export function _vueNodeReadonly<T extends pub.AnyNode | pub.Document>(
   view: any,
   original: T,
-  key: NonMethodKey<T>,
+  key: keyof T,
 ): void {
   const vueRef = toVueNodePropRef(view, original, key)
 

@@ -1,4 +1,4 @@
-import { computed, createEffectScope, watch } from 'fine-jsx'
+import { computed } from 'fine-jsx'
 
 import type * as pub from '#core'
 import { rangeContainsTime } from 'shared/video/utils.ts'
@@ -11,7 +11,6 @@ import type { PlaybackDocument } from './playback-document.ts'
 
 export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocument, T> {
   readonly renderClip = this.docView.renderView._getNode(this.original)
-  readonly #scope = createEffectScope()
 
   isInPresentationTime = computed(() => {
     if (this.isDisposed) return false
@@ -54,35 +53,6 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
       original.doc.on('playback:update', this.#onPlaybackUpdate.bind(this, renderClip), {
         signal: this._disposeAbort.signal,
       })
-
-      if (this.original.isTextClip()) {
-        const text = this.original
-
-        this.#scope.run(() => {
-          watch(
-            [
-              () => text.content,
-              () => text.fontFamily,
-              () => text.fontSize,
-              () => text.fontWeight,
-              () => text.fontStyle,
-              () => text.align,
-              () => text.inlineSize,
-              () => text.fill,
-              () => text.stroke,
-            ],
-            () => {
-              if (this.isDisposed) return
-              this.docView._updateAndRender(false)
-            },
-          )
-        })
-
-        void this.docView.renderView.whenRendererIsReady.then(() => {
-          if (this.isDisposed) return
-          this.docView._updateAndRender(false)
-        })
-      }
     }
   }
 
@@ -92,8 +62,7 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
     const { pixiNode } = renderClip
 
     // track changes to node properties
-    void renderClip.pixiFilters.value
-    void renderClip.matrix.value
+    void renderClip._reactiveRenderProps.value
 
     if (this.shouldRender) pixiNode.visible ||= true
     else pixiNode.visible &&= false
@@ -104,6 +73,5 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
 
     super.dispose()
     this._disposeAbort.abort()
-    this.#scope.stop()
   }
 }

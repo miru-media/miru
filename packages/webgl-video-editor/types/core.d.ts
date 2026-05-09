@@ -121,6 +121,10 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   readonly index: number
   prev?: AnyNode
   next?: AnyNode
+  readonly prevVideo: AnyVideoNode | undefined
+  readonly nextVideo: AnyVideoNode | undefined
+  readonly prevAudio: AnyAudioNode | undefined
+  readonly nextAudio: AnyAudioNode | undefined
   enabled: boolean
   effects: NonNullable<Schema.Base['effects']>
   isDisposed: boolean
@@ -157,7 +161,7 @@ export interface Timeline extends ParentNode<Track>, Schema.Timeline {
   toJSON: () => Schema.Timeline
 }
 
-type TrackType = 'text' | 'video' | 'audio'
+type TrackType = 'video' | 'audio'
 
 export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly trackType: TrackType
@@ -169,7 +173,17 @@ export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly duration: Rational
   prev?: Track
   next?: Track
+  readonly prevVideo: VideoTrack | undefined
+  readonly nextVideo: VideoTrack | undefined
+  readonly prevAudio: AudioTrack | undefined
+  readonly nextAudio: AudioTrack | undefined
   toJSON: () => Schema.Track
+}
+export interface VideoTrack extends Track {
+  trackType: 'video'
+}
+export interface AudioTrack extends Track {
+  trackType: 'audio'
 }
 
 export interface TrackChild extends BaseNode {
@@ -179,8 +193,8 @@ export interface TrackChild extends BaseNode {
   readonly parent?: Track
   prev?: AnyTrackChild | undefined
   next?: AnyTrackChild | undefined
-  readonly prevClip?: AnyClip | undefined
-  readonly nextClip?: AnyClip | undefined
+  readonly prevClip: AnyClip | undefined
+  readonly nextClip: AnyClip | undefined
 }
 
 export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip {
@@ -230,8 +244,8 @@ export type AnyMediaClip = VideoClip | AudioClip
 export type AnyVideoClip = VideoClip | TextClip
 export type AnyTrackChild = AnyClip | Gap
 export type AnyParentNode = Timeline | Track
-export type AnyVideoNode = Timeline | Track | VideoClip | TextClip
-export type AnyAudioNode = Timeline | Track | AudioClip
+export type AnyVideoNode = Timeline | VideoTrack | VideoClip | TextClip
+export type AnyAudioNode = Timeline | AudioTrack | AudioClip
 
 interface BaseAsset extends Schema.BaseAsset {
   dispose: () => void

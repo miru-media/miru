@@ -1,6 +1,5 @@
 import { computed, effect, ref, type Ref } from 'fine-jsx'
 
-import type { Track } from '#core'
 import { Button } from 'shared/components/button'
 import { useAsyncCallback, useI18n } from 'shared/utils'
 
@@ -36,9 +35,8 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
   const createClip = () => {
     if (!activeVideo.value || !dialogRef.value) return
     try {
-      const track: Track =
-        editor.tracks.find((track) => track.trackType === 'video') ?? editor.addTrack('video')
-      const clip = editor.addClip(track, activeVideo.value)
+      const asset = activeVideo.value
+      const clip = editor.addClip(editor.getTrackForMedia(asset), asset)
       editor.select(clip)
       dialogRef.value.close()
       editor.activeAssetBin = null
