@@ -14,6 +14,18 @@ export namespace Otio {
     tracks: TimelineStack
   }
 
+  export interface Rational {
+    OTIO_SCHEMA: 'RationalTime.1'
+    rate: number
+    value: number
+  }
+
+  export interface TimeRange {
+    OTIO_SCHEMA: 'TimeRange.1'
+    duration: Rational
+    start_time: Rational
+  }
+
   export interface BaseItem<T extends string = string> {
     OTIO_SCHEMA: T
     name: string
@@ -31,10 +43,23 @@ export namespace Otio {
       metadata: { [index: string]: unknown; Miru?: Record<string, any> }
     }[]
   }
-  export type TimelineStack = ReturnType<typeof timelineStack>
-  export type Track = ReturnType<typeof track>
-  export type Clip = ReturnType<typeof mediaClip>
-  export type Gap = ReturnType<typeof gap>
+
+  export interface TimelineStack extends BaseItem<'Stack.1'> {
+    children: Track[]
+  }
+
+  export interface Track extends BaseItem<'Track.1'> {
+    source_range: TimeRange
+    kind: 'Audio' | 'Video'
+    children: (Clip | Gap)[]
+  }
+
+  export interface TrackChild<T extends 'Gap.1' | 'Clip.1'> extends BaseItem<T> {
+    source_range: TimeRange
+  }
+
+  export type Clip<T extends pub.AnyClip = pub.AnyClip> = ReturnType<typeof mediaClip<T> | typeof textClip>
+  export interface Gap extends TrackChild<'Gap.1'> {}
 }
 
 export const documentToOTIO = (doc: pub.Document): Otio.TimelineDocument => {
@@ -72,14 +97,20 @@ const baseNode = <T extends pub.AnyNode, TO extends string>(node: T, OTIO_SCHEMA
   metadata: { ...node.metadata, Miru: { id: node.id, type: node.type } },
 })
 
-const timelineStack = (node: pub.Timeline) => ({
+const timelineStack = (node: pub.Timeline): Otio.TimelineStack => ({
   ...baseNode(node, 'Stack.1'),
   name: 'tracks',
   children: node.children.map(track),
 })
 
-const track = (node: pub.Track) => {
+const track = (node: pub.Track): Otio.Track => {
   const { frameRate } = node.doc
+
+  const children: (Otio.Clip | Otio.Gap)[] = node.children.map((child) => {
+    if (child.isMediaClip()) return child.isVideo() ? videoClip(child) : audioClip(child)
+    if (child.isTextClip()) return textClip(child)
+    return gap(child)
+  })
 
   return {
     ...baseNode(node, 'Track.1'),
@@ -89,14 +120,13 @@ const track = (node: pub.Track) => {
       start_time: new Rational(0, frameRate).toOTIO(),
     },
     kind: node.isAudio() ? 'Audio' : 'Video',
-    children: node.children.map((child) => {
-      if (child.isMediaClip()) return child.isVideo() ? videoClip(child) : audioClip(child)
-      if (child.isTextClip()) return textClip(child)
-      return gap(child)
-    }),
+    children,
   }
 }
-const trackChild = <T extends pub.AnyTrackChild, TO extends string>(node: T, schemaName: TO) => {
+const trackChild = <T extends pub.AnyTrackChild, TO extends 'Clip.1' | 'Gap.1'>(
+  node: T,
+  schemaName: TO,
+): Otio.TrackChild<TO> => {
   const { duration, source } = node.timeRational
 
   return {
@@ -157,15 +187,7 @@ const textClip = (node: pub.TextClip) => {
     ...trackChild(node, 'Clip.1'),
     media_reference: {
       OTIO_SCHEMA: 'ExternalReference.1',
-      metadata: {
-        Miru: {
-          fontFamily: node.fontFamily,
-          fontSize: node.fontSize,
-          fontWeight: node.fontWeight,
-          fill: node.fill,
-          stroke: node.stroke,
-        },
-      },
+      metadata: { Miru: undefined },
       name: '',
       available_range: null,
       target_url: null,
