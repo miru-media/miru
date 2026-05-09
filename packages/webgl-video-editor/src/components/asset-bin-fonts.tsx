@@ -15,6 +15,12 @@ import styles from '../css/index.module.css'
 
 import { useEditor } from './utils.ts'
 
+const ALIGNMENTS = [
+  { value: 'left', icon: 'i-tabler:align-left', labelKey: 'asset_bin_fonts_align_left' },
+  { value: 'center', icon: 'i-tabler:align-center', labelKey: 'asset_bin_fonts_align_center' },
+  { value: 'right', icon: 'i-tabler:align-right', labelKey: 'asset_bin_fonts_align_right' },
+] as const
+
 export const AssetBinFonts = () => {
   const editor = useEditor()
   const { t } = useI18n()
@@ -182,42 +188,20 @@ export const AssetBinFonts = () => {
                       </div>
                     </div>
                     <div class={styles.assetBinTextAlignContainer}>
-                      <button
-                        type="button"
-                        onClick={() => onTextAlignChange('left')}
-                        class={[
-                          styles.assetBinSanitize,
-                          styles.assetBinFontsStyleButton,
-                          clip.align === 'left' && styles.assetBinFontsStyleButtonActive,
-                        ]}
-                        aria-label={t('asset_bin_fonts_align_left')}
-                      >
-                        <div class="bulma-icon i-tabler:align-left" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onTextAlignChange('center')}
-                        class={[
-                          styles.assetBinSanitize,
-                          styles.assetBinFontsStyleButton,
-                          clip.align === 'center' && styles.assetBinFontsStyleButtonActive,
-                        ]}
-                        aria-label={t('asset_bin_fonts_align_center')}
-                      >
-                        <div class="bulma-icon i-tabler:align-center" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onTextAlignChange('right')}
-                        class={[
-                          styles.assetBinSanitize,
-                          styles.assetBinFontsStyleButton,
-                          clip.align === 'right' && styles.assetBinFontsStyleButtonActive,
-                        ]}
-                        aria-label={t('asset_bin_fonts_align_right')}
-                      >
-                        <div class="bulma-icon i-tabler:align-right" />
-                      </button>
+                      { ALIGNMENTS.map(({value, icon, labelKey}) => (
+                        <button
+                          type="button"
+                          onClick={() => onTextAlignChange(value)}
+                          class={[
+                            styles.assetBinSanitize,
+                            styles.assetBinFontsStyleButton,
+                            clip.align === 'left' && styles.assetBinFontsStyleButtonActive,
+                          ]}
+                          aria-label={t(labelKey)}
+                        >
+                          <div class={`bulma-icon" ${icon}`} />
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div class={styles.assetBinSettingsSection}>
