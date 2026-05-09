@@ -67,9 +67,7 @@ export const AssetBinFonts = () => {
     const clip = activeTextClip.value
     if (!clip) return
     const { value } = event.target as HTMLSelectElement
-    editor._transact(() => {
-      clip.fontFamily = value
-    })
+    clip.fontFamily = value
   }
 
   const onFontSizeChange = (event: InputEvent) => {
@@ -77,33 +75,25 @@ export const AssetBinFonts = () => {
     if (!clip) return
     const value = Number((event.target as HTMLInputElement).value)
     if (!Number.isFinite(value) || value <= 0) return
-    editor._transact(() => {
-      clip.fontSize = value
-    })
+    clip.fontSize = value
   }
 
   const onFontWeightToggle = () => {
     const clip = activeTextClip.value
     if (!clip) return
-    editor._transact(() => {
-      clip.fontWeight = clip.fontWeight >= FONT_WEIGHT_BOLD ? FONT_WEIGHT_NORMAL : FONT_WEIGHT_BOLD
-    })
+    clip.fontWeight = clip.fontWeight >= FONT_WEIGHT_BOLD ? FONT_WEIGHT_NORMAL : FONT_WEIGHT_BOLD
   }
 
   const onFontstyleToggle = () => {
     const clip = activeTextClip.value
     if (!clip) return
-    editor._transact(() => {
-      clip.fontStyle = clip.fontStyle === 'italic' ? 'normal' : 'italic'
-    })
+    clip.fontStyle = clip.fontStyle === 'italic' ? 'normal' : 'italic'
   }
 
   const onTextAlignChange = (align: 'left' | 'center' | 'right') => {
     const clip = activeTextClip.value
     if (!clip) return
-    editor._transact(() => {
-      clip.align = align
-    })
+    clip.align = align
   }
 
   const onFillColorChange = (event: InputEvent) => {
