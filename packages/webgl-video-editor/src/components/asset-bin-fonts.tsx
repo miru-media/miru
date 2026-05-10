@@ -75,6 +75,12 @@ export const AssetBinFonts = () => {
     }
   }
 
+  const onTextContentChange = (event: InputEvent) => {
+    const clip = activeTextClip.value
+    if (!clip) return
+    clip.content = (event.target as HTMLInputElement).value
+  }
+
   const onFontFamilyChange = (event: InputEvent) => {
     const clip = activeTextClip.value
     if (!clip) return
@@ -137,6 +143,17 @@ export const AssetBinFonts = () => {
             return (
               clip && (
                 <>
+                  <div class={styles.assetBinSettingsSection}>
+                    <h3 class={styles.textBodyBold}>{t('fonts')}</h3>
+                    <input
+                      type="text"
+                      value={() => clip.content}
+                      onInput={onTextContentChange}
+                      aria-label={t('asset_bin_fonts_content')}
+                      placeholder={t('asset_bin_fonts_content')}
+                      class={styles.assetBinFontsContentInput}
+                    />
+                  </div>
                   <div class={styles.assetBinSettingsSection}>
                     <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_text_settings')}</h3>
                     <select

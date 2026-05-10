@@ -50,6 +50,7 @@
   "fonts": "Text",
   "asset_bin_fonts_close": "Den Textbehälter schließen",
   "asset_bin_fonts_add": "Text hinzufügen",
+  "asset_bin_fonts_content": "Gib hier einen Text ein",
   "asset_bin_fonts_select_family": "Wähle eine Schriftfamilie aus",
   "asset_bin_fonts_size": "Schriftgröße",
   "asset_bin_fonts_bold": "Fettdruck",

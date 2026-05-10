@@ -50,6 +50,7 @@
   "fonts": "Text",
   "asset_bin_fonts_close": "Close the text bin",
   "asset_bin_fonts_add": "Add text",
+  "asset_bin_fonts_content": "Type some text here",
   "asset_bin_fonts_select_family": "Choose a font family",
   "asset_bin_fonts_size": "Font size",
   "asset_bin_fonts_bold": "Bold",

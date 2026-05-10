@@ -175,6 +175,18 @@
   margin-top: 0.5rem;
 }
 
+.assetBinFontsContentInput {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.25rem;
+
+  &:focus {
+    outline: none;
+  }
+}
+
 .assetBinFontsSelect {
   width: 100%;
   padding: 0.5rem;
