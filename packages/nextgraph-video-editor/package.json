@@ -18,8 +18,8 @@
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
-    "@ng-org/orm": "0.1.2-alpha.14",
-    "@ng-org/web": "0.1.2-alpha.10",
+    "@ng-org/orm": "0.1.2-alpha.17",
+    "@ng-org/web": "0.1.2-alpha.12",
     "@types/base64-js": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
     "@vueuse/core": "catalog:",
@@ -36,6 +36,6 @@
     "yjs": "catalog:"
   },
   "devDependencies": {
-    "@ng-org/shex-orm": "0.1.2-alpha.7"
+    "@ng-org/shex-orm": "0.1.2-alpha.8"
   }
 }

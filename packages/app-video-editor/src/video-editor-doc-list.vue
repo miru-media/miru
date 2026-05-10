@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { demoDoc } from './demo-document.ts'
+import styles from 'shared/css/shared.module.css'
 
 export interface DocListItem {
   id: string
@@ -93,7 +94,7 @@ const emit = defineEmits<{
   display: flex;
   gap: 0.675rem;
   flex-grow: 1;
-  color: var(--white-3);
+  color: inherit;
   border-color: gray;
   border-radius: 0.625rem;
   padding: 0.675rem 0.875rem;

@@ -11,7 +11,7 @@ const { log, error: logError } = console
 
 export const digestToString = (digest: { Blake3Digest32: Uint8Array }): string => {
   const bytes = Uint8Array.from([0, ...digest.Blake3Digest32].reverse())
-  return base64.fromByteArray(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  return base64.fromByteArray(bytes).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=/gu, '')
 }
 
 export class NextGraphProvider {
@@ -49,6 +49,7 @@ export class NextGraphProvider {
 
   /**
    * Listens to Yjs updates and sends them to NextGraph
+   *
    * @param {Uint8Array} update
    * @param {any} origin
    */
@@ -111,7 +112,7 @@ export class NextGraphProvider {
       if (patchUpdate) Y.applyUpdate(this.doc, patchUpdate, { local: true })
 
       let i = this.heads.length
-      while (i--) {
+      while ((i -= 1)) {
         if (response.V0.Patch.commit_info.past.includes(this.heads[i]) === true) this.heads.splice(i, 1)
       }
 

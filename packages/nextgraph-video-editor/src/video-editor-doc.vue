@@ -12,6 +12,7 @@ import { useShape } from '@ng-org/orm/vue'
 import { MiruVideoDocumentShapeType } from './shapes/orm/video.shapeTypes'
 import { nuriToObjectId } from './utils'
 import { getSession } from './nextgraph-session'
+import { NextGraphAssetStore } from './nextgraph-asset-store'
 
 const { nuri } = defineProps<{ nuri: string }>()
 const ydoc = new Y.Doc()
@@ -42,8 +43,8 @@ watch(
     console.log(doc.__raw__)
 
     try {
-      sync = markRaw(new YjsSync(ngMap!))
-      editor.value = markRaw(new NextGraphVideoEditor({ sync, session: session!, graphObject: doc }))
+      sync = markRaw(new YjsSync(ngMap!, new NextGraphAssetStore({ session: session!, graphObject: doc })))
+      editor.value = markRaw(new NextGraphVideoEditor({ sync, session: session! }))
     } catch (error_: unknown) {
       console.error(error_)
       error.value = error_

@@ -14,8 +14,8 @@ export const nuriToObjectId = (nuri: string) => nuri.slice(0, OBJECT_ID_LENGTH)
 
 export const createNextGraphDoc = async ({
   session,
-  name = 'Untitled',
-  content = undefined,
+  name,
+  content,
 }: {
   session: Session
   name: string

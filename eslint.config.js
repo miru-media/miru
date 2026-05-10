@@ -14,7 +14,7 @@ const TS_JS_FILES = '**/*.{ts,tsx,js,jsx,cjs,mts,mjs}'
 
 export default tseslint.config(
   includeIgnoreFile(resolve('.gitignore')),
-  globalIgnores(['**/auto-imports.d.ts']),
+  globalIgnores(['**/auto-imports.d.ts','packages/nextgraph-video-editor/src/shapes/orm']),
   {
     files: [TS_JS_FILES],
     extends: [eslint.configs.recommended],

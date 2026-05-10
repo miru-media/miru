@@ -73,7 +73,6 @@
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitejs/plugin-vue": "catalog:",
     "@vitest/coverage-v8": "4.0.18",
-    "@vue/runtime-core": "^3.5.26",
     "color-diff": "catalog:",
     "conventional-changelog-cli": "^5.0.0",
     "conventional-recommended-bump": "^11.2.0",

@@ -17,6 +17,8 @@ declare global {
   const IconTablerCropLandscape: typeof import('~icons/tabler/crop-landscape.jsx')['default']
   const IconTablerCropPortrait: typeof import('~icons/tabler/crop-portrait.jsx')['default']
   const IconTablerCrop_1_1: typeof import('~icons/tabler/crop-1-1.jsx')['default']
+  const IconTablerDeviceMobile: typeof import('~icons/tabler/device-mobile.jsx')['default']
+  const IconTablerDeviceMobileRotated: typeof import('~icons/tabler/device-mobile-rotated.jsx')['default']
   const IconTablerDropletHalfFilled: typeof import('~icons/tabler/droplet-half-filled.jsx')['default']
   const IconTablerFilters: typeof import('~icons/tabler/filters.jsx')['default']
   const IconTablerLoader2: typeof import('~icons/tabler/loader2.jsx')['default']

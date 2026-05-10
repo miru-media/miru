@@ -1,11 +1,6 @@
 import { effect } from '@ng-org/orm'
 import type { Session } from '@ng-org/web'
-import {
-  type AssetsByType,
-  FileSystemAssetStore,
-  type MediaAsset,
-  type Schema,
-} from 'webgl-video-editor'
+import { type AssetsByType, FileSystemAssetStore, type MediaAsset, type Schema } from 'webgl-video-editor'
 
 import { NextGraphAssetLoader } from './nextgraph-asset-loader.ts'
 import type { MiruMediaAsset, MiruVideoDocument, MiruVideoEffectAsset } from './shapes/orm/video.typings.ts'
@@ -48,8 +43,13 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
       })
     })
 
-    this.on('asset:delete', () => {
-      throw new Error('TODO: delete assets')
+    this.on('asset:delete', ({ asset }) => {
+      const ormAsset = [...(this.graphObject.assets ?? [])].find((a) => a.id === asset.id)
+      if (!ormAsset) return
+
+      this.graphObject.assets?.delete(ormAsset)
+      // eslint-disable-next-line no-alert -- TODO
+      alert('TODO: file not deleted from NG store')
     })
 
     this.loaders.push(new NextGraphAssetLoader({ ...options, nuri: this.docNuri }))
@@ -71,6 +71,8 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
       }
       case 'asset:effect:video':
         this.graphObject.assets?.add(this.assetToOrmShape(asset))
+        break
+      case 'asset:font':
         break
     }
 
@@ -122,20 +124,15 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
           mimeType: asset.mimeType,
           duration: asset.duration,
           size: asset.size,
-          audio: audio && {
-            ...audio,
-            '@graph': docNuri,
-            '@id': '',
-            '@type': 'did:ng:z:MiruMediaAssetAudio',
-          },
-          video: video && {
-            ...video,
-            '@graph': docNuri,
-            '@id': '',
-            '@type': 'did:ng:z:MiruMediaAssetVideo',
-          },
+          audio: audio as any,
+          video: video as any,
           uri: asset.uri ?? '',
+          thumbnailUri: asset.thumbnailUri,
         } satisfies MiruMediaAsset
+      }
+      case 'asset:font': {
+        // TODO
+        throw new Error('Not implemented yet: "asset:font" case')
       }
     }
   }
@@ -152,6 +149,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     )
     const uploadRes = (await ng.upload_done(uploadId, sessionId, this.docNuri, file.name)) as { nuri: string }
 
+    // eslint-disable-next-line require-atomic-updates -- assume we're creating the asset
     asset.uri = uploadRes.nuri
 
     const ormAsset = this.findOrmAsset(asset)

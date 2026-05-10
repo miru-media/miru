@@ -253,9 +253,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.0.18
         version: 4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.3)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.98.0)(sass@1.98.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      '@vue/runtime-core':
-        specifier: ^3.5.26
-        version: 3.5.30
       color-diff:
         specifier: 'catalog:'
         version: 1.4.0
@@ -533,11 +530,11 @@ importers:
   packages/nextgraph-video-editor:
     dependencies:
       '@ng-org/orm':
-        specifier: 0.1.2-alpha.14
-        version: 0.1.2-alpha.14(react@19.2.3)(vue@3.5.30(typescript@5.9.3))
+        specifier: 0.1.2-alpha.17
+        version: 0.1.2-alpha.17(react@19.2.3)(vue@3.5.30(typescript@5.9.3))
       '@ng-org/web':
-        specifier: 0.1.2-alpha.10
-        version: 0.1.2-alpha.10
+        specifier: 0.1.2-alpha.12
+        version: 0.1.2-alpha.12
       '@types/base64-js':
         specifier: 'catalog:'
         version: 1.5.0
@@ -555,7 +552,7 @@ importers:
         version: 1.5.1
       fine-jsx:
         specifier: 'catalog:'
-        version: 0.0.11
+        version: 0.0.14
       shared:
         specifier: workspace:^
         version: link:../shared
@@ -582,8 +579,8 @@ importers:
         version: 13.6.29
     devDependencies:
       '@ng-org/shex-orm':
-        specifier: 0.1.2-alpha.7
-        version: 0.1.2-alpha.7(encoding@0.1.13)
+        specifier: 0.1.2-alpha.8
+        version: 0.1.2-alpha.8(encoding@0.1.13)(typescript@5.9.3)
 
   packages/reactive-effects:
     dependencies:
@@ -983,11 +980,6 @@ packages:
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0
-
-  '@babel/helper-define-polyfill-provider@0.6.7':
-    resolution: {integrity: sha512-6Fqi8MtQ/PweQ9xvux65emkLQ83uB+qAVtfHkC9UodyHMIZdxNI01HjLCLUtybElp2KY2XNE0nOgyP1E1vXw9w==}
-    peerDependencies:
-      '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
 
   '@babel/helper-define-polyfill-provider@0.6.8':
     resolution: {integrity: sha512-47UwBLPpQi1NoWzLuHNjRoHlYXMwIJoBf7MFou6viC/sIHWYygpvr0B6IAyh5sBdA2nr2LPIRww8lfaUVQINBA==}
@@ -2490,8 +2482,8 @@ packages:
   '@napi-rs/wasm-runtime@1.1.1':
     resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
 
-  '@ng-org/alien-deepsignals@0.1.2-alpha.10':
-    resolution: {integrity: sha512-nwBm/r8zy8/wytt7OlNcGKsKfJ5zL4tuleAXk1f55nkYRZP3ddfUwcfRvhYs/XrkJkCspp+ealbpQ/EOGxtHow==}
+  '@ng-org/alien-deepsignals@0.1.2-alpha.11':
+    resolution: {integrity: sha512-nPgqOrheAda/pW5FHgSb45SrSZWuyMyEVqO683ijEsVPpD105bngfh92PPfcRoRnFzGSoKXa3CfuqUHi2+qVIQ==}
     peerDependencies:
       react: ^19.0.0 || ^18.0.0
       svelte: ^5.0.0 || ^4.0.0
@@ -2504,8 +2496,8 @@ packages:
       vue:
         optional: true
 
-  '@ng-org/orm@0.1.2-alpha.14':
-    resolution: {integrity: sha512-necK+H0rPZyYCLRTgv6KiNhAruE4xVoERv33oulf1yWQPu78UbppFQH45jOS8wk1QUNFLhIf45gmJeH1rJRaJw==}
+  '@ng-org/orm@0.1.2-alpha.17':
+    resolution: {integrity: sha512-Tcv3ZE/D5hGVbe2tdmy3y78ASsXuekKvXAVrWvUcqzBP2Dtt+CAeuIPjPAQ+a8os1qZp9JJDR/QTspK2lre0tA==}
     peerDependencies:
       react: ^19.0.0 || ^18.0.0
       svelte: ^5.0.0 || ^4.0.0
@@ -2518,12 +2510,14 @@ packages:
       vue:
         optional: true
 
-  '@ng-org/shex-orm@0.1.2-alpha.7':
-    resolution: {integrity: sha512-/unvAycZiHgIG11KH57lTp0bM9nC7srsGQlS5lJq252BwpEbdvEkL1hBi9nllTVer7KbewMytAptPLiR1IP0vw==}
+  '@ng-org/shex-orm@0.1.2-alpha.8':
+    resolution: {integrity: sha512-jogxiLfUtI3WkuF5O3PPwRBRWylpapk/JlvElGUqZnEavXXlEMmEGbK3VwqMUsbp1pweNA0sEKIFLIk3Lzt2Gg==}
     hasBin: true
+    peerDependencies:
+      typescript: ^4.9.0 || ^5.0.0 || ^6.0.0
 
-  '@ng-org/web@0.1.2-alpha.10':
-    resolution: {integrity: sha512-m5pGPrIprVj5xVFHxHxmlgP/pjCL+h/kp3MrDfAz+8S6UPHJaRHQ375QAhCbvGWlp+x2nZhubpzatSp/jVPDjg==}
+  '@ng-org/web@0.1.2-alpha.12':
+    resolution: {integrity: sha512-oEmefWnoPvMXm/yD/eanaKVvGDUPCTt9LykMN0Gid+lyV+M7RpiirSVw0VcljUM7ySaTSSoxiIBe9iinfv7zIg==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -3750,6 +3744,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@zachleat/heading-anchors@1.0.5':
     resolution: {integrity: sha512-hsAljmm6py9VEf6ToKGyQJweemQJM4bI75TTTbwRYIrasCm66ajJDhWYpgZJM1B+8KSop371RDhDASYl3Q4y9g==}
@@ -5266,13 +5261,11 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-semver-tags@8.0.1:
     resolution: {integrity: sha512-zMbamckSNdlT4U48IMFa2Cn6FTzM+2yF6/gEmStPJI8PiLxd/bT6dw10+mc6u5Qe4fhrc/y9nU290FWjQhAV7g==}
     engines: {node: '>=18'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   github-slugger@2.0.0:
@@ -8867,6 +8860,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   validate-npm-package-license@3.0.4:
@@ -9429,17 +9423,6 @@ snapshots:
       '@babel/helper-annotate-as-pure': 7.27.3
       regexpu-core: 6.4.0
       semver: 6.3.1
-
-  '@babel/helper-define-polyfill-provider@0.6.7(@babel/core@7.29.0)':
-    dependencies:
-      '@babel/core': 7.29.0
-      '@babel/helper-compilation-targets': 7.28.6
-      '@babel/helper-plugin-utils': 7.28.6
-      debug: 4.4.3
-      lodash.debounce: 4.0.8
-      resolve: 1.22.11
-    transitivePeerDependencies:
-      - supports-color
 
   '@babel/helper-define-polyfill-provider@0.6.8(@babel/core@7.29.0)':
     dependencies:
@@ -11001,21 +10984,21 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@ng-org/alien-deepsignals@0.1.2-alpha.10(react@19.2.3)(vue@3.5.30(typescript@5.9.3))':
+  '@ng-org/alien-deepsignals@0.1.2-alpha.11(react@19.2.3)(vue@3.5.30(typescript@5.9.3))':
     dependencies:
       alien-signals: 2.0.8
     optionalDependencies:
       react: 19.2.3
       vue: 3.5.30(typescript@5.9.3)
 
-  '@ng-org/orm@0.1.2-alpha.14(react@19.2.3)(vue@3.5.30(typescript@5.9.3))':
+  '@ng-org/orm@0.1.2-alpha.17(react@19.2.3)(vue@3.5.30(typescript@5.9.3))':
     dependencies:
-      '@ng-org/alien-deepsignals': 0.1.2-alpha.10(react@19.2.3)(vue@3.5.30(typescript@5.9.3))
+      '@ng-org/alien-deepsignals': 0.1.2-alpha.11(react@19.2.3)(vue@3.5.30(typescript@5.9.3))
     optionalDependencies:
       react: 19.2.3
       vue: 3.5.30(typescript@5.9.3)
 
-  '@ng-org/shex-orm@0.1.2-alpha.7(encoding@0.1.13)':
+  '@ng-org/shex-orm@0.1.2-alpha.8(encoding@0.1.13)(typescript@5.9.3)':
     dependencies:
       '@ldo/traverser-shexj': 1.0.0-alpha.28
       '@ldo/type-traverser': 1.0.0-alpha.28
@@ -11027,10 +11010,11 @@ snapshots:
       jsonld2graphobject: 0.0.5(encoding@0.1.13)
       loading-cli: 1.1.2
       prettier: 3.8.1
+      typescript: 5.9.3
     transitivePeerDependencies:
       - encoding
 
-  '@ng-org/web@0.1.2-alpha.10':
+  '@ng-org/web@0.1.2-alpha.12':
     dependencies:
       async-proxy: 0.4.1
 
@@ -12458,7 +12442,7 @@ snapshots:
     dependencies:
       '@babel/compat-data': 7.29.0
       '@babel/core': 7.29.0
-      '@babel/helper-define-polyfill-provider': 0.6.7(@babel/core@7.29.0)
+      '@babel/helper-define-polyfill-provider': 0.6.8(@babel/core@7.29.0)
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color

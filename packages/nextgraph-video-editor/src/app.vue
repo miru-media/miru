@@ -60,7 +60,11 @@ const deleteDoc = async (docId: string) => {
 </template>
 
 <style>
-@import url('../../../docs/.vitepress/theme/bulma-config.scss');
+@import url('../../../website/css/index.css');
+
+:root {
+  --white-3: rgb(255 255 255 / 60%);
+}
 </style>
 
 <style scoped>
