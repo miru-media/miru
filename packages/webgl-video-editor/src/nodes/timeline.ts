@@ -11,8 +11,18 @@ export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> impl
   constructor(doc: pub.Document) {
     super(doc, { id: 'timeline', type: 'timeline' })
   }
+
   get trackCount(): number {
     return this._count()
+  }
+
+  get firstVideoTrack(): pub.Track | undefined {
+    const { head } = this
+    if (head) return head.isVideo() ? head : head.nextVideo
+  }
+  get lastVideoTrack(): pub.Track | undefined {
+    const { tail } = this
+    if (tail) return tail.isVideo() ? tail : tail.prevVideo
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */

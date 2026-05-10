@@ -4,6 +4,7 @@ import { ACCEPT_VIDEO_FILE_TYPES } from '#constants'
 import type * as pub from '#core'
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils/index.js'
+import { FEAT_ASSET_BIN } from 'shared/video/constants.js'
 
 import styles from '../css/index.module.css'
 
@@ -34,34 +35,36 @@ export const Track = ({
           <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
         ))
       }
-      <label
-        class={() => [styles.trackButton, track.clipCount > 0 && styles.square]}
-        hidden={() => !hasAnyClips.value && track.index !== 0}
-      >
-        {() =>
-          track.clipCount ? (
-            <>
-              <IconTablerPlus />
-              <span class={styles.srOnly}>
-                {track.trackType === 'audio' ? t('add_audio') : t('add_clip')}
-              </span>
-            </>
-          ) : (
-            <>
-              <IconTablerVideo />
-              <span class={styles.textBody}>
-                {() => (track.trackType === 'audio' ? t('click_add_audio') : t('click_add_clip'))}
-              </span>
-            </>
-          )
-        }
-        <input
-          type="file"
-          class={styles.srOnly}
-          accept={ACCEPT_VIDEO_FILE_TYPES}
-          onInput={(event: InputEvent) => onInputClipFile(event, track)}
-        />
-      </label>
+      {() =>
+        !FEAT_ASSET_BIN && (
+          <label
+            class={() => [styles.trackButton, track.clipCount > 0 && styles.square]}
+            hidden={() => !hasAnyClips.value && track.index !== 0}
+          >
+            {() =>
+              track.clipCount ? (
+                <>
+                  <IconTablerPlus />
+                  <span class={styles.srOnly}>
+                    {track.trackType === 'audio' ? t('add_audio') : t('add_clip')}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <IconTablerVideo />
+                  <span class={styles.textBody}>{() => t(`click_add_${track.trackType}`)}</span>
+                </>
+              )
+            }
+            <input
+              type="file"
+              class={styles.srOnly}
+              accept={ACCEPT_VIDEO_FILE_TYPES}
+              onInput={(event: InputEvent) => onInputClipFile(event, track)}
+            />
+          </label>
+        )
+      }
     </div>
   )
 }

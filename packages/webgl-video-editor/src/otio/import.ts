@@ -77,7 +77,7 @@ const clip = <T extends Otio.Clip, TT extends Schema.AnyClip['type']>(item: T, t
   mediaRef: item.media_reference.metadata.Miru,
 })
 
-const audioClip = (item: Otio.Clip): Schema.AudioClip => {
+const audioClip = (item: Otio.Clip<pub.AudioClip>): Schema.AudioClip => {
   const json: Schema.AudioClip = clip(item, 'clip:audio')
   const effects: Schema.AudioClip['effects'] = []
 
@@ -92,13 +92,13 @@ const audioClip = (item: Otio.Clip): Schema.AudioClip => {
   }
 }
 
-const videoClip = (item: Otio.Clip): Schema.VideoClip => {
+const videoClip = (item: Otio.Clip<pub.VideoClip>): Schema.VideoClip => {
   const json: Schema.VideoClip = clip(item, 'clip:video')
   applyTransformEffect(json, item)
   return json
 }
 
-const textClip = (item: Otio.Clip): Schema.TextClip => {
+const textClip = (item: Otio.Clip<pub.TextClip>): Schema.TextClip => {
   const metadata = item.metadata.Miru as unknown as Schema.TextClip
   const json: Schema.TextClip = {
     content: metadata.content,
@@ -109,6 +109,7 @@ const textClip = (item: Otio.Clip): Schema.TextClip => {
     fill: metadata.fill,
     stroke: metadata.stroke,
     ...clip(item, 'clip:text'),
+    mediaRef: undefined,
   }
   applyTransformEffect(json, item)
   return json

@@ -6,11 +6,20 @@ import type * as pub from '#core'
 import { DocumentView, type ViewType } from '../document-view.ts'
 
 import { _vuePlainReadonly, _vueWritable } from './utils.ts'
-import { VueAudioClip, VueGap, VueTextClip, VueTimeline, VueTrack, VueVideoClip } from './vue-nodes.ts'
+import {
+  VueAudioClip,
+  type VueAudioTrack,
+  VueGap,
+  VueTextClip,
+  VueTimeline,
+  VueTrack,
+  VueVideoClip,
+  type VueVideoTrack,
+} from './vue-nodes.ts'
 
 export interface VueTypeMap {
   timeline: VueTimeline
-  track: VueTrack
+  track: VueVideoTrack | VueAudioTrack
   'clip:video': VueVideoClip
   'clip:audio': VueAudioClip
   'clip:text': VueTextClip

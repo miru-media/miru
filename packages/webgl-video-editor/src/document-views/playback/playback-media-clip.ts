@@ -156,10 +156,6 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
       const { asset } = original
       const { sprite } = renderClip
 
-      // track changes to node properties
-      void renderClip.pixiFilters.value
-      void renderClip.matrix.value
-
       if (this.isInPresentationTime.value && asset) {
         if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
           const rotation = asset.video?.rotation ?? 0

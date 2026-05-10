@@ -1,6 +1,5 @@
 import { computed, ref } from 'fine-jsx'
 
-import type { Track } from '#core'
 import { Button } from 'shared/components/button'
 import { useAsyncCallback, useI18n } from 'shared/utils'
 import { formatTime } from 'shared/video/utils'
@@ -52,9 +51,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
 
   const createClip = () => {
     try {
-      const track: Track =
-        editor.tracks.find((track) => track.trackType === 'audio') ?? editor.addTrack('audio')
-      const clip = editor.addClip(track, asset)
+      const clip = editor.addClip(editor.getTrackForMedia(asset), asset)
       editor.select(clip)
       editor.activeAssetBin = null
     } catch {

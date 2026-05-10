@@ -239,12 +239,19 @@ export class VideoEditor implements pub.VideoEditor {
     })
   }
 
+  getTrackForMedia(asset: pub.MediaAsset) {
+    const trackType = asset.video ? 'video' : 'audio'
+
+    // add to the last track of the correct type
+    return [...this.tracks].reverse().find((t) => t.trackType === trackType) ?? this.addTrack(trackType)
+  }
+
   addTrack(trackType: 'video' | 'audio'): pub.Track {
     const { doc } = this
 
     return this._transact(() => {
       const track = doc.createNode({ id: this.generateId(), trackType, type: 'track' })
-      track.move({ parentId: doc.timeline.id, index: doc.timeline.trackCount })
+      track.move({ parentId: doc.timeline.id, index: 0 })
       return track
     })
   }

@@ -49,10 +49,10 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
   isTrack(): this is Track {
     return true
   }
-  isVideo(): this is Track {
+  isVideo(): this is pub.VideoTrack {
     return this.trackType === 'video'
   }
-  isAudio(): this is Track {
+  isAudio(): this is pub.AudioTrack {
     return this.trackType === 'audio'
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */

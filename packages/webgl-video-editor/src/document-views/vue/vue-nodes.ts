@@ -22,6 +22,16 @@ const BASE_METHOD_KEYS = [
   'toJSON',
 ] satisfies MethodKey<pub.BaseNode>[]
 
+type VueNodeOf<T extends pub.AnyNode> = T extends pub.VideoTrack
+  ? VueVideoTrack
+  : T extends pub.AudioTrack
+    ? VueAudioTrack
+    : Extract<ViewType<VueTypeMap, pub.AnyNode>, { original: T }>
+type AnyVueClip = VueNodeOf<pub.AnyClip>
+type AnyVueVideoClip = VueNodeOf<pub.AnyVideoClip>
+type AnyVueVideoNode = VueNodeOf<pub.AnyVideoNode>
+type AnyVueAudioNode = VueNodeOf<pub.AnyAudioNode>
+
 abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, T> implements pub.BaseNode {
   readonly doc = this.docView
   readonly id: T['id'] = this.original.id
@@ -30,6 +40,10 @@ abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, 
   declare parent: ViewType<VueTypeMap, T['parent']>
   declare prev: ViewType<VueTypeMap, T['prev']>
   declare next: ViewType<VueTypeMap, T['next']>
+  declare prevVideo: AnyVueVideoNode | undefined
+  declare nextVideo: AnyVueVideoNode | undefined
+  declare prevAudio: AnyVueAudioNode | undefined
+  declare nextAudio: AnyVueAudioNode | undefined
   declare index: T['index']
   declare name: T['name']
   declare enabled: T['enabled']
@@ -52,10 +66,9 @@ abstract class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, 
   constructor(docView: VueDocument, original: any) {
     super(docView, original)
     Vue.markRaw(this)
-
-    _vueNodeReadonly(this, original, 'parent')
-    _vueNodeReadonly(this, original, 'prev')
-    _vueNodeReadonly(this, original, 'next')
+    ;(['parent', 'prev', 'next', 'nextVideo', 'nextVideo', 'nextAudio', 'nextAudio'] as const).forEach(
+      (key) => _vueNodeReadonly(this, original, key),
+    )
 
     _vuePlainReadonly(this, original, 'index')
     ;(['name', 'enabled', 'effects', 'markers', 'color', 'metadata'] satisfies (keyof T)[]).forEach((key) =>
@@ -101,10 +114,19 @@ abstract class VueParentNode<T extends pub.AnyParentNode>
 }
 
 export class VueTimeline extends VueParentNode<pub.Timeline> implements pub.Timeline {
+  declare prevVideo: VueTimeline
+  declare nextVideo: VueTimeline
+  declare prevAudio: VueTimeline
+  declare nextAudio: VueTimeline
   declare readonly trackCount: pub.Timeline['trackCount']
 }
 
 export class VueTrack extends VueParentNode<pub.Track> implements pub.Track {
+  declare prevVideo: VueVideoTrack | undefined
+  declare nextVideo: VueVideoTrack | undefined
+  declare prevAudio: VueAudioTrack | undefined
+  declare nextAudio: VueAudioTrack | undefined
+
   declare readonly clipCount: pub.Track['clipCount']
   declare readonly trackType: pub.Track['trackType']
   declare readonly duration: pub.Track['duration']
@@ -126,8 +148,21 @@ export class VueTrack extends VueParentNode<pub.Track> implements pub.Track {
     _vuePlainReadonly(this, original, 'duration')
   }
 }
+export interface VueVideoTrack extends VueTrack {
+  trackType: 'video'
+}
+export interface VueAudioTrack extends VueTrack {
+  trackType: 'audio'
+}
 
 abstract class VueTrackChild<T extends pub.AnyTrackChild> extends VueNodeView<T> implements pub.TrackChild {
+  declare prevVideo: AnyVueVideoClip | undefined
+  declare nextVideo: AnyVueVideoClip | undefined
+  declare prevAudio: VueAudioClip | undefined
+  declare nextAudio: VueAudioClip | undefined
+  declare readonly prevClip: AnyVueClip
+  declare readonly nextClip: AnyVueClip
+
   declare readonly timeRational: T['timeRational']
   declare readonly time: T['time']
   declare duration: T['duration']
@@ -138,6 +173,7 @@ abstract class VueTrackChild<T extends pub.AnyTrackChild> extends VueNodeView<T>
     _vueWritable(this, original, 'duration')
     _vuePlainReadonly(this, original, 'timeRational')
     _vuePlainReadonly(this, original, 'time')
+    ;(['prevClip', 'nextClip'] as const).forEach((key) => _vueNodeReadonly(this, original, key))
   }
 }
 

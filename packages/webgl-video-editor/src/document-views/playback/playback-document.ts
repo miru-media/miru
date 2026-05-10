@@ -30,6 +30,7 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   readonly #scope = createEffectScope()
   readonly #noRender = ref(0)
+  readonly #needsRender = ref(true)
   readonly #delayedActiveClipIsStalled = ref(false)
 
   readonly #isEnded = computed(() => this.currentTime >= this.doc.duration)
@@ -58,7 +59,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   constructor(options: { renderView: RenderDocument }) {
     const { renderView } = options
-    super(renderView.doc)
+    const { doc } = renderView
+    super(doc)
 
     this.renderView = renderView
 
@@ -74,6 +76,12 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
         }, ASSET_URL_REFRESH_TIMEOUT_MS)
         onCleanup(() => clearTimeout(timeoutId))
       })
+    })
+
+    const listenerOptions = { signal: this._abort.signal }
+    const markAsNeedsRender = this.#markAsNeedsRender.bind(this)
+    ;(['node:move', 'node:update', 'node:delete', 'settings:update'] as const).forEach((type) => {
+      doc.on(type, markAsNeedsRender, listenerOptions)
     })
 
     this.ticker.add(this.tick.bind(this))
@@ -162,11 +170,18 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     if (skipWhilePlaying && !this.isPaused && this.isReady) return
 
     this.doc.emit(UPDATE_EVENT)
+    void this.#needsRender.value
     this.renderView.render()
+    this.#needsRender.value = false
+
     return undefined
   }
 
   _updateAndRenderReactive = computed(this._updateAndRender.bind(this, true))
+
+  #markAsNeedsRender() {
+    this.#needsRender.value = true
+  }
 
   play(): void {
     if (this.#noRender.value) return

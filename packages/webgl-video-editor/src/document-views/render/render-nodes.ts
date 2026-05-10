@@ -1,4 +1,4 @@
-import { computed, ref, toRef } from 'fine-jsx'
+import { computed, type Ref, ref, toRef } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
 import type { Size } from 'shared/types.ts'
@@ -14,6 +14,7 @@ type AnyVideoParentNode = Extract<pub.AnyParentNode, pub.AnyVideoNode>
 export type AnyRenderClip = RenderVideoClip | RenderTextClip
 
 abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<RenderDocument, T> {
+  abstract readonly _reactiveRenderProps: Ref | undefined
   abstract readonly pixiNode: Pixi.Container | Pixi.Text
 
   get prevVideo(): pub.AnyVideoNode | undefined {
@@ -23,9 +24,9 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
     for (let other = this.original.next; other; other = other.next) if (other.isVideo()) return other
   }
 
-  _visualIndex = computed(() => {
+  readonly _visualIndex = computed(() => {
     const prevRenderNode = this.docView._getNode(this.prevVideo)
-    return prevRenderNode ? prevRenderNode.visualIndex : 0
+    return prevRenderNode ? prevRenderNode.visualIndex + 1 : 0
   })
 
   get visualIndex(): number {
@@ -47,7 +48,9 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
 
   /** @internal */
   _move(parent: RenderNodeView<AnyVideoParentNode> | undefined): void {
-    if (parent) parent.pixiNode.addChildAt(this.pixiNode, this._visualIndex.value)
+    const { pixiNode } = this
+
+    if (parent) parent.pixiNode.addChildAt(pixiNode, this.visualIndex)
     else this.pixiNode.removeFromParent()
   }
 
@@ -59,14 +62,44 @@ abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<Rende
 }
 
 export class RenderTimeline extends RenderNodeView<pub.Timeline> {
+  readonly _reactiveRenderProps = undefined
   readonly pixiNode = new Pixi.Container()
 }
 
-export class RenderTrack extends RenderNodeView<pub.Track> {
+export class RenderTrack extends RenderNodeView<pub.VideoTrack> {
+  readonly _reactiveRenderProps = undefined
   readonly pixiNode = new Pixi.Container()
+  get visualIndex(): number {
+    const { parent } = this.original
+    // tracks are rendered in reverse order
+    return parent ? parent.children.length - super.visualIndex - 1 : 0
+  }
+
+  /** @internal */
+  _move(parent: RenderNodeView<AnyVideoParentNode> | undefined): void {
+    const { pixiNode } = this
+
+    if (!parent) {
+      pixiNode.removeFromParent()
+      return
+    }
+
+    const parentPixiNode = parent.pixiNode
+    const nextPixiNode = this.docView._getNode(this.nextVideo)?.pixiNode
+    // tracks are rendered in reverse order - insert after the Pixi node of the next track
+    const newIndex =
+      nextPixiNode?.parent === parentPixiNode ? parentPixiNode.getChildIndex(nextPixiNode) + 1 : 0
+
+    parentPixiNode.addChildAt(pixiNode, newIndex)
+  }
 }
 
 export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
+  readonly _reactiveRenderProps = computed(() => ({
+    pixiFilters: this.pixiFilters,
+    matrix: this.matrix.value,
+  }))
+
   readonly pixiNode = new Pixi.Sprite({
     visible: false,
     texture: new Pixi.Texture(new Pixi.ImageSource({})),
@@ -75,7 +108,7 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
   readonly pixiFilters = ref<MiruFilter[]>([])
 
   readonly isReady = computed(() => !this.pixiFilters.value.some((f) => f.isLoading))
-  matrix = computed(() => getClipTransformMatrix(this, this.docView.applyVideoRotation))
+  readonly matrix = computed(() => getClipTransformMatrix(this, this.docView.applyVideoRotation))
 
   constructor(renderView: RenderDocument, original: pub.VideoClip) {
     super(renderView, original)
@@ -162,27 +195,10 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
 }
 
 export class RenderTextClip extends RenderNodeView<pub.TextClip> {
-  readonly pixiNode = new Pixi.Text({
-    text: this.original.content,
-    style: this.#getPixiTextStyle(),
-  })
   readonly pixiFilters = ref<MiruFilter[]>([])
   readonly isReady = ref(true)
-  matrix = computed(() => getClipTransformMatrix(this, false))
-
-  constructor(renderView: RenderDocument, original: pub.TextClip) {
-    super(renderView, original)
-    this.pixiNode.setFromMatrix(this.matrix.value)
-  }
-
-  getSize(): Size {
-    return {
-      width: this.original.inlineSize,
-      height: Pixi.CanvasTextMetrics.measureText(this.original.content, this.pixiNode.style).height,
-    }
-  }
-
-  #getPixiTextStyle(): Pixi.TextStyleOptions {
+  readonly matrix = computed(() => getClipTransformMatrix(this, false))
+  readonly style = computed(() => {
     const { original } = this
     return {
       fontFamily: original.fontFamily,
@@ -194,6 +210,30 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       fill: original.fill,
       stroke: original.stroke,
       wordWrap: true,
+    }
+  })
+  readonly pixiNode = new Pixi.Text({
+    text: this.original.content,
+    style: this.style.value,
+  })
+
+  readonly _reactiveRenderProps = computed(() => ({
+    pixiFilters: this.pixiFilters,
+    matrix: this.matrix.value,
+    style: this.style.value,
+  }))
+
+  constructor(renderView: RenderDocument, original: pub.TextClip) {
+    super(renderView, original)
+    this.pixiNode.setFromMatrix(this.matrix.value)
+  }
+
+  getSize(): Size {
+    void this.style.value
+
+    return {
+      width: this.original.inlineSize,
+      height: Pixi.CanvasTextMetrics.measureText(this.original.content, this.pixiNode.style).height,
     }
   }
 
@@ -216,15 +256,28 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       case 'fontFamily':
       case 'fontSize':
       case 'fontWeight':
+      case 'fontStyle':
+      case 'align':
       case 'inlineSize':
       case 'fill':
       case 'stroke': {
-        const key_: 'fontFamily' | 'fontSize' | 'fontWeight' | 'inlineSize' | 'fill' | 'stroke' = key
+        const key_:
+          | 'fontFamily'
+          | 'fontSize'
+          | 'fontWeight'
+          | 'fontStyle'
+          | 'align'
+          | 'inlineSize'
+          | 'fill'
+          | 'stroke' = key
         const value = this.original[key_] as any
         const { style } = this.pixiNode
 
         if (key_ === 'inlineSize') style.wordWrapWidth = value
+        else if (key_ === 'align') style.align = value
         else style[key_] = value
+
+        this.pixiNode.setFromMatrix(this.matrix.value)
         break
       }
       default:
