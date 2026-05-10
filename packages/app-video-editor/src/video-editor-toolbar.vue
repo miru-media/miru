@@ -69,12 +69,11 @@ useEventListener(
           {{ $t('filter') }}
         </button>
 
-        <label class="toolbar-button">
+        <label v-if="editor.selection.isMediaClip()" class="toolbar-button">
           <div class="icon i-tabler-exchange" />
           <input
             type="file"
             :accept="editor.selection.isAudio() ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES"
-            :disabled="!editor.selection"
             @input="onInputVideoFile"
             hidden
           />
