@@ -60,15 +60,6 @@ useEventListener(
           {{ $t('delete') }}
         </button>
 
-        <button
-          v-if="editor.selection.isVideo()"
-          :class="['toolbar-button', editor.selection.effects && 'active']"
-          @click="() => (showFilterMenu = !showFilterMenu)"
-        >
-          <div :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'" />
-          {{ $t('filter') }}
-        </button>
-
         <label v-if="editor.selection.isMediaClip()" class="toolbar-button">
           <div class="icon i-tabler-exchange" />
           <input
@@ -89,6 +80,21 @@ useEventListener(
       </template>
 
       <template v-if="FEAT_ASSET_BIN">
+        <button
+          v-if="editor.selection?.isVideo()"
+          :class="['toolbar-button', editor.selection.effects && 'active']"
+          @click="
+            () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.filters ? null : AssetBin.filters)
+          "
+        >
+          <div
+            :class="
+              editor.activeAssetBin === AssetBin.filters ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'
+            "
+          />
+          {{ $t('filters') }}
+        </button>
+
         <button
           class="toolbar-button"
           @click="
