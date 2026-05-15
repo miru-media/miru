@@ -261,3 +261,7 @@
   background-color: var(--primary-bg);
   border-radius: 0.25rem;
 }
+
+.assetBin .assetBinFiltersContainer {
+  background-color: transparent;
+}

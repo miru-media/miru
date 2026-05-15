@@ -14,6 +14,7 @@ import styles from '../css/index.module.css'
 import type { PlaybackDocument } from '../document-views/playback/playback-document.ts'
 
 import { AssetBinAudio } from './asset-bin-audio.jsx'
+import { AssetBinFilters } from './asset-bin-filters.jsx'
 import { AssetBinFonts } from './asset-bin-fonts.jsx'
 import { AssetBinVideo } from './asset-bin-video.jsx'
 import { PlaybackControls } from './playback-controls.jsx'
@@ -21,7 +22,6 @@ import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 import { provideEditor } from './utils.ts'
-import { AssetBinFilters } from './asset-bin-filters.tsx'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor

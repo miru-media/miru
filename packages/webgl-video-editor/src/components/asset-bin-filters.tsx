@@ -1,13 +1,15 @@
+import { computed, effect, onScopeDispose, ref } from 'fine-jsx'
+import { throttle } from 'throttle-debounce'
+import { mediaEditorContainerClass, WebglEffectsMenu } from 'webgl-media-editor'
+
+import { Effect } from 'reactive-effects/effect'
 import { Button } from 'shared/components/button'
+import type { Size } from 'shared/types'
 import { fit, useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'
 
 import { useEditor } from './utils.ts'
-import { WebglEffectsMenu } from 'webgl-media-editor'
-import { computed, effect, ref } from 'fine-jsx'
-import type { Size } from 'shared/types'
-import { Effect } from 'reactive-effects/effect'
 
 export const AssetBinFilters = () => {
   const editor = useEditor()
@@ -15,38 +17,84 @@ export const AssetBinFilters = () => {
 
   const EMPTY_SIZE: Size = { width: 1, height: 1 }
   const MAX_THUMBNAIL_SIZE: Size = { width: 200, height: 200 }
+  const THUMBNAIL_REFRESH_MS = 250
 
   const closeAssetbin = () => {
     editor.activeAssetBin = null
   }
 
-
+  const clip = computed(() => {
+    const { selection } = editor
+    return selection?.isVideo() ? selection : undefined
+  })
 
   const renderer = editor.effectRenderer
   const texture = renderer.createTexture()
+  onScopeDispose(() => renderer.deleteTexture(texture))
   const sourceSize = computed(() => editor.selection?.isVideo() ? editor.selection.mediaSize : EMPTY_SIZE)
   const thumbnailSize = computed(() => fit(sourceSize.value, MAX_THUMBNAIL_SIZE, 'contain'))
   const effects = ref(new Map<string, Effect>())
   effect((onCleanup) => {
     const next = new Map<string, Effect>()
     for (const [id, asset] of editor.effects) next.set(id, new Effect(asset.raw, renderer))
-    effects.value = next
-
-    onCleanup(() => next.forEach((e) => e.dispose))
+      effects.value = next
+    
+    onCleanup(() => next.forEach((e) => e.dispose()))
   })
-
+  
   const currentEffect = computed(() => editor.selection?.effects.at(0))
-
+  
   const onChange = (effectId: string | undefined, intensity: number) => {
-    if (!editor.selection) return
-
+    if (!clip.value) return
+    
     if (effectId) {
-      const prev = editor.selection.effects.at(0)
-      editor.selection.effects = [{ id: prev?.id ?? editor.generateId(), assetId: effectId, intensity }]
+      const prev = clip.value.effects.at(0)
+      clip.value.effects = [{ id: prev?.id ?? editor.generateId(), assetId: effectId, intensity }]
     } else {
-      editor.selection.effects = []
+      clip.value.effects = []
     }
   }
+  
+  const isLoading = ref(true)
+
+  const videoElement = computed(() => {
+    if (!clip.value) return undefined
+    const playbackClip = editor.playback._getNode(clip.value)
+    const video = playbackClip?.mediaElement
+    return video instanceof HTMLVideoElement ? video : undefined
+  })
+
+  const refreshThumbnails = throttle(THUMBNAIL_REFRESH_MS, () => {
+    if(!clip.value || !clip.value.isVideo) return
+    const video = videoElement.value
+    if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
+    renderer.loadImage(texture, video)
+    isLoading.value = false
+
+  })
+
+  effect((onCleanup) => {
+    isLoading.value = true
+    const onUpdate = () => refreshThumbnails()
+    const offPlaybackUpdate = editor.doc.on('playback:update', onUpdate)
+
+    const video = videoElement.value
+    if (video){
+      refreshThumbnails()
+      video.addEventListener('loadeddata', onUpdate)
+      video.addEventListener('seeked', onUpdate)
+
+      onCleanup(() => {
+        video.removeEventListener('loadeddata', onUpdate)
+        video.removeEventListener('seeked', onUpdate)
+      })
+    }
+
+    onCleanup(() => {
+      offPlaybackUpdate()
+      refreshThumbnails.cancel()
+    })
+  })
 
   return (
     <div class={styles.assetBin}>
@@ -55,7 +103,8 @@ export const AssetBinFilters = () => {
           <div class="bulma-icon i-tabler:x" />
         </Button>
         <h2 class={styles.textGreat}>{t('filters')}</h2>
-
+      </div>
+      <div class={[mediaEditorContainerClass, styles.assetBinFiltersContainer]}>
         <WebglEffectsMenu
           renderer={renderer}
           sourceTexture={texture}
@@ -65,6 +114,7 @@ export const AssetBinFilters = () => {
           effect={() => currentEffect.value?.assetId}
           intensity={() => currentEffect.value?.intensity ?? 1}
           onChange={onChange}
+          loading={isLoading}
         />
       </div>
 
