@@ -84,12 +84,15 @@ useEventListener(
           v-if="editor.selection?.isVideo()"
           :class="['toolbar-button', editor.selection.effects && 'active']"
           @click="
-            () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.filters ? null : AssetBin.filters)
+            () =>
+              (editor.activeAssetBin = editor.activeAssetBin === AssetBin.filters ? null : AssetBin.filters)
           "
         >
           <div
             :class="
-              editor.activeAssetBin === AssetBin.filters ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'
+              editor.activeAssetBin === AssetBin.filters
+                ? 'icon i-tabler-filters-filled'
+                : 'icon i-tabler-filters'
             "
           />
           {{ $t('filters') }}

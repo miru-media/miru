@@ -207,7 +207,7 @@ export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.Base
   readonly presentationTime: ClipTime
   readonly expectedMediaTime: number
   readonly isInClipTime: boolean
-  readonly mediaSize: { width: number, height: number }
+  readonly mediaSize: { width: number; height: number }
 }
 
 export interface VideoClip

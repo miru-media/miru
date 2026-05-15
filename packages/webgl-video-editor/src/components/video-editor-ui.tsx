@@ -74,7 +74,7 @@ export const VideoEditorUI = (props: {
       {() => editor.activeAssetBin === AssetBin.video && <AssetBinVideo />}
       {() => editor.activeAssetBin === AssetBin.audio && <AssetBinAudio />}
       {() => editor.activeAssetBin === AssetBin.fonts && <AssetBinFonts />}
-      {() => (editor.activeAssetBin === AssetBin.filters && editor.selection?.isVideo()) && <AssetBinFilters />}
+      {() => editor.activeAssetBin === AssetBin.filters && editor.selection?.isVideo() && <AssetBinFilters />}
       <div class={styles.slot}>{props.children?.default}</div>
       <progress
         style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}

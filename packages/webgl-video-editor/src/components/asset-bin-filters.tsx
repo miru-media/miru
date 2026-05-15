@@ -31,22 +31,22 @@ export const AssetBinFilters = () => {
   const renderer = editor.effectRenderer
   const texture = renderer.createTexture()
   onScopeDispose(() => renderer.deleteTexture(texture))
-  const sourceSize = computed(() => editor.selection?.isVideo() ? editor.selection.mediaSize : EMPTY_SIZE)
+  const sourceSize = computed(() => (editor.selection?.isVideo() ? editor.selection.mediaSize : EMPTY_SIZE))
   const thumbnailSize = computed(() => fit(sourceSize.value, MAX_THUMBNAIL_SIZE, 'contain'))
   const effects = ref(new Map<string, Effect>())
   effect((onCleanup) => {
     const next = new Map<string, Effect>()
     for (const [id, asset] of editor.effects) next.set(id, new Effect(asset.raw, renderer))
-      effects.value = next
-    
+    effects.value = next
+
     onCleanup(() => next.forEach((e) => e.dispose()))
   })
-  
+
   const currentEffect = computed(() => editor.selection?.effects.at(0))
-  
+
   const onChange = (effectId: string | undefined, intensity: number) => {
     if (!clip.value) return
-    
+
     if (effectId) {
       const prev = clip.value.effects.at(0)
       clip.value.effects = [{ id: prev?.id ?? editor.generateId(), assetId: effectId, intensity }]
@@ -54,7 +54,7 @@ export const AssetBinFilters = () => {
       clip.value.effects = []
     }
   }
-  
+
   const isLoading = ref(true)
 
   const videoElement = computed(() => {
@@ -65,12 +65,11 @@ export const AssetBinFilters = () => {
   })
 
   const refreshThumbnails = throttle(THUMBNAIL_REFRESH_MS, () => {
-    if(!clip.value || !clip.value.isVideo) return
+    if (!clip.value || !clip.value.isVideo()) return
     const video = videoElement.value
     if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
     renderer.loadImage(texture, video)
     isLoading.value = false
-
   })
 
   effect((onCleanup) => {
@@ -79,7 +78,7 @@ export const AssetBinFilters = () => {
     const offPlaybackUpdate = editor.doc.on('playback:update', onUpdate)
 
     const video = videoElement.value
-    if (video){
+    if (video) {
       refreshThumbnails()
       video.addEventListener('loadeddata', onUpdate)
       video.addEventListener('seeked', onUpdate)
@@ -117,7 +116,6 @@ export const AssetBinFilters = () => {
           loading={isLoading}
         />
       </div>
-
     </div>
   )
 }
