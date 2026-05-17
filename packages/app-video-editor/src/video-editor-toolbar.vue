@@ -74,8 +74,8 @@ useEventListener(
           <input
             type="file"
             :accept="editor.selection.isAudio() ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES"
+            class="sr-only"
             @input="onInputVideoFile"
-            hidden
           />
           {{ $t(`change_${editor.selection.parent?.trackType ?? ''}`) }}
         </label>
