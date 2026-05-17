@@ -19,4 +19,4 @@ export { WebglEffectsMenuElement }
 export { WebglEffectsMenu } from './components/webgl-effects-menu'
 export { getDefaultFilterDefinitions } from 'webgl-effects'
 
-export const mediaEditorContainerClass: string = styles.host
+export const _mediaEditorContainerClass_: string = styles.host

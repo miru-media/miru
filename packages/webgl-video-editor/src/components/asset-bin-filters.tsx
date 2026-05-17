@@ -1,6 +1,6 @@
 import { computed, effect, onScopeDispose, ref } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
-import { mediaEditorContainerClass, WebglEffectsMenu } from 'webgl-media-editor'
+import { _mediaEditorContainerClass_, WebglEffectsMenu } from 'webgl-media-editor'
 
 import { Effect } from 'reactive-effects/effect'
 import { Button } from 'shared/components/button'
@@ -65,7 +65,7 @@ export const AssetBinFilters = () => {
   })
 
   const refreshThumbnails = throttle(THUMBNAIL_REFRESH_MS, () => {
-    if (!clip.value || !clip.value.isVideo()) return
+    if (!clip.value) return
     const video = videoElement.value
     if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
     renderer.loadImage(texture, video)
@@ -74,18 +74,17 @@ export const AssetBinFilters = () => {
 
   effect((onCleanup) => {
     isLoading.value = true
-    const onUpdate = () => refreshThumbnails()
-    const offPlaybackUpdate = editor.doc.on('playback:update', onUpdate)
+    const offPlaybackUpdate = editor.doc.on('playback:update', refreshThumbnails)
 
     const video = videoElement.value
     if (video) {
       refreshThumbnails()
-      video.addEventListener('loadeddata', onUpdate)
-      video.addEventListener('seeked', onUpdate)
+      video.addEventListener('loadeddata', refreshThumbnails)
+      video.addEventListener('seeked', refreshThumbnails)
 
       onCleanup(() => {
-        video.removeEventListener('loadeddata', onUpdate)
-        video.removeEventListener('seeked', onUpdate)
+        video.removeEventListener('loadeddata', refreshThumbnails)
+        video.removeEventListener('seeked', refreshThumbnails)
       })
     }
 
@@ -103,7 +102,7 @@ export const AssetBinFilters = () => {
         </Button>
         <h2 class={styles.textGreat}>{t('filters')}</h2>
       </div>
-      <div class={[mediaEditorContainerClass, styles.assetBinFiltersContainer]}>
+      <div class={[_mediaEditorContainerClass_, styles.assetBinFiltersContainer]}>
         <WebglEffectsMenu
           renderer={renderer}
           sourceTexture={texture}
