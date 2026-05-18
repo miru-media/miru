@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watchEffect, ref } from 'vue'
+import { ref } from 'vue'
 import { filesize } from 'filesize'
 import { debounce } from 'throttle-debounce'
 
@@ -9,7 +9,6 @@ import { useEventListener } from 'shared/utils'
 import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES, AssetBin } from 'webgl-video-editor/vue'
 
 import type { VideoEditor } from 'webgl-video-editor'
-import FilterMenu from './video-editor-filter-menu.vue'
 import { state } from './state'
 import { FEAT_ASSET_BIN } from 'shared/video/constants'
 
@@ -23,13 +22,6 @@ const onInputVideoFile = async (event: Event) => {
   target.value = ''
   editor.replaceClipAsset(await editor.createMediaAsset(file))
 }
-
-const showFilterMenu = ref(false)
-
-watchEffect(() => {
-  const { selection } = editor
-  showFilterMenu.value &&= !!selection?.isVideo()
-})
 
 const showDebugButtons = ref(import.meta.env.DEV)
 const tapCounter = ref(0)
@@ -46,8 +38,6 @@ useEventListener(
 
 <template>
   <div class="actions">
-    <FilterMenu v-if="showFilterMenu" :editor="editor" />
-
     <div class="toolbar safe-padding-x">
       <button class="toolbar-button" @click="() => editor.splitClipAtCurrentTime()">
         <div class="icon i-tabler-cut" />
@@ -58,15 +48,6 @@ useEventListener(
         <button class="toolbar-button" @click="() => editor.deleteSelection()">
           <div class="icon i-tabler-trash" />
           {{ $t('delete') }}
-        </button>
-
-        <button
-          v-if="editor.selection.isVideo()"
-          :class="['toolbar-button', editor.selection.effects && 'active']"
-          @click="() => (showFilterMenu = !showFilterMenu)"
-        >
-          <div :class="showFilterMenu ? 'icon i-tabler-filters-filled' : 'icon i-tabler-filters'" />
-          {{ $t('filter') }}
         </button>
 
         <label v-if="editor.selection.isMediaClip()" class="toolbar-button">
@@ -87,6 +68,23 @@ useEventListener(
           {{ $t('Debug') }}
         </button>
       </template>
+
+      <button
+        v-if="editor.selection?.isVideo()"
+        :class="['toolbar-button', editor.selection.effects && 'active']"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.filters ? null : AssetBin.filters)
+        "
+      >
+        <div
+          :class="
+            editor.activeAssetBin === AssetBin.filters
+              ? 'icon i-tabler-filters-filled'
+              : 'icon i-tabler-filters'
+          "
+        />
+        {{ $t('filters') }}
+      </button>
 
       <template v-if="FEAT_ASSET_BIN">
         <button

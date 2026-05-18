@@ -104,7 +104,7 @@ export class ImageSourceInternal {
     return this.#texture
   }
 
-  get thunmbnailSize() {
+  get thumbnailSize() {
     return this.#thumbnailSize.value
   }
 

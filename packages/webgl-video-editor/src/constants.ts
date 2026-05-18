@@ -20,6 +20,7 @@ export const AssetBin = {
   video: 'video',
   audio: 'audio',
   fonts: 'fonts',
+  filters: 'filters',
 } as const
 export type AssetBin = (typeof AssetBin)[keyof typeof AssetBin] | null
 
