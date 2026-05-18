@@ -1,3 +1,4 @@
+import styles from './css/index.module.css'
 import { MediaEditorElement } from './customElements/media-editor-element.jsx'
 import {
   MediaEditorFilterMenuElement,
@@ -15,4 +16,7 @@ if (typeof customElements !== 'undefined' && 'define' in customElements) {
 export { MediaEditorElement }
 export { MediaEditor } from './wrapper.ts'
 export { WebglEffectsMenuElement }
+export { WebglEffectsMenu } from './components/webgl-effects-menu'
 export { getDefaultFilterDefinitions } from 'webgl-effects'
+
+export const _mediaEditorContainerClass_: string = styles.host

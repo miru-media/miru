@@ -51,7 +51,7 @@ export const FilterView = ({
       <WebglEffectsMenu
         sourceTexture={() => source.value?.texture}
         sourceSize={() => source.value?.rotated ?? EMPTY_SIZE}
-        thumbnailSize={() => source.value?.thunmbnailSize ?? EMPTY_SIZE}
+        thumbnailSize={() => source.value?.thumbnailSize ?? EMPTY_SIZE}
         crop={() => source.value?.crop.value}
         renderer={editor.renderer}
         effects={editor.effects}
