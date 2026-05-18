@@ -184,6 +184,7 @@ abstract class VueClip<T extends pub.AnyClip> extends VueTrackChild<T> implement
   declare readonly presentationTime: T['presentationTime']
   declare readonly expectedMediaTime: T['expectedMediaTime']
   declare readonly isInClipTime: T['isInClipTime']
+  declare readonly mediaSize: T['mediaSize']
   declare readonly sourceStart: T['sourceStart']
   declare readonly mediaRef: T['mediaRef']
 
@@ -198,6 +199,7 @@ abstract class VueClip<T extends pub.AnyClip> extends VueTrackChild<T> implement
       'presentationTime',
       'expectedMediaTime',
       'isInClipTime',
+      'mediaSize'
     ] satisfies (keyof T)[]
 
     writable.forEach((key) => _vueWritable(this, original, key))
