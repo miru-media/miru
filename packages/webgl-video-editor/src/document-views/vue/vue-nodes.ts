@@ -199,7 +199,7 @@ abstract class VueClip<T extends pub.AnyClip> extends VueTrackChild<T> implement
       'presentationTime',
       'expectedMediaTime',
       'isInClipTime',
-      'mediaSize'
+      'mediaSize',
     ] satisfies (keyof T)[]
 
     writable.forEach((key) => _vueWritable(this, original, key))
