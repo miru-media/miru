@@ -34,7 +34,7 @@ export function _vueNodeReadonly<T extends pub.AnyNode | pub.Document>(
   original: T,
   key: keyof T,
 ): void {
-  const vueRef = toVueNodePropRef(view, original, key)
+  const vueRef = toVueNodePropRef(view.docView, original, key)
 
   Object.defineProperty(view, key, {
     get: () => vueRef.value,
