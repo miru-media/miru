@@ -218,7 +218,7 @@ export const AssetBinFonts = () => {
                           ]}
                           aria-label={t(labelKey)}
                         >
-                          <div class={`bulma-icon" ${icon}`} />
+                          <div class={[`bulma-icon`, icon]} />
                         </button>
                       ))}
                     </div>
