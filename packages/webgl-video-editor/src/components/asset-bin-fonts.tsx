@@ -214,7 +214,7 @@ export const AssetBinFonts = () => {
                           class={[
                             styles.assetBinSanitize,
                             styles.assetBinFontsStyleButton,
-                            clip.align === 'left' && styles.assetBinFontsStyleButtonActive,
+                            clip.align === value && styles.assetBinFontsStyleButtonActive,
                           ]}
                           aria-label={t(labelKey)}
                         >
