@@ -74,7 +74,7 @@ export const AssetBinAudio = () => {
             type="file"
             accept={ACCEPT_AUDIO_FILE_TYPES}
             aria-label={t('asset_bin_music_upload')}
-            hidden
+            class={styles.srOnly}
             onInput={(event: InputEvent) => void onInputAudioFile(event)}
           />
           <div class="bulma-icon i-tabler:upload" />
