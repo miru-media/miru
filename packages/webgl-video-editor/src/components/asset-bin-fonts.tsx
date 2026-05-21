@@ -208,10 +208,7 @@ export const AssetBinFonts = () => {
                         </button>
                       </div>
                     </div>
-                    <div 
-                      class={styles.assetBinTextAlignContainer}
-                      role="group"
-                    >
+                    <div class={styles.assetBinTextAlignContainer} role="group">
                       {ALIGNMENTS.map(({ value, icon, labelKey }) => (
                         <button
                           type="button"
