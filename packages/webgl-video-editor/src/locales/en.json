@@ -40,6 +40,7 @@
   "asset_bin_delete_video": "Delete",
   "asset_bin_delete_video_disabled": "Cannot delete while video is in use",
   "music": "Music",
+  "asset_bin_music_empty": "It's empty here, trying uploading some music!",
   "asset_bin_music_search_empty": "No search results :(",
   "asset_bin_music_search_placeholder": "Search for music",
   "asset_bin_music_create_clip": "Use this music",

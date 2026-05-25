@@ -40,6 +40,7 @@
   "asset_bin_delete_video": "Löschen",
   "asset_bin_delete_video_disabled": "Kann nicht gelöscht werden, solange das Video verwendet wird",
   "music": "Musik",
+  "asset_bin_music_empty": "Hier ist nichts, versuch doch mal, etwas Musik hochzuladen!",
   "asset_bin_music_search_empty": "Keine Suchergebnisse :(",
   "asset_bin_music_search_placeholder": "Musik suchen",
   "asset_bin_music_create_clip": "Verwende diese Musik",

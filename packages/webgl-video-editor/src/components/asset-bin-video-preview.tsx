@@ -71,8 +71,16 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     }
   })
 
+  const dialogLabel = computed(() => activeVideo.value?.name ?? '')
+
   return (
-    <dialog class={styles.assetBinDialogue} ref={dialogRef} closedby="any" onClose={closeDialogue}>
+    <dialog
+      class={styles.assetBinDialogue}
+      ref={dialogRef}
+      closedby="any"
+      onClose={closeDialogue}
+      aria-label={dialogLabel}
+    >
       <video src={videoSrc} aria-label={() => activeVideo.value?.name} controls autoplay />
       <span>{() => activeVideo.value?.name ?? ''}</span>
       <div class={styles.dialogueButtonContainer}>

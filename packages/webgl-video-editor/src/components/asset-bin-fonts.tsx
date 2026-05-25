@@ -189,6 +189,7 @@ export const AssetBinFonts = () => {
                             clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive,
                           ]}
                           aria-label={t('asset_bin_fonts_bold')}
+                          aria-pressed={clip.fontWeight === FONT_WEIGHT_BOLD}
                         >
                           <div class="bulma-icon i-tabler:bold" />
                         </button>
@@ -201,12 +202,13 @@ export const AssetBinFonts = () => {
                             clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive,
                           ]}
                           aria-label={t('asset_bin_fonts_italic')}
+                          aria-pressed={clip.fontStyle === 'italic'}
                         >
                           <div class="bulma-icon i-tabler:italic" />
                         </button>
                       </div>
                     </div>
-                    <div class={styles.assetBinTextAlignContainer}>
+                    <div class={styles.assetBinTextAlignContainer} role="group">
                       {ALIGNMENTS.map(({ value, icon, labelKey }) => (
                         <button
                           type="button"
@@ -214,11 +216,12 @@ export const AssetBinFonts = () => {
                           class={[
                             styles.assetBinSanitize,
                             styles.assetBinFontsStyleButton,
-                            clip.align === 'left' && styles.assetBinFontsStyleButtonActive,
+                            clip.align === value && styles.assetBinFontsStyleButtonActive,
                           ]}
                           aria-label={t(labelKey)}
+                          aria-pressed={clip.align === value}
                         >
-                          <div class={`bulma-icon" ${icon}`} />
+                          <div class={[`bulma-icon`, icon]} />
                         </button>
                       ))}
                     </div>

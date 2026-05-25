@@ -66,7 +66,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
         <div class={styles.assetBinAudioAssetMeta}>
           <button
             class={[styles.assetBinAudioThumbnailContainer, styles.assetBinSanitize]}
-            aria-label={() => (isPlaying.value ? t('Pause') : t('Pause'))}
+            aria-label={() => (isPlaying.value ? t('Pause') : t('Play'))}
             onClick={togglePlayback}
           >
             <div class={styles.assetBinAudioThumbnail}>

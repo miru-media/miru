@@ -72,6 +72,7 @@ useEventListener(
       <button
         v-if="editor.selection?.isVideo()"
         :class="['toolbar-button', editor.selection.effects && 'active']"
+        :aria-expanded="editor.activeAssetBin === AssetBin.filters"
         @click="
           () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.filters ? null : AssetBin.filters)
         "
@@ -89,6 +90,7 @@ useEventListener(
       <template v-if="FEAT_ASSET_BIN">
         <button
           class="toolbar-button"
+          :aria-expanded="editor.activeAssetBin === AssetBin.audio"
           @click="
             () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)
           "
@@ -103,6 +105,7 @@ useEventListener(
 
         <button
           class="toolbar-button"
+          :aria-expanded="editor.activeAssetBin === AssetBin.video"
           @click="
             () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)
           "
@@ -119,6 +122,7 @@ useEventListener(
 
         <button
           class="toolbar-button"
+          :aria-expanded="editor.activeAssetBin === AssetBin.fonts"
           @click="
             () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.fonts ? null : AssetBin.fonts)
           "

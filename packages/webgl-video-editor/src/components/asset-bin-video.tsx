@@ -76,7 +76,7 @@ export const AssetBinVideo = () => {
             type="file"
             accept={ACCEPT_VIDEO_FILE_TYPES}
             aria-label={t('asset_bin_media_upload')}
-            hidden
+            class={styles.srOnly}
             onInput={(event: InputEvent) => void onInputVideoFile(event)}
           />
           <div class="bulma-icon i-tabler:upload" />
