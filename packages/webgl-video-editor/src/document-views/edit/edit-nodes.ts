@@ -155,6 +155,9 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case '_playableTime':
         return (target as EditClip<any>)[key]
 
+      case 'constructor':
+        return original[key]
+
       case IS_EDIT_VIEW:
         return true
     }

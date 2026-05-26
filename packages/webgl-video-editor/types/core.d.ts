@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging -- -- */
 import type { Ref } from 'fine-jsx'
 import type { EffectDefinition, Renderer } from 'webgl-effects'
 
@@ -42,6 +41,22 @@ export interface ClipTimeRational {
   source: Rational
   duration: Rational
   end: Rational
+}
+
+export interface NodeFieldFlags {
+  Readonly: number
+  Node: number
+  NodeArray: number
+  Asset: number
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional
+export interface NodeFieldDef<T extends {}, K extends keyof T = keyof T> {
+  key: K
+  flags: number
+  defaultValue?: T[K]
+  equal?: (a: any, b: any) => boolean
+  transform?: (value: any) => T[K]
 }
 
 export interface VideoEditorEvents {
@@ -142,6 +157,9 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   toJSON: () => any
   delete: () => void
   dispose: () => void
+  /** @internal */
+  _fields: <T extends pub.BaseNode>(this: T) => NodeFieldDef<T>[]
+
   [Symbol.dispose]: () => void
 }
 
@@ -197,8 +215,8 @@ export interface TrackChild extends BaseNode {
   readonly nextClip: AnyClip | undefined
 }
 
-export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.BaseClip {
-  type: T['type']
+export interface Clip extends TrackChild, Schema.BaseClip {
+  type: `clip:${string}`
   name: string
   sourceStart: Rational
   readonly isReady: boolean
@@ -211,16 +229,19 @@ export interface Clip<T extends Schema.BaseClip> extends TrackChild, Schema.Base
 }
 
 export interface VideoClip
-  extends Clip<Schema.VideoClip>, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends Clip, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  type: 'clip:video'
   effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
 }
-export interface AudioClip extends Clip<Schema.AudioClip>, Schema.AudioClip {
+export interface AudioClip extends Clip, Schema.AudioClip {
+  type: 'clip:audio'
   volume: number
   toJSON: () => Schema.AudioClip
 }
 export interface TextClip
-  extends Clip<Schema.TextClip>, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends Clip, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  type: 'clip:text'
   fontWeight: number
   fontStyle: Schema.FontStyle
   toJSON: () => Schema.TextClip

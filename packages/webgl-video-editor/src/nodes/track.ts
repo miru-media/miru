@@ -1,13 +1,27 @@
 import { computed } from 'fine-jsx'
 
+import { NODE_FIELD_FLAGS } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
+import type { NonOverlappingUnion } from '#internal'
 import { Rational } from 'shared/utils/math.ts'
 
 import { ParentNode } from './parent-node.ts'
 
+export interface Track extends NonOverlappingUnion<
+  ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild>,
+  pub.Track
+> {}
+
 export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild> implements pub.Track {
-  declare readonly type: 'track'
+  static FIELDS = super.FIELDS.concat([
+    { key: 'trackType', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'firstClip', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'lastClip', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'clips', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.NodeArray },
+    { key: 'clipCount', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'duration', flags: NODE_FIELD_FLAGS.Readonly },
+  ] satisfies pub.NodeFieldDef<pub.Track>[])
 
   trackType!: 'video' | 'audio'
 

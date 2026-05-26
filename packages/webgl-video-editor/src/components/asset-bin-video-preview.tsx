@@ -51,7 +51,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     let activeClip = false
     editor.doc.nodes.forEach((node) => {
       if (!node.isClip()) return
-      if (node.mediaRef.assetId === activeVideo.value?.id) activeClip = true
+      if (node.mediaRef?.assetId === activeVideo.value?.id) activeClip = true
     })
     return activeClip
   })

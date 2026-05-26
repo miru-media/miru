@@ -1,3 +1,4 @@
+import { ref } from 'fine-jsx'
 import { uid } from 'uid'
 import { getDefaultFilterDefinitions } from 'webgl-effects'
 
@@ -20,6 +21,8 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   loaders: pub.AssetLoader[] = [new HttpAssetLoader()]
   protected generateId: () => string
   protected getMediaAssetInfo = getMediaAssetInfo
+
+  readonly #changeCounter = ref(Number.MIN_SAFE_INTEGER)
 
   constructor(generateId: () => string = uid) {
     super()
@@ -63,11 +66,13 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
 
     this.#map.set(asset.id, asset)
     this.#emit(new AssetCreateEvent(asset))
+    this.#incChangeCounter()
 
     return asset as unknown as pub.AssetsByType[T['type']]
   }
 
   getAsset<T extends pub.AnyAsset | undefined>(id: string): T {
+    void this.#changeCounter.value
     return this.#map.get(id) as T
   }
 
@@ -120,6 +125,7 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     asset?.dispose()
     this.#map.delete(key)
     if (asset) this.#emit(new AssetDeleteEvent(asset))
+    this.#incChangeCounter()
   }
 
   async createMediaAsset(source: Blob | string): Promise<pub.MediaAsset> {
@@ -139,6 +145,11 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     const options = { signal: this.#abort.signal, ...options_ }
     this.addEventListener(type, listener as EventListener, options)
     return () => this.removeEventListener(type, listener as EventListener, options)
+  }
+
+  #incChangeCounter() {
+    const value = this.#changeCounter.value + 1
+    this.#changeCounter.value = value >= Number.MAX_SAFE_INTEGER ? Number.MIN_SAFE_INTEGER : value
   }
 
   dispose(): void {

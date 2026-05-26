@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging, @typescript-eslint/no-extraneous-class -- -- */
+/* eslint-disable @typescript-eslint/no-extraneous-class -- -- */
 import type { VideoEditor } from './core.ts'
 
 export interface VideoEditorElement extends HTMLElement, VideoEditor {

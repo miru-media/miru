@@ -144,6 +144,13 @@ export default tseslint.config(
     },
   },
   {
+    files: [`packages/webgl-video-editor/${TS_JS_FILES}`],
+    ignores: ['**/*.md/*'],
+    rules: {
+      '@typescript-eslint/no-unsafe-declaration-merging': 'off',
+    },
+  },
+  {
     files: ['packages/*/tests/**', '**/*.test.{ts,tsx,js,jsx}'],
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',

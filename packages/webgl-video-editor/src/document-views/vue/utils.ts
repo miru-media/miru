@@ -6,6 +6,7 @@ import * as interop from 'shared/utils/interop'
 import type * as pub from '../../../types/core'
 
 import type { VueDocument } from './vue-document.ts'
+import type { VueNodeView } from './vue-nodes.ts'
 
 export const toVue = interop.toVue.bind(null, Vue.customRef, Vue.onScopeDispose) as <T>(
   source: MaybeRefOrGetter<T>,
@@ -21,23 +22,41 @@ export type MethodKey<T> =
   keyof { [P in keyof T as T[P] extends Function ? P : never]: unknown }
 export type NonMethodKey<T extends pub.AnyNode | pub.Document> = Extract<keyof T, string>
 
-function toVueNodePropRef<T extends pub.AnyNode | pub.Document>(
-  docView: VueDocument,
-  original: T,
-  key: keyof T,
-): Vue.Ref<T, never> {
-  return toVue(() => docView._getNode((original as Record<typeof key, any>)[key]))
-}
-
-export function _vueNodeReadonly<T extends pub.AnyNode | pub.Document>(
+export function _vueNodeProp<T extends pub.AnyNode | pub.Document>(
   view: any,
   original: T,
   key: keyof T,
 ): void {
-  const vueRef = toVueNodePropRef(view.docView, original, key)
+  const vueRef = toVue(
+    () => (view.docView as VueDocument)._getNode((original as Record<typeof key, any>)[key]),
+    (newValue: VueNodeView<pub.AnyNode>) =>
+      ((original as Record<typeof key, any>)[key] = (view.docView as VueDocument)._getNode(
+        newValue as any,
+      ).original),
+  )
 
   Object.defineProperty(view, key, {
     get: () => vueRef.value,
+    set: (newValue) => void (vueRef.value = newValue),
+    configurable: true,
+    enumerable: true,
+  })
+}
+
+export function _vueNodeArrayProp<T extends pub.AnyNode | pub.Document>(
+  view: any,
+  original: T,
+  key: keyof T,
+): void {
+  const vueRef = toVue(() => {
+    const docView = view.docView as VueDocument
+    const original_ = original as Record<typeof key, VueNodeView<any>[]>
+    return original_[key].map((node) => docView._getNode(node as any))
+  })
+
+  Object.defineProperty(view, key, {
+    get: () => vueRef.value,
+    set: (newValue) => void (vueRef.value = newValue),
     configurable: true,
     enumerable: true,
   })

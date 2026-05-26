@@ -1,37 +1,23 @@
 import type { Schema } from '#core'
 import type * as pub from '#core'
+import type { NonOverlappingUnion } from '#internal'
 
 import { Clip } from './clip.ts'
 
+export interface TextClip extends NonOverlappingUnion<Clip<Schema.TextClip>, pub.TextClip> {}
+
 export class TextClip extends Clip<Schema.TextClip> implements pub.TextClip {
-  declare translate: Schema.Point
-  declare rotate: number
-  declare scale: Schema.Point
-
-  declare content: string
-  declare fontFamily: string
-  declare fontSize: number
-  declare fontWeight: number
-  declare fontStyle: Schema.FontStyle
-  declare align: Schema.TextAlign
-  declare inlineSize: number
-  declare fill: string
-  declare stroke: string
-
-  protected _init(init: Schema.TextClip): void {
-    super._init(init)
-    this._initTransformProps(init)
-
-    this._defineReactive('content', init.content)
-    this._defineReactive('fontFamily', init.fontFamily)
-    this._defineReactive('fontSize', init.fontSize)
-    this._defineReactive('fontWeight', init.fontWeight, { defaultValue: 400 })
-    this._defineReactive('fontStyle', init.fontStyle, { defaultValue: 'normal' })
-    this._defineReactive('align', init.align, { defaultValue: 'left' })
-    this._defineReactive('inlineSize', init.inlineSize)
-    this._defineReactive('fill', init.fill)
-    this._defineReactive('stroke', init.stroke)
-  }
+  static FIELDS = super.FIELDS.concat(Clip.TRANSFORM_FIELDS, [
+    { key: 'content', flags: 0 },
+    { key: 'fontFamily', flags: 0 },
+    { key: 'fontSize', flags: 0 },
+    { key: 'fontWeight', flags: 0, defaultValue: 400 },
+    { key: 'fontStyle', flags: 0, defaultValue: 'normal' },
+    { key: 'align', flags: 0, defaultValue: 'left' },
+    { key: 'inlineSize', flags: 0 },
+    { key: 'fill', flags: 0 },
+    { key: 'stroke', flags: 0 },
+  ] satisfies pub.NodeFieldDef<pub.TextClip>[])
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style -- TODO: check font face is ready

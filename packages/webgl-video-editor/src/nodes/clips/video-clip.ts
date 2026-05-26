@@ -1,19 +1,15 @@
 import type { Schema } from '#core'
 import type * as pub from '#core'
+import type { NonOverlappingUnion } from '#internal'
 
 import { Clip } from './clip.ts'
 
+export interface VideoClip extends NonOverlappingUnion<Clip<Schema.VideoClip>, pub.VideoClip> {}
+
 export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
-  declare translate: Schema.Point
-  declare rotate: number
-  declare scale: Schema.Point
+  static FIELDS = super.FIELDS.concat(Clip.TRANSFORM_FIELDS satisfies pub.NodeFieldDef<pub.VideoClip>[])
+
   declare effects: pub.VideoClip['effects']
-
-  protected _init(init: Schema.VideoClip): void {
-    super._init(init)
-
-    this._initTransformProps(init)
-  }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isMediaClip(): this is VideoClip {

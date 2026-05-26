@@ -110,33 +110,27 @@ export interface MediaAssetRef {
   assetId: string
 }
 
-export interface VideoPlaceholderRef {
+export interface MediaAssetPlaceholderRef {
   assetId?: undefined
 }
 
-export interface AudioPlaceholderRef {
-  assetId?: undefined
-}
-
-export interface BaseClip<
-  TPlaceholder extends VideoPlaceholderRef | AudioPlaceholderRef | undefined = any,
-> extends TrackChild {
+export interface BaseClip extends TrackChild {
   type: `clip:${string}`
   sourceStart: Rational
-  mediaRef?: MediaAssetRef | TPlaceholder
+  mediaRef?: MediaAssetRef | MediaAssetPlaceholderRef
   transition?: { assetId: string; duration: Rational }
 }
 
-export interface VideoClip extends BaseClip<VideoPlaceholderRef>, Partial<TransformProps> {
+export interface VideoClip extends BaseClip, Partial<TransformProps> {
   type: 'clip:video'
 }
 
-export interface AudioClip extends BaseClip<AudioPlaceholderRef> {
+export interface AudioClip extends BaseClip {
   type: 'clip:audio'
   volume?: number
 }
 
-export interface TextClip extends BaseClip<undefined>, Partial<TransformProps> {
+export interface TextClip extends BaseClip, Partial<TransformProps> {
   type: 'clip:text'
   content: string
   fontFamily: string
@@ -147,7 +141,6 @@ export interface TextClip extends BaseClip<undefined>, Partial<TransformProps> {
   inlineSize: number
   fill?: string
   stroke?: string
-  mediaRef?: undefined
 }
 export interface Gap extends TrackChild {
   type: 'gap'

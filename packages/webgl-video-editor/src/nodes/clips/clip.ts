@@ -1,30 +1,47 @@
-import { computed, ref, type Ref } from 'fine-jsx'
+import { computed, type Ref } from 'fine-jsx'
 
+import { NODE_FIELD_FLAGS, VIDEO_PREPLAY_TIME_S } from '#constants'
 import type { ClipTime, ClipTimeRational, Schema } from '#core'
 import type * as pub from '#core'
-import type { Size } from 'shared/types.ts'
+import type { NonOverlappingUnion } from '#internal'
 import { clamp, Rational } from 'shared/utils/math.ts'
 import { rangeContainsTime } from 'shared/video/utils.ts'
 
-import { VIDEO_PREPLAY_TIME_S } from '../../constants.ts'
 import { TrackChild } from '../track-child.ts'
 
 const pointsAreEqual = (a?: Schema.Point, b?: Schema.Point): boolean =>
   (!a && !b) || (!!a && !!b && a.x === b.x && a.y === b.y)
 
+export interface Clip<T extends Schema.AnyClip> extends NonOverlappingUnion<TrackChild<T>, pub.Clip> {}
+
 export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   extends TrackChild<T>
-  implements pub.Clip<T>
+  implements pub.Clip
 {
-  declare readonly type: T['type']
+  static FIELDS = super.FIELDS.concat([
+    { key: 'sourceStart', flags: 0, transform: Rational.from },
+    { key: 'mediaRef', flags: 0, equal: (a, b) => a?.assetId === b?.assetId },
+    { key: 'transition', flags: 0 },
+
+    { key: 'isReady', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'asset', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Asset },
+    { key: 'playableTime', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'presentationTime', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'expectedMediaTime', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'isInClipTime', flags: NODE_FIELD_FLAGS.Readonly },
+  ] satisfies pub.NodeFieldDef<pub.Clip>[])
+
+  static TRANSFORM_FIELDS = [
+    { key: 'translate', flags: 0, equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } },
+    { key: 'rotate', flags: 0, defaultValue: 0 },
+    { key: 'scale', flags: 0, equal: pointsAreEqual, defaultValue: { x: 1, y: 1 } },
+  ] satisfies pub.NodeFieldDef<Schema.TransformProps>[]
+
   declare readonly children: undefined
 
-  declare sourceStart: Rational
   declare private _asset: Ref<pub.MediaAsset | undefined>
   declare mediaRef: T['mediaRef']
   declare error: Ref<MediaError | undefined>
-
-  declare transition: Schema.AnyClip['transition']
 
   declare private _presentationTime: Ref<ClipTime>
   declare private _playableTime: Ref<ClipTime>
@@ -34,7 +51,6 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   })
   readonly #isInClipTime = computed(() => rangeContainsTime(this.presentationTime, this.doc.currentTime))
 
-  declare private _mediaSize: Ref<Size>
   get asset(): pub.MediaAsset | undefined {
     return this._asset.value
   }
@@ -56,45 +72,14 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     return this.#isInClipTime.value
   }
 
-  get mediaSize(): Size {
-    return this._mediaSize.value
-  }
+  protected _init(): void {
+    super._init()
 
-  protected _init(init: T): void {
-    super._init(init)
-    this._asset = ref<pub.MediaAsset>()
-
-    this._defineReactive('mediaRef', init.mediaRef, {
-      onChange: (value) =>
-        (this._asset.value = value?.assetId ? this.doc.assets.getAsset(value.assetId) : undefined),
-      equal: (a, b) => a?.assetId === b?.assetId,
-    })
-    this._defineReactive('sourceStart', init.sourceStart, { transform: Rational.from })
-
+    this._asset = computed((): pub.MediaAsset | undefined =>
+      this.mediaRef?.assetId ? this.doc.assets.getAsset(this.mediaRef.assetId) : undefined,
+    )
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())
-
-    this._mediaSize = computed((): Size => {
-      const video = this.asset?.video
-      if (!video) return { width: 1, height: 1 }
-
-      const { width, height } = video
-      return video.rotation % 180 ? { width: height, height: width } : { width, height }
-    })
-
-    this.doc.assets.on(
-      'asset:create',
-      ({ asset }) => {
-        if (asset.id === this.mediaRef?.assetId && asset.type === 'asset:media:av') this._asset.value = asset
-      },
-      { signal: this._abort.signal },
-    )
-  }
-
-  _initTransformProps<T extends Schema.AnyVideoClip>(this: Clip<T>, init: T): void {
-    this._defineReactive('translate', init.translate, { equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } })
-    this._defineReactive('rotate', init.rotate, { defaultValue: 0 })
-    this._defineReactive('scale', init.scale, { equal: pointsAreEqual, defaultValue: { x: 1, y: 1 } })
   }
 
   _computeTimeRational(): ClipTimeRational {

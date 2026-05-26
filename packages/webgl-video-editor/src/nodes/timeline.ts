@@ -1,12 +1,15 @@
+import { NODE_FIELD_FLAGS } from '#constants'
 import type { Schema } from '#core'
 import type * as pub from '#core'
 
 import { ParentNode } from './parent-node.ts'
 
 export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> implements pub.Timeline {
-  declare readonly parent: undefined
+  static FIELDS = super.FIELDS.concat([
+    { key: 'trackCount', flags: NODE_FIELD_FLAGS.Readonly },
+  ] satisfies pub.NodeFieldDef<pub.Timeline>[])
+
   declare readonly id: 'timeline'
-  declare readonly type: 'timeline'
 
   constructor(doc: pub.Document) {
     super(doc, { id: 'timeline', type: 'timeline' })

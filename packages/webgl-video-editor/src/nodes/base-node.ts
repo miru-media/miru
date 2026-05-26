@@ -1,10 +1,15 @@
-import { computed, ref, type Ref } from 'fine-jsx'
+import { computed, ref } from 'fine-jsx'
 
+import { NODE_FIELD_FLAGS } from '#constants'
 import type { Schema } from '#core'
 import type * as pub from '#core'
 import type { NonReadonly } from '#internal'
 
 import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in class def
+export interface BaseNode<T extends Schema.Base = any, TParent extends pub.AnyParentNode = pub.AnyParentNode>
+  extends pub.BaseNode {}
 
 export abstract class BaseNode<
   T extends Schema.Base = any,
@@ -12,20 +17,37 @@ export abstract class BaseNode<
 >
   implements pub.BaseNode
 {
+  static FIELDS: pub.NodeFieldDef<any>[] = [
+    { key: 'name', flags: 0, defaultValue: '' },
+    { key: 'enabled', flags: 0, defaultValue: true },
+    { key: 'effects', flags: 0, defaultValue: [] },
+    { key: 'markers', flags: 0, defaultValue: [] },
+    { key: 'color', flags: 0 },
+    { key: 'metadata', flags: 0, defaultValue: {} },
+
+    { key: 'doc', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'id', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'type', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'parent', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'index', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'prev', flags: NODE_FIELD_FLAGS.Node },
+    { key: 'next', flags: NODE_FIELD_FLAGS.Node },
+    { key: 'prevVideo', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'nextVideo', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'prevAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'nextAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+  ] satisfies pub.NodeFieldDef<pub.BaseNode & { type: string }>[]
+
   declare readonly doc: pub.Document
 
   readonly type: T['type']
-  readonly id: string
   declare name: string
-  declare enabled: boolean
-  declare effects: NonNullable<Schema.Base['effects']>
-  declare color: Schema.Base['color']
-  declare metadata: Schema.Base['metadata']
-  abstract readonly children?: unknown
 
   readonly #parent = ref<TParent>()
 
-  readonly _effectAssets: Ref<pub.VideoEffectAsset[]> = ref([])
+  readonly _effectAssets = computed((): pub.VideoEffectAsset[] =>
+    this.effects.map(({ assetId }) => this.doc.assets.getAsset(assetId)),
+  )
 
   declare parent?: TParent | undefined
   get ['parent' as never](): TParent | undefined {
@@ -87,18 +109,11 @@ export abstract class BaseNode<
     this.id = init.id
     this.type = init.type
 
-    this._defineReactive('name', init.name, { defaultValue: '' })
-    this._defineReactive('enabled', init.enabled, { defaultValue: true })
-    this._defineReactive('effects', init.effects, {
-      defaultValue: [],
-      onChange: (value) => {
-        this._effectAssets.value.length = 0
-        this._effectAssets.value = value?.map(({ assetId }) => this.doc.assets.getAsset(assetId)) ?? []
-      },
+    this._fields().forEach((field) => {
+      if (field.flags !== 0) return
+      const { key } = field
+      this._defineReactive(key as any, (init as any)[key], field as any)
     })
-    this._defineReactive('markers', init.markers, { defaultValue: [] })
-    this._defineReactive('color', init.color)
-    this._defineReactive('metadata', init.metadata, { defaultValue: {} })
 
     this.doc.assets.on(
       'asset:create',
@@ -194,13 +209,15 @@ export abstract class BaseNode<
     this.doc.emit(event)
   }
 
+  _fields<T extends pub.BaseNode>(this: T): pub.NodeFieldDef<T>[] {
+    return (this.constructor as typeof BaseNode).FIELDS as any
+  }
+
   _defineReactive<Key extends keyof T>(
     key: Extract<Exclude<Key, 'id' | 'type'>, string>,
     initialValue: T[Key],
     options: {
       equal?: (a: T[Key], b: T[Key]) => boolean
-      emit?: boolean
-      onChange?: (value: T[Key]) => unknown
       transform?: (value: T[Key]) => T[Key]
       defaultValue?: T[Key]
     } = {},
@@ -223,17 +240,12 @@ export abstract class BaseNode<
 
         ref_.value = value
 
-        options.onChange?.(value)
-
-        if (options.emit !== false)
-          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
-          this.#emitUpdate(key, prev === undefined ? (options.defaultValue as unknown as typeof prev) : prev)
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
+        this.#emitUpdate(key, prev === undefined ? (options.defaultValue as unknown as typeof prev) : prev)
       },
       configurable: true,
       enumerable: true,
     })
-
-    options.onChange?.(initialValue)
   }
 
   delete(): void {

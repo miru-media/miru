@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging, @typescript-eslint/no-extraneous-class -- false positive */
+/* eslint-disable @typescript-eslint/no-extraneous-class -- false positive */
 import type * as Y from 'yjs'
 
 import type { VideoEditorAssetStore, VideoEditorDocumentSync } from '#core'

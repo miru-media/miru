@@ -1,5 +1,6 @@
 import { ref } from 'fine-jsx'
 
+import { NODE_FIELD_FLAGS } from '#constants'
 import type { AnyNode, AnyParentNode, Schema } from '#core'
 import type * as pub from '#core'
 import type { NonReadonly } from '#internal'
@@ -14,6 +15,12 @@ export abstract class ParentNode<
   extends BaseNode<T, TParent>
   implements pub.ParentNode<TChild>
 {
+  static FIELDS = super.FIELDS.concat([
+    { key: 'head', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'tail', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'children', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.NodeArray },
+  ] satisfies pub.NodeFieldDef<pub.ParentNode<pub.AnyNode>>[])
+
   readonly #head = ref<TChild>()
   readonly #tail = ref<TChild>()
 
