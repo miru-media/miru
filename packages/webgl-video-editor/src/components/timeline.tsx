@@ -1,7 +1,6 @@
 import '@interactjs/actions/drop'
 import { effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
-import type * as pub from '#core'
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 
@@ -44,13 +43,13 @@ export const Timeline = ({
     editor.seekTo(editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
   }
 
-  const onInputClipFile = async (event: InputEvent, track: pub.Track | undefined) => {
+  const onInputClipFile = async (event: InputEvent) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     try {
       const asset = await editor.createMediaAsset(file)
-      editor.addClip(track ?? editor.getTrackForMedia(asset), asset)
+      editor.addClip(editor.getTrackForMedia(asset), asset)
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
@@ -92,7 +91,7 @@ export const Timeline = ({
                       type="file"
                       class={styles.srOnly}
                       accept={ACCEPT_VIDEO_FILE_TYPES}
-                      onInput={(event: InputEvent) => onInputClipFile(event, undefined)}
+                      onInput={(event: InputEvent) => onInputClipFile(event)}
                     />
                     <span class={styles.textBody}>{t('click_add_clip')}</span>
                   </label>
@@ -111,7 +110,7 @@ export const Timeline = ({
                       dragTargetTrack.value?.id === track.id && dragTargetTrack.value.before && styles.active,
                     ]}
                   />
-                  <Track data-track-id={track.id} track={track} onInputClipFile={onInputClipFile} />
+                  <Track data-track-id={track.id} track={track} />
                 </>
               ))
             )

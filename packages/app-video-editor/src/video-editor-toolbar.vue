@@ -10,7 +10,6 @@ import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES, AssetBin } from 'webg
 
 import type { VideoEditor } from 'webgl-video-editor'
 import { state } from './state'
-import { FEAT_ASSET_BIN } from 'shared/video/constants'
 
 const { editor } = defineProps<{ editor: VideoEditor }>()
 
@@ -87,56 +86,52 @@ useEventListener(
         {{ $t('filters') }}
       </button>
 
-      <template v-if="FEAT_ASSET_BIN">
-        <button
-          class="toolbar-button"
-          :aria-expanded="editor.activeAssetBin === AssetBin.audio"
-          @click="
-            () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)
+      <button
+        class="toolbar-button"
+        :aria-expanded="editor.activeAssetBin === AssetBin.audio"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)
+        "
+      >
+        <div
+          :class="
+            editor.activeAssetBin === AssetBin.audio ? 'icon i-tabler-music-search' : 'icon i-tabler-music'
           "
-        >
-          <div
-            :class="
-              editor.activeAssetBin === AssetBin.audio ? 'icon i-tabler-music-search' : 'icon i-tabler-music'
-            "
-          />
-          {{ $t('music') }}
-        </button>
+        />
+        {{ $t('music') }}
+      </button>
 
-        <button
-          class="toolbar-button"
-          :aria-expanded="editor.activeAssetBin === AssetBin.video"
-          @click="
-            () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)
+      <button
+        class="toolbar-button"
+        :aria-expanded="editor.activeAssetBin === AssetBin.video"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)
+        "
+      >
+        <div
+          :class="
+            editor.activeAssetBin === AssetBin.video ? 'icon i-tabler-folder-filled' : 'icon i-tabler-folder'
           "
-        >
-          <div
-            :class="
-              editor.activeAssetBin === AssetBin.video
-                ? 'icon i-tabler-folder-filled'
-                : 'icon i-tabler-folder'
-            "
-          />
-          {{ $t('media') }}
-        </button>
+        />
+        {{ $t('media') }}
+      </button>
 
-        <button
-          class="toolbar-button"
-          :aria-expanded="editor.activeAssetBin === AssetBin.fonts"
-          @click="
-            () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.fonts ? null : AssetBin.fonts)
+      <button
+        class="toolbar-button"
+        :aria-expanded="editor.activeAssetBin === AssetBin.fonts"
+        @click="
+          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.fonts ? null : AssetBin.fonts)
+        "
+      >
+        <div
+          :class="
+            editor.activeAssetBin === AssetBin.fonts
+              ? 'icon i-tabler-file-typography-filled'
+              : 'icon i-tabler-file-typography'
           "
-        >
-          <div
-            :class="
-              editor.activeAssetBin === AssetBin.fonts
-                ? 'icon i-tabler-file-typography-filled'
-                : 'icon i-tabler-file-typography'
-            "
-          />
-          {{ $t('fonts') }}
-        </button>
-      </template>
+        />
+        {{ $t('fonts') }}
+      </button>
 
       <button class="toolbar-button" @click="() => editor.export()">
         <div class="icon i-tabler-download" />
