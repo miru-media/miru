@@ -198,7 +198,9 @@ export class Document implements pub.Document {
     return {
       resolution: this.resolution,
       frameRate: this.frameRate,
-      assets: Array.from(this.assets.values()).map((asset) => asset.toJSON()),
+      assets: Array.from(this.assets.values())
+        .filter((asset) => !asset.isBuiltIn)
+        .map((asset) => asset.toJSON()),
       timeline: serialize(this.timeline),
     }
   }

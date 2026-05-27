@@ -1,4 +1,5 @@
 import { uid } from 'uid'
+import { getDefaultFilterDefinitions } from 'webgl-effects'
 
 import type * as pub from '../../types/core.d.ts'
 import type { Schema } from '../../types/core.d.ts'
@@ -23,6 +24,10 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   constructor(generateId: () => string = uid) {
     super()
     this.generateId = generateId
+
+    getDefaultFilterDefinitions().forEach((def) => {
+      this.create({ ...def, id: `filter:${def.id!}`, type: 'asset:effect:video' }, { isBuiltIn: true })
+    })
   }
 
   values(): MapIterator<pub.AnyAsset> {
@@ -35,24 +40,24 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
 
   create<T extends Schema.AnyAssetSchema>(
     init: T,
-    { source }: { source?: Blob | string } = {},
+    { source, isBuiltIn }: { source?: Blob | string; isBuiltIn?: boolean } = {},
   ): pub.AssetsByType[T['type']] {
     let asset
 
     switch (init.type) {
       case 'asset:media:av':
-        asset = new MediaAsset(init, { store: this, source })
+        asset = new MediaAsset(init, { store: this, source, isBuiltIn: isBuiltIn })
         this.getOrCreateFile(asset, source ?? ('uri' in init ? init.uri : undefined))
           .then(asset.setBlob.bind(asset))
           .catch(asset.setError.bind(asset))
         break
 
       case 'asset:font':
-        asset = new FontAsset(init, this)
+        asset = new FontAsset(init, this, isBuiltIn)
         break
 
       case 'asset:effect:video':
-        asset = new VideoEffectAsset(init, this)
+        asset = new VideoEffectAsset(init, this, isBuiltIn)
         break
     }
 

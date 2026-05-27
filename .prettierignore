@@ -8,3 +8,4 @@ bin
 auto-imports.d.ts
 .eslintrc-auto-import.json
 CHANGELOG.md
+**/src/shapes/orm

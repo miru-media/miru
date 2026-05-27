@@ -9,7 +9,6 @@ import wavesThumbnail from 'https://github.com/miru-media/static-assets/raw/main
 import wavesRocks from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-rocks-McPix22-pixabay.mp4'
 import wavesRocksThumbnail from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/waves-rocks-McPix22-pixabay.mp4.webp'
 import { uid } from 'uid'
-import { getDefaultFilterDefinitions } from 'webgl-effects'
 import type { Schema } from 'webgl-video-editor'
 
 import { createInitialDocument } from 'webgl-video-editor/sync'
@@ -133,13 +132,6 @@ const assets = {
       firstTimestamp: { value: 0, rate: 125 },
     },
   },
-  ...Object.fromEntries(
-    getDefaultFilterDefinitions().map((def): [string, Schema.VideoEffectAsset] => {
-      const id = `filter:${def.id!}`
-
-      return [id, { ...def, id, type: 'asset:effect:video' }]
-    }),
-  ),
 } satisfies Record<string, Schema.MediaAsset>
 
 export const demoDoc = createInitialDocument()

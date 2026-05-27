@@ -1,0 +1,41 @@
+{
+  "name": "nextgraph-video-editor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "type": "module",
+  "imports": {
+    "#orm": "./src/shapes/orm"
+  },
+  "scripts": {
+    "dev": "pnpm run orm:build && vite dev",
+    "build": "pnpm run orm:build && vite build --mode=production",
+    "orm:build": "rdf-orm build --input ./src/shapes/shex --output ./src/shapes/orm",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "@ng-org/orm": "0.1.2-alpha.18",
+    "@ng-org/web": "0.1.2-alpha.13",
+    "@types/base64-js": "catalog:",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vueuse/core": "catalog:",
+    "app-video-editor": "workspace:^",
+    "base64-js": "catalog:",
+    "fine-jsx": "catalog:",
+    "shared": "workspace:^",
+    "uid": "catalog:",
+    "vue": "catalog:",
+    "webgl-effects": "workspace:^",
+    "webgl-media-editor": "workspace:^",
+    "webgl-video-editor": "workspace:^",
+    "y-indexeddb": "catalog:",
+    "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@ng-org/shex-orm": "0.1.2-alpha.8"
+  }
+}

@@ -74,7 +74,9 @@ export const documentToOTIO = (doc: pub.Document): Otio.TimelineDocument => {
       ...settings.metadata,
       Miru: {
         ...settings,
-        assets: Array.from(doc.assets.values()).map((asset) => asset.toJSON()),
+        assets: Array.from(doc.assets.values())
+          .filter((asset) => !asset.isBuiltIn)
+          .map((asset) => asset.toJSON()),
       },
     },
     name: '',

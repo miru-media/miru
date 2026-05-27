@@ -224,7 +224,10 @@ export abstract class BaseNode<
         ref_.value = value
 
         options.onChange?.(value)
-        if (options.emit !== false) this.#emitUpdate(key, prev)
+
+        if (options.emit !== false)
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
+          this.#emitUpdate(key, prev === undefined ? (options.defaultValue as unknown as typeof prev) : prev)
       },
       configurable: true,
       enumerable: true,

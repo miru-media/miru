@@ -32,6 +32,7 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
+      - run: pnpm --prefix packages/nextgraph-video-editor run orm:build
       - run: pnpm vue-tsc -b config/tsconfig.check.json
       - run: pnpm lint
       - run: pnpm test

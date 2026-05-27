@@ -249,6 +249,7 @@ export type AnyVideoNode = Timeline | VideoTrack | VideoClip | TextClip
 export type AnyAudioNode = Timeline | AudioTrack | AudioClip
 
 interface BaseAsset extends Schema.BaseAsset {
+  isBuiltIn?: boolean
   dispose: () => void
   [Symbol.dispose]: () => void
 }

@@ -108,21 +108,21 @@ export const getMediaAssetInfo = async (
     audio: audio
       ? {
           codec: audio.codec,
-          duration: getRational(audio, await audio.computeDuration()),
+          duration: getRational(audio, await audio.computeDuration()).toJSON(),
           numberOfChannels: audio.numberOfChannels,
           sampleRate: audio.sampleRate,
-          firstTimestamp: getRational(audio, await audio.getFirstTimestamp()),
+          firstTimestamp: getRational(audio, await audio.getFirstTimestamp()).toJSON(),
         }
       : undefined,
     video: video
       ? {
           codec: video.codec,
-          duration: getRational(video, await video.computeDuration()),
+          duration: getRational(video, await video.computeDuration()).toJSON(),
           rotation: video.rotation,
           width: video.codedWidth,
           height: video.codedHeight,
           frameRate: (await video.computePacketStats()).averagePacketRate,
-          firstTimestamp: getRational(video, await video.getFirstTimestamp()),
+          firstTimestamp: getRational(video, await video.getFirstTimestamp()).toJSON(),
         }
       : undefined,
     duration: await input.computeDuration(),

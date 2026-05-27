@@ -6,12 +6,14 @@ export abstract class BaseAsset<T extends Schema.AnyAssetSchema = any> {
   readonly id: string
   readonly type: T['type']
   readonly raw: T
+  readonly isBuiltIn: boolean
 
-  constructor(init: T, store: pub.VideoEditorAssetStore) {
+  constructor(init: T, store: pub.VideoEditorAssetStore, isBuiltIn?: boolean) {
     this.store = store
     this.id = init.id
     this.type = init.type
     this.raw = init
+    this.isBuiltIn = !!isBuiltIn
   }
 
   toJSON(): T {

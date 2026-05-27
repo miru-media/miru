@@ -48,10 +48,10 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
 
   constructor(
     init: Schema.MediaAsset,
-    options: { source?: Blob | string; store: pub.VideoEditorAssetStore },
+    options: { source?: Blob | string; store: pub.VideoEditorAssetStore; isBuiltIn?: boolean },
   ) {
-    const { store, source } = options
-    super(init, store)
+    const { store, source, isBuiltIn } = options
+    super(init, store, isBuiltIn)
 
     this.setBlob(source == null || typeof source === 'string' ? undefined : source)
 
