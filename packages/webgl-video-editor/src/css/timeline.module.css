@@ -17,18 +17,24 @@
   box-sizing: content-box;
   display: flex;
   flex-direction: column;
-  width: var(--timeline-width);
+  width: var(--timeline-duration);
   height: 100%;
-  padding: 0 calc(var(--editor-width) / 2);
+  padding: 0 var(--timeline-offset);
 }
 
 .timelinePlayhead {
   position: absolute;
-  top: calc(var(--ruler-spacing-top) + var(--ruler-height) + 0.5rem);
-  left: calc(var(--editor-width) / 2);
+  top: var(--ruler-spacing-top);
+  left: var(--timeline-offset);
   z-index: 10;
   display: flex;
   user-select: none;
+  translate: var(--timeline-current-time);
+
+  .mobile & {
+    top: calc(var(--ruler-spacing-top) + var(--ruler-height) + 0.5rem);
+    translate: 0;
+  }
 }
 
 .timelinePlayhead .timePill {
@@ -51,7 +57,7 @@
 
 .timePillDrop {
   position: absolute;
-  bottom: -0.5rem;
+  bottom: calc(-0.5rem + 1px);
   left: calc(50% - 0.5rem);
   width: 1rem;
   height: 0.5rem;
@@ -60,13 +66,16 @@
 
 .timelineCursor {
   position: absolute;
-  top: calc(var(--ruler-spacing-bottom));
-  bottom: 0;
-  left: calc(var(--editor-width) / 2 - 0.0625rem);
   z-index: 10;
   width: 0.125rem;
+  height: var(--timeline-height);
   pointer-events: none;
   background-color: var(--yellow);
+  translate: -50%;
+}
+
+.timelinePlayheadHandle {
+  translate: -50%;
 }
 
 .trackList {
@@ -75,11 +84,10 @@
   flex-grow: 1;
   flex-shrink: 1;
   flex-direction: column;
-  width: calc(var(--timeline-width) + var(--editor-width));
+  width: calc(var(--timeline-duration) + var(--timeline-width));
   min-height: calc(var(--clip-height) * 2.5);
-  padding-top: 0.25rem;
   padding-bottom: 1rem;
-  padding-left: calc(var(--editor-width) / 2);
+  padding-left: var(--timeline-offset);
   overflow: hidden auto;
 }
 
@@ -110,7 +118,7 @@
   position: relative;
   flex-shrink: 0;
   width: 100%;
-  width: calc(var(--editor-width) + var(--timeline-width));
+  width: calc(var(--timeline-width) + var(--timeline-duration));
   height: var(--ruler-height);
   margin-top: var(--ruler-spacing-top);
   margin-bottom: var(--ruler-spacing-bottom);

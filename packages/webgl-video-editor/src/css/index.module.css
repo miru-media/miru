@@ -20,19 +20,6 @@
   }
 }
 
-.playbackControls {
-  position: absolute;
-  bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  pointer-events: none;
-
-  > * {
-    pointer-events: all;
-  }
-}
-
 .secondaryToolbar {
   display: flex;
   align-items: center;
@@ -50,39 +37,6 @@
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-}
-
-.toolbar {
-  position: relative;
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.5rem;
-  align-items: flex-start;
-
-  width: 100%;
-  padding-top: 0.675rem;
-  padding-bottom: 0.675rem;
-  overflow-x: auto;
-  color: var(--white);
-}
-
-.toolbarButton {
-  flex-direction: column;
-  align-self: stretch;
-  justify-content: flex-start;
-  width: 3rem;
-  padding: 0.5rem;
-  font-size: 0.75rem;
-  line-height: initial;
-  text-align: center;
-
-  &.active {
-    color: var(--yellow);
-  }
-
-  :global(.miru-icon) {
-    font-size: 1.5rem;
-  }
 }
 
 .filtersMenu {

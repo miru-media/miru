@@ -23,13 +23,14 @@ export const useCursor = (
         const deltaS = ARROW_KEY_DELTA_S * (event.code === 'ArrowLeft' || event.code === 'ArrowUp' ? -1 : 1)
         context.seekTo(toValue(context.currentTime) + deltaS)
         event.preventDefault()
+        event.stopPropagation()
         break
       }
     }
   })
 
   return {
-    tabIndex: 0,
+    tabindex: 0,
     role: 'slider',
     // TODO: i18n
     'aria-label': 'Cursor',

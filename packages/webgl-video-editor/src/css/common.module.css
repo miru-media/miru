@@ -25,7 +25,7 @@
   --white-3: rgb(255 255 255 / 60%);
   --ruler-height: 1rem;
   --ruler-spacing-top: 0.25rem;
-  --ruler-spacing-bottom: 2.625rem;
+  --ruler-spacing-bottom: 1.125rem;
   --primary-bg: #17191a;
   --primary-bg-05: #17191a88;
   --secondary-bg: #1c2023;
@@ -34,6 +34,7 @@
   .mobile {
     --primary-bg: black;
     --secondary-bg: #17191a;
+    --ruler-spacing-bottom: 2.625rem;
   }
 
   &,

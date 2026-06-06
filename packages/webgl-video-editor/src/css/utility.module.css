@@ -117,3 +117,16 @@
   margin-top: max(env(safe-area-inset-top, 1.25rem), 1.25rem);
   margin-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
 }
+
+.triColumn {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+
+  > :first-child {
+    justify-self: start;
+  }
+
+  > :last-child {
+    justify-self: end;
+  }
+}

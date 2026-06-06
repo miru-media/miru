@@ -1,5 +1,5 @@
 import '@interactjs/actions/drop'
-import { effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
+import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
@@ -12,6 +12,8 @@ import { Ruler } from './ruler.jsx'
 import { Track } from './track.jsx'
 import { useEditor } from './utils.ts'
 
+const TIMELINE_OFFSET_DESKTOP_PX = 24
+
 export const Timeline = ({
   children,
 }: {
@@ -20,27 +22,41 @@ export const Timeline = ({
   const editor = useEditor()
   const { t } = useI18n()
   const scrollContainer = ref<HTMLElement>()
+  const scrollOffset = ref(0)
+  const timelineOffset = computed(() =>
+    editor.isMobileWorkspace ? editor._timelineSize.value.width / 2 : TIMELINE_OFFSET_DESKTOP_PX,
+  )
   const { doc } = editor
 
   const timelineSize = editor._timelineSize
 
-  let lastScroll = 0
-  const scrollIsClose = (): boolean => Math.abs(lastScroll - (scrollContainer.value?.scrollLeft ?? 0)) < 1
+  const scrollIsClose = (): boolean =>
+    Math.abs(scrollOffset.value - (scrollContainer.value?.scrollLeft ?? 0)) < 1
 
   effect(() => {
+    if (!editor.isMobileWorkspace) {
+      scrollOffset.value = scrollContainer.value?.scrollLeft ?? 0
+      return
+    }
+
     const scrollEl = scrollContainer.value
     const newScroll = editor.secondsToPixels(doc.currentTime)
-    if (!scrollEl || lastScroll === newScroll) return
+    if (!scrollEl || scrollOffset.value === newScroll) return
 
     scrollEl.scrollLeft = newScroll
-    lastScroll = scrollEl.scrollLeft
+    scrollOffset.value = scrollEl.scrollLeft
   })
 
-  const onScroll = () => {
+  const onScroll = (): void => {
+    if (!editor.isMobileWorkspace) {
+      scrollOffset.value = scrollContainer.value?.scrollLeft ?? 0
+      return
+    }
+
     const scrollEl = scrollContainer.value
     if (!scrollEl || scrollIsClose()) return
 
-    editor.seekTo(editor.pixelsToSeconds((lastScroll = scrollEl.scrollLeft)))
+    editor.seekTo(editor.pixelsToSeconds((scrollOffset.value = scrollEl.scrollLeft)))
   }
 
   const onInputClipFile = async (event: InputEvent) => {
@@ -67,19 +83,21 @@ export const Timeline = ({
       ref={editor._timelineContainer}
       class={styles.timeline}
       style={() => `
-          --editor-width: ${timelineSize.value.width}px;
-          --editor-height: ${timelineSize.value.height}px;
-          --timeline-width:${editor.secondsToPixels(Math.max(editor.resize.docDuration.value, doc.duration))}px`}
+          --timeline-width: ${timelineSize.value.width}px;
+          --timeline-height: ${timelineSize.value.height}px;
+          --timeline-offset: ${timelineOffset.value}px;
+          --timeline-duration:${editor.secondsToPixels(Math.max(editor.resize.docDuration.value, doc.duration))}px;
+          --timeline-current-time:${editor.secondsToPixels(editor.currentTime)}px`}
     >
-      <Playhead />
-
+      {() => (editor.isMobileWorkspace ? <Playhead /> : null)}
       <div
         ref={scrollContainer}
         class={styles.timelineScroller}
         onScroll={onScroll}
         onPointerdown={onPointerdownScroller}
       >
-        <Ruler />
+        <Ruler {...{ scrollOffset, timelineOffset }} />
+        {() => (editor.isMobileWorkspace ? null : <Playhead />)}
 
         <div class={styles.trackList}>
           {() =>

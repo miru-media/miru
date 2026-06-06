@@ -1,4 +1,4 @@
-import { computed, watch } from 'fine-jsx'
+import { computed, type Ref, toValue, watch } from 'fine-jsx'
 
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
@@ -9,7 +9,13 @@ import { useEditor } from './utils.ts'
 
 const RULER_INTERVAL_MULTIPLIER = 32
 
-export const Ruler = () => {
+export const Ruler = ({
+  scrollOffset,
+  timelineOffset,
+}: {
+  scrollOffset: Ref<number>
+  timelineOffset: Ref<number>
+}) => {
   const editor = useEditor()
   const { languages } = useI18n()
 
@@ -23,7 +29,7 @@ export const Ruler = () => {
 
   const Markings = (): JSX.Element => {
     const size = computed(() => editor.secondsToPixels(intervalS.value))
-    const offset = computed(() => (editor._timelineSize.value.width / 2) % size.value)
+    const offset = computed(() => timelineOffset.value % size.value)
 
     return (
       <svg class={styles.rulerMarkings} style={() => `--ruler-markings-offset: ${offset.value}px`}>
@@ -46,19 +52,19 @@ export const Ruler = () => {
     const getChildren = (): JSX.Element[] => {
       const timelineWidth = editor._timelineSize.value.width
       const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
-      const halfTimelineWidth = timelineWidth / 2
+      const offset = timelineOffset.value
 
       const children: JSX.Element[] = []
       const labelSpacing = intervalS.value < 1 ? 4 : 5
       const labelIntervalS = intervalS.value * labelSpacing
       const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
 
-      let fromS = editor.doc.currentTime - timelineRangeS / 2
+      let fromS = editor.pixelsToSeconds(toValue(scrollOffset)) - editor.pixelsToSeconds(offset)
       fromS -= fromS % labelIntervalS
 
       for (let i = 0; i < nLabels; i++) {
         const timeS = fromS + i * labelIntervalS
-        const left = editor.secondsToPixels(timeS) + halfTimelineWidth
+        const left = editor.secondsToPixels(timeS) + offset
 
         let durationText = formattedDurations.get(timeS)
         if (!durationText) {
@@ -84,7 +90,7 @@ export const Ruler = () => {
 
   const onClick = (event: PointerEvent) => {
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    const timeS = editor.pixelsToSeconds(event.clientX - rect.left - editor._timelineSize.value.width / 2)
+    const timeS = editor.pixelsToSeconds(event.clientX - rect.left - timelineOffset.value)
 
     editor.seekTo(timeS)
   }

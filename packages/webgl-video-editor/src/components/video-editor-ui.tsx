@@ -15,8 +15,9 @@ import { getPanelList } from '../panels-list.ts'
 
 import { Debug } from './debug.jsx'
 import { DesktopControls } from './desktop-controls.jsx'
+import { MobileControls } from './mobile-controls.jsx'
 import { PanelToolbar } from './panel-toolbar.jsx'
-import { PlaybackControls } from './playback-controls.jsx'
+import { DesktopPlaybackControls } from './playback-controls-overlay.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 import { provideEditor } from './utils.ts'
@@ -62,26 +63,21 @@ export const VideoEditorUI = (props: {
       <div class={styles.workspaceHeader}>Header</div>
 
       <div class={styles.panels}>
-        {/* TODO: I'm using fragments here to keep the number of children stable. Need to fix it in fine-jsx */}
-        <>{() => !editor.isMobileWorkspace && <PanelToolbar />}</>
+        {() => !editor.isMobileWorkspace && <PanelToolbar />}
 
-        <>
-          {getPanelList(editor).map(({ id, titleI18nKey, PanelBody, isPermitted = () => true }) => () => {
-            if (!isPermitted()) return
-            if (editor.isMobileWorkspace)
-              return (
-                <Drawer id={editor.getPartId(id)} title={t(titleI18nKey)} content={() => <PanelBody />} />
-              )
+        {getPanelList(editor).map(({ id, titleI18nKey, PanelBody, isPermitted = () => true }) => () => {
+          if (!isPermitted()) return
+          if (editor.isMobileWorkspace)
+            return <Drawer id={editor.getPartId(id)} title={t(titleI18nKey)} content={() => <PanelBody />} />
 
-            return (
-              editor.activeAssetBin === id && (
-                <div class={styles.panel}>
-                  <PanelBody />
-                </div>
-              )
+          return (
+            editor.activeAssetBin === id && (
+              <div class={styles.panel}>
+                <PanelBody />
+              </div>
             )
-          })}
-        </>
+          )
+        })}
       </div>
 
       <div
@@ -93,13 +89,15 @@ export const VideoEditorUI = (props: {
         {h(editor.canvas, { class: styles.viewportCanvas })}
         <TransformControls />
         <LoadingOverlay loading={() => !playback.isReady} />
-        <PlaybackControls />
+        {() => !editor.isMobileWorkspace && <DesktopPlaybackControls />}
       </div>
+
+      {() => editor.isMobileWorkspace && <MobileControls />}
 
       <div class={styles.workspaceProperties}>Transform</div>
 
       <div class={styles.workspaceBottom}>
-        {() => (editor.isMobileWorkspace ? null : <DesktopControls />)}
+        {() => !editor.isMobileWorkspace && <DesktopControls />}
 
         <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
 

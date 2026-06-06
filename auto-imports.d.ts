@@ -16,6 +16,8 @@ declare global {
   const IconMsContentCutRounded: typeof import('~icons/material-symbols/content-cut-rounded.jsx')['default']
   const IconMsDeleteOutlineRounded: typeof import('~icons/material-symbols/delete-outline-rounded.jsx')['default']
   const IconMsDoNotDisturbOnOutlineRounded: typeof import('~icons/material-symbols/do-not-disturb-on-outline-rounded.jsx')['default']
+  const IconMsFastForwardOutlineRounded: typeof import('~icons/material-symbols/fast-forward-outline-rounded.jsx')['default']
+  const IconMsFastRewindOutlineRounded: typeof import('~icons/material-symbols/fast-rewind-outline-rounded.jsx')['default']
   const IconMsFilterVintageOutline: typeof import('~icons/material-symbols/filter-vintage-outline.jsx')['default']
   const IconMsFolderOpenOutlineRounded: typeof import('~icons/material-symbols/folder-open-outline-rounded.jsx')['default']
   const IconMsFormatAlignCenterRounded: typeof import('~icons/material-symbols/format-align-center-rounded.jsx')['default']
