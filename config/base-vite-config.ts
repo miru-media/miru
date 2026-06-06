@@ -38,7 +38,10 @@ export const extendViteConfig = (config: UserConfig): UserConfig => {
         compiler: 'jsx',
         jsx: 'preact',
         defaultClass: 'miru-icon',
-        transform: (svg) => svg.replace('<svg', '<svg role="presentation"'),
+        iconCustomizer(collection, _icon, props) {
+          props.role = 'presentation'
+          if (collection === 'material-symbols') props.width = props.height = '1em'
+        },
       }),
       unocss({
         presets: [

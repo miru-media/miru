@@ -44,10 +44,11 @@ export const Clip = ({
     return { left, right }
   })
 
+  const selectClip = editor.select.bind(editor, clip, false)
+
   return (
     <div
       tabindex="0"
-      onFocus={() => editor.select(clip)}
       class={() => [
         styles.clip,
         isSelected() && [styles.isSelected, editor.drag.isDragging.value && styles.isDragging],
@@ -60,13 +61,10 @@ export const Clip = ({
         --drag-offset: ${editor.drag.x.value};
         --clip-color: ${clipColor.value};
       `}
+      onFocus={selectClip}
+      onClick={selectClip}
     >
-      <div
-        ref={mainContainer}
-        data-clip-id={clip.id}
-        class={styles.clipBox}
-        onClick={() => editor.select(clip, false)}
-      >
+      <div ref={mainContainer} data-clip-id={clip.id} class={styles.clipBox}>
         <span class={styles.clipName}>
           {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
         </span>

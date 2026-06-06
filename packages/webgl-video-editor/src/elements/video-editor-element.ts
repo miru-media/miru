@@ -53,6 +53,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare readonly tracks: pub.VideoEditor['tracks']
   declare readonly viewportSize: pub.VideoEditor['viewportSize']
   declare readonly zoom: pub.VideoEditor['zoom']
+  declare readonly isMobileWorkspace: pub.VideoEditor['isMobileWorkspace']
 
   declare secondsToPixels: pub.VideoEditor['secondsToPixels']
   declare pixelsToSeconds: pub.VideoEditor['pixelsToSeconds']
@@ -67,6 +68,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare importJson: pub.VideoEditor['importJson']
   declare export: pub.VideoEditor['export']
   declare generateId: pub.VideoEditor['generateId']
+  declare getPartId: pub.VideoEditor['getPartId']
 
   constructor() {
     super()
@@ -167,6 +169,7 @@ for (const key of [
   'tracks',
   'viewportSize',
   'zoom',
+  'isMobileWorkspace',
 ] satisfies (keyof pub.VideoEditor)[])
   Object.defineProperty(VideoEditorElement.prototype, key, {
     get(this: VideoEditorElement) {
@@ -189,6 +192,7 @@ for (const key of [
   'importJson',
   'export',
   'generateId',
+  'getPartId',
 ] satisfies (keyof pub.VideoEditor)[])
   VideoEditorElement.prototype[key] = function (...args: any[]): any {
     const editor = this._editor

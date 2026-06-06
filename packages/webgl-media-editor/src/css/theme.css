@@ -1,4 +1,4 @@
-.host {
+:where(.host) {
   /* APP COLOR [ter] */
   background-color: var(--background-softer);
 

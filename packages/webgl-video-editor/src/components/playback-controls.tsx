@@ -7,8 +7,8 @@ import { useEditor } from './utils.ts'
 
 export const PlaybackControls = () => {
   const editor = useEditor()
-  const { playback } = editor
-  const { t } = useI18n()
+  const { playback, sync } = editor
+  const { t, tr } = useI18n()
   const playOrPause = () => (playback.isPaused ? t('play') : t('pause'))
 
   return (
@@ -23,6 +23,21 @@ export const PlaybackControls = () => {
       >
         {() => (playback.isPaused ? <IconTablerPlayerPlay /> : <IconTablerPlayerPause />)}
       </Button>
+
+      {() =>
+        editor.isMobileWorkspace &&
+        sync && (
+          <div class={styles.secondaryToolbarGroup}>
+            <Button label={tr('undo')} disabled={() => !sync.canUndo} onClick={sync.undo.bind(sync)}>
+              <IconMsUndoRounded />
+            </Button>
+
+            <Button label={tr('redo')} disabled={() => !sync.canRedo} onClick={sync.redo.bind(sync)}>
+              <IconMsRedoRounded />
+            </Button>
+          </div>
+        )
+      }
     </div>
   )
 }

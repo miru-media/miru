@@ -222,6 +222,7 @@ export const createHiddenMediaElement = <T extends 'audio' | 'video'>(
   if (type === 'video') (media as HTMLVideoElement).playsInline = true
   media.preload = 'auto'
   media.muted = true
+  media.inert = true
   media.setAttribute('style', 'width:1px;height:1px;position:fixed;left:-1px;top:-1px')
   document.body.appendChild(media)
 

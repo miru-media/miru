@@ -343,6 +343,7 @@ export interface VideoEditor {
   readonly exportProgress: number
 
   readonly viewportSize: { width: number; height: number }
+  readonly isMobileWorkspace: boolean
 
   readonly zoom: number
 
@@ -417,6 +418,8 @@ export interface VideoEditor {
   deleteSelection: () => void
 
   generateId: () => string
+
+  getPartId: (part: string) => string
 
   /** Adds assets and tracks from the provided JSON object */
   importJson: (newContent: Schema.SerializedDocument) => void

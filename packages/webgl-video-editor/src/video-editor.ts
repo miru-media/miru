@@ -31,8 +31,11 @@ const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined 
 }
 
 const INITIAL_SECONDS_PER_PIXEL = 0.01
+const MOBILE_SCREEN_CUTOFF_PX = 1000
 
 export class VideoEditor implements pub.VideoEditor {
+  readonly #uid = uid()
+
   doc!: EditDocument
   _editor = this
   readonly sync?: pub.VideoEditorDocumentSync
@@ -42,6 +45,8 @@ export class VideoEditor implements pub.VideoEditor {
   _timelineContainer = ref<HTMLElement>()
   _timelineSize = useElementSize(this._timelineContainer)
   _viewportSize: Ref<Size>
+  _workspaceContainer = ref<HTMLElement>()
+  _workspaceSize = useElementSize(this._workspaceContainer)
   _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
 
   drag: ClipDrag
@@ -67,6 +72,11 @@ export class VideoEditor implements pub.VideoEditor {
   }
   set timelineContainer(value) {
     this._timelineContainer.value = value
+  }
+
+  get isMobileWorkspace(): boolean {
+    const { width } = this._workspaceSize.value
+    return width !== 0 && width < MOBILE_SCREEN_CUTOFF_PX
   }
 
   readonly #effects = computed(
@@ -153,6 +163,10 @@ export class VideoEditor implements pub.VideoEditor {
   generateId(): string {
     const { sync } = this
     return sync ? sync.generateId() : uid()
+  }
+
+  getPartId(part: string): string {
+    return `${part}-${this.#uid}`
   }
 
   importJson(content: Schema.SerializedDocument): void {

@@ -1,7 +1,6 @@
 import { computed, effect, ref } from 'fine-jsx'
 
 import { ACCEPT_AUDIO_FILE_TYPES } from '#constants'
-import { Button } from 'shared/components/button'
 import { useI18n } from 'shared/utils'
 
 import type { MediaAsset } from '../assets/media-asset.ts'
@@ -56,39 +55,27 @@ export const AssetBinAudio = () => {
     assetSearchQuery.value = (event.target as HTMLInputElement).value
   }
 
-  const closeAssetbin = () => {
-    editor.activeAssetBin = null
-  }
-
   return (
-    <div class={styles.assetBin}>
-      <div class={styles.assetBinHeader}>
-        <Button onClick={closeAssetbin} label={t('asset_bin_music_close')} class={styles.textGreat}>
-          <div class="bulma-icon i-tabler:x" />
-        </Button>
-        <h2 class={styles.textGreat}>{t('music')}</h2>
-      </div>
-      <div class={styles.assetBinInputContainer}>
-        <label class={[styles.assetBinUpload, styles.textBodyBold]}>
-          <input
-            type="file"
-            accept={ACCEPT_AUDIO_FILE_TYPES}
-            aria-label={t('asset_bin_music_upload')}
-            class={styles.srOnly}
-            onInput={(event: InputEvent) => void onInputAudioFile(event)}
-          />
-          <div class="bulma-icon i-tabler:upload" />
-          <span>{t('asset_bin_music_upload')}</span>
-        </label>
+    <div class={styles.panelBody}>
+      <label class={[styles.wideButton, styles.textBodyBold]}>
         <input
-          type="search"
-          value={() => assetSearchQuery.value}
-          onInput={onSearchInput}
-          class={styles.assetBinSearch}
-          placeholder={t('asset_bin_music_search_placeholder')}
-          aria-label={t('asset_bin_music_search_placeholder')}
+          type="file"
+          accept={ACCEPT_AUDIO_FILE_TYPES}
+          aria-label={t('asset_bin_music_upload')}
+          class={styles.srOnly}
+          onInput={(event: InputEvent) => void onInputAudioFile(event)}
         />
-      </div>
+        <IconMsUploadRounded />
+        <span>{t('asset_bin_music_upload')}</span>
+      </label>
+      <input
+        type="search"
+        value={assetSearchQuery}
+        onInput={onSearchInput}
+        class={styles.panelInput}
+        placeholder={t('asset_bin_music_search_placeholder')}
+        aria-label={t('asset_bin_music_search_placeholder')}
+      />
       <div class={styles.assetBinAudioPreviewContainer}>
         {() => {
           if (assets.value.length === 0) {

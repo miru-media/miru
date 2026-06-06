@@ -92,7 +92,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
         >
           <div class={[styles.assetBinButton]}>
             <span>{t('asset_bin_delete_video')}</span>
-            <div class="bulma-icon i-tabler:trash" />
+            <IconMsDeleteOutlineRounded />
           </div>
         </Button>
         <Button
@@ -103,7 +103,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
         >
           <div class={styles.assetBinButton}>
             <span>{t('asset_bin_media_create_clip')}</span>
-            <div class="bulma-icon i-tabler:circle-plus" />
+            <IconMsAddCircleOutlineRounded />
           </div>
         </Button>
       </div>

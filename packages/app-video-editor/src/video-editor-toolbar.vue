@@ -3,24 +3,14 @@ import { ref } from 'vue'
 import { filesize } from 'filesize'
 import { debounce } from 'throttle-debounce'
 
-import { type InputEvent } from 'shared/types'
 import { useEventListener } from 'shared/utils'
 
-import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VIDEO_FILE_TYPES, AssetBin } from 'webgl-video-editor/vue'
+import { AssetBin } from 'webgl-video-editor/vue'
 
 import type { VideoEditor } from 'webgl-video-editor'
 import { state } from './state'
 
 const { editor } = defineProps<{ editor: VideoEditor }>()
-
-const onInputVideoFile = async (event: Event) => {
-  const { target: target } = event as InputEvent
-  const file = target.files?.[0]
-  if (!file) return
-
-  target.value = ''
-  editor.replaceClipAsset(await editor.createMediaAsset(file))
-}
 
 const showDebugButtons = ref(import.meta.env.DEV)
 const tapCounter = ref(0)
@@ -39,102 +29,60 @@ useEventListener(
   <div class="actions">
     <div class="toolbar safe-padding-x">
       <button class="toolbar-button" @click="() => editor.splitClipAtCurrentTime()">
-        <div class="icon i-tabler-cut" />
+        <div class="icon i-material-symbols:split-scene-outline" />
         {{ $t('split') }}
       </button>
 
       <template v-if="editor.selection">
         <button class="toolbar-button" @click="() => editor.deleteSelection()">
-          <div class="icon i-tabler-trash" />
+          <div class="icon i-material-symbols: i-material-symbols:delete-outline-rounded" />
           {{ $t('delete') }}
-        </button>
-
-        <label v-if="editor.selection.isMediaClip()" class="toolbar-button">
-          <div class="icon i-tabler-exchange" />
-          <input
-            type="file"
-            :accept="editor.selection.isAudio() ? ACCEPT_AUDIO_FILE_TYPES : ACCEPT_VIDEO_FILE_TYPES"
-            class="sr-only"
-            @input="onInputVideoFile"
-          />
-          {{ $t(`change_${editor.selection.parent?.trackType ?? ''}`) }}
-        </label>
-      </template>
-
-      <template v-if="showDebugButtons">
-        <button class="toolbar-button" @click="() => (editor._showStats = !editor._showStats)">
-          <div :class="editor._showStats ? 'icon i-tabler-graph-filled' : 'icon i-tabler-graph'" />
-          {{ $t('Debug') }}
         </button>
       </template>
 
       <button
-        v-if="editor.selection?.isVideo()"
+        v-if="editor.selection?.isVideo() && editor.selection.isMediaClip()"
         :class="['toolbar-button', editor.selection.effects && 'active']"
         :aria-expanded="editor.activeAssetBin === AssetBin.filters"
-        @click="
-          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.filters ? null : AssetBin.filters)
-        "
+        :commandfor="editor.getPartId(AssetBin.filters)"
+        command="show-modal"
       >
-        <div
-          :class="
-            editor.activeAssetBin === AssetBin.filters
-              ? 'icon i-tabler-filters-filled'
-              : 'icon i-tabler-filters'
-          "
-        />
+        <div class="icon i-material-symbols:filter-vintage-outline-rounded" />
         {{ $t('filters') }}
       </button>
 
       <button
         class="toolbar-button"
         :aria-expanded="editor.activeAssetBin === AssetBin.audio"
-        @click="
-          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.audio ? null : AssetBin.audio)
-        "
+        :commandfor="editor.getPartId(AssetBin.audio)"
+        command="show-modal"
       >
-        <div
-          :class="
-            editor.activeAssetBin === AssetBin.audio ? 'icon i-tabler-music-search' : 'icon i-tabler-music'
-          "
-        />
+        <div class="icon i-material-symbols:music-note-rounded" />
         {{ $t('music') }}
       </button>
 
       <button
         class="toolbar-button"
         :aria-expanded="editor.activeAssetBin === AssetBin.video"
-        @click="
-          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.video ? null : AssetBin.video)
-        "
+        :commandfor="editor.getPartId(AssetBin.video)"
+        command="show-modal"
       >
-        <div
-          :class="
-            editor.activeAssetBin === AssetBin.video ? 'icon i-tabler-folder-filled' : 'icon i-tabler-folder'
-          "
-        />
+        <div class="icon i-material-symbols:folder-open-outline-rounded" />
         {{ $t('media') }}
       </button>
 
       <button
         class="toolbar-button"
         :aria-expanded="editor.activeAssetBin === AssetBin.fonts"
-        @click="
-          () => (editor.activeAssetBin = editor.activeAssetBin === AssetBin.fonts ? null : AssetBin.fonts)
-        "
+        :commandfor="editor.getPartId(AssetBin.fonts)"
+        command="show-modal"
       >
-        <div
-          :class="
-            editor.activeAssetBin === AssetBin.fonts
-              ? 'icon i-tabler-file-typography-filled'
-              : 'icon i-tabler-file-typography'
-          "
-        />
+        <div class="icon i-material-symbols:text-fields-rounded" />
         {{ $t('fonts') }}
       </button>
 
       <button class="toolbar-button" @click="() => editor.export()">
-        <div class="icon i-tabler-download" />
+        <div class="icon i-material-symbols:download-rounded" />
         {{ $t('export') }}
       </button>
 
@@ -142,8 +90,21 @@ useEventListener(
         {{ editor.exportResult.blob.type }} {{ filesize(editor.exportResult.blob.size) }}
       </a>
 
+      <template v-if="showDebugButtons">
+        <button class="toolbar-button" @click="() => (editor._showStats = !editor._showStats)">
+          <div
+            :class="
+              editor._showStats
+                ? 'icon i-material-symbols:frame-bug-rounded'
+                : 'icon i-material-symbols:frame-bug-outline-rounded'
+            "
+          />
+          {{ $t('Debug') }}
+        </button>
+      </template>
+
       <button class="toolbar-button info" @click="() => (state.showInfo = true)">
-        <div class="icon i-tabler-help" />
+        <div class="icon i-material-symbols:help-outline-rounded" />
         {{ $t('info') }}
       </button>
     </div>

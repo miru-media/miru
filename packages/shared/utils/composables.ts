@@ -25,16 +25,21 @@ export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | un
   })
 
   const observer = new ResizeObserver(([entry]) => {
-    if ('contentBoxSize' in (entry as never)) {
-      const { contentBoxSize } = entry
+    const prev = size.value
+    let width
+    let height
 
-      const sizeItem = (
-        Array.isArray(contentBoxSize) ? contentBoxSize[0] : contentBoxSize
-      ) as ResizeObserverSize
-      size.value = { width: sizeItem.inlineSize, height: sizeItem.blockSize }
+    if ('borderBoxSize' in (entry as never)) {
+      const { borderBoxSize } = entry
+
+      const sizeItem = (Array.isArray(borderBoxSize) ? borderBoxSize[0] : borderBoxSize) as ResizeObserverSize
+      width = sizeItem.inlineSize
+      height = sizeItem.blockSize
     } else {
-      size.value = { width: entry.contentRect.width, height: entry.contentRect.height }
+      ;({ width, height } = { width: entry.contentRect.width, height: entry.contentRect.height })
     }
+
+    if (prev.width !== width || prev.height !== height) size.value = { width, height }
   })
 
   watch([() => toValue(element)], ([el], _prev, onCleanup) => {
@@ -173,7 +178,8 @@ export const useI18n = () => inject<ReturnType<typeof createI18n>>('i18n')!
  * @throws {Error} Throws if the method is called while a result is pending.
  */
 export const useAsyncCallback = <TArgs extends unknown[]>(
-  callback: (...args: TArgs) => Promise<unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- needs to be flexible
+  callback: (...args: TArgs) => Promise<unknown> | undefined | {},
 ): [fn: typeof callback, isPending: Ref<boolean>] => {
   const isPending = ref(false)
   const fn: typeof callback = async (...args) => {

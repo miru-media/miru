@@ -1,9 +1,14 @@
+import { resolve } from 'node:path'
+
 import unpluginIconResolver from 'unplugin-icons/resolver'
+
+import { ROOT } from './utils.js'
 
 const iconResolver = () => {
   const baseResolver = unpluginIconResolver({
     prefix: 'Icon',
     extension: 'jsx',
+    alias: { ms: 'material-symbols' },
   })
 
   return (/** @type {string} */ name) =>
@@ -15,5 +20,6 @@ const iconResolver = () => {
 
 export const autoImportOptions = {
   resolvers: [iconResolver()],
+  dts: resolve(ROOT, 'auto-imports.d.ts'),
   eslintrc: { enabled: false },
 }

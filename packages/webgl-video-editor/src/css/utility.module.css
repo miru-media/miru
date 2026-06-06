@@ -1,3 +1,33 @@
+.sanitize {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  line-height: normal;
+  color: inherit;
+  outline: none;
+  background: transparent;
+  border: none;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &,
+  * {
+    &,
+    &::before,
+    &::after {
+      box-sizing: border-box;
+    }
+  }
+}
+
+.focusWithin:has(:focus-visible),
+.sanitize:focus-visible {
+  outline: solid 4px white;
+}
+
 .textSmall {
   font-size: 9px;
   font-weight: 600;
@@ -46,6 +76,10 @@
   line-height: 36px;
 }
 
+.textSecondary {
+  color: #aaacc2;
+}
+
 .numeric {
   font-family: sans-serif;
   font-variant-numeric: tabular-nums;
@@ -72,4 +106,14 @@
 .safePaddingY {
   padding-top: max(env(safe-area-inset-top, 1.25rem), 1.25rem);
   padding-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
+}
+
+.safeMarginX {
+  margin-right: max(env(safe-area-inset-right, 1.25rem), 1.25rem);
+  margin-left: max(env(safe-area-inset-left, 1.25rem), 1.25rem);
+}
+
+.safeMarginY {
+  margin-top: max(env(safe-area-inset-top, 1.25rem), 1.25rem);
+  margin-bottom: max(env(safe-area-inset-bottom, 1.25rem), 1.25rem);
 }

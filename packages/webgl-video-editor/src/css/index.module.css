@@ -1,21 +1,18 @@
 @import url('./common.module.css');
+@import url('../components/atoms/design.css');
 @import url('./clip.module.css');
 @import url('./viewport.module.css');
 @import url('./timeline.module.css');
 @import url('./assetbin.module.css');
 
 .videoEditor {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  font-size: 0.875rem;
   color: white;
-  background-color: var(--primary-bg);
 
   .viewport {
     max-height: min(60vh, calc(100dvh - 22rem));
-    padding: 0.25rem;
   }
 
   .viewportCanvas {

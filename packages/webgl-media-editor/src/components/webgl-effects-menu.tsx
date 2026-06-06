@@ -10,76 +10,26 @@ import {
   watch,
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
-import type { CropState, Renderer, RendererEffectOp } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/effect'
-import type { InputEvent, Size } from 'shared/types'
+import type { InputEvent } from 'shared/types'
 import { getCenter, useElementSize } from 'shared/utils'
 
 import { DEFAULT_INTENSITY, SCROLL_SELECT_EVENT_THROTTLE_MS, SCROLL_SELECT_TIMEOUT_MS } from '../constants.ts'
 import styles from '../css/index.module.css'
 
 import { RowSlider } from './row-slider.jsx'
-
-const EffectItem = (props: {
-  effect: Effect
-  id: string | undefined
-  imageData: MaybeRefOrGetter<ImageData | undefined>
-  thumbnailIndex: MaybeRefOrGetter<number>
-  size: MaybeRefOrGetter<Size>
-  class: unknown
-  isActive: () => boolean
-  onClick: () => void
-}) => {
-  const { id, class: className, isActive, onClick } = props
-  const canvas = ref<HTMLCanvasElement>()
-
-  // get data from thumbnail sprite
-  effect(() => {
-    const context = canvas.value?.getContext('2d')
-    const imageData = toValue(props.imageData)
-    if (!context || !imageData) return
-
-    const { width, height } = toValue(props.size)
-    context.canvas.width = width
-    context.canvas.height = height
-
-    const x = toValue(props.thumbnailIndex) * width
-    context.putImageData(imageData, -x, 0, x, 0, width, height)
-  })
-
-  return (
-    <label data-id={id} class={[styles['miru--button'], styles['miru--filter-preview'], className]}>
-      <input
-        type="radio"
-        name="image-filter"
-        value={props.effect.name}
-        checked={() => isActive()}
-        onClick={onClick}
-      />
-      <canvas ref={canvas} role="presentation" />
-      <span class={styles['miru--button__label']}>{props.effect.name}</span>
-    </label>
-  )
-}
+import { type EffectThumbnailsOptions, useEffectThumbnails } from './use-effect-thumbnails.jsx'
 
 export interface WebglEffectsMenuExpose {
   scrollToEffect: (filterId: string | undefined, scrollBehaviour?: ScrollBehavior) => void
 }
 
-export interface WebglEffectsMenuProps {
+export interface WebglEffectsMenuProps extends EffectThumbnailsOptions {
   ref?: Ref<WebglEffectsMenuExpose | undefined> | ((value: WebglEffectsMenuExpose | undefined) => void)
-  sourceTexture: MaybeRefOrGetter<WebGLTexture>
-  sourceSize: MaybeRefOrGetter<Size>
-  thumbnailSize: MaybeRefOrGetter<Size>
-  crop?: MaybeRefOrGetter<CropState | undefined>
-  renderer: Renderer
-  effects: MaybeRefOrGetter<Map<string, Effect>>
   effect: MaybeRefOrGetter<string | undefined>
   intensity: MaybeRefOrGetter<number>
-  prependOps?: MaybeRefOrGetter<RendererEffectOp[]>
   showIntensity?: MaybeRefOrGetter<boolean | undefined>
-  loading?: MaybeRefOrGetter<boolean>
   class?: unknown
   onChange: (effectId: string | undefined, intensity: number) => void
 }
@@ -213,68 +163,13 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
     scrolledEffectId.value = filterId
   }
 
-  // canvas will contain one row of all thumbnails
-  const imageData = ref<ImageData>()
-  const fb = renderer.createFramebufferAndTexture(toValue(props.thumbnailSize))
-
-  effect(async (onCleanup) => {
-    const effects = [ORIGINAL_EFFECT, ...toValue(props.effects).values()]
-
-    if (toValue(props.loading) === true || effects.some((e) => e.isLoading)) return
-
-    let isStale = false as boolean
-    onCleanup(() => void (isStale = true))
-
-    const { width, height } = toValue(props.thumbnailSize)
-    const textureSize = { width: width * effects.length, height }
-
-    renderer.resizeTexture(fb.texture, textureSize)
-    renderer.setSourceTexture(
-      toValue(props.sourceTexture),
-      toValue(props.thumbnailSize),
-      toValue(props.sourceSize),
-      toValue(props.crop),
-    )
-
-    const options = {
-      framebuffer: fb.framebuffer,
-      x: 0,
-      y: 0,
-      width,
-      height,
-      clear: true,
-    }
-    const prependOps = toValue(props.prependOps) ?? []
-
-    for (let i = 0; i < effects.length; i++) {
-      renderer.setEffect({ ops: prependOps.concat(effects[i].ops) })
-      renderer.setIntensity(1)
-      renderer.setIntensity(DEFAULT_INTENSITY)
-
-      options.x = i * width
-      renderer.draw(options)
-    }
-
-    await renderer.waitAsync()
-    if (isStale) return
-
-    const data = await renderer.getImageData(fb.framebuffer, textureSize)
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- may have changed after await
-    if (isStale) return
-    imageData.value = data
-  })
-
-  onScopeDispose(() => {
-    renderer.deleteFramebuffer(fb.framebuffer)
-    renderer.deleteTexture(fb.texture)
-  })
-
+  const canvases = useEffectThumbnails(props)
   const stopPropagaion = (event: Event): void => event.stopPropagation()
 
   return (
     <div {...attrs} class={[styles['miru--menu'], props.class]}>
       <fieldset
-        class={[styles['miru--menu__row--scroll']]}
+        class={styles['miru--menu__row--scroll']}
         role="radiogroup"
         onInput={stopPropagaion}
         onChange={stopPropagaion}
@@ -284,38 +179,48 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
           {() =>
             [['', ORIGINAL_EFFECT] as const, ...toValue(props.effects)].map(
               ([id, effect], thumbnailIndex) => (
-                <EffectItem
-                  effect={effect}
-                  id={id || ''}
-                  imageData={imageData}
-                  thumbnailIndex={thumbnailIndex}
-                  size={props.thumbnailSize}
-                  isActive={() => currentEffect.value === id}
-                  onClick={() => onClickFilter(id)}
+                <label
+                  data-id={id}
                   class={() => [
+                    styles['miru--button'],
+                    styles['miru--filter-preview'],
                     scrolledEffectId.value === id && styles['miru--hov'],
-                    ((toValue(props.loading) ?? false) || effect.isLoading || !imageData.value) &&
+                    ((toValue(props.loading) ?? false) ||
+                      effect.isLoading ||
+                      thumbnailIndex >= canvases.value.length) &&
                       styles['miru--loading'],
                   ]}
-                />
+                >
+                  <input
+                    type="radio"
+                    name="image-filter"
+                    value={effect.name}
+                    checked={() => currentEffect.value === id}
+                    onClick={() => onClickFilter(id)}
+                  />
+                  {canvases.value[thumbnailIndex]}
+                  <span class={styles['miru--button__label']}>{effect.name}</span>
+                </label>
               ),
             )
           }
         </div>
       </fieldset>
 
-      {() => (
-        <RowSlider
-          label="Intensity"
-          Icon={IconTablerCircleOff}
-          ticks={[0, 1]}
-          zeroPoint={0}
-          value={toRef(props.intensity)}
-          onInput={onInputIntensity}
-          onChange={onInputIntensity}
-          disabled={() => toValue(showIntensity) ?? !currentEffect.value}
-        />
-      )}
+      {() =>
+        showIntensity !== false && (
+          <RowSlider
+            label="Intensity"
+            Icon={IconTablerCircleOff}
+            ticks={[0, 1]}
+            zeroPoint={0}
+            value={toRef(props.intensity)}
+            onInput={onInputIntensity}
+            onChange={onInputIntensity}
+            disabled={() => !currentEffect.value}
+          />
+        )
+      }
     </div>
   )
 }

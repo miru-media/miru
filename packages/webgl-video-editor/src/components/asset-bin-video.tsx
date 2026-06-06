@@ -1,7 +1,6 @@
 import { computed, effect, ref } from 'fine-jsx'
 
 import { ACCEPT_VIDEO_FILE_TYPES } from '#constants'
-import { Button } from 'shared/components/button'
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 
@@ -42,10 +41,6 @@ export const AssetBinVideo = () => {
     })
   })
 
-  const closeAssetbin = () => {
-    editor.activeAssetBin = null
-  }
-
   const onInputVideoFile = async (event: InputEvent) => {
     const file = (event.target as HTMLInputElement).files?.[0]
     if (!file) return
@@ -63,34 +58,28 @@ export const AssetBinVideo = () => {
   }
 
   return (
-    <div class={styles.assetBin}>
-      <div class={styles.assetBinHeader}>
-        <Button onClick={closeAssetbin} label={t('asset_bin_media_close')} class={styles.textGreat}>
-          <div class="bulma-icon i-tabler:x" />
-        </Button>
-        <h2 class={styles.textGreat}>{t('media')}</h2>
-      </div>
-      <div class={styles.assetBinInputContainer}>
-        <label class={[styles.assetBinUpload, styles.textBodyBold]}>
-          <input
-            type="file"
-            accept={ACCEPT_VIDEO_FILE_TYPES}
-            aria-label={t('asset_bin_media_upload')}
-            class={styles.srOnly}
-            onInput={(event: InputEvent) => void onInputVideoFile(event)}
-          />
-          <div class="bulma-icon i-tabler:upload" />
-          <span>{t('asset_bin_media_upload')}</span>
-        </label>
+    <div class={styles.panelBody}>
+      <label class={[styles.wideButton, styles.textBodyBold]}>
         <input
-          type="search"
-          value={() => assetSearchQuery.value}
-          onInput={onSearchInput}
-          class={styles.assetBinSearch}
-          placeholder={t('asset_bin_media_search_placeholder')}
-          aria-label={t('asset_bin_media_search_placeholder')}
+          type="file"
+          accept={ACCEPT_VIDEO_FILE_TYPES}
+          aria-label={t('asset_bin_media_upload')}
+          class={styles.srOnly}
+          onInput={(event: InputEvent) => void onInputVideoFile(event)}
         />
-      </div>
+        <IconMsUploadRounded />
+        <span>{t('asset_bin_media_upload')}</span>
+      </label>
+
+      <input
+        type="search"
+        value={assetSearchQuery}
+        onInput={onSearchInput}
+        class={styles.panelInput}
+        placeholder={t('asset_bin_media_search_placeholder')}
+        aria-label={t('asset_bin_media_search_placeholder')}
+      />
+
       <div class={styles.assetBinAssetsContainer}>
         {() => {
           if (assets.value.length === 0) {
@@ -106,8 +95,8 @@ export const AssetBinVideo = () => {
                 activeVideo.value = asset
               }}
             >
-              <img src={asset.thumbnailUri} alt={asset.name} />
-              <span class={styles.textBodySmall}>{asset.name}</span>
+              <img src={asset.thumbnailUri} alt="" class={styles.assetBinThumbnail} />
+              <span class={styles.assetBinName}>{asset.name}</span>
             </button>
           ))
         }}

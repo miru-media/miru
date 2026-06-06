@@ -42,6 +42,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       exportResult: toVue(() => editor.exportResult),
       exportProgress: toVue(() => editor.exportProgress),
       viewportSize: toVue(() => editor.viewportSize),
+      isMobileWorkspace: toVue(() => editor.isMobileWorkspace),
       zoom: toVue(() => editor.zoom),
       playback: toVue(() => editor.playback),
       _secondsPerPixel: toVue(() => editor._secondsPerPixel),
@@ -74,6 +75,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       pixelsToSeconds: editor.pixelsToSeconds.bind(editor),
       addTrack: editor.addTrack.bind(editor),
       generateId: editor.generateId.bind(editor),
+      getPartId: editor.getPartId.bind(editor),
 
       dispose(): void {
         fineJsxScope.stop()

@@ -8,6 +8,7 @@
     "dist"
   ],
   "imports": {
+    "#atoms": "./src/components/atoms/index.ts",
     "#constants": "./src/constants.ts",
     "#assets": "./src/assets/index.ts",
     "#nodes": "./src/nodes/index.ts",

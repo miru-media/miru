@@ -26,8 +26,24 @@
   --ruler-height: 1rem;
   --ruler-spacing-top: 0.25rem;
   --ruler-spacing-bottom: 2.625rem;
-  --primary-bg: #171717;
-  --primary-bg-05: #17171788;
+  --primary-bg: #17191a;
+  --primary-bg-05: #17191a88;
+  --secondary-bg: #1c2023;
+  --focus-outline: 0.25rem solid white;
+
+  .mobile {
+    --primary-bg: black;
+    --secondary-bg: #17191a;
+  }
+
+  &,
+  * {
+    &,
+    &::before,
+    &::after {
+      box-sizing: border-box;
+    }
+  }
 }
 
 .slot {
@@ -48,7 +64,7 @@
   height: 100%;
   overflow: hidden;
   background-color: black;
-  border-radius: 1.25rem;
+  border-radius: 0.625rem;
 }
 
 .host :global(.miru-icon) {

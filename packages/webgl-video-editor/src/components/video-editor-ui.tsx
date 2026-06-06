@@ -2,23 +2,21 @@
 import type { Ref } from 'fine-jsx'
 import { h } from 'fine-jsx/jsx-runtime'
 
+import { Drawer } from '#atoms'
 import type { VideoEditor } from '#core'
 import { LoadingOverlay } from 'shared/components/loading-overlay'
-import type { I18nOptions, InputEvent } from 'shared/types'
-import { provideI18n, Rational } from 'shared/utils'
-import { ReadyState } from 'shared/video/constants.ts'
+import type { I18nOptions } from 'shared/types'
+import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
-import { AssetBin, EXPORT_VIDEO_CODECS } from '../constants.ts'
+import { EXPORT_VIDEO_CODECS } from '../constants.ts'
 import styles from '../css/index.module.css'
-import type { PlaybackDocument } from '../document-views/playback/playback-document.ts'
+import { getPanelList } from '../panels-list.ts'
 
-import { AssetBinAudio } from './asset-bin-audio.jsx'
-import { AssetBinFilters } from './asset-bin-filters.jsx'
-import { AssetBinFonts } from './asset-bin-fonts.jsx'
-import { AssetBinVideo } from './asset-bin-video.jsx'
+import { Debug } from './debug.jsx'
+import { DesktopControls } from './desktop-controls.jsx'
+import { PanelToolbar } from './panel-toolbar.jsx'
 import { PlaybackControls } from './playback-controls.jsx'
-import { SecondaryToolbar } from './secondary-toolbar.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 import { provideEditor } from './utils.ts'
@@ -50,14 +48,44 @@ export const VideoEditorUI = (props: {
       .catch(() => undefined)
   else alert(t('error_no_webcodecs'))
 
-  const { doc } = editor
-  const playback = editor.playback as unknown as PlaybackDocument
+  const { playback } = editor
 
   return (
-    <div class={styles.videoEditor}>
-      {() => editor._showStats && playback.stats.dom}
+    <div
+      ref={editor._editor._workspaceContainer}
+      class={() => [
+        styles.videoEditor,
+        styles.workspace,
+        editor.isMobileWorkspace ? styles.mobile : styles.desktop,
+      ]}
+    >
+      <div class={styles.workspaceHeader}>Header</div>
+
+      <div class={styles.panels}>
+        {/* TODO: I'm using fragments here to keep the number of children stable. Need to fix it in fine-jsx */}
+        <>{() => !editor.isMobileWorkspace && <PanelToolbar />}</>
+
+        <>
+          {getPanelList(editor).map(({ id, titleI18nKey, PanelBody, isPermitted = () => true }) => () => {
+            if (!isPermitted()) return
+            if (editor.isMobileWorkspace)
+              return (
+                <Drawer id={editor.getPartId(id)} title={t(titleI18nKey)} content={() => <PanelBody />} />
+              )
+
+            return (
+              editor.activeAssetBin === id && (
+                <div class={styles.panel}>
+                  <PanelBody />
+                </div>
+              )
+            )
+          })}
+        </>
+      </div>
+
       <div
-        class={styles.viewport}
+        class={[styles.viewport, styles.workspaceViewport]}
         style={() =>
           `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
         }
@@ -68,81 +96,22 @@ export const VideoEditorUI = (props: {
         <PlaybackControls />
       </div>
 
-      <SecondaryToolbar />
+      <div class={styles.workspaceProperties}>Transform</div>
 
-      <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
-      {() => editor.activeAssetBin === AssetBin.video && <AssetBinVideo />}
-      {() => editor.activeAssetBin === AssetBin.audio && <AssetBinAudio />}
-      {() => editor.activeAssetBin === AssetBin.fonts && <AssetBinFonts />}
-      {() => editor.activeAssetBin === AssetBin.filters && editor.selection?.isVideo() && <AssetBinFilters />}
-      <div class={styles.slot}>{props.children?.default}</div>
-      <progress
-        style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}
-        value={() => editor.exportProgress}
-      ></progress>
+      <div class={styles.workspaceBottom}>
+        {() => (editor.isMobileWorkspace ? null : <DesktopControls />)}
 
-      {() =>
-        editor._showStats && (
-          <div class={styles.textBodySmall} style={() => `width:100%; padding:0.25rem; overflow:auto;`}>
-            <p style="display:flex;gap:0.25rem">
-              {() =>
-                doc.timeline.children.map((track) =>
-                  track.children.map((clip) => {
-                    if (!clip.isMediaClip()) return null
+        <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
 
-                    const playbackClip = playback._getNode(clip)
-                    const { mediaState } = playbackClip
+        <div class={styles.slot}>{props.children?.default}</div>
 
-                    return (
-                      <div style="font-family:monospace">
-                        <div>
-                          {() =>
-                            [
-                              playbackClip.mediaTime.value.toFixed(2),
-                              mediaState.latestEvent.value?.type,
-                            ].join(' ')
-                          }
-                        </div>
-                        <div>
-                          {() => (
-                            <>
-                              {Object.keys(ReadyState).find(
-                                (key) =>
-                                  ReadyState[key as keyof typeof ReadyState] === mediaState.readyState.value,
-                              )}{' '}
-                              | {playbackClip.mediaState.error.value?.code}
-                            </>
-                          )}
-                        </div>
+        <progress
+          style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}
+          value={() => editor.exportProgress}
+        ></progress>
 
-                        <div>
-                          <label>
-                            source time{' '}
-                            <input
-                              type="number"
-                              min="0"
-                              max="20"
-                              step="0.25"
-                              value={() => clip.sourceStart.valueOf()}
-                              onInput={(event: InputEvent) =>
-                                (clip.sourceStart = Rational.fromDecimal(
-                                  event.target.valueAsNumber,
-                                  clip.sourceStart.rate,
-                                ))
-                              }
-                            />
-                          </label>
-                          [{() => clip.time.start.toFixed(2)}, {() => clip.time.end.toFixed(2)}]{' | '}
-                        </div>
-                      </div>
-                    )
-                  }),
-                )
-              }
-            </p>
-          </div>
-        )
-      }
+        {() => editor._showStats && <Debug />}
+      </div>
     </div>
   )
 }

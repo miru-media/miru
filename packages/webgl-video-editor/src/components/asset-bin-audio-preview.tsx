@@ -73,14 +73,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
               {asset.thumbnailUri && <img src={asset.thumbnailUri} alt={asset.name} />}
             </div>
             <div class={styles.assetBinAudioThumbnailOverlay}>
-              {() => (
-                <div
-                  class={[
-                    'bulma-icon',
-                    isPlaying.value ? 'i-tabler:player-pause-filled' : 'i-tabler:player-play-filled',
-                  ]}
-                />
-              )}
+              {() => (isPlaying.value ? <IconMsPauseRounded /> : <IconMsPlayArrowRounded />)}
             </div>
           </button>
           <div class={styles.assetBinAudioText}>
@@ -97,7 +90,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
               isAudioInUse.value ? t('asset_bin_delete_music_disabled') : t('asset_bin_delete_music')
             }
           >
-            <div class="bulma-icon i-tabler:trash" />
+            <IconMsDeleteOutlineRounded />
           </Button>
           <Button
             onClick={createClip}
@@ -105,7 +98,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
             class={styles.assetBinCreateClip}
             label={t('asset_bin_music_create_clip')}
           >
-            <div class="bulma-icon i-tabler:circle-plus" />
+            <IconMsAddCircleOutlineRounded />
           </Button>
         </div>
       </div>

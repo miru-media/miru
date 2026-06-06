@@ -1,9 +1,8 @@
-import { computed, effect, onScopeDispose, ref } from 'fine-jsx'
+import { computed, effect, h, onScopeDispose, ref } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
-import { _mediaEditorContainerClass_, WebglEffectsMenu } from 'webgl-media-editor'
+import { useEffectThumbnails } from 'webgl-media-editor'
 
 import { Effect } from 'reactive-effects/effect'
-import { Button } from 'shared/components/button'
 import type { Size } from 'shared/types'
 import { fit, useI18n } from 'shared/utils'
 
@@ -19,19 +18,15 @@ export const AssetBinFilters = () => {
   const MAX_THUMBNAIL_SIZE: Size = { width: 200, height: 200 }
   const THUMBNAIL_REFRESH_MS = 250
 
-  const closeAssetbin = () => {
-    editor.activeAssetBin = null
-  }
-
   const clip = computed(() => {
     const { selection } = editor
     return selection?.isVideo() ? selection : undefined
   })
 
   const renderer = editor.effectRenderer
-  const texture = renderer.createTexture()
-  onScopeDispose(() => renderer.deleteTexture(texture))
-  const sourceSize = computed(() => (editor.selection?.isVideo() ? editor.selection.mediaSize : EMPTY_SIZE))
+  const sourceTexture = renderer.createTexture()
+  onScopeDispose(() => renderer.deleteTexture(sourceTexture))
+  const sourceSize = computed(() => editor.playback.renderView._getNode(clip.value)?.getSize() ?? EMPTY_SIZE)
   const thumbnailSize = computed(() => fit(sourceSize.value, MAX_THUMBNAIL_SIZE, 'contain'))
   const effects = ref(new Map<string, Effect>())
   effect((onCleanup) => {
@@ -42,7 +37,7 @@ export const AssetBinFilters = () => {
     onCleanup(() => next.forEach((e) => e.dispose()))
   })
 
-  const currentEffect = computed(() => editor.selection?.effects.at(0))
+  const currentEffect = computed(() => clip.value?.effects.at(0))
 
   const onChange = (effectId: string | undefined, intensity: number) => {
     if (!clip.value) return
@@ -68,7 +63,7 @@ export const AssetBinFilters = () => {
     if (!clip.value) return
     const video = videoElement.value
     if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
-    renderer.loadImage(texture, video)
+    renderer.loadImage(sourceTexture, video)
     isLoading.value = false
   })
 
@@ -94,27 +89,59 @@ export const AssetBinFilters = () => {
     })
   })
 
+  const canvases = useEffectThumbnails({
+    renderer,
+    sourceTexture,
+    sourceSize,
+    thumbnailSize,
+    effects,
+    loading: isLoading,
+  })
+
   return (
-    <div class={styles.assetBin}>
-      <div class={styles.assetBinHeader}>
-        <Button onClick={closeAssetbin} label={t('asset_bin_filters_close')} class={styles.textGreat}>
-          <div class="bulma-icon i-tabler:x" />
-        </Button>
-        <h2 class={styles.textGreat}>{t('filters')}</h2>
+    <div class={[styles.panelBody, styles.assetBinFiltersContainer]}>
+      <div class={styles.assetBinAssetsContainer}>
+        <button
+          type="button"
+          class={[styles.assetBinAsset, styles.assetBinSanitize]}
+          aria-selected={() => !clip.value?.effects[0]}
+          onClick={() => onChange(undefined, 1)}
+        >
+          <div class={styles.assetBinThumbnail}>
+            <IconMsBlockOutline style="font-size:1.5rem" />
+          </div>
+          <span class={styles.textBodySmall}>{t('none')}</span>
+        </button>
+
+        {() =>
+          [...effects.value.values()].map((effect, index) => (
+            <button
+              type="button"
+              class={[styles.assetBinAsset, styles.assetBinSanitize]}
+              aria-selected={() => clip.value?.effects[0]?.assetId === effect.id}
+              onClick={() => onChange(effect.id, 1)}
+            >
+              {h(canvases.value[index + 1] ?? 'div', { class: styles.assetBinThumbnail })}
+              <span class={styles.assetBinName}>{effect.name}</span>
+            </button>
+          ))
+        }
       </div>
-      <div class={[_mediaEditorContainerClass_, styles.assetBinFiltersContainer]}>
-        <WebglEffectsMenu
-          renderer={renderer}
-          sourceTexture={texture}
-          sourceSize={sourceSize}
-          thumbnailSize={thumbnailSize}
-          effects={effects}
-          effect={() => currentEffect.value?.assetId}
-          intensity={() => currentEffect.value?.intensity ?? 1}
-          onChange={onChange}
-          loading={isLoading}
+
+      {() => (
+        <input
+          type="range"
+          step="any"
+          min="0"
+          max="1"
+          value={() => currentEffect.value?.intensity ?? 1}
+          style={() => `visibility: ${currentEffect.value ? 'visible' : 'hidden'}`}
+          class={styles.assetBinFilterIntensitySlider}
+          onInput={(event: InputEvent) =>
+            onChange(currentEffect.value?.assetId, (event.target as HTMLInputElement).valueAsNumber)
+          }
         />
-      </div>
+      )}
     </div>
   )
 }

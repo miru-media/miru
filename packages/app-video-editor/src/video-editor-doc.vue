@@ -105,7 +105,7 @@ if (!import.meta.env.SSR) {
       :editor="editorProp"
       class="video-editor"
     >
-      <Toolbar v-if="editorRef" :editor="editorRef" />
+      <Toolbar v-if="editorRef?.isMobileWorkspace" :editor="editorRef" />
     </VideoEditorUI>
     <IntroModal />
   </div>

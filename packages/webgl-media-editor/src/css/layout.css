@@ -1,5 +1,5 @@
 /* MAIN CONTAINERS */
-.host {
+:where(.host) {
   /* SIZE */
   max-height: 90vh;
 }
@@ -10,7 +10,7 @@
 }
 
 /* MAIN FLEX CONTAINERS */
-.host,
+:where(.host),
 .miru--main {
   display: flex;
   flex: 1 1 0%;
