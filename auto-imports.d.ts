@@ -7,6 +7,7 @@
 export {}
 declare global {
   const IconMsAddCircleOutlineRounded: typeof import('~icons/material-symbols/add-circle-outline-rounded.jsx')['default']
+  const IconMsArrowBackRounded: typeof import('~icons/material-symbols/arrow-back-rounded.jsx')['default']
   const IconMsArrowDownward: typeof import('~icons/material-symbols/arrow-downward.jsx')['default']
   const IconMsArrowDownwardRounded: typeof import('~icons/material-symbols/arrow-downward-rounded.jsx')['default']
   const IconMsAudioFile: typeof import('~icons/material-symbols/audio-file.jsx')['default']
@@ -26,6 +27,7 @@ declare global {
   const IconMsFormatBoldRounded: typeof import('~icons/material-symbols/format-bold-rounded.jsx')['default']
   const IconMsFormatItalicRounded: typeof import('~icons/material-symbols/format-italic-rounded.jsx')['default']
   const IconMsFrameBugRounded: typeof import('~icons/material-symbols/frame-bug-rounded.jsx')['default']
+  const IconMsHelpOutlineRounded: typeof import('~icons/material-symbols/help-outline-rounded.jsx')['default']
   const IconMsMusicNoteRounded: typeof import('~icons/material-symbols/music-note-rounded.jsx')['default']
   const IconMsPauseRounded: typeof import('~icons/material-symbols/pause-rounded.jsx')['default']
   const IconMsPlayArrowRounded: typeof import('~icons/material-symbols/play-arrow-rounded.jsx')['default']

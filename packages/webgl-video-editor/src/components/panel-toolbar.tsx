@@ -6,37 +6,50 @@ import { getPanelList } from '../panels-list.ts'
 
 import { useEditor } from './utils.ts'
 
-export const PanelToolbar = () => {
+export const PanelToolbar = ({ onClickHelp }: { onClickHelp?: () => unknown }) => {
   const editor = useEditor()
   const togglePanel = (target: AssetBin) =>
     (editor.activeAssetBin = editor.activeAssetBin === target ? null : target)
   const { t } = useI18n()
 
   return (
-    <div class={styles.panelToolbar}>
-      {getPanelList(editor).map(({ id, titleI18nKey, Icon, isPermitted = () => true }) => (
-        <button
-          hidden={() => !isPermitted()}
-          class={styles.panelToggle}
-          aria-expanded={() => editor.activeAssetBin === id}
-          onClick={togglePanel.bind(null, id)}
-        >
-          <Icon class={styles.panelToggleIcon} />
+    <menu class={styles.panelToolbar}>
+      {getPanelList(editor).map(({ id, titleI18nKey, Icon, isPermitted }) => (
+        <li>
+          <button
+            hidden={() => !isPermitted.value}
+            class={styles.panelToggle}
+            aria-expanded={() => editor.activeAssetBin === id}
+            onClick={togglePanel.bind(null, id)}
+          >
+            <Icon class={styles.panelToggleIcon} />
 
-          {t(titleI18nKey)}
-        </button>
+            {t(titleI18nKey)}
+          </button>
+        </li>
       ))}
 
       {import.meta.env.DEV && (
-        <button
-          class={styles.panelToggle}
-          aria-expanded={() => editor._showStats}
-          onClick={() => (editor._showStats = !editor._showStats)}
-        >
-          <IconMsFrameBugRounded class={styles.panelToggleIcon} />
-          Debug
-        </button>
+        <li>
+          <button
+            class={styles.panelToggle}
+            aria-expanded={() => editor._showStats}
+            onClick={() => (editor._showStats = !editor._showStats)}
+          >
+            <IconMsFrameBugRounded class={styles.panelToggleIcon} />
+            Debug
+          </button>
+        </li>
       )}
-    </div>
+
+      {onClickHelp && (
+        <li>
+          <button class={styles.panelToggle} onClick={onClickHelp} style="margin-top:auto">
+            <IconMsHelpOutlineRounded />
+            {t('help')}
+          </button>
+        </li>
+      )}
+    </menu>
   )
 }

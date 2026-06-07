@@ -1,6 +1,5 @@
 import { computed, effect, ref, type Ref } from 'fine-jsx'
 
-import { Button } from 'shared/components/button'
 import { useAsyncCallback, useI18n } from 'shared/utils'
 
 import type { MediaAsset } from '../assets/media-asset.ts'
@@ -84,28 +83,24 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
       <video src={videoSrc} aria-label={() => activeVideo.value?.name} controls autoplay />
       <span>{() => activeVideo.value?.name ?? ''}</span>
       <div class={styles.dialogueButtonContainer}>
-        <Button
+        <button
           disabled={() => isDeleting.value || isVideoInUse.value}
           onClick={deleteVideo}
-          class={[styles.assetBinDelete, styles.textBodyBold]}
+          class={[styles.ctaButton, styles.danger, styles.textBodyBold]}
           label={deleteLabel}
         >
-          <div class={[styles.assetBinButton]}>
-            <span>{t('asset_bin_delete_video')}</span>
-            <IconMsDeleteOutlineRounded />
-          </div>
-        </Button>
-        <Button
+          {t('asset_bin_delete_video')}
+          <IconMsDeleteOutlineRounded />
+        </button>
+        <button
           onClick={createClip}
           disabled={() => isDeleting.value}
           label={t('asset_bin_media_create_clip')}
-          class={[styles.assetBinCreateClip, styles.textBodyBold]}
+          class={[styles.ctaButton, styles.primary, styles.textBodyBold]}
         >
-          <div class={styles.assetBinButton}>
-            <span>{t('asset_bin_media_create_clip')}</span>
-            <IconMsAddCircleOutlineRounded />
-          </div>
-        </Button>
+          {t('asset_bin_media_create_clip')}
+          <IconMsAddCircleOutlineRounded />
+        </button>
       </div>
     </dialog>
   )

@@ -16,38 +16,12 @@
     background-color: var(--white-2);
   }
 
-  &.overlay {
-    background-color: var(--primary-bg-05);
-
-    &:hover {
-      background-color: var(--black-3);
-    }
-
-    &:active {
-      background-color: var(--black-3);
-    }
-  }
-
   &[disabled],
   &[aria-disabled] {
     cursor: default;
     background-color: transparent;
     opacity: 0.625;
   }
-}
-
-.square,
-.round {
-  aspect-ratio: 1;
-  padding: 0.25rem;
-
-  &.overlay {
-    padding: 0.5rem;
-  }
-}
-
-.round {
-  border-radius: 9999px;
 }
 
 .loadingOverlay {

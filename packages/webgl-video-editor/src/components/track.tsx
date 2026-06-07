@@ -11,7 +11,8 @@ export const Track = ({ track, ...props }: { track: pub.Track; [index: string]: 
   return (
     <div
       {...props}
-      class={styles.track}
+      class={() => [styles.track, editor.getTrackForMedia({ video: true }).id === track.id && styles.primary]}
+      data-track-type={track.trackType}
       style={() => `--track-width: ${editor.secondsToPixels(track.duration.valueOf())}px;`}
     >
       {() =>

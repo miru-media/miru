@@ -12,7 +12,7 @@
   --purple-light: #ac7dff;
   --blue: #1d6be4;
   --yellow-dark: #ead627;
-  --yellow: #feea38;
+  --yellow: #fffb24;
   --yellow-light: #fff38b;
   --green-dark: #03b072;
   --green: #03ad70;
@@ -30,6 +30,10 @@
   --primary-bg-05: #17191a88;
   --secondary-bg: #1c2023;
   --focus-outline: 0.25rem solid white;
+  --clip-radius: 0.875rem;
+  --clip-border-width: 0.125rem;
+  --panel-width: 17.75rem;
+  --workspace-gap: 1.25rem;
 
   .mobile {
     --primary-bg: black;
@@ -63,25 +67,18 @@
 .viewportCanvas {
   max-width: 100%;
   height: 100%;
-  overflow: hidden;
   background-color: black;
   border-radius: 0.625rem;
 }
 
 .host :global(.miru-icon) {
   flex-shrink: 0;
-  width: 1.5em;
-  height: 1.5em;
 }
 
 .button {
   composes: button from 'shared/css/shared.module.css';
 }
 
-.square {
-  composes: square from 'shared/css/shared.module.css';
-}
-
 .round {
-  composes: round from 'shared/css/shared.module.css';
+  border-radius: 9999px;
 }

@@ -5,11 +5,11 @@ import { ref } from 'vue'
 import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'
-import Toolbar from './video-editor-toolbar.vue'
 import VideoEditorUI from 'webgl-video-editor/vue'
 import Settings from './video-editor-settings.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
+import { state } from './state.ts'
 
 const {
   sync,
@@ -103,9 +103,9 @@ if (!import.meta.env.SSR) {
       :assets
       :messages="{ en, de }"
       :editor="editorProp"
+      :onClickHelp="() => (state.showInfo = true)"
       class="video-editor"
     >
-      <Toolbar v-if="editorRef?.isMobileWorkspace" :editor="editorRef" />
     </VideoEditorUI>
     <IntroModal />
   </div>

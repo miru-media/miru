@@ -90,6 +90,12 @@ export class Document implements pub.Document {
   }
 
   readonly timeline: Timeline
+
+  _isEmpty = computed(() => this.timeline.children.every((track) => !track.firstClip))
+  get isEmpty(): boolean {
+    return this._isEmpty.value
+  }
+
   isDisposed = false
 
   constructor(options: Partial<Schema.DocumentSettings & { assets: pub.VideoEditorAssetStore }>) {
@@ -146,10 +152,6 @@ export class Document implements pub.Document {
   _setCurrentTime(time: number): void {
     const { duration } = this
     this._currentTime.value = clamp(time, 0, duration)
-  }
-
-  get isEmpty(): boolean {
-    return this.timeline.children.every((track) => !track.firstClip)
   }
 
   on<T extends Extract<keyof pub.VideoEditorEvents, string>>(

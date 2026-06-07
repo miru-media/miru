@@ -1,3 +1,5 @@
+import { computed, ref } from 'fine-jsx'
+
 import { AssetBin } from '#constants'
 import type { VideoEditor } from '#core'
 
@@ -6,6 +8,8 @@ import { AssetBinFilters } from './components/asset-bin-filters.jsx'
 import { AssetBinFonts } from './components/asset-bin-fonts.jsx'
 import { AssetBinVideo } from './components/asset-bin-video.jsx'
 
+const TRUE_REF = ref(true)
+
 export const getPanelList = (editor: VideoEditor) =>
   [
     {
@@ -13,27 +17,31 @@ export const getPanelList = (editor: VideoEditor) =>
       titleI18nKey: 'music',
       PanelBody: AssetBinAudio,
       Icon: IconMsMusicNoteRounded,
-      isPermitted: undefined,
+      isForSelection: false,
+      isPermitted: TRUE_REF,
     },
     {
       id: AssetBin.video,
       titleI18nKey: 'media',
       PanelBody: AssetBinVideo,
       Icon: IconMsFolderOpenOutlineRounded,
-      isPermitted: undefined,
+      isForSelection: false,
+      isPermitted: TRUE_REF,
     },
     {
       id: AssetBin.fonts,
       titleI18nKey: 'fonts',
       PanelBody: AssetBinFonts,
       Icon: IconMsTextFieldsRounded,
-      isPermitted: undefined,
+      isForSelection: false,
+      isPermitted: TRUE_REF,
     },
     {
       id: AssetBin.filters,
       titleI18nKey: 'filters',
       PanelBody: AssetBinFilters,
       Icon: IconMsFilterVintageOutline,
-      isPermitted: () => editor.selection?.isVideo() && editor.selection.isMediaClip(),
+      isForSelection: true,
+      isPermitted: computed(() => editor.selection?.isVideo() && editor.selection.isMediaClip()),
     },
   ] as const

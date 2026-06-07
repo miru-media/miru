@@ -89,7 +89,8 @@ export const Timeline = ({
           --timeline-duration:${editor.secondsToPixels(Math.max(editor.resize.docDuration.value, doc.duration))}px;
           --timeline-current-time:${editor.secondsToPixels(editor.currentTime)}px`}
     >
-      {() => (editor.isMobileWorkspace ? <Playhead /> : null)}
+      {() => editor.isMobileWorkspace && <Playhead />}
+
       <div
         ref={scrollContainer}
         class={styles.timelineScroller}
@@ -97,7 +98,8 @@ export const Timeline = ({
         onPointerdown={onPointerdownScroller}
       >
         <Ruler {...{ scrollOffset, timelineOffset }} />
-        {() => (editor.isMobileWorkspace ? null : <Playhead />)}
+
+        {() => !editor.isMobileWorkspace && <Playhead />}
 
         <div class={styles.trackList}>
           {() =>

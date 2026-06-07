@@ -67,16 +67,13 @@ export class VideoEditor implements pub.VideoEditor {
     return this.doc.currentTime
   }
 
-  get timelineContainer(): HTMLElement | undefined {
-    return this._timelineContainer.value
-  }
-  set timelineContainer(value) {
-    this._timelineContainer.value = value
-  }
-
-  get isMobileWorkspace(): boolean {
+  _isMobileWorkspace = computed(() => {
     const { width } = this._workspaceSize.value
     return width !== 0 && width < MOBILE_SCREEN_CUTOFF_PX
+  })
+
+  get isMobileWorkspace(): boolean {
+    return this._isMobileWorkspace.value
   }
 
   readonly #effects = computed(
@@ -253,8 +250,8 @@ export class VideoEditor implements pub.VideoEditor {
     })
   }
 
-  getTrackForMedia(asset: pub.MediaAsset) {
-    const trackType = asset.video ? 'video' : 'audio'
+  getTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }) {
+    const trackType = (asset.video ?? false) === false ? 'audio' : 'video'
 
     // add to the last track of the correct type
     return [...this.tracks].reverse().find((t) => t.trackType === trackType) ?? this.addTrack(trackType)

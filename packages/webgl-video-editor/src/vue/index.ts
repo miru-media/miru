@@ -31,6 +31,10 @@ export default Vue.defineComponent({
       type: Object as Vue.PropType<pub.VideoEditorAssetStore>,
       required: false,
     },
+    onClickHelp: {
+      type: Function as Vue.PropType<() => unknown>,
+      required: false,
+    },
     messages: { type: Object as Vue.PropType<Record<string, Record<string, string>>>, required: false },
     languages: { type: Array as Vue.PropType<string[]>, required: false },
   },
@@ -60,6 +64,7 @@ export default Vue.defineComponent({
         {
           editor,
           children,
+          onClickHelp: props.onClickHelp,
           i18n: {
             messages: fromVue(() => props.messages ?? {}),
             languages: fromVue(() => props.languages ?? []),

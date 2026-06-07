@@ -16,6 +16,7 @@ import { getPanelList } from '../panels-list.ts'
 import { Debug } from './debug.jsx'
 import { DesktopControls } from './desktop-controls.jsx'
 import { MobileControls } from './mobile-controls.jsx'
+import { MobileToolbar } from './mobile-toolbar.jsx'
 import { PanelToolbar } from './panel-toolbar.jsx'
 import { DesktopPlaybackControls } from './playback-controls-overlay.jsx'
 import { Timeline } from './timeline.jsx'
@@ -26,6 +27,7 @@ export const VideoEditorUI = (props: {
   editor: VideoEditor
   children?: Record<string, Ref>
   i18n?: I18nOptions
+  onClickHelp?: () => unknown
 }): JSX.Element => {
   const { editor } = props
   const i18n = provideI18n(props.i18n ?? { messages: {} })
@@ -51,6 +53,9 @@ export const VideoEditorUI = (props: {
 
   const { playback } = editor
 
+  const getSlot = (name: string) =>
+    props.children?.[name] && <div class={styles.slot}>{props.children[name]}</div>
+
   return (
     <div
       ref={editor._editor._workspaceContainer}
@@ -60,25 +65,28 @@ export const VideoEditorUI = (props: {
         editor.isMobileWorkspace ? styles.mobile : styles.desktop,
       ]}
     >
-      <div class={styles.workspaceHeader}>Header</div>
+      {() =>
+        !editor.isMobileWorkspace && (
+          <PanelToolbar onClickHelp={props.onClickHelp}>{getSlot('toolbar')}</PanelToolbar>
+        )
+      }
 
-      <div class={styles.panels}>
-        {() => !editor.isMobileWorkspace && <PanelToolbar />}
+      <>
+        {getPanelList(editor).map(({ id, titleI18nKey, PanelBody, isPermitted }) => () => {
+          if (!isPermitted.value) return
 
-        {getPanelList(editor).map(({ id, titleI18nKey, PanelBody, isPermitted = () => true }) => () => {
-          if (!isPermitted()) return
           if (editor.isMobileWorkspace)
             return <Drawer id={editor.getPartId(id)} title={t(titleI18nKey)} content={() => <PanelBody />} />
 
           return (
             editor.activeAssetBin === id && (
-              <div class={styles.panel}>
+              <section class={styles.panel}>
                 <PanelBody />
-              </div>
+              </section>
             )
           )
         })}
-      </div>
+      </>
 
       <div
         class={[styles.viewport, styles.workspaceViewport]}
@@ -94,14 +102,20 @@ export const VideoEditorUI = (props: {
 
       {() => editor.isMobileWorkspace && <MobileControls />}
 
-      <div class={styles.workspaceProperties}>Transform</div>
+      {() =>
+        import.meta.env.DEV && !editor.isMobileWorkspace && <section class={styles.workspaceProperties} />
+      }
 
       <div class={styles.workspaceBottom}>
         {() => !editor.isMobileWorkspace && <DesktopControls />}
 
         <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
 
-        <div class={styles.slot}>{props.children?.default}</div>
+        {() =>
+          editor.isMobileWorkspace && (
+            <MobileToolbar onClickHelp={props.onClickHelp}>{getSlot('toolbar')}</MobileToolbar>
+          )
+        }
 
         <progress
           style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}

@@ -45,26 +45,35 @@ export const Clip = ({
   })
 
   const selectClip = editor.select.bind(editor, clip, false)
+  const isVideoMedia = () => clip.isVideo() && clip.isMediaClip()
+  const Icon = clip.isAudio()
+    ? IconMsMusicNoteRounded
+    : clip.isTextClip()
+      ? IconMsTextFieldsRounded
+      : undefined
 
   return (
     <div
       tabindex="0"
       class={() => [
         styles.clip,
+        isVideoMedia() && styles.isVideoMedia,
         isSelected() && [styles.isSelected, editor.drag.isDragging.value && styles.isDragging],
         clip.prev && styles.canResizeLeft,
-        clip.next && editor.selection === clip.next && styles.nextIsSelected,
+        clip.next && editor.selection?.id === clip.next.id && styles.nextIsSelected,
       ]}
       style={() => `
         --clip-box-left: ${boxEdges.value.left}px;
         --clip-box-right: ${boxEdges.value.right}px;
         --drag-offset: ${editor.drag.x.value};
         --clip-color: ${clipColor.value};
+        ${isVideoMedia() && clip.asset?.thumbnailUri ? `--clip-thumbnail: url("${encodeURI(clip.asset.thumbnailUri)}");` : ''}
       `}
       onFocus={selectClip}
       onClick={selectClip}
     >
       <div ref={mainContainer} data-clip-id={clip.id} class={styles.clipBox}>
+        {Icon !== undefined && <Icon class={styles.clipIcon} />}
         <span class={styles.clipName}>
           {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
         </span>
