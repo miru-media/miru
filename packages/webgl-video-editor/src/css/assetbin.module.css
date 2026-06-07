@@ -161,11 +161,6 @@
   border: none;
 }
 
-.assetBinFontsPropContainer {
-  display: flex;
-  gap: 0.625rem;
-}
-
 .assetBinFontsStyleButtonActive {
   color: var(--yellow);
   background-color: rgb(from var(--white) r g b / 10%);

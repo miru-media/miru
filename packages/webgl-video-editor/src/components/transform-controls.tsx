@@ -2,7 +2,6 @@ import '@interactjs/auto-start'
 import '@interactjs/modifiers'
 
 import type { DragEvent } from '@interactjs/actions/drag/plugin'
-import type { ResizeEvent } from '@interactjs/actions/resize/plugin'
 import interact from '@interactjs/interact'
 import { computed, effect, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
@@ -12,8 +11,6 @@ import type { VideoClip } from '#core'
 import styles from '../css/index.module.css'
 
 import { useEditor } from './utils.ts'
-
-const ROTATE_LINE_LENGTH = 50
 
 export const TransformControls = () => {
   const editor = useEditor()
@@ -26,20 +23,6 @@ export const TransformControls = () => {
   const clipProps = computed((): Pick<VideoClip, 'translate' | 'rotate' | 'scale'> => {
     const clip = editor.selection
     return clip?.isVideo() ? clip : { translate: { x: 0, y: 0 }, rotate: 0, scale: { x: 1, y: 1 } }
-  })
-
-  const rotateZoomMatrix = computed(() => {
-    const { zoom } = editor
-    const { rotate } = clipProps.value
-    const size = clipSize.value
-    const halfWidth = size.width / 2
-    const halfHeight = size.height / 2
-
-    return new Pixi.Matrix()
-      .translate(-halfWidth, -halfHeight)
-      .rotate((rotate * Math.PI) / 180)
-      .translate(halfWidth, halfHeight)
-      .scale(zoom, zoom)
   })
 
   effect((onCleanup) => {
@@ -74,59 +57,8 @@ export const TransformControls = () => {
       },
     })
 
-    let edges: Record<string, boolean | undefined> = {}
-    const resizeStart = {
-      pointer: { x: 0, y: 0 },
-      translate: { x: 0, y: 0 },
-      size: { width: 0, height: 0 },
-    }
-
-    const resizer = interact('[data-edges]', { context: element }).draggable({
-      origin: element,
-      listeners: {
-        start(event: ResizeEvent) {
-          const clip = editor.selection
-          if (!clip?.isVideo()) return
-
-          clip._startEditing(['translate', 'scale'])
-
-          resizeStart.pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
-          resizeStart.translate = clip.translate
-          const { scale } = clip
-          const mediaSize = clipSize.value
-          resizeStart.size = { width: mediaSize.width * scale.x, height: mediaSize.height * scale.y }
-          edges = Object.fromEntries(
-            (event.target.dataset.edges ?? '').split(' ').map((edge) => [edge, true]),
-          )
-        },
-        move(event: ResizeEvent) {
-          const clip = clipProps.value
-
-          const mediaSize = clipSize.value
-          const startSize = resizeStart.size
-          const pointer = rotateZoomMatrix.value.applyInverse(new Pixi.Point(event.pageX, event.pageY))
-          const dx = (pointer.x - resizeStart.pointer.x) * (edges.left ? -1 : edges.right ? 1 : 0)
-          const dy = (pointer.y - resizeStart.pointer.y) * (edges.top ? -1 : edges.bottom ? 1 : 0)
-          const newSize = {
-            width: Math.max(startSize.width + dx, 1),
-            height: Math.max(startSize.height + dy, 1),
-          }
-          const newScale = { x: newSize.width / mediaSize.width, y: newSize.height / mediaSize.height }
-
-          if (Math.abs(dx) > Math.abs(dy)) newScale.y = newScale.x
-          else newScale.x = newScale.y
-
-          clip.scale = newScale
-        },
-        end() {
-          editor.selection?._applyEdits()
-        },
-      },
-    })
-
     onCleanup(() => {
       dragger.unset()
-      resizer.unset()
     })
   })
 
@@ -152,18 +84,6 @@ export const TransformControls = () => {
     ).map(([x, y, edges]) => ({ point: matrix.apply(new Pixi.Point(x, y)), edges }))
   })
 
-  const rotateLine = computed(() => {
-    const halfWidth = clipSize.value.width / 2
-    const matrix = clipMatrix.value
-    const clipScale = editor.selection?.isVideo() ? editor.selection.scale : { x: 1, y: 1 }
-    const { zoom } = editor
-
-    return {
-      start: matrix.apply(new Pixi.Point(halfWidth, 0)),
-      end: matrix.apply(new Pixi.Point(halfWidth, -ROTATE_LINE_LENGTH / zoom / clipScale.y)),
-    }
-  })
-
   return (
     <svg class={styles.transformControls}>
       <g ref={container}>
@@ -171,7 +91,6 @@ export const TransformControls = () => {
           const clip = editor.selection
           if (!clip?.isVideo() || !clip.isInClipTime) return
 
-          const { start: rotateStart, end: rotateEnd } = rotateLine.value
           const points = boxPoints.value
           const edges: [p1: Pixi.Point, p2: Pixi.Point, edge: string][] = []
 
@@ -196,14 +115,6 @@ export const TransformControls = () => {
               {boxPoints.value.map(({ point: { x, y }, edges }) => (
                 <circle cx={x} cy={y} class={styles.transformResizeCorner} data-edges={edges.join(' ')} />
               ))}
-              <line
-                x1={rotateStart.x}
-                x2={rotateEnd.x}
-                y1={rotateStart.y}
-                y2={rotateEnd.y}
-                class={styles.transformRotateLine}
-              />
-              <circle cx={rotateEnd.x} cy={rotateEnd.y} class={styles.transformRotateHandle} />
             </>
           )
         }}

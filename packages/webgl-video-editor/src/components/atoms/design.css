@@ -12,6 +12,17 @@
     padding-right: 0.5rem;
   }
 
+  &.asText {
+    &,
+    :is(select, input, textarea) {
+      appearance: textfield;
+
+      input[type='number']::-webkit-inner-spin-button {
+        appearance: none;
+      }
+    }
+  }
+
   button,
   input,
   select,
@@ -27,6 +38,23 @@
 
 .input {
   composes: baseInput focusWithin;
+}
+
+.numberInput {
+  composes: input;
+  width: 5.5rem;
+
+  .inputPrefix {
+    margin-right: -0.365rem;
+  }
+
+  .inputSuffix {
+    margin-left: -0.365rem;
+  }
+
+  &:not(.asText, :has(.inputSuffix)) {
+    padding-right: 0.5rem;
+  }
 }
 
 .ctaButton {
@@ -75,6 +103,7 @@
   }
 }
 
+.inputPrefix,
 .inputSuffix {
   color: #aaacc2;
 
@@ -83,6 +112,11 @@
     font-variant-numeric: tabular-nums;
     text-transform: uppercase;
   }
+}
+
+.inputUnit {
+  composes: inputSuffix;
+  margin-left: -0.25rem;
 }
 
 .dropdown {
@@ -141,6 +175,11 @@
     content: '';
     background-color: #2c3033;
   }
+}
+
+.inputRow {
+  display: flex;
+  gap: 0.625rem;
 }
 
 .drawer {
@@ -215,8 +254,8 @@
     'toolbar panel  gap-l  gap-t    gap-t' var(--workspace-gap)
     'toolbar panel  gap-l  viewport properties' auto
     'toolbar panel  gap-l  gap-m    gap-m' var(--workspace-gap)
-    'toolbar panel  gap-l  timeline timeline' 1fr
-    / auto auto var(--workspace-gap) 1fr auto;
+    'toolbar panel  gap-l  timeline timeline' 1fr;
+  grid-template-columns: var(--panel-toolbar-width) auto var(--workspace-gap) 1fr auto;
   justify-content: stretch;
   padding-right: 1.25rem;
   background-color: var(--primary-bg);
@@ -243,23 +282,23 @@
 }
 
 .workspaceViewport {
+  --workspace-viewport-spacing-left: var(--panel-width);
+  --workspace-viewport-spacing-right: calc(var(--workspace-properties-width) + var(--workspace-gap));
+
   display: flex;
   flex-grow: 1;
   flex-direction: column;
   grid-area: viewport;
   width: calc(100% - var(--workspace-viewport-spacing-right) - var(--workspace-viewport-spacing-left));
-
-  margin: 0 var(--workspace-viewport-spacing-right) 0 var(--workspace-viewport-spacing-left);
-
-  --workspace-viewport-spacing-left: var(--panel-width);
-  --workspace-viewport-spacing-right: var(--panel-width);
+  margin-left: var(--workspace-viewport-spacing-left);
+  overflow: hidden;
 
   .workspace:has(.panel) & {
-    --workspace-viewport-spacing-left: 0;
+    --workspace-viewport-spacing-left: 0px;
   }
 
   .workspace:has(.workspaceProperties) & {
-    --workspace-viewport-spacing-right: 0;
+    --workspace-viewport-spacing-right: var(--workspace-gap);
   }
 
   .mobile & {
@@ -312,6 +351,24 @@
   flex-direction: column;
   gap: 0.625rem;
   align-items: start;
+}
+
+.panelHeadingBase {
+  composes: sanitize;
+  font: unset;
+  letter-spacing: inherit;
+}
+
+.panelHeading {
+  composes: panelHeadingBase;
+  color: inherit;
+}
+
+.panelSubheading {
+  composes: panelHeadingBase;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #aaacc2;
 }
 
 .panelToolbar {
@@ -369,14 +426,24 @@
   }
 }
 
-.workspaceProperties {
-  display: none;
+.workspacePropertiesPositioner {
   grid-area: properties;
-  width: 200px;
-  padding: 1rem 0.25rem;
-  text-align: center;
+  height: 0;
+}
+
+.workspaceProperties {
+  composes: panelBase;
+  width: var(--workspace-properties-width);
+  height: var(--viewport-height);
+  padding: 0 1rem;
   border: solid 1px #2c3033;
   border-radius: 1.25rem;
+
+  .panelBody {
+    height: 100%;
+    padding: 1rem 0.25rem;
+    overflow: hidden auto;
+  }
 }
 
 .desktopControls {

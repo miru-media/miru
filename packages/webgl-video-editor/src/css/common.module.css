@@ -32,8 +32,10 @@
   --focus-outline: 0.25rem solid white;
   --clip-radius: 0.875rem;
   --clip-border-width: 0.125rem;
-  --panel-width: 17.75rem;
   --workspace-gap: 1.25rem;
+  --workspace-properties-width: 20.625rem;
+  --panel-toolbar-width: 4.75rem;
+  --panel-width: 17.75rem;
 
   .mobile {
     --primary-bg: black;

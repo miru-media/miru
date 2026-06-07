@@ -34,21 +34,3 @@
   fill: none;
   stroke: none;
 }
-
-.transformResizeCorner {
-  pointer-events: all;
-  stroke: none;
-  r: 0.5rem;
-}
-
-.transformRotateLine {
-  r: 0.25rem;
-  stroke-width: 0.25rem;
-}
-
-.transformRotateHandle {
-  pointer-events: all;
-  cursor: rotate;
-  stroke: none;
-  r: 0.5rem;
-}

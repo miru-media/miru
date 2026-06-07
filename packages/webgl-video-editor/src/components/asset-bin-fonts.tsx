@@ -158,8 +158,8 @@ export const AssetBinFonts = () => {
                 ))}
               </select>
 
-              <div class={styles.assetBinFontsPropContainer}>
-                <label class={styles.input} style="width: 7.5rem">
+              <div class={styles.inputRow}>
+                <label class={[styles.numberInput, styles.asText]}>
                   <input
                     type="number"
                     min="1"

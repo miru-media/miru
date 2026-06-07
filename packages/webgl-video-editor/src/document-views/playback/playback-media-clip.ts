@@ -1,10 +1,10 @@
-import { createEffectScope, ref, watch } from 'fine-jsx'
+import { createEffectScope, effect, ref, watch } from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { NonReadonly } from '#internal'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
 import { useEventListener } from 'shared/utils/composables.ts'
-import { createHiddenMediaElement } from 'shared/utils/images.ts'
+import { clamp, createHiddenMediaElement } from 'shared/utils/index.ts'
 import { ReadyState } from 'shared/video/constants.ts'
 import { useInterval } from 'shared/video/utils.ts'
 
@@ -76,6 +76,8 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
           } else mediaElement.removeAttribute('src')
         },
       )
+
+      if (original.isAudio()) effect(() => (this.mediaElement.volume = clamp(original.volume || 0, 0, 1)))
 
       useInterval(
         () => {

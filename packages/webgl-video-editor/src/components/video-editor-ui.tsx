@@ -13,6 +13,7 @@ import { EXPORT_VIDEO_CODECS } from '../constants.ts'
 import styles from '../css/index.module.css'
 import { getPanelList } from '../panels-list.ts'
 
+import { ClipProperties } from './clip-properties.jsx'
 import { Debug } from './debug.jsx'
 import { DesktopControls } from './desktop-controls.jsx'
 import { MobileControls } from './mobile-controls.jsx'
@@ -64,6 +65,9 @@ export const VideoEditorUI = (props: {
         styles.workspace,
         editor.isMobileWorkspace ? styles.mobile : styles.desktop,
       ]}
+      style={() =>
+        `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
+      }
     >
       {() =>
         !editor.isMobileWorkspace && (
@@ -88,12 +92,7 @@ export const VideoEditorUI = (props: {
         })}
       </>
 
-      <div
-        class={[styles.viewport, styles.workspaceViewport]}
-        style={() =>
-          `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
-        }
-      >
+      <div class={[styles.viewport, styles.workspaceViewport]}>
         {h(editor.canvas, { class: styles.viewportCanvas })}
         <TransformControls />
         <LoadingOverlay loading={() => !playback.isReady} />
@@ -103,7 +102,12 @@ export const VideoEditorUI = (props: {
       {() => editor.isMobileWorkspace && <MobileControls />}
 
       {() =>
-        import.meta.env.DEV && !editor.isMobileWorkspace && <section class={styles.workspaceProperties} />
+        import.meta.env.DEV &&
+        !editor.isMobileWorkspace && (
+          <div class={styles.workspacePropertiesPositioner}>
+            <ClipProperties />
+          </div>
+        )
       }
 
       <div class={styles.workspaceBottom}>
