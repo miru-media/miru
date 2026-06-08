@@ -1,6 +1,8 @@
-import { computed, type Ref, toValue, watch } from 'fine-jsx'
+import { computed, ref, type Ref, toValue, watch } from 'fine-jsx'
 
 import { useI18n } from 'shared/utils'
+import { useCursor } from 'shared/video/use-cursor.ts'
+import { useScrubber } from 'shared/video/use-scrubber.ts'
 import { formatDuration } from 'shared/video/utils'
 
 import styles from '../css/index.module.css'
@@ -18,6 +20,19 @@ export const Ruler = ({
 }) => {
   const editor = useEditor()
   const { languages } = useI18n()
+  const root = ref<HTMLElement>()
+
+  const scrubberContext = {
+    pixelsPerSecond: () => 1 / editor._secondsPerPixel.value,
+    currentTime: () => editor.currentTime,
+    mediaDuration: () => editor.doc.duration,
+    offsetX: timelineOffset,
+    seekTo: editor.seekTo.bind(editor),
+  }
+
+  useScrubber(scrubberContext, root, undefined)
+
+  const cursorProps = useCursor(scrubberContext, root)
 
   const intervalS = computed(() => {
     const range = editor._secondsPerPixel.value
@@ -88,15 +103,13 @@ export const Ruler = ({
     return <div>{getChildren}</div>
   }
 
-  const onClick = (event: PointerEvent) => {
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    const timeS = editor.pixelsToSeconds(event.clientX - rect.left - timelineOffset.value)
-
-    editor.seekTo(timeS)
-  }
-
   return (
-    <div class={styles.ruler} onClick={onClick}>
+    <div
+      ref={root}
+      {...cursorProps}
+      class={styles.ruler}
+      onPointerdown={(event: Event) => event.stopPropagation()}
+    >
       {() =>
         editor._timelineSize.value.width === 0 ? undefined : (
           <>

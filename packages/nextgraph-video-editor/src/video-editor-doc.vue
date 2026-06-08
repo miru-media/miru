@@ -64,5 +64,19 @@ const backUrl = import.meta.env.BASE_URL
 
 <template>
   <VideoEditorDocError v-if="error" :backUrl />
-  <VideoEditorDoc v-else-if="editor && doc" :onCloseProject :editor v-model:name="doc.name" />
+  <VideoEditorDoc v-else-if="editor && doc" :editor>
+    <template #header-start>
+      <button class="button overlay square" :title="$t('close_project')" @click="onCloseProject">
+        <div class="i-tabler:x" />
+        <span class="sr-only">{{ $t('close_project') }}</span>
+      </button>
+    </template>
+    <template #header-middle>
+      <input
+        v-model="doc.name"
+        class="border-none bg-transparent p-0.5rem rounded-lg text-center w-full"
+        :aria-label="$t('title')"
+      />
+    </template>
+  </VideoEditorDoc>
 </template>

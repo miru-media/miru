@@ -8,6 +8,7 @@ export const useScrubber = (
     pixelsPerSecond: MaybeRefOrGetter<number>
     currentTime: MaybeRefOrGetter<number>
     mediaDuration: MaybeRefOrGetter<number>
+    offsetX?: MaybeRefOrGetter<number>
     seekTo: (timeS: number) => void
   },
   container: MaybeRefOrGetter<HTMLElement | undefined>,
@@ -22,12 +23,14 @@ export const useScrubber = (
 
     target.setPointerCapture(event.pointerId)
     isScrubbing.value = true
-    onScrubberMove({ offsetX: event.clientX - target.getBoundingClientRect().left })
+    onScrubberMove({
+      offsetX: event.clientX - target.getBoundingClientRect().left,
+    })
   }
 
   const onScrubberMove = ({ offsetX }: Pick<PointerEvent, 'offsetX'>): void => {
     if (!isScrubbing.value) return
-    const time = offsetX / toValue(context.pixelsPerSecond)
+    const time = (offsetX - (toValue(context.offsetX) ?? 0)) / toValue(context.pixelsPerSecond)
     context.seekTo(time)
   }
   const onScrubberUp = (): void => {

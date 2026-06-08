@@ -14,10 +14,6 @@
   .viewport {
     max-height: min(60vh, calc(100dvh - 22rem));
   }
-
-  .viewportCanvas {
-    height: 100%;
-  }
 }
 
 .secondaryToolbar {

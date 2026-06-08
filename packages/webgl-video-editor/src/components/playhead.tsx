@@ -1,7 +1,6 @@
 import { computed, ref } from 'fine-jsx'
 
 import { useElementSize } from 'shared/utils'
-import { useCursor } from 'shared/video/use-cursor.ts'
 import { splitTime } from 'shared/video/utils'
 
 import styles from '../css/index.module.css'
@@ -14,25 +13,13 @@ export const Playhead = (): JSX.Element => {
   const size = useElementSize(interactiveEl)
 
   const timeParts = computed(() => splitTime(editor.doc.currentTime))
-  const cursorProps = useCursor(
-    {
-      currentTime: () => editor.currentTime,
-      mediaDuration: () => editor.doc.duration,
-      seekTo: editor.seekTo.bind(editor),
-    },
-    interactiveEl,
-  )
 
   return (
     <>
-      <div class={styles.timelinePlayhead} style={() => `--time-pill-width: ${size.value.width}px`}>
+      <div inert class={styles.timelinePlayhead} style={() => `--time-pill-width: ${size.value.width}px`}>
         {() =>
           editor.isMobileWorkspace ? (
-            <span
-              ref={interactiveEl}
-              class={[styles.timePill, styles.textBodySmall, styles.numeric]}
-              {...cursorProps}
-            >
+            <span ref={interactiveEl} class={[styles.timePill, styles.textBodySmall, styles.numeric]}>
               <span>
                 {() => timeParts.value.hours}:{() => timeParts.value.minutes}
               </span>
@@ -54,7 +41,6 @@ export const Playhead = (): JSX.Element => {
               width="11"
               height="12"
               viewBox="0 0 11 12"
-              {...cursorProps}
             >
               <path
                 d="M0 2C0 0.895432 0.895431 0 2 0H9C10.1046 0 11 0.89543 11 2V5.86249C11 6.4067 10.7782 6.92742 10.3858 7.30451L6.88584 10.6682C6.11172 11.4121 4.88828 11.4121 4.11416 10.6682L0.614157 7.30451C0.221771 6.92742 0 6.4067 0 5.86249V2Z"

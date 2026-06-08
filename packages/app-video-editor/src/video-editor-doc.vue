@@ -6,23 +6,16 @@ import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'
 import VideoEditorUI from 'webgl-video-editor/vue'
-import Settings from './video-editor-settings.vue'
+import Header from './video-editor-header.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
 import { state } from './state.ts'
 
-const {
-  sync,
-  onCloseProject,
-  editor: editorProp,
-} = defineProps<{
+const { sync, editor: editorProp } = defineProps<{
   sync?: VideoEditorDocumentSync
   assets?: VideoEditorAssetStore
   editor?: VideoEditor
-  onCloseProject?: () => unknown
 }>()
-
-const name = defineModel<string>('name')
 
 const editorRef = ref<VideoEditor>()
 
@@ -96,7 +89,6 @@ if (!import.meta.env.SSR) {
 
 <template>
   <div class="video-editor-app">
-    <Settings v-if="editorRef" :editor="editorRef" :onCloseProject v-model:name="name" />
     <VideoEditorUI
       ref="editorRef"
       :sync
@@ -106,6 +98,12 @@ if (!import.meta.env.SSR) {
       :onClickHelp="() => (state.showInfo = true)"
       class="video-editor"
     >
+      <template #header>
+        <Header v-if="editorRef" :editor="editorRef">
+          <template v-if="$slots['header-start']" #start><slot name="header-start"></slot></template>
+          <template #middle><slot name="header-middle"></slot></template>
+        </Header>
+      </template>
     </VideoEditorUI>
     <IntroModal />
   </div>

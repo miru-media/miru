@@ -50,7 +50,7 @@ export default Vue.defineComponent({
 
     const vueEditor = editorToVue(editor, !props.editor)
     const children = {
-      default: ref<unknown>(),
+      header: ref<unknown>(),
       timelineEmpty: ref<unknown>(),
     }
 
@@ -98,7 +98,7 @@ export default Vue.defineComponent({
       )
 
     return () =>
-      h('div', { ...ctx.attrs, ref: container }, [createSlotNode('default'), createSlotNode('timelineEmpty')])
+      h('div', { ...ctx.attrs, ref: container }, [createSlotNode('header'), createSlotNode('timelineEmpty')])
   },
 })
 

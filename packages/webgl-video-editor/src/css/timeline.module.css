@@ -129,6 +129,7 @@
   overflow: hidden;
   color: var(--white-3);
   cursor: pointer;
+  user-select: none;
 }
 
 .rulerMarkings {

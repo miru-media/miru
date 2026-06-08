@@ -54,8 +54,8 @@ export const VideoEditorUI = (props: {
 
   const { playback } = editor
 
-  const getSlot = (name: string) =>
-    props.children?.[name] && <div class={styles.slot}>{props.children[name]}</div>
+  const getSlot = (name: string, className = styles.slot) =>
+    props.children?.[name] && <div class={className}>{props.children[name]}</div>
 
   return (
     <div
@@ -65,10 +65,15 @@ export const VideoEditorUI = (props: {
         styles.workspace,
         editor.isMobileWorkspace ? styles.mobile : styles.desktop,
       ]}
-      style={() =>
-        `--viewport-width:${editor.viewportSize.width}px;--viewport-height:${editor.viewportSize.height}px;`
-      }
+      style={() => {
+        const { width, height } = editor.doc.resolution
+        return `--viewport-width:${editor.viewportSize.width}px;
+        --viewport-height:${editor.viewportSize.height}px;
+        --viewport-aspect-ratio:${width / height};`
+      }}
     >
+      {getSlot('header', styles.workspaceHeader)}
+
       {() =>
         !editor.isMobileWorkspace && (
           <PanelToolbar onClickHelp={props.onClickHelp}>{getSlot('toolbar')}</PanelToolbar>
@@ -102,7 +107,6 @@ export const VideoEditorUI = (props: {
       {() => editor.isMobileWorkspace && <MobileControls />}
 
       {() =>
-        import.meta.env.DEV &&
         !editor.isMobileWorkspace && (
           <div class={styles.workspacePropertiesPositioner}>
             <ClipProperties />

@@ -5,7 +5,6 @@
   align-items: center;
   padding: 0.6875rem 0.9375rem;
   background-color: #2b2e30;
-  border: none;
   border-radius: 0.625rem;
 
   &[type='number'] {
@@ -250,19 +249,18 @@
 .workspace {
   display: grid;
   grid-template:
-    'toolbar header header header   header' auto
-    'toolbar panel  gap-l  gap-t    gap-t' var(--workspace-gap)
-    'toolbar panel  gap-l  viewport properties' auto
-    'toolbar panel  gap-l  gap-m    gap-m' var(--workspace-gap)
-    'toolbar panel  gap-l  timeline timeline' 1fr;
-  grid-template-columns: var(--panel-toolbar-width) auto var(--workspace-gap) 1fr auto;
+    'header  header header header   header     header' auto
+    'toolbar panel  gap-l  gap-t    gap-t      gap-r' var(--workspace-gap)
+    'toolbar panel  gap-l  viewport properties gap-r' auto
+    'toolbar panel  gap-l  gap-m    gap-m      gap-r' var(--workspace-gap)
+    'toolbar panel  gap-l  timeline timeline   gap-r' 1fr;
+  grid-template-columns: var(--panel-toolbar-width) auto var(--workspace-gap) 1fr auto var(--workspace-gap);
   justify-content: stretch;
-  padding-right: 1.25rem;
   background-color: var(--primary-bg);
 
   &.mobile {
     grid-template:
-      'header' auto
+      'header' minmax(var(--workspace-gap), auto)
       'viewport' auto
       'controls' auto
       'timeline' 1fr
@@ -279,6 +277,11 @@
 .workspaceHeader {
   grid-area: header;
   border-bottom: solid 1px #2c3033;
+
+  .mobile &,
+  &:empty {
+    border: none;
+  }
 }
 
 .workspaceViewport {
@@ -290,6 +293,8 @@
   flex-direction: column;
   grid-area: viewport;
   width: calc(100% - var(--workspace-viewport-spacing-right) - var(--workspace-viewport-spacing-left));
+  height: 100%;
+  aspect-ratio: var(--viewport-aspect-ratio);
   margin-left: var(--workspace-viewport-spacing-left);
   overflow: hidden;
 
@@ -302,8 +307,6 @@
   }
 
   .mobile & {
-    margin-top: var(--workspace-gap);
-
     --workspace-viewport-spacing-left: var(--workspace-gap);
     --workspace-viewport-spacing-right: var(--workspace-gap);
   }

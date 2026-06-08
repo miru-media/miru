@@ -36,13 +36,25 @@ const showConnectionToggle = import.meta.env.DEV
 
 <template>
   <VideoEditorDocError v-if="error" backUrl="/video-editor" />
-  <VideoEditorDoc
-    v-else-if="sync"
-    class="fullscreen-app"
-    :sync
-    :onCloseProject="() => router.push('/')"
-    v-model:name="name"
-  />
+  <VideoEditorDoc v-else-if="sync" class="fullscreen-app" :sync>
+    <template #header-start>
+      <router-link to="/" class="nav-brand mt-[-6px] px-2" :title="$t('close_project')">
+        <span class="sr-only">{{ $t('close_project') }}</span>
+        <img
+          src="../../../website/content/media/logo/white-logo.svg"
+          style="width: auto; height: 28px"
+          alt=""
+        />
+      </router-link>
+    </template>
+    <template #header-middle>
+      <input
+        v-model="name"
+        class="border-none bg-transparent p-0.5rem rounded-lg text-center w-full"
+        :aria-label="$t('title')"
+      />
+    </template>
+  </VideoEditorDoc>
   <button
     aria-label="(dev) toggle collaboration connection"
     title="(dev) toggle collaboration connection"

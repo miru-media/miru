@@ -176,9 +176,9 @@ const AudioClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AudioClip>
     <>
       <h1 class={styles.panelHeading}>{t('audio_properties')}</h1>
 
-      <h1 id={headingId} class={styles.panelHeading}>
+      <h2 id={headingId} class={styles.panelSubheading}>
         {t('volume')}
-      </h1>
+      </h2>
 
       <div class={styles.inputRow}>
         <input type="range" {...volumeInputProps} />
