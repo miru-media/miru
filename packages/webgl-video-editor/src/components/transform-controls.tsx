@@ -28,7 +28,13 @@ export const TransformControls = () => {
 
   const clipProps = computed(
     (): TransformProps =>
-      getSelectedClip() ?? { translate: { x: 0, y: 0 }, rotate: 0, scale: { x: 1, y: 1 } },
+      getSelectedClip() ?? {
+        translateX: 0,
+        translateY: 0,
+        rotate: 0,
+        scaleX: 1,
+        scaleY: 1,
+      },
   )
 
   effect((onCleanup) => {
@@ -39,22 +45,22 @@ export const TransformControls = () => {
       getRect() {
         const clip = clipProps.value
 
-        const { x, y } = clip.translate
+        const { translateX, translateY } = clip
         const { width, height } = clipSize.value
-        return { left: x, top: y, right: x + width, bottom: y + height }
+        return { left: translateX, top: translateY, right: translateX + width, bottom: translateY + height }
       },
     }).draggable({
       listeners: {
         start() {
-          getSelectedClip()?._startEditing(['translate', 'scale'])
+          getSelectedClip()?._startEditing(['translateX', 'translateY'])
         },
         move(event: DragEvent) {
           const clip = clipProps.value
 
           const { zoom } = editor
-          const { translate } = clip
           const { delta } = event
-          clip.translate = { x: translate.x + delta.x / zoom, y: translate.y + delta.y / zoom }
+          clip.translateX += delta.x / zoom
+          clip.translateY += delta.y / zoom
         },
         end() {
           getSelectedClip()?._applyEdits()

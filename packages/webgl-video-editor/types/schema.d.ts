@@ -11,9 +11,11 @@ export interface Rational {
 }
 
 export interface TransformProps {
-  translate: Point
+  translateX: number
+  translateY: number
   rotate: number
-  scale: Point
+  scaleX: number
+  scaleY: number
 }
 
 export type FontStyle = 'normal' | 'italic' | 'oblique'

@@ -13,8 +13,8 @@ import type { Schema } from 'webgl-video-editor'
 
 import { createInitialDocument } from 'webgl-video-editor/sync'
 
-const scale1080p = { x: 1.7778, y: 1.7778 }
-const scale720p = { x: 2.6667, y: 2.6667 }
+const scale1080p = { scaleX: 1.7778, scaleY: 1.7778 }
+const scale720p = { scaleX: 2.6667, scaleY: 2.6667 }
 
 const assets = {
   waves: {
@@ -150,7 +150,8 @@ demoDoc.timeline.children.push(
         type: 'clip:text',
         duration: { rate: 1, value: 2 },
         sourceStart: { value: 0, rate: 1 },
-        translate: { x: 20, y: 600 },
+        translateX: 20,
+        translateY: 600,
         content: 'Hello world!',
         fontFamily: 'Arial',
         fontSize: 300,
@@ -172,7 +173,7 @@ demoDoc.timeline.children.push(
         sourceStart: { value: 90000, rate: 30000 },
         duration: { value: 90000, rate: 30000 },
         mediaRef: { assetId: assets.waves.id },
-        scale: scale1080p,
+        ...scale1080p,
         effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
       },
       {
@@ -182,7 +183,7 @@ demoDoc.timeline.children.push(
         sourceStart: { value: 60000, rate: 30000 },
         duration: { value: 120000, rate: 30000 },
         mediaRef: { assetId: assets.wavesRocks.id },
-        scale: scale1080p,
+        ...scale1080p,
         effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 0.5 }],
       },
       {
@@ -192,7 +193,7 @@ demoDoc.timeline.children.push(
         sourceStart: { value: 38400, rate: 12800 },
         duration: { value: 38400, rate: 12800 },
         mediaRef: { assetId: assets.waveBreaking.id },
-        scale: scale720p,
+        ...scale720p,
         effects: [{ id: uid(), assetId: 'filter:Chromatic', intensity: 0.75 }],
       },
       {
@@ -202,7 +203,7 @@ demoDoc.timeline.children.push(
         sourceStart: { value: 33484, rate: 15360 },
         duration: { value: 76800, rate: 15360 },
         mediaRef: { assetId: assets.turtle.id },
-        scale: scale720p,
+        ...scale720p,
         effects: [{ id: uid(), assetId: 'filter:Vintage', intensity: 0.3 }],
       },
       {
@@ -212,7 +213,7 @@ demoDoc.timeline.children.push(
         sourceStart: { value: 30000, rate: 30000 },
         duration: { value: 60000, rate: 30000 },
         mediaRef: { assetId: assets.waves.id },
-        scale: scale1080p,
+        ...scale1080p,
         effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
       },
     ],

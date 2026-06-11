@@ -217,7 +217,13 @@ const gap = (duration: Rational): Otio.Gap => ({
 const addTransformEffect = (otio: Otio.BaseItem, node: Schema.TransformProps): void => {
   const json = otio.metadata.Miru as Partial<Schema.VideoClip>
 
-  if (!!json.translate || !!(json.rotate ?? 0) || !!json.scale) {
+  if (
+    !!(json.translateX ?? 0) ||
+    !!(json.translateY ?? 0) ||
+    !!(json.rotate ?? 0) ||
+    (json.scaleX ?? 1) !== 1 ||
+    (json.scaleY ?? 1) !== 1
+  ) {
     // https://github.com/AcademySoftwareFoundation/OpenTimelineIO/discussions/1794
     otio.effects.unshift({
       OTIO_SCHEMA: 'Effect.1',
@@ -226,9 +232,9 @@ const addTransformEffect = (otio: Otio.BaseItem, node: Schema.TransformProps): v
       metadata: {},
       center: { OTIO_SCHEMA: 'V2d.1', x: 0.5, y: 0.5 },
       rotate: node.rotate,
-      scale: { OTIO_SCHEMA: 'V2d.1', ...node.scale },
+      scale: { OTIO_SCHEMA: 'V2d.1', x: node.scaleX, y: node.scaleY },
       skew: { OTIO_SCHEMA: 'V2d.1', x: 0.0, y: 0.0 },
-      translate: { OTIO_SCHEMA: 'V2d.1', ...node.translate },
+      translate: { OTIO_SCHEMA: 'V2d.1', x: node.translateX, y: node.translateY },
       filter: 'cubic',
     })
   }

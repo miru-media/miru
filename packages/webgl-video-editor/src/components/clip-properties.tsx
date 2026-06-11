@@ -75,8 +75,10 @@ const VideoClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AnyVideoCl
   const rotateId = `y-${id}`
 
   const scaleInputProps = getNumberInputProps(
-    () => clip.scale.x,
-    (value) => (clip.scale = { x: value, y: value }),
+    () => clip.scaleX,
+    (value) => {
+      clip.scaleX = clip.scaleY = value
+    },
     scaleId,
     1 / 10,
     10,
@@ -84,16 +86,16 @@ const VideoClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AnyVideoCl
   )
 
   const xInputProps = getNumberInputProps(
-    () => clip.translate.x,
-    (value) => (clip.translate = { x: value, y: clip.translate.y }),
+    () => clip.translateX,
+    (value) => (clip.translateX = value),
     `${positionId} ${xId}`,
     -Infinity,
     Infinity,
   )
 
   const yInputProps = getNumberInputProps(
-    () => clip.translate.y,
-    (value) => (clip.translate = { y: value, x: clip.translate.x }),
+    () => clip.translateY,
+    (value) => (clip.translateY = value),
     `${positionId} ${yId}`,
     -Infinity,
     Infinity,

@@ -136,9 +136,11 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
     super._update(key, oldValue)
 
     switch (key) {
-      case 'translate':
+      case 'translateX':
+      case 'translateY':
       case 'rotate':
-      case 'scale':
+      case 'scaleX':
+      case 'scaleY':
       case 'mediaRef':
         this.pixiNode.setFromMatrix(this.matrix.value)
         break
@@ -245,9 +247,11 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
 
   _update<Key extends keyof pub.TextClip>(key: Key): void {
     switch (key) {
-      case 'translate':
+      case 'translateX':
+      case 'translateY':
       case 'rotate':
-      case 'scale':
+      case 'scaleX':
+      case 'scaleY':
         this.pixiNode.setFromMatrix(this.matrix.value)
         break
       case 'content':

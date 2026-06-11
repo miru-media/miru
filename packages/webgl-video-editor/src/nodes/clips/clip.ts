@@ -9,9 +9,6 @@ import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import { TrackChild } from '../track-child.ts'
 
-const pointsAreEqual = (a?: Schema.Point, b?: Schema.Point): boolean =>
-  (!a && !b) || (!!a && !!b && a.x === b.x && a.y === b.y)
-
 export interface Clip<T extends Schema.AnyClip> extends NonOverlappingUnion<TrackChild<T>, pub.Clip> {}
 
 export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
@@ -34,9 +31,11 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   ] satisfies pub.NodeFieldDef<pub.Clip>[])
 
   static TRANSFORM_FIELDS = [
-    { key: 'translate', flags: 0, equal: pointsAreEqual, defaultValue: { x: 0, y: 0 } },
+    { key: 'translateX', flags: 0, defaultValue: 0 },
+    { key: 'translateY', flags: 0, defaultValue: 0 },
     { key: 'rotate', flags: 0, defaultValue: 0 },
-    { key: 'scale', flags: 0, equal: pointsAreEqual, defaultValue: { x: 1, y: 1 } },
+    { key: 'scaleX', flags: 0, defaultValue: 1 },
+    { key: 'scaleY', flags: 0, defaultValue: 1 },
   ] satisfies pub.NodeFieldDef<Schema.TransformProps>[]
 
   declare readonly children: undefined
@@ -145,12 +144,14 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   _transformToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.TransformProps>>>(
     this: Clip<T> & Schema.TransformProps,
   ): Partial<Schema.TransformProps> {
-    const { translate, rotate, scale } = this
+    const { translateX, translateY, rotate, scaleX, scaleY } = this
     const transform: Partial<Schema.TransformProps> = {}
 
-    if (translate.x !== 0 || translate.y !== 0) transform.translate = translate
+    if (translateX !== 0) transform.translateX = translateX
+    if (translateY !== 0) transform.translateY = translateY
     if (rotate !== 0) transform.rotate = rotate
-    if (scale.x !== 1 || scale.y !== 1) transform.scale = scale
+    if (scaleX !== 1) transform.scaleX = scaleX
+    if (scaleY !== 1) transform.scaleY = scaleY
 
     return transform
   }

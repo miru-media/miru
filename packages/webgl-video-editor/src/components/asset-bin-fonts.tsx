@@ -50,18 +50,14 @@ export const AssetBinFonts = () => {
         const clip = editor.doc.createNode({
           id: editor.generateId(),
           type: 'clip:text',
-          sourceStart: Rational.fromDecimal(0, editor.doc.frameRate),
+          sourceStart: Rational.ZERO,
           duration: Rational.fromDecimal(3, editor.doc.frameRate),
           content: 'hello world',
           fontFamily: DEFAULT_FONT_FAMILY,
           fontSize: 96,
-          inlineSize: editor.doc.resolution.width,
+          inlineSize: editor.doc.resolution.width * (1 - 2 / 10),
           fill: '#ffffff',
           stroke: '#000000',
-          // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- TODO
-          translate: { x: editor.doc.resolution.width * 0.1, y: editor.doc.resolution.height * 0.01 },
-          scale: { x: 1, y: 1 },
-          rotate: 0,
         })
 
         clip.move({ parentId: targetTrack.id, index: targetTrack.children.length })

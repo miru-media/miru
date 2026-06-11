@@ -129,8 +129,11 @@ const textClip = (item: Otio.Clip<pub.TextClip>): Schema.SerializedTextClip => {
 
 const applyTransformEffect = (json: Partial<Schema.TransformProps>, item: Otio.Clip): void => {
   const transform = item.effects.find((e: any) => e.effect_name === 'SpatialTransformEffect')
+  if (!transform) return
 
-  json.translate = transform?.translate
-  json.rotate = transform?.rotate
-  json.scale = transform?.scale
+  json.translateX = transform.translate.x
+  json.translateY = transform.translate.y
+  json.rotate = transform.rotate
+  json.scaleX = transform.scale.x
+  json.scaleY = transform.scale.y
 }

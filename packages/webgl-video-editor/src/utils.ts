@@ -10,7 +10,7 @@ export const getClipTransformMatrix = (
   if (!size) return new Pixi.Matrix()
 
   const clip = renderClip.original
-  const { scale } = clip
+  const { scaleX, scaleY } = clip
   const mediaRotation = clip.isMediaClip() ? (clip.asset?.video?.rotation ?? 0) : 0
 
   const { width, height } = size
@@ -28,14 +28,14 @@ export const getClipTransformMatrix = (
     )
   }
 
-  const { translate } = clip
+  const { translateX, translateY } = clip
   const halfWidth = width / 2
   const halfHeight = height / 2
 
-  if (clip.rotate !== 0 || scale.x !== 1 || scale.y !== 1) {
+  if (clip.rotate !== 0 || scaleX !== 1 || scaleY !== 1) {
     matrix
       .translate(-halfWidth, -halfHeight)
-      .scale(scale.x, scale.y)
+      .scale(scaleX, scaleY)
       .rotate((clip.rotate * Math.PI) / 180)
       .translate(halfWidth, halfHeight)
   }
@@ -47,7 +47,7 @@ export const getClipTransformMatrix = (
     if (dx !== 0 || dy !== 0) matrix.translate(dx / 2, dy / 2)
   }
 
-  if (translate.x !== 0 || translate.y !== 0) matrix.translate(translate.x, translate.y)
+  if (translateX !== 0 || translateY !== 0) matrix.translate(translateX, translateY)
 
   return matrix
 }
