@@ -20,7 +20,7 @@ export const AssetBinFilters = () => {
 
   const clip = computed(() => {
     const { selection } = editor
-    return selection?.isVideo() ? selection : undefined
+    return selection?.isNode && selection.isVideo() ? selection : undefined
   })
 
   const renderer = editor.effectRenderer

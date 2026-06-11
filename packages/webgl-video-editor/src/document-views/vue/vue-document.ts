@@ -8,7 +8,6 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import { _vuePlainReadonly, _vueWritable } from './utils.ts'
 import {
   type VueAudioClip,
-  type VueGap,
   VueNodeView,
   VueParentNode,
   type VueTextClip,
@@ -23,7 +22,6 @@ export interface VueTypeMap {
   'clip:video': VueVideoClip
   'clip:audio': VueAudioClip
   'clip:text': VueTextClip
-  gap: VueGap
 }
 
 export class VueDocument extends DocumentView<VueTypeMap> implements pub.Document {

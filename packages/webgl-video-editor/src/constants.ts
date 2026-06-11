@@ -46,6 +46,7 @@ export const NODE_FIELD_FLAGS: NodeFieldFlags = {
   Node: 1 << 1,
   NodeArray: 1 << 2,
   Asset: 1 << 3,
+  Gap: 1 << 4,
 }
 
 export const CLIP_COLORS = [

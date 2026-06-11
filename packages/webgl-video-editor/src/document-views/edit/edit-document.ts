@@ -7,7 +7,8 @@ import type { Valueof } from '#internal'
 import { DocumentView, type ViewType } from '../document-view.ts'
 import { defineWrapperProps } from '../utils.ts'
 
-import { EditClip, EditGap, EditView } from './edit-nodes.ts'
+import { ClipDragContext } from './clip-drag-context.ts'
+import { EditClip, EditView } from './edit-nodes.ts'
 
 export interface ViewTypeMap {
   timeline: EditView.Timeline
@@ -15,7 +16,6 @@ export interface ViewTypeMap {
   'clip:video': EditView.VideoClip
   'clip:audio': EditView.AudioClip
   'clip:text': EditView.TextClip
-  gap: EditView.Gap
 }
 
 /**
@@ -58,6 +58,8 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   toJSON = this.doc.toJSON.bind(this.doc)
   emit = this.doc.emit.bind(this.doc)
 
+  clipDrag = new ClipDragContext()
+
   constructor(doc: pub.Document) {
     super(doc)
 
@@ -73,6 +75,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
         'node:create',
         'node:move',
         'node:update',
+        'node:gap-update',
         'canvas:pointerdown',
         'canvas:pointermove',
         'canvas:pointerup',
@@ -83,11 +86,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   }
 
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
-    const view = original.isClip()
-      ? new EditClip(this, original)
-      : original.isGap()
-        ? new EditGap(this, original)
-        : new EditView(this, original)
+    const view = original.isClip() ? new EditClip(this, original) : new EditView(this, original)
     const proxy = EditView.proxy(view)
     return proxy as unknown as ViewType<ViewTypeMap, T>
   }
@@ -126,11 +125,14 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
       case 'node:move':
         newEvent = event.clone(view, event.from)
         break
-      case 'node:update': {
+      case 'node:update':
+      case 'node:gap-update': {
         const editProps = view._editedProps.value
+
+        const propKey = event.type === 'node:gap-update' ? 'gap' : event.key
         // ignore updates while editing
-        if (editProps && !view._isEnding && event.key in editProps) return
-        newEvent = event.clone(view, event.key, event.from)
+        if (editProps && !view._isEnding && propKey in editProps) return
+        newEvent = event.clone(view as any)
         break
       }
       case 'node:delete':
@@ -160,10 +162,6 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
 
   _emit(event: pub.VideoEditorEvents[keyof pub.VideoEditorEvents]): void {
     this.#eventTarget.dispatchEvent(event)
-  }
-
-  dispose(): void {
-    super.dispose()
   }
 }
 

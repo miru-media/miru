@@ -49,15 +49,15 @@ export const ClipProperties = () => {
   return (
     <>
       {() => {
-        const clip = editor.selection
+        const { selection } = editor
 
-        if (!clip?.isClip()) return
+        if (!selection?.isNode || !selection.isClip()) return
 
         return (
           <section class={styles.workspaceProperties}>
             <div class={styles.panelBody}>
-              {() => clip.isVideo() && <VideoClipProperties {...{ editor, i18n, clip }} />}
-              {() => clip.isAudio() && <AudioClipProperties {...{ editor, i18n, clip }} />}
+              {() => selection.isVideo() && <VideoClipProperties {...{ editor, i18n, clip: selection }} />}
+              {() => selection.isAudio() && <AudioClipProperties {...{ editor, i18n, clip: selection }} />}
             </div>
           </section>
         )

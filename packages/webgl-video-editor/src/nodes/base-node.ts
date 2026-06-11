@@ -25,6 +25,7 @@ export abstract class BaseNode<
     { key: 'color', flags: 0 },
     { key: 'metadata', flags: 0, defaultValue: {} },
 
+    { key: 'isNode', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'doc', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'id', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'type', flags: NODE_FIELD_FLAGS.Readonly },
@@ -174,6 +175,7 @@ export abstract class BaseNode<
     }
   }
 
+  readonly isNode = true
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isTimeline(): this is pub.Timeline {
     return false
@@ -191,9 +193,6 @@ export abstract class BaseNode<
     return false
   }
   isTextClip(): this is pub.TextClip {
-    return false
-  }
-  isGap(): this is pub.Gap {
     return false
   }
   isVideo(): this is pub.AnyVideoNode {
@@ -249,12 +248,14 @@ export abstract class BaseNode<
   }
 
   delete(): void {
+    if (this.isDisposed) return
+
     this.parent?._unlinkChild(this as any)
     this.doc.emit(new NodeDeleteEvent(this as unknown as pub.AnyNode))
     this.dispose()
   }
 
-  dispose() {
+  dispose(): void {
     if (this.isDisposed) return
     this.isDisposed = true
 
@@ -266,9 +267,5 @@ export abstract class BaseNode<
 
   [Symbol.dispose](): void {
     this.dispose()
-  }
-
-  onDispose(fn: () => void): void {
-    this._abort.signal.addEventListener('abort', fn, { once: true })
   }
 }

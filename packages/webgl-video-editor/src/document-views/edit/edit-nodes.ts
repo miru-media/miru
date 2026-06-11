@@ -3,13 +3,14 @@ import { computed, ref } from 'fine-jsx'
 import type * as pub from '#core'
 import type { AnyClip, AnyNode, AnyParentNode, ClipTime, ClipTimeRational } from '#core'
 import type { KeyofUnion } from '#internal'
-import type { Clip, Gap } from '#nodes'
+import type { Clip } from '#nodes'
 
 import { NodeUpdateEvent } from '../../events.ts'
 import { TrackChild } from '../../nodes/track-child.ts'
+import type { ViewType } from '../document-view.ts'
 import { NodeView } from '../node-view.ts'
 
-import type { EditDocument } from './edit-document.ts'
+import type { EditDocument, ViewTypeMap } from './edit-document.ts'
 
 declare module 'webgl-video-editor' {
   export interface BaseNode {
@@ -28,9 +29,8 @@ export namespace EditView {
   export type VideoClip = EditClip<pub.VideoClip> & ProxyOf<pub.VideoClip>
   export type AudioClip = EditClip<pub.AudioClip> & ProxyOf<pub.AudioClip>
   export type TextClip = EditClip<pub.TextClip> & ProxyOf<pub.TextClip>
-  export type Gap = EditGap & ProxyOf<pub.Gap>
   export type AnyClip = VideoClip | AudioClip | TextClip
-  export type AnyTrackChild = AnyClip | Gap
+  export type AnyTrackChild = AnyClip
 }
 
 export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
@@ -44,9 +44,15 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
   readonly [IS_EDIT_VIEW]? = true as boolean
   readonly _boundMethods: Record<string | symbol, (...args: unknown[]) => unknown>
 
-  readonly _editedProps = ref<Partial<T> | undefined>()
+  readonly _editedProps = ref<Partial<T>>()
+  readonly _editedPosition = ref<pub.ChildNodePosition>()
 
   _isEnding = false
+
+  declare parent?: ViewType<ViewTypeMap, T['parent']>
+  declare prev?: ViewType<ViewTypeMap, T['prev']>
+  declare next?: ViewType<ViewTypeMap, T['next']>
+  declare children?: T extends { children: any[] } ? ViewType<ViewTypeMap, T['children'][number]>[] : never
 
   _move = super._move.bind(this)
   _update = super._update.bind(this)
@@ -102,7 +108,7 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     this._isEnding = false
   }
 
-  static proxy = <T extends AnyNode>(view: EditView<T> | EditClip<any> | EditGap): EditView.ProxyOf<T> => {
+  static proxy = <T extends AnyNode>(view: EditView<T> | EditClip<any>): EditView.ProxyOf<T> => {
     const proxy = new Proxy<EditView<any>>(view, nodeHandler) as EditView.ProxyOf<T>
     viewProxies.set(view, proxy as any)
     return proxy
@@ -114,7 +120,11 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
     const { original } = target
 
     switch (key) {
+      case 'original':
+        return original
+
       case 'doc':
+      case 'docView':
         return target.docView
 
       // node properties
@@ -137,7 +147,6 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
 
       // node array properties
       case 'children':
-      case 'clips':
         return (original as pub.Track)[key].map((node) => target.docView._getNode(node))
 
       // clip time properties and methods
@@ -169,8 +178,11 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
     const editedProps = target._editedProps.value
 
     if (original.isTrackChild()) {
-      if (key === 'timeRational') {
-        return (target as EditView.AnyTrackChild)._timeRational.value
+      if (key === 'timeRational') return (target as EditView.AnyTrackChild)._timeRational.value
+
+      if (key === 'gap') {
+        const dragGap = target.docView.clipDrag.getAdjustedGap(receiver)
+        if (dragGap) return dragGap
       }
     }
 
@@ -204,13 +216,20 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
   },
 }
 
-export class EditClip<T extends AnyClip> extends EditView<T> {
+abstract class EditTrackChild<T extends pub.AnyTrackChild> extends EditView<T> {
   /* eslint-disable @typescript-eslint/unbound-method -- Reflect.apply */
   _timeRational = computed(
     (): ClipTimeRational =>
-      Reflect.apply((this.original as unknown as Clip<T>)._computeTimeRational, viewProxies.get(this), []),
+      Reflect.apply(
+        (this.original as unknown as TrackChild<T>)._computeTimeRational,
+        viewProxies.get(this),
+        [],
+      ),
   )
   _time = computed((): ClipTime => TrackChild.clipTimeRationalToDecimal(this._timeRational.value))
+}
+
+export class EditClip<T extends AnyClip> extends EditTrackChild<T> {
   _presentationTime = computed(
     (): ClipTime =>
       Reflect.apply(
@@ -222,15 +241,6 @@ export class EditClip<T extends AnyClip> extends EditView<T> {
   _playableTime = computed(
     (): ClipTime =>
       Reflect.apply((this.original as unknown as Clip<T>)._computePlayableTime, viewProxies.get(this), []),
-  )
-  /* eslint-enable @typescript-eslint/unbound-method */
-}
-
-export class EditGap extends EditView<pub.Gap> {
-  /* eslint-disable @typescript-eslint/unbound-method -- Reflect.apply */
-  _timeRational = computed(
-    (): ClipTimeRational =>
-      Reflect.apply((this.original as unknown as Gap)._computeTimeRational, viewProxies.get(this), []),
   )
   /* eslint-enable @typescript-eslint/unbound-method */
 }

@@ -11,7 +11,7 @@ import { Document } from '../src/document.ts'
 import * as events from '../src/events.ts'
 
 import { docWithTracks } from './test-content.ts'
-import { makeAudioClip, makeTrack, makeVideoClip } from './utils.ts'
+import { makeAudioClip, makeAvAsset, makeTrack, makeVideoClip } from './utils.ts'
 
 class TestView extends NodeView<TestDocument, any> {
   _move = vi.fn()
@@ -26,6 +26,7 @@ class TestDocument extends DocumentView<Record<string, TestView>> {
   }
 }
 
+let stack: DisposableStack
 let doc: Document
 let editDoc: EditDocument
 let testDoc: TestDocument
@@ -35,39 +36,50 @@ let editClip2: EditView<pub.VideoClip> & pub.VideoClip
 let originalClip1: pub.AudioClip
 let originalClip2: pub.VideoClip
 
-const clipInit1 = makeAudioClip({ id: 'clip-1', mediaRef: { assetId: 'unknown' } })
-const clipInit2 = makeVideoClip({ id: 'clip-2', mediaRef: { assetId: 'unknown' } })
-const clipInit3 = makeVideoClip({ id: 'clip-3', mediaRef: { assetId: 'unknown' } })
-const trackInit = makeTrack('test-track', 'audio', [clipInit1, clipInit2])
+const clipInit1 = makeAudioClip({ id: 'clip-1' })
+const clipInit2 = makeVideoClip({ id: 'clip-2' })
+const clipInit3 = makeVideoClip({ id: 'clip-3' })
+const trackInit1 = makeTrack('test-track', 'audio', [clipInit1, clipInit2])
+const trackInit2 = makeTrack('test-track', 'video', [clipInit3])
 
 const onDocUpdate = vi.fn()
+const onDocMove = vi.fn()
+const onDocDelete = vi.fn()
 const onEditDocUpdate = vi.fn()
+const onEditDocMove = vi.fn()
+const onEditDocDelete = vi.fn()
 const viewMarkerMatcher = expect.objectContaining({ _is_edit_view: true })
 
-beforeEach(() => {
-  doc = new Document({})
-  doc.on('node:update', onDocUpdate)
-  doc.importFromJson(docWithTracks([trackInit]))
+const clearMockListeners = () =>
+  [onDocUpdate, onDocMove, onDocDelete, onEditDocUpdate, onEditDocMove, onEditDocDelete].forEach((fn) =>
+    fn.mockClear(),
+  )
 
-  editDoc = new EditDocument(doc)
-  testDoc = new TestDocument(editDoc)
+beforeEach(() => {
+  stack = new DisposableStack()
+  doc = stack.use(new Document({}))
+  doc.on('node:update', onDocUpdate)
+  doc.on('node:move', onDocMove)
+  doc.on('node:delete', onDocDelete)
+  doc.importFromJson(docWithTracks([trackInit1, trackInit2]))
+
+  editDoc = stack.use(new EditDocument(doc))
+  testDoc = stack.use(new TestDocument(editDoc))
   editDoc.on('node:update', onEditDocUpdate)
+  editDoc.on('node:move', onEditDocMove)
+  editDoc.on('node:delete', onEditDocDelete)
 
   editClip1 = editDoc.nodes.get(clipInit1.id)
   editClip2 = editDoc.nodes.get(clipInit2.id)
   originalClip1 = doc.nodes.get(clipInit1.id)
   originalClip2 = doc.nodes.get(clipInit2.id)
 
-  onDocUpdate.mockClear()
-  onEditDocUpdate.mockClear()
+  clearMockListeners()
 })
 
 afterEach(() => {
-  doc.dispose()
-  editDoc.dispose()
-  testDoc.dispose()
-  onDocUpdate.mockClear()
-  onEditDocUpdate.mockClear()
+  stack.dispose()
+  clearMockListeners()
 })
 
 test('gets proxied nodes', () => {
@@ -86,11 +98,11 @@ test('re-emits events from original doc with proxied nodes', () => {
   editDoc.on('canvas:pointerup', listener)
   editDoc.on('playback:seek', listener)
 
-  const originalClip3 = doc.createNode(clipInit3)
-  originalClip3.duration = originalClip3.duration.add(new Rational(1, 1))
-  originalClip3.delete()
+  const newClip = doc.createNode(makeVideoClip({ id: 'clip-new' }))
+  newClip.duration = newClip.duration.add(new Rational(1, 1))
+  newClip.delete()
 
-  doc.emit(new events.AssetCreateEvent({} as any))
+  doc.emit(new events.AssetCreateEvent(makeAvAsset('x', 1) as any))
   doc.emit(new events.CanvasEvent('pointerup', originalClip2))
   doc.emit(new events.PlaybackSeekEvent())
 
@@ -124,13 +136,13 @@ test('views on top of the edit document see the proxied nodes', () => {
   expect(testDoc._createView).toHaveBeenNthCalledWith(2, viewMarkerMatcher)
   expect(testDoc._createView).toHaveBeenNthCalledWith(3, viewMarkerMatcher)
   expect(testDoc._createView).toHaveBeenNthCalledWith(4, viewMarkerMatcher)
-  expect(testDoc._createView).toHaveBeenCalledTimes(4)
+  expect(testDoc._createView).toHaveBeenNthCalledWith(5, viewMarkerMatcher)
+  expect(testDoc._createView).toHaveBeenCalledTimes(5)
 })
 
 test('while editing, update events to original node are suppressed', () => {
   const editListener = vi.fn()
   editDoc.on('node:update', editListener)
-
   editClip1._startEditing(['duration'])
   originalClip1.duration = originalClip1.duration.add(new Rational(1, 1))
   expect(editListener).not.toHaveBeenCalled()

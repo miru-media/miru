@@ -123,5 +123,10 @@ export class Rational {
 
   static max = (a: Rational, b: Rational): Rational => (a.isGte(b) ? a : b)
 
+  static clamp = (value: Rational, min: RationalLike, max: RationalLike): Rational =>
+    Rational.from(value.isLessThan(min) ? min : value.isGreaterThan(max) ? max : value)
+
   static ZERO = new Rational(0, 1)
+  static INFINITY = new Rational(Infinity, 1)
+  static MINUS_INFINITY = new Rational(-Infinity, 1)
 }

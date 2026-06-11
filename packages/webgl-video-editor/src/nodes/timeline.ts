@@ -1,22 +1,13 @@
-import { NODE_FIELD_FLAGS } from '#constants'
 import type { Schema } from '#core'
 import type * as pub from '#core'
 
 import { ParentNode } from './parent-node.ts'
 
 export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> implements pub.Timeline {
-  static FIELDS = super.FIELDS.concat([
-    { key: 'trackCount', flags: NODE_FIELD_FLAGS.Readonly },
-  ] satisfies pub.NodeFieldDef<pub.Timeline>[])
-
   declare readonly id: 'timeline'
 
   constructor(doc: pub.Document) {
     super(doc, { id: 'timeline', type: 'timeline' })
-  }
-
-  get trackCount(): number {
-    return this._count()
   }
 
   get firstVideoTrack(): pub.Track | undefined {

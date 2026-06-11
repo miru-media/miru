@@ -4,7 +4,7 @@ import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
-import { AudioClip, Gap, VideoClip } from '#nodes'
+import { AudioClip, VideoClip } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
@@ -76,8 +76,7 @@ export class Document implements pub.Document {
 
   readonly activeClipIsStalled = computed(() => {
     for (let track = this.timeline.head; track; track = track.next)
-      for (let clip = track.firstClip; clip; clip = clip.nextClip)
-        if (!clip.isReady && clip.isInClipTime) return true
+      for (let clip = track.head; clip; clip = clip.next) if (!clip.isReady && clip.isInClipTime) return true
     return false
   })
 
@@ -91,7 +90,7 @@ export class Document implements pub.Document {
 
   readonly timeline: Timeline
 
-  _isEmpty = computed(() => this.timeline.children.every((track) => !track.firstClip))
+  _isEmpty = computed(() => this.timeline.children.every((track) => !track.head))
   get isEmpty(): boolean {
     return this._isEmpty.value
   }
@@ -133,9 +132,6 @@ export class Document implements pub.Document {
       case 'clip:text':
         node = new TextClip(this, init)
         break
-      case 'gap':
-        node = new Gap(this, init)
-        break
       // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- in case of invalid input
       default:
         throw new Error(`[webgl-video-editor] Unexpected init of type "${(init as { type: string }).type}".`)
@@ -176,10 +172,14 @@ export class Document implements pub.Document {
 
     content.assets.forEach((init) => void this.assets.create(init))
 
-    const createChildren = (parent: pub.AnyNode, childrenInit: Schema.AnyNodeSerializedSchema[]): void => {
+    const createChildren = (parent: pub.AnyNode, childrenInit: Schema.AnySerializedNode[]): void => {
       childrenInit.forEach((childInit, index) => {
         const childNode = this.createNode(childInit)
         childNode.move({ parentId: parent.id, index })
+
+        if ('gap' in childInit && childInit.gap && 'gap' in childNode)
+          childNode.gap = Rational.from(childInit.gap)
+
         if ('children' in childInit) createChildren(childNode, childInit.children)
       })
     }
@@ -190,11 +190,13 @@ export class Document implements pub.Document {
   toJSON(): Schema.SerializedDocument {
     const serialize = <T extends Schema.AnyNode['type'], TN extends Extract<pub.AnyNode, { type: T }>>(
       node: TN,
-    ): Extract<Schema.AnyNodeSerializedSchema, ReturnType<TN['toJSON']>> => {
+    ): Extract<Schema.AnySerializedNode, ReturnType<TN['toJSON']>> => {
       const json = node.toJSON()
       const serialized = 'children' in node ? { ...json, children: node.children.map(serialize) } : json
 
-      return serialized as Extract<Schema.AnyNodeSerializedSchema, ReturnType<TN['toJSON']>>
+      return (
+        'gap' in node && node.gap.value !== 0 ? { ...serialized, gap: node.gap.toJSON() } : serialized
+      ) as Extract<Schema.AnySerializedNode, ReturnType<TN['toJSON']>>
     }
 
     return {
@@ -213,7 +215,7 @@ export class Document implements pub.Document {
 
     this.emit(new DocDisposeEvent(this))
     this.#disposeAbort.abort()
-    this.nodes.forEach((node) => node.dispose())
+    this.nodes.forEach((node) => node.dispose(true))
 
     if (this.#ownsAssetStore) this.assets.dispose()
   }

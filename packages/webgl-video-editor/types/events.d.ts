@@ -30,10 +30,7 @@ export class NodeCreateEvent extends Event {
 export class NodeUpdateEvent<
   T extends pub.Schema.AnyNode = pub.Schema.AnyNode,
   K extends KeyofUnion<T> = KeyofUnion<T>,
->
-  extends Event
-  implements pub.NodeUpdateEvent
-{
+> extends Event {
   declare readonly type: 'node:update'
   readonly node: pub.NodesByType[T['type']]
   readonly key: K
@@ -41,6 +38,16 @@ export class NodeUpdateEvent<
 
   constructor(node: pub.NodesByType[T['type']], key: K, from: T[K])
   clone(node?: pub.NodesByType[T['type']], key?: K, from?: T[K]): this
+}
+
+export class NodeGapUpdateEvent extends Event {
+  readonly type: 'node:gap-update'
+  readonly node: pub.AnyClip
+  readonly key: string
+  readonly from: pub.Rational
+
+  constructor(node: pub.AnyClip, key: string, from: pub.Rational)
+  clone(node?: pub.AnyClip, key?: string, from?: pub.Rational): this
 }
 
 export class NodeDeleteEvent extends Event {

@@ -1,4 +1,3 @@
-import '@interactjs/actions/drop'
 import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
 import type { InputEvent } from 'shared/types'
@@ -73,10 +72,8 @@ export const Timeline = ({
   }
 
   const onPointerdownScroller = (event: Event) => {
-    if (!(event.target as HTMLElement).closest(`.${styles.clip}`)) editor.select(undefined)
+    if (!(event.target as HTMLElement).closest(`.${styles.clipBoxBase}`)) editor.select(undefined)
   }
-
-  const dragTargetTrack = editor.drag.targetTrack
 
   return (
     <div
@@ -127,7 +124,9 @@ export const Timeline = ({
                     data-before-track-id={track.id}
                     class={() => [
                       styles.clipDragTrackSpace,
-                      dragTargetTrack.value?.id === track.id && dragTargetTrack.value.before && styles.active,
+                      editor.drag.targetTrack?.id === track.id &&
+                        editor.drag.targetTrack.before &&
+                        styles.active,
                     ]}
                   />
                   <Track data-track-id={track.id} track={track} />

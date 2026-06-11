@@ -29,17 +29,22 @@
   z-index: 20;
 }
 
-.clipBox {
-  --clip-color-light: oklch(from var(--clip-color) calc(l + 0.1) c h);
-  --clip-color-dark: oklch(from var(--clip-color) calc(l - 0.15) calc(c * 0.8) h);
-
+.clipBoxBase {
   position: absolute;
   left: var(--clip-box-left);
+  width: calc(var(--clip-box-right) - var(--clip-box-left));
+  height: var(--clip-height);
+
+  --clip-color-light: oklch(from var(--clip-color) calc(l + 0.1) c h);
+  --clip-color-dark: oklch(from var(--clip-color) calc(l - 0.15) calc(c * 0.8) h);
+}
+
+.clipBox {
+  composes: clipBoxBase;
+
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  width: calc(var(--clip-box-right) - var(--clip-box-left));
-  height: var(--clip-height);
   padding: 0 0.5rem;
   overflow: hidden;
   cursor: pointer;
@@ -167,4 +172,22 @@
 .clip.isSelected.canResizeLeft .clipResizeLeft,
 .clip.isSelected .clipResizeRight {
   visibility: visible;
+}
+
+.clipGap {
+  composes: clipBoxBase;
+  border-radius: var(--clip-radius);
+
+  &:hover,
+  &.isSelected {
+    background-color: var(--primary-bg);
+
+    .mobile & {
+      background-color: var(--secondary-bg);
+    }
+  }
+
+  &.isSelected {
+    border: dashed 0.125rem var(--clip-selected-color-accent);
+  }
 }

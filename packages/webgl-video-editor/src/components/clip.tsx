@@ -4,26 +4,27 @@ import '@interactjs/modifiers'
 import '@interactjs/auto-start'
 import { computed, ref } from 'fine-jsx'
 
-import { Button } from 'shared/components/button.tsx'
-import { stringHashCode, useI18n } from 'shared/utils'
+import type { AnyClip } from '#core'
+import { stringHashCode } from 'shared/utils'
 
-import type { AnyClip } from '../../types/core.d.ts'
-import { CLIP_COLORS, MIN_CLIP_WIDTH_PX } from '../constants.ts'
+import { CLIP_COLORS } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
+import { useTrackChildEdges } from './utils.ts'
+
 const DISABLED_COLOR = 'var(--white-2)'
+const GAPPED = true as boolean
 
 export const Clip = ({
-  clip,
+  node: clip,
   editor,
   isSelected,
 }: {
-  clip: AnyClip
+  node: AnyClip
   editor: VideoEditor
   isSelected: () => boolean
 }) => {
-  const { t, tr } = useI18n()
   const mainContainer = ref<HTMLElement>()
 
   const clipColor = computed(() =>
@@ -34,17 +35,11 @@ export const Clip = ({
       : DISABLED_COLOR,
   )
 
-  const boxEdges = computed(() => {
-    const { time } = clip
-    const { isDragging, x } = editor.drag
-
-    const left = isSelected() && isDragging.value ? x.value : editor.secondsToPixels(time.start)
-    const right = left + Math.max(MIN_CLIP_WIDTH_PX, editor.secondsToPixels(time.duration))
-
-    return { left, right }
-  })
+  const boxEdges = useTrackChildEdges(editor, clip)
 
   const selectClip = editor.select.bind(editor, clip, false)
+  const selectGap = (): void => editor.select({ node: clip, isNode: false }, false)
+
   const isVideoMedia = () => clip.isVideo() && clip.isMediaClip()
   const Icon = clip.isAudio()
     ? IconMsMusicNoteRounded
@@ -53,51 +48,66 @@ export const Clip = ({
       : undefined
 
   return (
-    <div
-      tabindex="0"
-      class={() => [
-        styles.clip,
-        isVideoMedia() && styles.isVideoMedia,
-        isSelected() && [styles.isSelected, editor.drag.isDragging.value && styles.isDragging],
-        clip.prev && styles.canResizeLeft,
-        clip.next && editor.selection?.id === clip.next.id && styles.nextIsSelected,
-      ]}
-      style={() => `
+    <>
+      <div
+        tabindex="0"
+        onClick={selectGap}
+        onFocus={selectGap}
+        hidden={() => clip.gap.value <= 0}
+        class={() => [
+          styles.clipGap,
+          editor.selection?.isNode === false && editor.selection.node.id === clip.id && styles.isSelected,
+        ]}
+        style={() => `
+        --clip-box-left: ${editor.secondsToPixels(clip.prev?.time.end ?? 0)}px;
+        --clip-box-right: ${editor.secondsToPixels(clip.time.start)}px;`}
+      >
+        {() => editor._showStats && <div class="text-right">{clip.gap.valueOf().toFixed(2)}</div>}
+      </div>
+
+      <div
+        tabindex="0"
+        class={() => [
+          styles.clip,
+          isVideoMedia() && styles.isVideoMedia,
+          isSelected() && [styles.isSelected, editor.drag.isDragging() && styles.isDragging],
+          (GAPPED || clip.prev) && styles.canResizeLeft,
+          clip.next &&
+            editor.selection?.isNode &&
+            editor.selection.id === clip.next.id &&
+            styles.nextIsSelected,
+        ]}
+        style={() => `
         --clip-box-left: ${boxEdges.value.left}px;
         --clip-box-right: ${boxEdges.value.right}px;
-        --drag-offset: ${editor.drag.x.value};
         --clip-color: ${clipColor.value};
         ${isVideoMedia() && clip.asset?.thumbnailUri ? `--clip-thumbnail: url("${encodeURI(clip.asset.thumbnailUri)}");` : ''}
       `}
-      onFocus={selectClip}
-      onClick={selectClip}
-    >
-      <div ref={mainContainer} data-clip-id={clip.id} class={styles.clipBox}>
-        {Icon !== undefined && <Icon class={styles.clipIcon} />}
-        <span class={styles.clipName}>
-          {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
-        </span>
-        <div class={styles.clipControls}>
-          <div class={styles.clipResizeLeft}>
-            <IconTablerChevronLeft />
-          </div>
-          <div class={styles.clipResizeRight}>
-            <IconTablerChevronRight />
+        onFocus={selectClip}
+        onClick={selectClip}
+      >
+        <div ref={mainContainer} data-clip-id={clip.id} class={styles.clipBox}>
+          {() =>
+            editor._showStats && (
+              <pre class="z-1 bg-#0004 pointer-events-node line-height-1em">
+                …{clip.id.slice(clip.id.length / 2)}
+              </pre>
+            )
+          }
+          {Icon !== undefined && <Icon class={styles.clipIcon} />}
+          <span class={styles.clipName}>
+            {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
+          </span>
+          <div class={styles.clipControls}>
+            <div class={styles.clipResizeLeft}>
+              <IconTablerChevronLeft />
+            </div>
+            <div class={styles.clipResizeRight}>
+              <IconTablerChevronRight />
+            </div>
           </div>
         </div>
       </div>
-      {import.meta.env.DEV && (
-        <Button
-          class={styles.clipTransition}
-          label={tr('transition')}
-          onClick={() => {
-            // eslint-disable-next-line no-alert -- TODO
-            alert(t('Not implemented.'))
-          }}
-        >
-          {() => (clip.transition ? <IconTablerChevronsRight /> : <IconTablerChevronRight />)}
-        </Button>
-      )}
-    </div>
+    </>
   )
 }

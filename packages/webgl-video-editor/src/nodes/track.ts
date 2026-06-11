@@ -16,40 +16,12 @@ export interface Track extends NonOverlappingUnion<
 export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild> implements pub.Track {
   static FIELDS = super.FIELDS.concat([
     { key: 'trackType', flags: NODE_FIELD_FLAGS.Readonly },
-    { key: 'firstClip', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
-    { key: 'lastClip', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
-    { key: 'clips', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.NodeArray },
-    { key: 'clipCount', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'duration', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.Track>[])
 
   trackType!: 'video' | 'audio'
 
-  get firstClip(): pub.AnyClip | undefined {
-    const { head } = this
-    if (head) return head.isClip() ? head : head.nextClip
-  }
-  get lastClip(): pub.AnyClip | undefined {
-    const { tail } = this
-    if (tail) return tail.isClip() ? tail : tail.prevClip
-  }
-
-  get clips(): pub.AnyClip[] {
-    const clips: pub.AnyClip[] = []
-    for (let clip = this.firstClip; clip; clip = clip.nextClip) clips.push(clip)
-    return clips
-  }
-
-  get clipCount(): number {
-    return this.clips.length
-  }
-
-  readonly #duration = computed(() => {
-    const { lastClip } = this
-    if (!lastClip) return Rational.ZERO
-
-    return lastClip.timeRational.end
-  })
+  readonly #duration = computed(() => this.tail?.timeRational.end ?? Rational.ZERO)
 
   get duration(): Rational {
     return this.#duration.value

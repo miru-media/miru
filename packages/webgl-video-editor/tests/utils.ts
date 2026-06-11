@@ -36,26 +36,21 @@ const makeBaseClip = <T extends Schema.AnyClip['type']>(id: string, type: T) => 
 })
 
 export const makeVideoClip = (
-  init: Partial<Omit<Schema.VideoClip, 'id' | 'type'>> & {
+  init: Partial<Omit<Schema.SerializedVideoClip, 'id' | 'type'>> & {
     id: string
   },
-): Schema.VideoClip => ({
+): Schema.SerializedVideoClip => ({
   ...makeBaseClip(init.id, 'clip:video'),
   ...init,
 })
 
 export const makeAudioClip = (
-  init: Partial<Omit<Schema.AudioClip, 'id' | 'type'>> & {
+  init: Partial<Omit<Schema.SerializedAudioClip, 'id' | 'type'>> & {
     id: string
   },
-): Schema.AudioClip => ({
+): Schema.SerializedAudioClip => ({
   ...makeBaseClip(init.id, 'clip:audio'),
   ...init,
-})
-
-export const makeGap = (id: string, duration = 1) => ({
-  ...makeBase(id, 'gap'),
-  duration: { value: duration, rate: 1 },
 })
 
 export const makeAvAsset = (id: string, duration: number, uri?: string): Schema.MediaAsset => ({

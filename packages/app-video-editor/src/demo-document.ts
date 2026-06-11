@@ -147,6 +147,26 @@ demoDoc.timeline.children.push(
     children: [
       {
         id: uid(),
+        type: 'clip:text',
+        duration: { rate: 1, value: 2 },
+        sourceStart: { value: 0, rate: 1 },
+        translate: { x: 20, y: 600 },
+        content: 'Hello world!',
+        fontFamily: 'Arial',
+        fontSize: 300,
+        inlineSize: 1000,
+        fill: 'white',
+        gap: { rate: 1, value: 2 },
+      },
+    ],
+  },
+  {
+    id: uid(),
+    type: 'track',
+    trackType: 'video',
+    children: [
+      {
+        id: uid(),
         type: 'clip:video',
         name: assets.waves.name,
         sourceStart: { value: 90000, rate: 30000 },

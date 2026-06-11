@@ -1,13 +1,9 @@
-import * as base64 from 'base64-js'
 import { markRaw, type MaybeRefOrGetter, type Ref, ref, toRef, watch } from 'vue'
 import { IndexeddbPersistence } from 'y-indexeddb'
 import { WebrtcProvider } from 'y-webrtc'
 import * as Y from 'yjs'
 
 import { YjsAssetStore, YjsSync } from 'webgl-video-editor/yjs'
-
-export const INITIAL_DOC_UPDATE_BASE64 =
-  'AAACQA4PAQAEAAYABEoQAgBCCFYCABUnAiEBJwAoACcAKAAnAigBJwAoAKiYAYMBeXRyZWVyb290X3BhcmVudEhpc3Rvcnl2YWx1ZXJlc29sdXRpb25mcmFtZVJhdGV5dHJlZV9udWxsX3ZhbHVlX3BhcmVudEhpc3Rvcnlyb290YXNzZXRzeXRyZWV0aW1lbGluZXZhbHVlaWR0eXBlX3BhcmVudEhpc3RvcnlfbnVsbF8FBA4FCgkFBgUOBAYFCAUCBA4GCwEAAAMBAAADAQAAAkEHAkEHARIAdgB2Agdjb3VudGVyfQAFb3JkZXJ3BMKAYAZ3CHRpbWVsaW5ldwh0aW1lbGluZXYCB2NvdW50ZXJ9AAVvcmRlcncFwoDDgAd2AgV3aWR0aH2AHgZoZWlnaHR9uBB9GAEAAQMB'
 
 export const useVideoEditorStore = (
   id: MaybeRefOrGetter<string>,
@@ -32,7 +28,6 @@ export const useVideoEditorStore = (
 
       try {
         ydoc = new Y.Doc()
-        Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
         idb = new IndexeddbPersistence(id, ydoc)
       } catch (error_: unknown) {
         error.value = error_

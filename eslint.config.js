@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { includeIgnoreFile } from '@eslint/compat'
 import eslint from '@eslint/js'
 import markdown from '@eslint/markdown'
+import vitest from '@vitest/eslint-plugin'
 import { globalIgnores } from 'eslint/config'
 import eslintConfigLove from 'eslint-config-love'
 import importPlugin from 'eslint-plugin-import'
@@ -25,6 +26,7 @@ export default tseslint.config(
     extends: [
       tseslint.configs.strictTypeChecked,
       tseslint.configs.stylisticTypeChecked,
+      // @ts-expect-error harmless(?) type version mismatch
       eslintConfigLove,
       jsdoc({
         config: 'flat/recommended-typescript',
@@ -152,7 +154,9 @@ export default tseslint.config(
   },
   {
     files: ['packages/*/tests/**', '**/*.test.{ts,tsx,js,jsx}'],
+    plugins: { vitest },
     rules: {
+      ...vitest.configs.recommended.rules,
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',

@@ -1,4 +1,4 @@
-import { ref } from 'fine-jsx'
+import { computed, ref } from 'fine-jsx'
 
 import { NODE_FIELD_FLAGS } from '#constants'
 import type { AnyNode, AnyParentNode, Schema } from '#core'
@@ -19,6 +19,7 @@ export abstract class ParentNode<
     { key: 'head', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
     { key: 'tail', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
     { key: 'children', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.NodeArray },
+    { key: 'count', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.ParentNode<pub.AnyNode>>[])
 
   readonly #head = ref<TChild>()
@@ -31,26 +32,19 @@ export abstract class ParentNode<
     return this.#tail.value
   }
 
-  declare children: TChild[]
-
-  get ['children' as never](): TChild[] {
+  readonly #children = computed(() => {
     const array: TChild[] = []
     for (let current = this.head; current; current = current.next as TChild) array.push(current)
     return array
+  })
+  declare children: TChild[]
+  get ['children' as never](): TChild[] {
+    return this.#children.value
   }
 
-  protected _count(): number {
+  get count(): number {
     const { tail } = this
     return tail ? tail.index + 1 : 0
-  }
-
-  constructor(doc: pub.Document, init: T) {
-    super(doc, init)
-
-    this.onDispose(() => {
-      while (this.tail) this.tail.dispose()
-      this.#head.value = this.#tail.value = undefined
-    })
   }
 
   #setChildparent(child: TChild): void {
@@ -112,5 +106,12 @@ export abstract class ParentNode<
     if (before === head) this.#head.value = node
     if (prev) prev.next = node
     before.prev = node
+  }
+
+  dispose(deep = false): void {
+    super.dispose()
+
+    if (deep) while (this.tail) this.tail.dispose()
+    else while (this.tail) this.tail.remove()
   }
 }

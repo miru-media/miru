@@ -45,11 +45,13 @@ test('sort single palette', () => {
 const repeat = <T>(item: T, n: number): T[] => new Array<T>(n).fill(item)
 
 describe('get closest palette', () => {
-  expect(() => getClosestPaletteIndex([], [])).toThrow()
+  test('throws with empty palette or collection', () => {
+    expect(() => getClosestPaletteIndex([], [])).toThrow()
+    expect(() => getClosestPaletteIndex([], [RED_PALETTE, PURPLE_PALETTE])).toThrow()
+    expect(() => getClosestPaletteIndex(RED_PALETTE, [])).toThrow()
+  })
 
   const N = 5
-
-  expect(() => getClosestPaletteIndex([], [RED_PALETTE, PURPLE_PALETTE])).toThrow()
 
   test.for([
     ['black     ', { R: 0, G: 0, B: 0 }, [RED_PALETTE, PURPLE_PALETTE], 0],

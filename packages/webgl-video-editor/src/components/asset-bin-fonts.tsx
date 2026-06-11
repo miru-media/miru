@@ -24,7 +24,10 @@ export const AssetBinFonts = () => {
   const editor = useEditor()
   const { t } = useI18n()
 
-  const activeTextClip = computed(() => (editor.selection?.isTextClip() ? editor.selection : undefined))
+  const activeTextClip = computed(() => {
+    const { selection } = editor
+    return selection?.isNode && selection.isTextClip() ? selection : undefined
+  })
 
   const createClip = () => {
     try {
@@ -61,7 +64,7 @@ export const AssetBinFonts = () => {
           rotate: 0,
         })
 
-        clip.move({ parentId: targetTrack.id, index: targetTrack.clipCount })
+        clip.move({ parentId: targetTrack.id, index: targetTrack.children.length })
         editor.select(clip)
       })
     } catch {

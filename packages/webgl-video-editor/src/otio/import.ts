@@ -49,24 +49,36 @@ const timelineStack = (item: Otio.TimelineStack): Schema.SerializedTimeline => (
 const track = (item: Otio.Track): Schema.SerializedTrack => {
   const trackType = item.kind === 'Audio' ? 'audio' : 'video'
 
+  const children: Schema.AnySerializedClip[] = []
+  let nextChildGapDuration: Schema.Rational | undefined
+
+  item.children.forEach((child) => {
+    if (child.OTIO_SCHEMA === 'Gap.1') {
+      nextChildGapDuration = plainRational(child.source_range.duration)
+      return
+    }
+
+    const childInit =
+      trackType === 'audio'
+        ? audioClip(child)
+        : child.metadata.Miru?.type === 'clip:video'
+          ? videoClip(child)
+          : textClip(child)
+
+    if (nextChildGapDuration) {
+      childInit.gap = nextChildGapDuration
+      nextChildGapDuration = undefined
+    }
+
+    children.push(childInit)
+  })
   return {
     ...baseNode(item, 'track'),
     trackType,
-    children: item.children.map((child) =>
-      child.OTIO_SCHEMA === 'Gap.1'
-        ? gap(child)
-        : trackType === 'audio'
-          ? audioClip(child)
-          : child.metadata.Miru?.type === 'clip:video'
-            ? videoClip(child)
-            : textClip(child),
-    ),
+    children,
   }
 }
-const trackChild = <TO extends Otio.Clip | Otio.Gap, TT extends (Schema.AnyClip | Schema.Gap)['type']>(
-  item: TO,
-  type: TT,
-) => ({
+const trackChild = <TO extends Otio.Clip, TT extends Schema.AnyClip['type']>(item: TO, type: TT) => ({
   ...baseNode(item, type),
   duration: plainRational(item.source_range.duration),
 })
@@ -77,7 +89,7 @@ const clip = <T extends Otio.Clip, TT extends Schema.AnyClip['type']>(item: T, t
   mediaRef: item.media_reference.metadata.Miru,
 })
 
-const audioClip = (item: Otio.Clip<pub.AudioClip>): Schema.AudioClip => {
+const audioClip = (item: Otio.Clip<pub.AudioClip>): Schema.SerializedAudioClip => {
   const json: Schema.AudioClip = clip(item, 'clip:audio')
   const effects: Schema.AudioClip['effects'] = []
 
@@ -92,13 +104,13 @@ const audioClip = (item: Otio.Clip<pub.AudioClip>): Schema.AudioClip => {
   }
 }
 
-const videoClip = (item: Otio.Clip<pub.VideoClip>): Schema.VideoClip => {
+const videoClip = (item: Otio.Clip<pub.VideoClip>): Schema.SerializedVideoClip => {
   const json: Schema.VideoClip = clip(item, 'clip:video')
   applyTransformEffect(json, item)
   return json
 }
 
-const textClip = (item: Otio.Clip<pub.TextClip>): Schema.TextClip => {
+const textClip = (item: Otio.Clip<pub.TextClip>): Schema.SerializedTextClip => {
   const metadata = item.metadata.Miru as unknown as Schema.TextClip
   const json: Schema.TextClip = {
     content: metadata.content,
@@ -114,8 +126,6 @@ const textClip = (item: Otio.Clip<pub.TextClip>): Schema.TextClip => {
   applyTransformEffect(json, item)
   return json
 }
-
-const gap = (item: Otio.Gap): Schema.SerializedGap => trackChild(item, 'gap')
 
 const applyTransformEffect = (json: Partial<Schema.TransformProps>, item: Otio.Clip): void => {
   const transform = item.effects.find((e: any) => e.effect_name === 'SpatialTransformEffect')

@@ -142,44 +142,43 @@ export interface TextClip extends BaseClip, Partial<TransformProps> {
   fill?: string
   stroke?: string
 }
-export interface Gap extends TrackChild {
-  type: 'gap'
-}
 
 export interface SerializedTimeline extends Timeline {
   children: SerializedTrack[]
 }
 
 export interface SerializedTrack extends Track {
-  children: (SerializedClip | SerializedGap)[]
+  children: AnySerializedClip[]
 }
 
-export type SerializedClip = AnyClip
-export type SerializedGap = Gap
+export type SerializedVideoClip = WithGap<VideoClip>
+export type SerializedAudioClip = WithGap<AudioClip>
+export type SerializedTextClip = WithGap<TextClip>
+export type AnySerializedClip = WithGap<AnyClip>
+
+type WithGap<T> = T & { gap?: Rational }
 
 export interface NodeSchemasByType {
   timeline: Timeline
   track: Track
   'clip:video': VideoClip
   'clip:audio': AudioClip
-  gap: Gap
   'clip:text': TextClip
 }
 
 export interface SerializedNodeSchemasByType {
   timeline: SerializedTimeline
   track: SerializedTrack
-  'clip:video': VideoClip
-  'clip:audio': AudioClip
-  gap: Gap
-  'clip:text': TextClip
+  'clip:video': SerializedVideoClip
+  'clip:audio': SerializedAudioClip
+  'clip:text': SerializedTextClip
 }
 
 export type AnyNode = NodeSchemasByType[keyof NodeSchemasByType]
 export type AnyClip = NodeSchemasByType[Extract<keyof NodeSchemasByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
 export type AnyVideoClip = VideoClip | TextClip
-export type AnyNodeSerializedSchema = SerializedNodeSchemasByType[keyof SerializedNodeSchemasByType]
+export type AnySerializedNode = SerializedNodeSchemasByType[keyof SerializedNodeSchemasByType]
 
 export interface SerializedDocument extends DocumentSettings {
   assets: AnyAssetSchema[]

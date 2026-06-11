@@ -16,9 +16,11 @@ export const Track = ({ track, ...props }: { track: pub.Track; [index: string]: 
       style={() => `--track-width: ${editor.secondsToPixels(track.duration.valueOf())}px;`}
     >
       {() =>
-        track.clips.map((clip) => (
-          <Clip editor={editor} clip={clip} isSelected={() => editor.selection?.id === clip.id} />
-        ))
+        track.children.map((node) => {
+          const isSelected = () => !!editor.selection?.isNode && editor.selection.id === node.id
+
+          return <Clip {...{ editor, node, isSelected }} />
+        })
       }
     </div>
   )

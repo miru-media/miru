@@ -5,7 +5,7 @@ import { ref } from 'vue'
 import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from 'webgl-video-editor'
 import de from 'webgl-video-editor/locales/de.json'
 import en from 'webgl-video-editor/locales/en.json'
-import VideoEditorUI from 'webgl-video-editor/vue'
+import VideoEditorUI, { EDITOR_SELECTION_ACTIONS_BY_ID } from 'webgl-video-editor/vue'
 import Header from './video-editor-header.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
@@ -60,16 +60,16 @@ if (!import.meta.env.SSR) {
         break
 
       case 'Delete':
-        editor.deleteSelection()
+        EDITOR_SELECTION_ACTIONS_BY_ID.delete.exec(editor)
         break
 
       case 'KeyS':
         if (event.repeat) break
-        editor.splitClipAtCurrentTime()
+        EDITOR_SELECTION_ACTIONS_BY_ID.split.exec(editor)
         break
 
       case 'ArrowLeft': {
-        const prev = editor.selection?.prevClip
+        const prev = editor.selection?.prev
         if (prev) editor.select(prev)
 
         event.preventDefault()
@@ -77,7 +77,7 @@ if (!import.meta.env.SSR) {
       }
 
       case 'ArrowRight': {
-        const next = editor.selection?.nextClip
+        const next = editor.selection?.next
         if (next) editor.select(next)
         event.preventDefault()
         break

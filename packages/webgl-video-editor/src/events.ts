@@ -1,6 +1,5 @@
+import type * as pub from '#core'
 import type { KeyofUnion } from '#internal'
-
-import type * as pub from '../types/core.d.ts'
 
 export class DocDisposeEvent extends Event implements pub.DocDisposeEvent {
   declare readonly type: 'doc:dispose'
@@ -56,6 +55,23 @@ export class NodeUpdateEvent<
 
   constructor(node: pub.NodesByType[T['type']], key: K, from: T[K]) {
     super('node:update')
+    this.node = node
+    this.key = key
+    this.from = from
+  }
+  clone(node = this.node, key = this.key, from = this.from): this {
+    return new (this.constructor as new (...args: unknown[]) => any)(node, key, from)
+  }
+}
+
+export class NodeGapUpdateEvent extends Event implements pub.NodeGapUpdateEvent {
+  declare readonly type: 'node:gap-update'
+  readonly node: pub.AnyClip
+  readonly key: string
+  readonly from: pub.Rational
+
+  constructor(node: pub.AnyClip, key: string, from: pub.Rational) {
+    super('node:gap-update')
     this.node = node
     this.key = key
     this.from = from

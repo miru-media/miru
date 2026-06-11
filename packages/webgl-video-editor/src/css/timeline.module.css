@@ -157,10 +157,14 @@
 }
 
 .clipDragTrackSpace {
+  position: relative;
   height: 0.675rem;
-  transition: height 0.2s;
 
-  &.active {
-    height: var(--clip-height);
+  &.active::after {
+    position: absolute;
+    inset: 0.25rem 0.5rem;
+    content: '';
+    background-color: var(--yellow-dark);
+    border-radius: 999px;
   }
 }

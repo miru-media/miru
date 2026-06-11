@@ -2,7 +2,8 @@ import { computed, ref, type Ref } from 'fine-jsx'
 import { uid } from 'uid'
 import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
 
-import type { ClipDrag, ClipResize } from '#internal'
+import type * as pub from '#core'
+import type { ClipResize } from '#internal'
 import type * as Schema from '#schema'
 import type { Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
@@ -10,9 +11,8 @@ import { useElementSize } from 'shared/utils/composables.ts'
 import { getWebgl2Context } from 'shared/utils/images.ts'
 import { Rational, remap0 } from 'shared/utils/math'
 
-import type * as pub from '../types/webgl-video-editor'
-
-import { useClipDragResize } from './components/utils.ts'
+import { useClipDragResize } from './components/interactions/clip-drag-resize.ts'
+import { useTrackDropzone } from './components/interactions/track-dropzone.ts'
 import type { AssetBin } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
 import type { EditView } from './document-views/edit/edit-nodes.ts'
@@ -22,34 +22,28 @@ import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
 import type { NodeDeleteEvent } from './events.ts'
 
-const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined => {
-  for (let clip = track.firstClip; clip; clip = clip.nextClip) {
-    const clipTime = clip.time
-
-    if (clipTime.start <= time && time < clipTime.end) return clip
-  }
-}
-
 const INITIAL_SECONDS_PER_PIXEL = 0.01
 const MOBILE_SCREEN_CUTOFF_PX = 1000
 
 export class VideoEditor implements pub.VideoEditor {
   readonly #uid = uid()
 
-  doc!: EditDocument
-  _editor = this
+  readonly doc: EditDocument
+  readonly _editor = this
   readonly sync?: pub.VideoEditorDocumentSync
 
-  readonly #selection = ref<pub.AnyTrackChild>()
-  _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
-  _timelineContainer = ref<HTMLElement>()
-  _timelineSize = useElementSize(this._timelineContainer)
-  _viewportSize: Ref<Size>
-  _workspaceContainer = ref<HTMLElement>()
-  _workspaceSize = useElementSize(this._workspaceContainer)
-  _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
+  readonly #selection = ref<pub.AnyTrackChild | pub.GapSelection>()
+  readonly _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
+  readonly _timelineContainer = ref<HTMLElement>()
+  readonly _timelineSize = useElementSize(this._timelineContainer)
+  readonly _viewportSize: Ref<Size>
+  readonly _workspaceContainer = ref<HTMLElement>()
+  readonly _workspaceSize = useElementSize(this._workspaceContainer)
+  readonly _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
 
-  drag: ClipDrag
+  get drag() {
+    return this.doc.clipDrag
+  }
   resize: ClipResize
 
   effectRenderer: EffectRenderer
@@ -114,8 +108,9 @@ export class VideoEditor implements pub.VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): EditView.AnyTrackChild | undefined {
-    return this.doc._getNode(this.#selection.value)
+  get selection(): EditView.AnyTrackChild | pub.GapSelection | undefined {
+    const selection = this.#selection.value
+    return selection?.isNode ? this.doc._getNode(selection) : selection
   }
 
   get tracks(): pub.Track[] {
@@ -137,7 +132,8 @@ export class VideoEditor implements pub.VideoEditor {
     this.#ownsDoc = !sync
     this.sync = sync
     this.doc = doc
-    ;({ drag: this.drag, resize: this.resize } = useClipDragResize(this))
+    ;({ resize: this.resize } = useClipDragResize(this))
+    useTrackDropzone(this)
 
     const renderView = new RenderDocument({
       doc,
@@ -148,8 +144,18 @@ export class VideoEditor implements pub.VideoEditor {
 
     this.effectRenderer = new EffectRenderer()
 
-    this.doc.on('node:delete', ({ node }: NodeDeleteEvent) => {
-      if (node.id === this.selection?.id) this.select(undefined)
+    this.doc.on('node:delete', (event: NodeDeleteEvent) => {
+      const { selection } = this
+      if (!selection) return
+      const deletedId = event.node.id
+
+      if (
+        // unselect the deleted node
+        (selection.isNode && deletedId === selection.id) ||
+        // unselect the gaps around the deleted node
+        !((selection.isNode && selection.prev?.id === deletedId) || selection.next?.id === deletedId)
+      )
+        this.select(undefined)
     })
 
     this.doc.on('canvas:pointerdown', ({ node }) => this.select(node))
@@ -188,14 +194,14 @@ export class VideoEditor implements pub.VideoEditor {
 
     return this._transact(() => {
       const clip = this.doc.createNode(init)
-      clip.move({ parentId: track.id, index: track.clipCount })
+      clip.move({ parentId: track.id, index: track.children.length })
       return clip
     })
   }
 
   replaceClipAsset(asset: pub.MediaAsset): void {
     const clip = this.#selection.value
-    if (!clip?.isClip()) return
+    if (!clip?.isNode || !clip.isClip()) return
 
     this._transact(() => {
       clip.duration = Rational.min(Rational.fromDecimal(asset.duration, clip.duration.rate), clip.duration)
@@ -203,51 +209,45 @@ export class VideoEditor implements pub.VideoEditor {
     })
   }
 
-  splitClipAtCurrentTime(): [pub.AnyClip, pub.AnyClip] | undefined {
-    const { currentTime, frameRate } = this.doc
-    const trackOfSelectedClip = this.#selection.value?.parent
+  splitClip(clip: pub.AnyClip, time: number): [pub.AnyClip, pub.AnyClip] | undefined {
+    if (!clip.parent) return
 
-    // first search the track that contains a selected clip
-    let clip = trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
+    const { parent, gap: startGap } = clip
+    const clipTime = clip.timeRational
+    const { frameRate } = this.doc
+    const endGap = clip.next?.gap
 
-    if (!clip) {
-      // then search all tracks for a clip at the current time
-      for (const track of this.doc.timeline.children) {
-        clip = getClipAtTime(track, currentTime)
-        if (clip) break
-      }
-    }
+    const splitTimeRational = Rational.fromDecimal(time, frameRate)
 
-    if (!clip?.parent) return
+    if (clipTime.end.toRate(frameRate).subtract(splitTimeRational).value < 1) return
 
-    const { parent } = clip
-    const prevClipTime = clip.timeRational
-    const delta = Rational.fromDecimal(currentTime, frameRate).subtract(prevClipTime.start.toRate(frameRate))
+    const delta = splitTimeRational.subtract(clipTime.start.toRate(frameRate))
 
     if (delta.value < 1) return
 
-    return this._transact(() => {
-      const startClip = this.doc.createNode({
-        ...clip.toJSON(),
-        id: this.generateId(),
-        transition: undefined,
-        duration: delta,
-      })
-      const endClip = this.doc.createNode({
-        ...clip.toJSON(),
-        id: this.generateId(),
-        sourceStart: prevClipTime.source.add(delta),
-        duration: prevClipTime.duration.subtract(delta),
-      })
-
-      startClip.move({ parentId: parent.id, index: clip.index })
-      endClip.move({ parentId: parent.id, index: clip.index + 1 })
-
-      this.#select(startClip, false)
-      clip.delete()
-
-      return [startClip, endClip]
+    const startClip = this.doc.createNode({
+      ...clip.toJSON(),
+      id: this.generateId(),
+      transition: undefined,
+      duration: delta,
     })
+    const endClip = this.doc.createNode({
+      ...clip.toJSON(),
+      id: this.generateId(),
+      sourceStart: clipTime.source.add(delta),
+      duration: clipTime.duration.subtract(delta),
+    })
+
+    startClip.move({ parentId: parent.id, index: clip.index })
+    endClip.move({ parentId: parent.id, index: clip.index + 1 })
+
+    startClip.gap = startGap
+    if (endClip.next && endGap) endClip.next.gap = endGap
+
+    this.#select(startClip, false)
+    clip.delete()
+
+    return [startClip, endClip]
   }
 
   getTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }) {
@@ -267,15 +267,6 @@ export class VideoEditor implements pub.VideoEditor {
     })
   }
 
-  deleteSelection(): void {
-    const clip = this.#selection.value
-    if (!clip) return
-
-    this.#selection.value = undefined
-
-    this._transact(() => clip.delete())
-  }
-
   play(): void {
     this.playback.play()
   }
@@ -286,15 +277,33 @@ export class VideoEditor implements pub.VideoEditor {
     this.doc.seekTo(time)
   }
 
-  select(clip: pub.AnyTrackChild | undefined, seek = true): void {
-    this.#select(clip, seek)
+  select(item: pub.AnyTrackChild | pub.GapSelection | undefined, seek = item?.isNode ?? true): void {
+    this.#select(item, seek)
   }
-  #select(clip_: pub.AnyTrackChild | undefined, seek: boolean): void {
+  #select(item: pub.AnyTrackChild | pub.GapSelection | undefined, seek: boolean): void {
     const { doc } = this
-    const clip = (this.#selection.value = doc._getNode(clip_))
 
-    if (clip && seek) {
-      const { start, end } = clip.time
+    if (!item) {
+      this.#selection.value = undefined
+      return
+    }
+
+    const node = doc._getNode(item.isNode ? item : item.node)
+    this.#selection.value = item.isNode
+      ? node
+      : {
+          node,
+          isNode: false,
+          get prev() {
+            return node.prev
+          },
+          get next() {
+            return node.next
+          },
+        }
+
+    if (item.isNode && seek) {
+      const { start, end } = node.time
 
       if (doc.currentTime < start) doc.seekTo(start)
       else if (doc.currentTime >= end) doc.seekTo(end - 1 / doc.frameRate)

@@ -37,7 +37,13 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       effectRenderer: Vue.markRaw(editor.effectRenderer),
       currentTime: toVue(() => editor.currentTime),
       tracks: toVue(() => docView.timeline.children),
-      selection: toVue(() => editor.selection && docView._getNode(editor.selection)),
+      selection: toVue(() => {
+        const { selection } = editor
+        if (!selection) return
+
+        const node = docView._getNode(selection.isNode ? selection : selection.node)
+        return selection.isNode ? node : { ...selection, node }
+      }),
       effects: toVue(() => editor.effects),
       exportResult: toVue(() => editor.exportResult),
       exportProgress: toVue(() => editor.exportProgress),
@@ -58,17 +64,16 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       seekTo: editor.seekTo.bind(editor),
       addClip: (track: pub.Track, asset: pub.MediaAsset) =>
         editor.addClip(editor.doc.nodes.get(track.id), asset),
-      select: (clip: pub.AnyClip | pub.Gap | undefined) =>
-        editor.select(clip && editor.doc.nodes.get<pub.AnyTrackChild>(clip.id)),
+      select: (item: pub.AnyClip | pub.GapSelection | undefined) =>
+        editor.select(item?.isNode ? editor.doc.nodes.get<pub.AnyTrackChild>(item.id) : item),
       async createMediaAsset(source: string | Blob) {
         return await editor.createMediaAsset(source)
       },
-      splitClipAtCurrentTime() {
-        const newClips = editor.splitClipAtCurrentTime()
+      splitClip(clip: pub.AnyClip, time: number) {
+        const newClips = editor.splitClip(clip, time)
         return newClips && [docView._getNode(newClips[0]), docView._getNode(newClips[1])]
       },
       replaceClipAsset: editor.replaceClipAsset.bind(editor),
-      deleteSelection: editor.deleteSelection.bind(editor),
       importJson: editor.importJson.bind(editor),
       export: editor.export.bind(editor),
       secondsToPixels: editor.secondsToPixels.bind(editor),

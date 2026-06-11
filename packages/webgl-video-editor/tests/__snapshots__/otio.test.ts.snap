@@ -167,32 +167,6 @@ exports[`OTIO export is as expected 1`] = `
               },
             },
           },
-          {
-            "OTIO_SCHEMA": "Gap.1",
-            "color": null,
-            "effects": [],
-            "enabled": true,
-            "metadata": {
-              "Miru": {
-                "id": "gap-0-1",
-                "type": "gap",
-              },
-            },
-            "name": "",
-            "source_range": {
-              "OTIO_SCHEMA": "TimeRange.1",
-              "duration": {
-                "OTIO_SCHEMA": "RationalTime.1",
-                "rate": 1,
-                "value": 1,
-              },
-              "start_time": {
-                "OTIO_SCHEMA": "RationalTime.1",
-                "rate": 1,
-                "value": 0,
-              },
-            },
-          },
         ],
         "color": null,
         "effects": [],

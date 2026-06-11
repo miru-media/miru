@@ -13,6 +13,7 @@ import type {
   AssetDeleteEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
+  NodeGapUpdateEvent,
   NodeMoveEvent,
   NodeUpdateEvent,
   SettingsUpdateEvent,
@@ -41,6 +42,13 @@ type HistoryOp =
       key: KeyofUnion<Schema.AnyNode>
       from: any
       to: any
+    }
+  | {
+      type: 'node:gap-update'
+      nodeId: string
+      key: string
+      from: Schema.Rational
+      to: Schema.Rational
     }
   | { type: 'node:delete'; nodeId: string; from: Schema.AnyNode }
 
@@ -96,6 +104,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     doc.on('node:create', this.#onNodeCreate.bind(this), options)
     doc.on('node:move', this.#onMove.bind(this), options)
     doc.on('node:update', this.#onUpdate.bind(this), options)
+    doc.on('node:gap-update', this.#onGapUpdate.bind(this), options)
     doc.on('node:delete', this.#onDelete.bind(this), options)
   }
 
@@ -205,6 +214,9 @@ export class LocalSync implements core.VideoEditorDocumentSync {
             case 'node:update':
               ;(nodes.get(op.nodeId) as unknown as Record<string, unknown>)[op.key] = op.to
               break
+            case 'node:gap-update':
+              nodes.get<pub.AnyClip>(op.nodeId).setGap(op.key, op.to)
+              break
             // delete
             case 'node:delete':
               nodes.get(op.nodeId).delete()
@@ -232,6 +244,9 @@ export class LocalSync implements core.VideoEditorDocumentSync {
             // revert udpate
             case 'node:update':
               ;(nodes.get(op.nodeId) as unknown as Record<string, unknown>)[op.key] = op.from
+              break
+            case 'node:gap-update':
+              nodes.get<pub.AnyClip>(op.nodeId).setGap(op.key, op.from)
               break
             // recreate deleted
             case 'node:delete':
@@ -288,6 +303,11 @@ export class LocalSync implements core.VideoEditorDocumentSync {
     const to = node[key as keyof typeof node]
 
     this.#add([{ type: 'node:update', nodeId: node.id, key, from, to }])
+  }
+  #onGapUpdate({ node, key, from }: NodeGapUpdateEvent): void {
+    const to = node.getGap(key)
+
+    this.#add([{ type: 'node:gap-update', nodeId: node.id, key, from, to }])
   }
   #onDelete({ node }: NodeDeleteEvent): void {
     const { parent } = node

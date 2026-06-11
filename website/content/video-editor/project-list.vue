@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
-import * as base64 from 'base64-js'
 import { uid } from 'uid'
 import { useI18n } from 'vue-i18n-lite'
 import * as Y from 'yjs'
@@ -8,7 +7,6 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 
 import type { Schema } from 'webgl-video-editor'
 import { YjsSync } from 'webgl-video-editor/yjs'
-import { INITIAL_DOC_UPDATE_BASE64 } from './video-editor-demo-store'
 import { VideoEditorDocList } from 'app-video-editor'
 import { useRouter } from 'vue-router'
 import type { DocListItem } from '../../../packages/app-video-editor/src/video-editor-doc-list.vue'
@@ -30,7 +28,6 @@ const createDoc = async (name = 'Untitled', content?: Schema.SerializedDocument)
 
   if (content) {
     const ydoc = new Y.Doc()
-    Y.applyUpdateV2(ydoc, base64.toByteArray(INITIAL_DOC_UPDATE_BASE64))
 
     YjsSync.initYmapFromJson({ root: ydoc, assetsYmap: ydoc.getMap('assets'), content })
 

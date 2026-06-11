@@ -11,6 +11,7 @@ import type {
   ErrorEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
+  NodeGapUpdateEvent,
   NodeMoveEvent,
   NodeUpdateEvent,
   PlaybackPauseEvent,
@@ -48,6 +49,7 @@ export interface NodeFieldFlags {
   Node: number
   NodeArray: number
   Asset: number
+  Gap: number
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional
@@ -68,6 +70,7 @@ export interface VideoEditorEvents {
   'node:create': NodeCreateEvent
   'node:move': NodeMoveEvent
   'node:update': NodeUpdateEvent
+  'node:gap-update': NodeGapUpdateEvent
   'node:delete': NodeDeleteEvent
 
   'asset:create': AssetCreateEvent
@@ -145,18 +148,18 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   isDisposed: boolean
   move: (position: ChildNodePosition | undefined) => void
   remove: () => void
+  isNode: true
   isTimeline: () => this is Timeline
   isTrack: () => this is Track
   isTrackChild: () => this is AnyTrackChild
   isClip: () => this is AnyClip
   isMediaClip: () => this is AnyMediaClip
   isTextClip: () => this is TextClip
-  isGap: () => this is Gap
   isVideo: () => this is AnyVideoNode
   isAudio: () => this is AnyAudioNode
   toJSON: () => any
-  delete: () => void
-  dispose: () => void
+  delete: (deep?: boolean) => void
+  dispose: (deep?: boolean) => void
   /** @internal */
   _fields: <T extends pub.BaseNode>(this: T) => NodeFieldDef<T>[]
 
@@ -167,6 +170,7 @@ export interface ParentNode<TChild extends AnyNode> extends BaseNode {
   readonly head?: TChild
   readonly tail?: TChild
   readonly children: TChild[]
+  readonly count: number
   /** @internal */
   _unlinkChild: (node: TChild) => void
   /** @internal */
@@ -175,7 +179,6 @@ export interface ParentNode<TChild extends AnyNode> extends BaseNode {
 
 export interface Timeline extends ParentNode<Track>, Schema.Timeline {
   readonly parent?: undefined
-  readonly trackCount: number
   toJSON: () => Schema.Timeline
 }
 
@@ -184,10 +187,6 @@ type TrackType = 'video' | 'audio'
 export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly trackType: TrackType
   readonly parent?: Timeline
-  readonly firstClip?: AnyClip
-  readonly lastClip?: AnyClip
-  readonly clips: AnyClip[]
-  readonly clipCount: number
   readonly duration: Rational
   prev?: Track
   next?: Track
@@ -206,13 +205,14 @@ export interface AudioTrack extends Track {
 
 export interface TrackChild extends BaseNode {
   duration: Rational
+  gap: Rational
   readonly timeRational: ClipTimeRational
   readonly time: ClipTime
   readonly parent?: Track
   prev?: AnyTrackChild | undefined
   next?: AnyTrackChild | undefined
-  readonly prevClip: AnyClip | undefined
-  readonly nextClip: AnyClip | undefined
+  getGap: (prevClipId: string | undefined) => Rational
+  setGap: (prevClipId: string | undefined, duration: Schema.Rational) => void
 }
 
 export interface Clip extends TrackChild, Schema.BaseClip {
@@ -247,24 +247,19 @@ export interface TextClip
   toJSON: () => Schema.TextClip
 }
 
-export interface Gap extends TrackChild, Schema.Gap {
-  toJSON: () => Schema.Gap
-}
-
 export interface NodesByType {
   timeline: Timeline
   track: Track
   'clip:video': VideoClip
   'clip:audio': AudioClip
   'clip:text': TextClip
-  gap: Gap
 }
 
 export type AnyNode = NodesByType[keyof NodesByType]
 export type AnyClip = NodesByType[Extract<keyof NodesByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
 export type AnyVideoClip = VideoClip | TextClip
-export type AnyTrackChild = AnyClip | Gap
+export type AnyTrackChild = AnyClip
 export type AnyParentNode = Timeline | Track
 export type AnyVideoNode = Timeline | VideoTrack | VideoClip | TextClip
 export type AnyAudioNode = Timeline | AudioTrack | AudioClip
@@ -306,6 +301,13 @@ export type AnyAsset = AssetsByType[keyof AssetsByType]
 
 export type { AssetOrigin } from './schema.d.ts'
 
+export interface GapSelection {
+  node: AnyTrackChild
+  isNode: false
+  next?: AnyTrackChild
+  prev?: AnyTrackChild
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- false positive
 export class VideoEditor {
   constructor(options?: { sync?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore })
@@ -328,7 +330,7 @@ export interface VideoEditor {
   effects: Map<string, VideoEffectAsset>
 
   /** The currently selected video clip on the timeline. */
-  selection?: AnyClip | Gap
+  selection?: AnyClip | GapSelection
 
   /** The audio and video tracks which contain clips */
   tracks: Track[]
@@ -371,7 +373,7 @@ export interface VideoEditor {
   pixelsToSeconds: (pixels: number) => number
 
   /** Select the given track item */
-  select: (clip: AnyTrackChild | undefined) => void
+  select: (node: AnyTrackChild | GapSelection | undefined) => void
 
   /**
    * Seek to the given time of the video.
@@ -406,16 +408,13 @@ export interface VideoEditor {
   createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
 
   /**
-   * Split a clip that intersects with the current video time. If a clip is selected, its track will be
-   * searched for an intersecting clip. If a clip isn't found, all tracks are then searched in order. When a
-   * clip is found, its duration is reduced and a similar clip is inserted after it.
+   * Split a clip by replacing it with two new clips which end and start at the given time.
+   *
+   * Does nothing and returns undefined if the time is outside the clip.
    *
    * @returns The newly created clip or `undefined.`.
    */
-  splitClipAtCurrentTime: () => [AnyClip, AnyClip] | undefined
-
-  /** Delete the selected clip */
-  deleteSelection: () => void
+  splitClip: (clip: AnyClip, time: number) => [AnyClip, AnyClip] | undefined
 
   generateId: () => string
 
@@ -441,6 +440,14 @@ export interface VideoEditor {
 
 export type VideoEditorChangeEvent = CustomEvent<Schema.SerializedDocument>
 export type VideoEditorChangeLoadingEvent = CustomEvent<boolean>
+
+export interface VideoEditorAction {
+  id: string
+  localeKey: string
+  canPerform: (editor: VideoEditor) => boolean
+  Icon: () => JSX.Element
+  exec: (editor: VideoEditor) => unknown
+}
 
 export interface VideoEditorDocumentSync {
   doc: Document
@@ -524,16 +531,16 @@ export interface Rational {
   value: number
   rate: number
 
-  add: (other: RationalLike) => Rational
-  subtract: (other: RationalLike) => Rational
+  add: (other: Schema.Rational) => Rational
+  subtract: (other: Schema.Rational) => Rational
   toRate: (rate: number) => Rational
-  compare: (other: RationalLike) => number
-  isLessThan: (other: RationalLike) => boolean
-  isGreaterThan: (other: RationalLike) => boolean
-  isEqualTo: (other: RationalLike) => boolean
-  isLte: (other: RationalLike) => boolean
-  isGte: (other: RationalLike) => boolean
-  clamp: (min: RationalLike, max: RationalLike) => Rational
+  compare: (other: Schema.Rational) => number
+  isLessThan: (other: Schema.Rational) => boolean
+  isGreaterThan: (other: Schema.Rational) => boolean
+  isEqualTo: (other: Schema.Rational) => boolean
+  isLte: (other: Schema.Rational) => boolean
+  isGte: (other: Schema.Rational) => boolean
+  clamp: (min: Schema.Rational, max: Schema.Rational) => Rational
   valueOf: () => number
   toJSON: () => { value: number; rate: number }
   toOTIO: () => { OTIO_SCHEMA: 'RationalTime.1'; rate: number; value: number }

@@ -42,6 +42,9 @@ export const getPanelList = (editor: VideoEditor) =>
       PanelBody: AssetBinFilters,
       Icon: IconMsFilterVintageOutline,
       isForSelection: true,
-      isPermitted: computed(() => editor.selection?.isVideo() && editor.selection.isMediaClip()),
+      isPermitted: computed(() => {
+        const { selection } = editor
+        return selection?.isNode && selection.isVideo() && selection.isMediaClip()
+      }),
     },
   ] as const

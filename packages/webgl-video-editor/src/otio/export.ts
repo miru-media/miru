@@ -59,7 +59,10 @@ export namespace Otio {
   }
 
   export type Clip<T extends pub.AnyClip = pub.AnyClip> = ReturnType<typeof mediaClip<T> | typeof textClip>
-  export interface Gap extends TrackChild<'Gap.1'> {}
+  export interface Gap {
+    OTIO_SCHEMA: 'Gap.1'
+    source_range: TimeRange
+  }
 }
 
 export const documentToOTIO = (doc: pub.Document): Otio.TimelineDocument => {
@@ -108,10 +111,13 @@ const timelineStack = (node: pub.Timeline): Otio.TimelineStack => ({
 const track = (node: pub.Track): Otio.Track => {
   const { frameRate } = node.doc
 
-  const children: (Otio.Clip | Otio.Gap)[] = node.children.map((child) => {
-    if (child.isMediaClip()) return child.isVideo() ? videoClip(child) : audioClip(child)
-    if (child.isTextClip()) return textClip(child)
-    return gap(child)
+  const children: (Otio.Clip | Otio.Gap)[] = []
+  node.children.forEach((child) => {
+    if (child.gap.value !== 0) children.push(gap(child.gap))
+
+    children.push(
+      child.isTextClip() ? textClip(child) : child.isVideo() ? videoClip(child) : audioClip(child),
+    )
   })
 
   return {
@@ -199,7 +205,14 @@ const textClip = (node: pub.TextClip) => {
   return otio
 }
 
-const gap = (node: pub.Gap) => trackChild(node, 'Gap.1')
+const gap = (duration: Rational): Otio.Gap => ({
+  OTIO_SCHEMA: 'Gap.1',
+  source_range: {
+    OTIO_SCHEMA: 'TimeRange.1',
+    duration: duration.toOTIO(),
+    start_time: Rational.ZERO.toOTIO(),
+  },
+})
 
 const addTransformEffect = (otio: Otio.BaseItem, node: Schema.TransformProps): void => {
   const json = otio.metadata.Miru as Partial<Schema.VideoClip>

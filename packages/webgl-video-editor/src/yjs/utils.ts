@@ -68,6 +68,9 @@ const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void 
         case 'metadata':
           yjsValue = new Y.Map(Object.entries((value as typeof init.metadata) ?? {}))
           break
+        // clip.gap prop is skipped and handled elsewhere
+        case 'gap':
+          break
         default:
           yjsValue =
             typeof value === 'object' && value != null && 'toJSON' in value
@@ -79,9 +82,12 @@ const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void 
     })
 }
 
-export const createYnodeFromJson = (init: Schema.AnyNode): Y.Map<unknown> => {
+export const createYnodeFromJson = (init: Schema.AnyNode | Schema.AnySerializedNode): Y.Map<unknown> => {
   const ymap = new Y.Map()
   updateYnodeFromJson(ymap, init)
+
+  // gaps are stored as a map of other clip IDs to Rational duration
+  if (init.type.startsWith('clip:')) ymap.set('gap', new Y.Map())
   return ymap
 }
 
@@ -99,24 +105,29 @@ export const initYmapFromJson = ({
   const init = (): void => {
     const { ytree, settings } = initYjsRoot(root)
 
-    const addNodeAndChildren = (parentKey: string, init: Schema.AnyNodeSerializedSchema) => {
-      ytree.createNode(parentKey, init.id, createYnodeFromJson(init))
-      if ('children' in init) init.children.forEach((child) => addNodeAndChildren(init.id, child))
+    const addNodeAndChildren = (
+      parentKey: string,
+      init: Schema.AnySerializedNode,
+      prevChildId: string,
+      createNode: boolean,
+    ) => {
+      let ynode
+      if (createNode) ytree.createNode(parentKey, init.id, (ynode = createYnodeFromJson(init)))
+      else ynode = ytree.getNodeValueFromKey(init.id) as Y.Map<unknown>
+
+      if ('gap' in init && init.gap && init.gap.value !== 0)
+        (ynode.get('gap') as Y.Map<Schema.Rational>).set(prevChildId, init.gap)
+
+      if ('children' in init) {
+        let prevChildId = ''
+        init.children.forEach((child) => {
+          addNodeAndChildren(init.id, child, prevChildId, true)
+          prevChildId = child.id
+        })
+      }
     }
 
-    try {
-      ytree.getNodeValueFromKey('timeline')
-    } catch {
-      // create the timeline node if it's missing
-      addNodeAndChildren(YTREE_ROOT_KEY, {
-        id: TIMELINE_ID,
-        type: 'timeline',
-        children: [],
-      })
-    }
-
-    updateYnodeFromJson(ytree.getNodeValueFromKey('timeline') as Y.Map<unknown>, content.timeline)
-    content.timeline.children.forEach((track) => addNodeAndChildren(TIMELINE_ID, track))
+    addNodeAndChildren('', content.timeline, '', false)
 
     // update doc settings
     const { resolution, frameRate } = content

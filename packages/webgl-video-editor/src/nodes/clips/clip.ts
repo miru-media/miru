@@ -29,6 +29,8 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     { key: 'presentationTime', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'expectedMediaTime', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'isInClipTime', flags: NODE_FIELD_FLAGS.Readonly },
+
+    { key: 'gap', flags: NODE_FIELD_FLAGS.Gap },
   ] satisfies pub.NodeFieldDef<pub.Clip>[])
 
   static TRANSFORM_FIELDS = [
@@ -84,7 +86,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
   _computeTimeRational(): ClipTimeRational {
     const prevTime = this.prev?.timeRational
-    const start = prevTime ? prevTime.end : Rational.ZERO
+    const start = this.gap.add(prevTime ? prevTime.end : Rational.ZERO)
     const end = start.add(this.duration)
 
     const { duration } = this

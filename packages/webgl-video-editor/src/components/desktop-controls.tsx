@@ -3,6 +3,7 @@ import { clamp, remap, useI18n } from 'shared/utils'
 import { formatTime } from 'shared/video/utils.ts'
 
 import styles from '../css/index.module.css'
+import { EDITOR_SELECTION_ACTIONS } from '../editor-actions.ts'
 
 import { useEditor } from './utils.ts'
 
@@ -13,7 +14,7 @@ const PPS_CHANGE_RATIO = 0.75
 export const DesktopControls = () => {
   const editor = useEditor()
   const { doc, sync } = editor
-  const { tr } = useI18n()
+  const { t } = useI18n()
   const maxPps = () => Math.max(MIN_MAX_PPS, (doc.duration / editor._timelineSize.value.width) * 2)
 
   const changePps = (decrease: boolean): void => {
@@ -31,7 +32,8 @@ export const DesktopControls = () => {
           <>
             <button
               class={styles.desktopControlsButton}
-              label={tr('undo')}
+              aria-label={t('undo')}
+              title={t('undo')}
               disabled={() => !sync.canUndo}
               onClick={sync.undo.bind(sync)}
             >
@@ -40,7 +42,8 @@ export const DesktopControls = () => {
 
             <button
               class={styles.desktopControlsButton}
-              label={tr('redo')}
+              aria-label={t('redo')}
+              title={t('redo')}
               disabled={() => !sync.canRedo}
               onClick={sync.redo.bind(sync)}
             >
@@ -49,33 +52,17 @@ export const DesktopControls = () => {
           </>
         )}
 
-        {() =>
-          !editor.isMobileWorkspace && (
-            <>
-              <button
-                label={tr('split')}
-                class={styles.desktopControlsButton}
-                onClick={() => editor.splitClipAtCurrentTime()}
-              >
-                <IconMsSplitSceneOutline />
-              </button>
-
-              {() =>
-                editor.selection && (
-                  <>
-                    <button
-                      label={tr('delete')}
-                      class={styles.desktopControlsButton}
-                      onClick={() => editor.deleteSelection()}
-                    >
-                      <IconMsDeleteOutlineRounded />
-                    </button>
-                  </>
-                )
-              }
-            </>
-          )
-        }
+        {EDITOR_SELECTION_ACTIONS.map((action) => (
+          <button
+            aria-label={t(action.localeKey)}
+            title={t(action.localeKey)}
+            disabled={() => !editor.selection || !action.canPerform(editor)}
+            class={styles.desktopControlsButton}
+            onClick={() => action.exec(editor)}
+          >
+            <action.Icon />
+          </button>
+        ))}
       </div>
 
       <div>
@@ -87,7 +74,7 @@ export const DesktopControls = () => {
 
       <div>
         <button
-          label={tr('zoom_out')}
+          label={t('zoom_out')}
           class={styles.desktopControlsButton}
           onClick={changePps.bind(null, true)}
         >
@@ -99,8 +86,8 @@ export const DesktopControls = () => {
           min="0"
           max="1"
           step="any"
-          title={tr('timeline_zoom')}
-          aria-label={tr('timeline_zoom')}
+          title={t('timeline_zoom')}
+          aria-label={t('timeline_zoom')}
           value={() => remap(editor._secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
           onInput={(event: InputEvent) => {
             editor._secondsPerPixel.value = remap(
@@ -114,7 +101,7 @@ export const DesktopControls = () => {
         />
 
         <button
-          label={tr('zoom_in')}
+          label={t('zoom_in')}
           class={styles.desktopControlsButton}
           onClick={changePps.bind(null, false)}
         >

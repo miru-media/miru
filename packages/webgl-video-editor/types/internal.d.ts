@@ -34,10 +34,14 @@ export interface ClipDrag {
   isDragging: Ref<boolean>
   x: Ref<number>
   targetTrack: Ref<{ id: string; before: boolean } | undefined>
+  targetIndex: Ref<number>
+  trackType: Schema.Track['trackType'] | undefined
+  clip: Ref<EditView.AnyClip | undefined>
+  clipWasAloneInTrack: Ref<boolean>
 }
 
 export interface ClipResize {
   docDuration: Ref<number>
   isResizing: Ref<boolean>
-  clips: [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip] | undefined
+  clips: [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip]
 }

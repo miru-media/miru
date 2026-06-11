@@ -23,7 +23,6 @@ const BASE_METHOD_KEYS = [
   'isClip',
   'isMediaClip',
   'isTextClip',
-  'isGap',
   'isVideo',
   'isAudio',
   'toJSON',
@@ -45,12 +44,12 @@ export class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, T>
     BASE_METHOD_KEYS.forEach((key) => _bindMethod(this, original, key))
   }
 
-  delete(): void {
-    this.original.delete()
+  delete(deep?: boolean): void {
+    this.original.delete(deep)
   }
 
-  dispose(): void {
-    if (!this.original.isDisposed) this.original.dispose()
+  dispose(deep?: boolean): void {
+    this.original.dispose(deep)
     super.dispose()
   }
 }
@@ -69,4 +68,3 @@ export interface VueTrack extends VueParentNode<pub.Track>, pub.Track {}
 export interface VueVideoClip extends VueNodeView<pub.VideoClip>, pub.VideoClip {}
 export interface VueAudioClip extends VueNodeView<pub.AudioClip>, pub.AudioClip {}
 export interface VueTextClip extends VueNodeView<pub.TextClip>, pub.TextClip {}
-export interface VueGap extends VueNodeView<pub.Gap>, pub.Gap {}
