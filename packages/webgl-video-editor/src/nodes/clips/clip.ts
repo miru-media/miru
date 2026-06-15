@@ -57,7 +57,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   }
 
   get isReady(): boolean {
-    return this.asset?.isLoading === false
+    return this.asset?.isLoading !== true
   }
 
   get presentationTime(): ClipTime {

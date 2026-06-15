@@ -31,7 +31,7 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
   shouldPlay = computed(() => this.isInPlayableTime.value && !this.docView.isPaused)
 
   get isReady(): boolean {
-    return this.original.isReady && this.renderClip?.isReady.value === true
+    return this.original.isReady && this.renderClip?.isReady.value !== false
   }
   get shouldRender(): boolean {
     return this.isInPresentationTime.value

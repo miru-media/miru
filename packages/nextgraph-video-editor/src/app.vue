@@ -37,7 +37,7 @@ const currentDoc = toRef(() => {
 
 const getDocUrl = (id: string) => `${import.meta.env.BASE_URL}#${nuriToObjectId(id)}`
 
-const createDoc = async (name = 'Untitled', content: Schema.SerializedDocument | undefined = undefined) => {
+const createDoc = async (name = t('untitled'), content?: Schema.SerializedDocument) => {
   const nuri = await createNextGraphDoc({ name, content, session: (await getSession())! })
   location.value.href = getDocUrl(nuri)
 }

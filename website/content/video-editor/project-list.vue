@@ -23,7 +23,7 @@ const openDoc = (doc: DocListItem, event: Event) => {
   router.push(getDocUrl(doc.id))
 }
 
-const createDoc = async (name = 'Untitled', content?: Schema.SerializedDocument) => {
+const createDoc = async (name = t('untitled'), content?: Schema.SerializedDocument) => {
   const id = uid()
 
   if (content) {

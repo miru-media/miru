@@ -55,6 +55,7 @@ const packageOptions = (async () => {
         vue: 'src/vue/index.ts',
         yjs: 'src/yjs/index.ts',
         'yjs/utils': 'src/yjs/utils.ts',
+        otio: 'src/otio/index.ts',
       },
       copy: (options) => ({
         targets: [

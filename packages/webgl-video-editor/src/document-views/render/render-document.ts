@@ -12,7 +12,7 @@ Pixi.extensions.add(LutUploaderSystem)
 interface ViewTypeMap {
   timeline: RenderTimeline
   track: RenderTrack
-  'clip:video': RenderVideoClip | undefined
+  'clip:video': RenderVideoClip
   'clip:text': RenderTextClip
 }
 

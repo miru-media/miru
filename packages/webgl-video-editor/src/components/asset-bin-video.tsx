@@ -15,7 +15,8 @@ export const AssetBinVideo = () => {
   const { t } = useI18n()
   const getVideoAssets = (): MediaAsset[] =>
     Array.from(editor.doc.assets.values()).filter(
-      (asset): asset is MediaAsset => asset.type === 'asset:media:av' && asset.video != null,
+      (asset): asset is MediaAsset =>
+        asset.type === 'asset:media:av' && (!!asset.video || asset.mimeType.startsWith('video/')),
     )
 
   const assets = ref<MediaAsset[]>(getVideoAssets())

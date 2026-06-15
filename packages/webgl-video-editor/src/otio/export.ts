@@ -1,69 +1,7 @@
 import type * as pub from '#core'
 import type { Schema } from '#core'
+import type { Otio } from '#otio'
 import { Rational } from 'shared/utils'
-
-export namespace Otio {
-  export interface TimelineDocument {
-    OTIO_SCHEMA: 'Timeline.1'
-    metadata?: {
-      [index: string]: unknown
-      Miru: Schema.DocumentSettings & { assets: Schema.AnyAssetSchema[] }
-    }
-    name: ''
-    global_start_time: null
-    tracks: TimelineStack
-  }
-
-  export interface Rational {
-    OTIO_SCHEMA: 'RationalTime.1'
-    rate: number
-    value: number
-  }
-
-  export interface TimeRange {
-    OTIO_SCHEMA: 'TimeRange.1'
-    duration: Rational
-    start_time: Rational
-  }
-
-  export interface BaseItem<T extends string = string> {
-    OTIO_SCHEMA: T
-    name: string
-    enabled: boolean
-    color: string | null
-    metadata: {
-      [index: string]: unknown
-      Miru?: { [index: string]: unknown; id: string; type: string }
-    }
-    effects: {
-      [index: string]: any
-      OTIO_SCHEMA: 'Effect.1'
-      name: string
-      effect_name: string
-      metadata: { [index: string]: unknown; Miru?: Record<string, any> }
-    }[]
-  }
-
-  export interface TimelineStack extends BaseItem<'Stack.1'> {
-    children: Track[]
-  }
-
-  export interface Track extends BaseItem<'Track.1'> {
-    source_range: TimeRange
-    kind: 'Audio' | 'Video'
-    children: (Clip | Gap)[]
-  }
-
-  export interface TrackChild<T extends 'Gap.1' | 'Clip.1'> extends BaseItem<T> {
-    source_range: TimeRange
-  }
-
-  export type Clip<T extends pub.AnyClip = pub.AnyClip> = ReturnType<typeof mediaClip<T> | typeof textClip>
-  export interface Gap {
-    OTIO_SCHEMA: 'Gap.1'
-    source_range: TimeRange
-  }
-}
 
 export const documentToOTIO = (doc: pub.Document): Otio.TimelineDocument => {
   const settings: Schema.DocumentSettings = {
@@ -147,30 +85,33 @@ const trackChild = <T extends pub.AnyTrackChild, TO extends 'Clip.1' | 'Gap.1'>(
   }
 }
 
-const mediaClip = <T extends pub.AnyClip>(node: T) => {
+const mediaClip = <T extends pub.AnyClip>(node: T): Otio.Clip => {
   const { asset } = node
 
   return {
     ...trackChild(node, 'Clip.1'),
-    media_reference: {
-      OTIO_SCHEMA: 'ExternalReference.1',
-      metadata: {
-        Miru: node.mediaRef,
+    media_references: {
+      DEFAULT_MEDIA: {
+        OTIO_SCHEMA: 'ExternalReference.1',
+        metadata: {
+          Miru: node.mediaRef,
+        },
+        name: asset?.name ?? '',
+        available_range: asset
+          ? {
+              OTIO_SCHEMA: 'TimeRange.1',
+              duration: Rational.simplified(asset.duration, 1).toOTIO(),
+              start_time: Rational.ZERO.toOTIO(),
+            }
+          : null,
+        target_url: (asset?.uri ?? asset?.name ?? '') || null,
       },
-      name: asset?.name ?? '',
-      available_range: asset
-        ? {
-            OTIO_SCHEMA: 'TimeRange.1',
-            duration: Rational.simplified(asset.duration, 1).toOTIO(),
-            start_time: Rational.ZERO.toOTIO(),
-          }
-        : null,
-      target_url: (asset?.uri ?? asset?.name ?? '') || null,
     },
+    active_media_reference_key: 'DEFAULT_MEDIA',
   }
 }
 
-const audioClip = (node: pub.AudioClip) => {
+const audioClip = (node: pub.AudioClip): Otio.Clip => {
   const otio = mediaClip(node)
 
   otio.effects.unshift({
@@ -184,22 +125,16 @@ const audioClip = (node: pub.AudioClip) => {
   return otio
 }
 
-const videoClip = (node: pub.VideoClip) => {
+const videoClip = (node: pub.VideoClip): Otio.Clip => {
   const otio = mediaClip(node)
   addTransformEffect(otio, node)
   return otio
 }
 
-const textClip = (node: pub.TextClip) => {
+const textClip = (node: pub.TextClip): Otio.Clip => {
   const otio = {
     ...trackChild(node, 'Clip.1'),
-    media_reference: {
-      OTIO_SCHEMA: 'ExternalReference.1',
-      metadata: { Miru: undefined },
-      name: '',
-      available_range: null,
-      target_url: null,
-    },
+    media_reference: null,
   }
   addTransformEffect(otio, node)
   return otio

@@ -1,4 +1,4 @@
-import { computed, type Ref, ref, toRef } from 'fine-jsx'
+import { computed, createEffectScope, type Ref, ref, toRef, watch } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
 import type { Size } from 'shared/types.ts'
@@ -6,6 +6,7 @@ import type { Size } from 'shared/types.ts'
 import type * as pub from '../../../types/core'
 import { getClipTransformMatrix } from '../../utils.ts'
 import { NodeView } from '../node-view.ts'
+import { usePlaceholderImage } from '../utils.ts'
 
 import { MiruFilter } from './pixi-miru-filter.ts'
 import type { RenderDocument } from './render-document.ts'
@@ -107,8 +108,12 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
   readonly sprite = this.pixiNode
   readonly pixiFilters = ref<MiruFilter[]>([])
 
-  readonly isReady = computed(() => !this.pixiFilters.value.some((f) => f.isLoading))
+  readonly isReady = computed(
+    () => !this.pixiFilters.value.some((f) => f.isLoading) && !this.#placeholderIsLoading.value,
+  )
   readonly matrix = computed(() => getClipTransformMatrix(this, this.docView.applyVideoRotation))
+  readonly #placeholderIsLoading = ref(false)
+  readonly #scope = createEffectScope()
 
   constructor(renderView: RenderDocument, original: pub.VideoClip) {
     super(renderView, original)
@@ -118,11 +123,37 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
 
     this._update('mediaRef', undefined)
     this._update('effects', [])
+
+    this.#scope.run(() => {
+      watch([() => original.asset], ([asset], _prev, onCleanup) => {
+        const { texture } = this.sprite
+        if (asset) return
+
+        const scope = createEffectScope()
+        onCleanup(scope.stop.bind(scope))
+        this.#placeholderIsLoading.value = true
+
+        texture.source.resource = scope.run(() =>
+          usePlaceholderImage({
+            text: () => original.name,
+            color: () => original.color,
+            size: () => original.doc.resolution,
+            onLoad: () => {
+              texture.source.update()
+              this.#placeholderIsLoading.value = false
+            },
+          }),
+        )
+        texture.update()
+      })
+    })
   }
 
   getSize(): Size | undefined {
     const { asset } = this.original
-    return asset?.video
+    if (!asset) return this.docView.doc.resolution
+
+    return asset.video
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */

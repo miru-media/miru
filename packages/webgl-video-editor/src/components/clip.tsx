@@ -13,7 +13,6 @@ import type { VideoEditor } from '../video-editor.ts'
 
 import { useTrackChildEdges } from './utils.ts'
 
-const DISABLED_COLOR = 'var(--white-2)'
 const GAPPED = true as boolean
 
 export const Clip = ({
@@ -27,12 +26,11 @@ export const Clip = ({
 }) => {
   const mainContainer = ref<HTMLElement>()
 
-  const clipColor = computed(() =>
-    (editor.playback._getNode(clip)?.everHadEnoughData ?? true)
-      ? (clip.color ??
-        clip.asset?.color ??
-        CLIP_COLORS[Math.abs(stringHashCode(clip.asset?.id ?? clip.id)) % CLIP_COLORS.length])
-      : DISABLED_COLOR,
+  const clipColor = computed(
+    () =>
+      clip.color ??
+      clip.asset?.color ??
+      CLIP_COLORS[Math.abs(stringHashCode(clip.asset?.id ?? clip.id)) % CLIP_COLORS.length],
   )
 
   const boxEdges = useTrackChildEdges(editor, clip)
@@ -71,6 +69,7 @@ export const Clip = ({
           styles.clip,
           isVideoMedia() && styles.isVideoMedia,
           isSelected() && [styles.isSelected, editor.drag.isDragging() && styles.isDragging],
+          clip.isMediaClip() && !editor.playback._getNode(clip).everHadEnoughData && styles.isLoading,
           (GAPPED || clip.prev) && styles.canResizeLeft,
           clip.next &&
             editor.selection?.isNode &&
@@ -95,9 +94,13 @@ export const Clip = ({
             )
           }
           {Icon !== undefined && <Icon class={styles.clipIcon} />}
-          <span class={styles.clipName}>
-            {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
-          </span>
+          {() =>
+            !clip.asset?.thumbnailUri && (
+              <span class={styles.clipName}>
+                {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
+              </span>
+            )
+          }
           <div class={styles.clipControls}>
             <div class={styles.clipResizeLeft}>
               <IconTablerChevronLeft />

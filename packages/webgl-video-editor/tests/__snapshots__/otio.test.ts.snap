@@ -23,17 +23,20 @@ exports[`OTIO export is as expected 1`] = `
         "children": [
           {
             "OTIO_SCHEMA": "Clip.1",
+            "active_media_reference_key": "DEFAULT_MEDIA",
             "color": null,
             "effects": [],
             "enabled": true,
-            "media_reference": {
-              "OTIO_SCHEMA": "ExternalReference.1",
-              "available_range": null,
-              "metadata": {
-                "Miru": undefined,
+            "media_references": {
+              "DEFAULT_MEDIA": {
+                "OTIO_SCHEMA": "ExternalReference.1",
+                "available_range": null,
+                "metadata": {
+                  "Miru": undefined,
+                },
+                "name": "",
+                "target_url": null,
               },
-              "name": "",
-              "target_url": null,
             },
             "metadata": {
               "Miru": {
@@ -58,17 +61,20 @@ exports[`OTIO export is as expected 1`] = `
           },
           {
             "OTIO_SCHEMA": "Clip.1",
+            "active_media_reference_key": "DEFAULT_MEDIA",
             "color": null,
             "effects": [],
             "enabled": true,
-            "media_reference": {
-              "OTIO_SCHEMA": "ExternalReference.1",
-              "available_range": null,
-              "metadata": {
-                "Miru": undefined,
+            "media_references": {
+              "DEFAULT_MEDIA": {
+                "OTIO_SCHEMA": "ExternalReference.1",
+                "available_range": null,
+                "metadata": {
+                  "Miru": undefined,
+                },
+                "name": "",
+                "target_url": null,
               },
-              "name": "",
-              "target_url": null,
             },
             "metadata": {
               "Miru": {
@@ -122,6 +128,7 @@ exports[`OTIO export is as expected 1`] = `
         "children": [
           {
             "OTIO_SCHEMA": "Clip.1",
+            "active_media_reference_key": "DEFAULT_MEDIA",
             "color": null,
             "effects": [
               {
@@ -137,14 +144,16 @@ exports[`OTIO export is as expected 1`] = `
               },
             ],
             "enabled": true,
-            "media_reference": {
-              "OTIO_SCHEMA": "ExternalReference.1",
-              "available_range": null,
-              "metadata": {
-                "Miru": undefined,
+            "media_references": {
+              "DEFAULT_MEDIA": {
+                "OTIO_SCHEMA": "ExternalReference.1",
+                "available_range": null,
+                "metadata": {
+                  "Miru": undefined,
+                },
+                "name": "",
+                "target_url": null,
               },
-              "name": "",
-              "target_url": null,
             },
             "metadata": {
               "Miru": {

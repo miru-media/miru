@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { Schema } from 'webgl-video-editor'
 import { demoDoc } from './demo-document.ts'
-import styles from 'shared/css/shared.module.css'
+import { useI18n } from 'vue-i18n-lite'
 
 export interface DocListItem {
   id: string
@@ -13,9 +14,29 @@ const props = defineProps<{ docs: DocListItem[] }>()
 
 const emit = defineEmits<{
   open: [doc: DocListItem, event: Event]
-  create: [title?: string, content?: any]
+  create: [title?: string, content?: Schema.SerializedDocument]
   delete: [id: string]
 }>()
+
+const { t } = useI18n()
+
+const onInputOtio = async (event: InputEvent) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  const { documentJSONFromOTIO, documentJSONFromOTIOZ } = await import('webgl-video-editor/otio')
+
+  const doc: Schema.SerializedDocument =
+    file.type.includes('zip') || file.name.endsWith('.otioz')
+      ? await documentJSONFromOTIOZ(file)
+      : await documentJSONFromOTIO(JSON.parse(await file.text()))
+
+  console.log(doc)
+
+  const title =
+    (doc.metadata?.name as string | undefined) || file?.name.replace(/\.(otioz?)$/u, '') || t('untitled')
+  emit('create', title, doc)
+}
 </script>
 
 <template>
@@ -28,12 +49,17 @@ const emit = defineEmits<{
           class="<md:hidden max-w-20rem m-auto"
         />
         <button @click="() => emit('create')" class="button tertiary">
-          <div class="i-tabler:plus" />
           {{ $t('create_empty_project') }}
+          <div class="i-material-symbols:add-circle-outline-rounded text-2xl" />
         </button>
+        <label class="button tertiary">
+          {{ $t('import_project') }} (<code>.otio</code>)
+          <div class="i-material-symbols:upload-rounded text-2xl" />
+          <input type="file" accept=".otio,.otioz,.json" class="sr-only" @input="onInputOtio" />
+        </label>
         <button @click="() => emit('create', 'Example', demoDoc)" class="button primary">
-          <div class="i-tabler:plus" />
           {{ $t('create_example_project') }}
+          <div class="i-material-symbols:rocket-launch-outline-rounded text-2xl" />
         </button>
       </div>
     </div>
@@ -46,7 +72,7 @@ const emit = defineEmits<{
             <div class="text-[0.75em]">{{ new Date(doc.createdAt).toLocaleString() }}</div>
           </a>
           <button class="button tertiary" @click="() => emit('delete', doc.id)">
-            <div class="i-tabler:trash" />
+            <div class="i-material-symbols:delete-outline-rounded" />
             <div class="sr-only">{{ $t('delete') }}</div>
           </button>
         </li>

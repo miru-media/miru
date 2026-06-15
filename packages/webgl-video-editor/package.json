@@ -12,6 +12,7 @@
     "#constants": "./src/constants.ts",
     "#assets": "./src/assets/index.ts",
     "#nodes": "./src/nodes/index.ts",
+    "#otio": "./src/otio/index.ts",
     "#core": "./types/core.d.ts",
     "#schema": "./types/schema.d.ts",
     "#internal": "./types/internal.d.ts"
@@ -37,6 +38,9 @@
     },
     "./yjs/utils": {
       "import": "./src/yjs/utils.ts"
+    },
+    "./otio": {
+      "import": "./src/otio/index.ts"
     }
   },
   "publishConfig": {
@@ -63,6 +67,9 @@
       },
       "./yjs/utils": {
         "import": "./dist/yjs/utils.ts"
+      },
+      "./otio": {
+        "import": "./dist/otio.js"
       }
     }
   },
@@ -94,6 +101,7 @@
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:",
     "uid": "catalog:",
+    "unzipit": "^2.0.3",
     "webgl-effects": "workspace:^",
     "webgl-media-editor": "workspace:^"
   },

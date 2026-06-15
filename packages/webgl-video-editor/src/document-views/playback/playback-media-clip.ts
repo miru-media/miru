@@ -25,15 +25,19 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
     return this.mediaElement.paused
   }
 
+  get isPlaceholder(): boolean {
+    return !this.original.asset
+  }
+
   get isReady(): boolean {
-    return super.isReady && this.mediaState.isReady.value
+    return super.isReady && (this.mediaState.isReady.value || this.isPlaceholder)
   }
   get shouldRender(): boolean {
-    return super.shouldRender && this.mediaState.wasEverPlayable.value
+    return super.shouldRender && this.everHadEnoughData
   }
 
   get everHadEnoughData(): boolean {
-    return this.mediaState.wasEverPlayable.value
+    return this.mediaState.wasEverPlayable.value || this.isPlaceholder
   }
 
   constructor(playbackView: PlaybackDocument, original: T) {
@@ -47,11 +51,18 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
         event.stopPropagation()
       })
 
-      watch([() => this.everHadEnoughData], ([everHadEnoughData]) => {
-        if (!everHadEnoughData) return
-        const { texture } = renderClip.sprite
-        texture.source.resource = this.mediaElement as HTMLVideoElement
-        texture.update()
+      this.#scope.run(() => {
+        watch(
+          [() => this.everHadEnoughData, () => this.isPlaceholder],
+          ([everHadEnoughData, isPlaceholder], _prev) => {
+            if (!everHadEnoughData || isPlaceholder) return
+
+            const textureSource = renderClip.sprite.texture.source
+
+            textureSource.resource = this.mediaElement as HTMLVideoElement
+            textureSource.update()
+          },
+        )
       })
     }
 
@@ -158,7 +169,7 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
       const { asset } = original
       const { sprite } = renderClip
 
-      if (this.isInPresentationTime.value && asset) {
+      if (this.shouldRender && asset) {
         if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
           const rotation = asset.video?.rotation ?? 0
           try {

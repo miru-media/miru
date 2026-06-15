@@ -13,13 +13,13 @@ test('OTIO export is as expected', () => {
   expect(documentToOTIO(doc)).toMatchSnapshot()
 })
 
-test('OTIO roundtrips to same content', () => {
+test('OTIO roundtrips to same content', async () => {
   using doc = new Document({})
   using docFromOtio = new Document({})
 
   doc.importFromJson(simpleDocWithAudioVideoClips())
 
-  docFromOtio.importFromJson(documentJSONFromOTIO(documentToOTIO(doc)))
+  docFromOtio.importFromJson(await documentJSONFromOTIO(documentToOTIO(doc)))
 
-  expect(doc.toJSON()).toEqual(docFromOtio.toJSON())
+  expect(docFromOtio.toJSON()).toEqual(doc.toJSON())
 })

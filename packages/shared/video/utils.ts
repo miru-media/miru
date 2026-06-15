@@ -264,5 +264,13 @@ export const setVideoEncoderConfigCodec = async (
   if (!foundSupportedCodec) throw firstError
 }
 
-export const rangeContainsTime = (range: { start: number; end: number }, time: number): boolean =>
+interface Range {
+  start: number
+  end: number
+}
+
+export const rangeContainsTime = (range: Range, time: number): boolean =>
   range.start <= time && time < range.end
+
+export const rangesIntersect = (a: Range, b: Range): boolean =>
+  rangeContainsTime(a, b.start) || rangeContainsTime(b, a.start)

@@ -93,9 +93,6 @@ catalogs:
     yjs:
       specifier: ^13.6.29
       version: 13.6.29
-    yjs-orderedtree:
-      specifier: 1.0.1-beta.3
-      version: 1.0.1-beta.3
 
 pnpmfileChecksum: sha256-Y7IpIdQvOO2GI65WfPCRNwNi12YRbJTEK9SRedIlX0c=
 
@@ -706,6 +703,9 @@ importers:
       uid:
         specifier: 'catalog:'
         version: 2.0.2
+      unzipit:
+        specifier: ^2.0.3
+        version: 2.0.3
       vue:
         specifier: '3'
         version: 3.5.30(typescript@5.9.3)
@@ -8904,6 +8904,10 @@ packages:
 
   unrs-resolver@1.11.1:
     resolution: {integrity: sha512-bSjt9pjaEBnNiGgc9rUiHGKv5l4/TGzDmYw3RhnkJGtLhbnnA/5qJj7x3dNDCRx/PJxu774LlH8lCOlB4hEfKg==}
+
+  unzipit@2.0.3:
+    resolution: {integrity: sha512-e6+ftgSQRj9Hwf2mIWFwYIGqBoKV7AziG/d7pep2Uv3NCzHbhLO5d9dGRwpahVlnpQ7aQC+5kWk72dnWocdYyA==}
+    engines: {node: '>=18'}
 
   update-browserslist-db@1.2.3:
     resolution: {integrity: sha512-Js0m9cx+qOgDxo0eMiFGEueWztz+d4+M3rGlmKPT+T4IS/jP4ylw3Nwpu6cpTTP8R1MAC1kF4VbdLt3ARf209w==}
@@ -18317,6 +18321,8 @@ snapshots:
       '@unrs/resolver-binding-win32-arm64-msvc': 1.11.1
       '@unrs/resolver-binding-win32-ia32-msvc': 1.11.1
       '@unrs/resolver-binding-win32-x64-msvc': 1.11.1
+
+  unzipit@2.0.3: {}
 
   update-browserslist-db@1.2.3(browserslist@4.28.2):
     dependencies:

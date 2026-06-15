@@ -9,12 +9,6 @@ import { NodeView } from '../node-view.ts'
 
 import type { ExportDocument } from './exporter-document.ts'
 
-export interface InitOptions {
-  video: Mb.InputVideoTrack | null
-  audio: Mb.InputAudioTrack | null
-  audioBuffer?: AudioBuffer
-}
-
 export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> {
   renderClip = this.docView.renderView._getNode(this.original)
   readonly videoEffect: VideoEffectAsset | undefined
@@ -50,10 +44,14 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     this.targetFrameDurationUs = 1e6 / exportView.doc.frameRate
   }
 
-  init({ audio, video, audioBuffer }: InitOptions): void {
-    const { playableTime } = this.original
-    const start = playableTime.source
-    const end = start + playableTime.duration
+  init(): void {
+    const exporter = this.docView
+    const { audio, video, audioBuffer } = exporter.sources.get(this.original.asset!.id)!
+    const { playableTime, time: clipTime } = this.original
+    const start = playableTime.source + Math.max(0, exporter.range.start - clipTime.start)
+    const end = playableTime.source + playableTime.duration + Math.max(0, exporter.range.end - clipTime.end)
+
+    if (start < 0 || end < start) return
 
     this.audio = audio
     this.video = video
@@ -70,54 +68,48 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     if (this.isReady) return
 
     await new Promise<void>((resolve, reject) => {
-      signal.addEventListener('abort', () => {
+      const onAbort = (): void => {
         stop()
         reject(new Error('aborted', { cause: signal.reason }))
-      })
+      }
+      signal.addEventListener('abort', onAbort)
 
       const stop = effect(() => {
         if (!this.isReady) return
         stop()
         resolve()
+        signal.removeEventListener('abort', onAbort)
       })
     })
   }
 
-  async seekVideo(): Promise<boolean> {
+  async seekVideo(): Promise<void> {
     this.videoIsReady = true
 
-    const timeS = this.docView.doc.currentTime
+    if (!this.video) return
 
-    if (!this.video) return false
-
-    const { presentationTime } = this.original
-
-    if (timeS < presentationTime.start || timeS >= presentationTime.end) {
-      this.renderClip!.sprite.visible = false
-      return false
-    }
+    this.renderClip!.sprite.visible = this.original.isInClipTime
 
     const sourceTimeUs = this.original.expectedMediaTime * 1e6
 
-    if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) return true
+    if (this.#hasCurrentVideoFrame(sourceTimeUs)) return
 
     this.videoIsReady = false
 
-    if (!this.currentVideoFrame) if (await this.readNextVideoFrame()) return false
+    if (!this.currentVideoFrame) if (await this.readNextVideoFrame()) return
 
     while (this.currentVideoFrame) {
-      if (this.#hasVideoFrameAtTimeUs(sourceTimeUs)) {
+      if (this.#hasCurrentVideoFrame(sourceTimeUs)) {
         this.videoIsReady = true
-        return true
+        break
       }
 
       // eslint-disable-next-line no-await-in-loop -- TODO: use async iterator
       if (await this.readNextVideoFrame()) break
     }
-
-    return false
   }
 
+  /** @returns `true` if the sample iterator is done */
   async readNextVideoFrame(): Promise<boolean> {
     this.currentVideoFrame?.close()
     const next = await this.videoSamples!.next()
@@ -192,7 +184,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     return !!next.done
   }
 
-  #hasVideoFrameAtTimeUs(sourceTimeUs: number): boolean {
+  #hasCurrentVideoFrame(sourceTimeUs: number): boolean {
     const frame = this.currentVideoFrame
     if (!frame) return false
 
@@ -220,10 +212,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
   }
 }
 
-export class ExportNonMediaVideoClip extends NodeView<
-  ExportDocument,
-  Exclude<pub.AnyVideoClip, pub.AnyMediaClip>
-> {
+export class ExportNonMediaVideoClip extends NodeView<ExportDocument, pub.AnyVideoClip> {
   renderClip = this.docView.renderView._getNode(this.original)
 
   get isReady(): boolean {
@@ -231,6 +220,10 @@ export class ExportNonMediaVideoClip extends NodeView<
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  init(): void {
+    // stub
+  }
+
   whenReady(): void {
     throw new Error('TODO: load font asset')
   }
