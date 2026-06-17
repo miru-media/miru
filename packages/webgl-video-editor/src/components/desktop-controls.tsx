@@ -1,5 +1,6 @@
 import type { InputEvent } from 'shared/types'
-import { clamp, remap, useI18n } from 'shared/utils'
+import { SUPPORTS_FULLSCREEN } from 'shared/userAgent.ts'
+import { useI18n } from 'shared/utils'
 import { formatTime } from 'shared/video/utils.ts'
 
 import styles from '../css/index.module.css'
@@ -7,23 +8,10 @@ import { EDITOR_SELECTION_ACTIONS } from '../editor-actions.ts'
 
 import { useEditor } from './utils.ts'
 
-const MIN_PPS = 0.005
-const MIN_MAX_PPS = 0.2
-const PPS_CHANGE_RATIO = 0.75
-
 export const DesktopControls = () => {
   const editor = useEditor()
-  const { doc, sync } = editor
+  const { sync } = editor
   const { t } = useI18n()
-  const maxPps = () => Math.max(MIN_MAX_PPS, (doc.duration / editor._timelineSize.value.width) * 2)
-
-  const changePps = (decrease: boolean): void => {
-    editor._secondsPerPixel.value = clamp(
-      editor._secondsPerPixel.value * (decrease ? 1 / PPS_CHANGE_RATIO : PPS_CHANGE_RATIO),
-      MIN_PPS,
-      maxPps(),
-    )
-  }
 
   return (
     <div class={styles.desktopControls}>
@@ -76,11 +64,10 @@ export const DesktopControls = () => {
         <button
           label={t('zoom_out')}
           class={styles.desktopControlsButton}
-          onClick={changePps.bind(null, true)}
+          onClick={() => editor.timelineZoom.dec()}
         >
           <IconMsDoNotDisturbOnOutlineRounded />
         </button>
-
         <input
           type="range"
           min="0"
@@ -88,25 +75,33 @@ export const DesktopControls = () => {
           step="any"
           title={t('timeline_zoom')}
           aria-label={t('timeline_zoom')}
-          value={() => remap(editor._secondsPerPixel.value, MIN_PPS, maxPps(), 1, 0) ** 2}
-          onInput={(event: InputEvent) => {
-            editor._secondsPerPixel.value = remap(
-              Math.sqrt(event.target.valueAsNumber),
-              1,
-              0,
-              MIN_PPS,
-              maxPps(),
-            )
-          }}
+          value={() => editor.timelineZoom.zeroToOne}
+          onInput={(event: InputEvent) => (editor.timelineZoom.zeroToOne = event.target.valueAsNumber)}
         />
-
         <button
           label={t('zoom_in')}
           class={styles.desktopControlsButton}
-          onClick={changePps.bind(null, false)}
+          onClick={() => editor.timelineZoom.inc()}
         >
           <IconMsAddCircleOutlineRounded />
         </button>
+        {SUPPORTS_FULLSCREEN ? (
+          <button
+            label={t('fullscreen')}
+            class={styles.desktopControlsButton}
+            onClick={() => editor._fullscreen.toggle()}
+          >
+            {() =>
+              editor._fullscreen.isFullscreen.value ? (
+                <IconMsFullscreenExitRounded />
+              ) : (
+                <IconMsFullscreenRounded />
+              )
+            }
+          </button>
+        ) : (
+          <div></div>
+        )}
       </div>
     </div>
   )

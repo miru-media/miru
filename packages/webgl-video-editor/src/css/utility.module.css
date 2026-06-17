@@ -1,4 +1,4 @@
-.sanitize {
+:where(.sanitize) {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
@@ -9,8 +9,9 @@
   background: transparent;
   border: none;
 
-  &[hidden] {
-    display: none;
+  &[hidden],
+  [hidden] {
+    display: none !important;
   }
 
   &,

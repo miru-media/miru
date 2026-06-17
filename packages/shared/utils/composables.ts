@@ -13,16 +13,13 @@ import {
 } from 'fine-jsx'
 import { throttle } from 'throttle-debounce'
 
-import type { I18nOptions } from '../types.ts'
+import type { I18nOptions, Size } from '../types.ts'
+import { SUPPORTS_FULLSCREEN } from '../userAgent.ts'
 
 import { win } from './window.ts'
 
-export const useElementSize = (element: MaybeRefOrGetter<HTMLElement | null | undefined>) => {
-  const initialElement = toValue(element)
-  const size = ref({
-    width: initialElement?.offsetWidth ?? 0,
-    height: initialElement?.offsetHeight ?? 0,
-  })
+export const useElementSize = (element: MaybeRefOrGetter<Element | null | undefined>): Ref<Size> => {
+  const size = ref({ width: 0, height: 0 })
 
   const observer = new ResizeObserver(([entry]) => {
     const prev = size.value
@@ -142,7 +139,7 @@ export const useDocumentVisibility = (doc = document) => {
 }
 
 export const createI18n = (options: I18nOptions) => {
-  const languages = toRef(options.languages ?? (navigator.languages as string[]))
+  const languages = toRef(() => toValue(options.languages) ?? navigator.languages)
   const language = computed(() => {
     const messages = toValue(options.messages)
     return (
@@ -195,4 +192,31 @@ export const useAsyncCallback = <TArgs extends unknown[]>(
   }
 
   return [fn, isPending]
+}
+
+export const useFullscreen = (
+  element: MaybeRefOrGetter<Element | null | undefined>,
+): {
+  isFullscreen: Ref<boolean>
+  isSupported: boolean
+  request: () => Promise<void>
+  exit: () => Promise<void>
+  toggle: () => Promise<void>
+} => {
+  const isFullscreen = ref(false)
+  const request = () => Promise.resolve(toValue(element)?.requestFullscreen())
+  const exit = () => document.exitFullscreen()
+
+  useEventListener(document, 'fullscreenchange', () => {
+    const el = toValue(element)
+    isFullscreen.value = !!el && document.fullscreenElement === el
+  })
+
+  return {
+    isFullscreen,
+    isSupported: SUPPORTS_FULLSCREEN,
+    request,
+    exit,
+    toggle: () => (isFullscreen.value ? exit() : request()),
+  }
 }

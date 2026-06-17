@@ -1,20 +1,37 @@
-import type { VideoEditor, VideoEditorAction } from '#core'
+import type { AnyClip, Track, VideoEditor, VideoEditorAction } from '#core'
 import { Rational } from 'shared/utils/math.ts'
 
 const RETURN_TRUE = (): true => true
 const GAPPED = true as boolean
+
+const getClipAtTime = (track: Track, time: number): AnyClip | undefined => {
+  for (let clip = track.head; clip; clip = clip.next) {
+    const clipTime = clip.time
+
+    if (clipTime.start <= time && time < clipTime.end) return clip
+  }
+}
+
+const getSplitTarget = (editor: VideoEditor): AnyClip | undefined => {
+  const { currentTime } = editor.doc
+  const { selection } = editor
+  const trackOfSelectedClip = selection && (selection.isNode ? selection : selection.node).parent
+
+  // first search the track that contains a selected clip
+  return trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
+}
 
 export const EDITOR_SELECTION_ACTIONS: VideoEditorAction[] = [
   {
     id: 'split',
     localeKey: 'split',
     Icon: IconMsSplitSceneOutlineRounded,
-    canPerform: (editor: VideoEditor) => !!(editor.selection?.isNode && editor.selection.isClip()),
+    canPerform: (editor: VideoEditor) => !!getSplitTarget(editor),
     exec: (editor: VideoEditor) => {
-      const { selection } = editor
-      if (!selection?.isNode || !selection.isClip()) return
+      const clip = getSplitTarget(editor)
+      if (!clip) return
 
-      editor._editor._transact(() => editor.splitClip(selection, editor.currentTime))
+      editor._editor._transact(() => editor.splitClip(clip, editor.currentTime))
     },
   },
   {

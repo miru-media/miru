@@ -10,9 +10,15 @@
   min-height: 0;
   font-size: 0.875rem;
   color: white;
+  color-scheme: dark;
 
-  .viewport {
-    max-height: min(60vh, calc(100dvh - 22rem));
+  /* For iOS */
+  :where(button) {
+    color: inherit;
+
+    &:where(:disabled) {
+      color: GrayText;
+    }
   }
 }
 

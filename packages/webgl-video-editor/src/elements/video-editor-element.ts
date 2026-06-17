@@ -1,9 +1,9 @@
 import { createEffectScope, ref } from 'fine-jsx'
 
+import type * as pub from '#core'
 import { HTMLElementOrStub } from 'shared/utils/window.ts'
 import { renderComponentTo } from 'shared/video/render-to.ts'
 
-import type * as pub from '../../types/webgl-video-editor.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
 import { LocalSync } from '../sync/index.ts'
@@ -38,7 +38,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   }
 
   declare readonly doc: pub.VideoEditor['doc']
-  declare readonly _secondsPerPixel: pub.VideoEditor['_secondsPerPixel']
   declare readonly _showStats: pub.VideoEditor['_showStats']
   declare readonly activeAssetBin: pub.VideoEditor['activeAssetBin']
   declare readonly canvas: pub.VideoEditor['canvas']
@@ -46,13 +45,13 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare readonly effectRenderer: pub.VideoEditor['effectRenderer']
   declare readonly effects: pub.VideoEditor['effects']
   declare readonly exportProgress: pub.VideoEditor['exportProgress']
-  declare readonly exportResult: pub.VideoEditor['exportResult']
   declare readonly playback: pub.VideoEditor['playback']
   declare readonly selection: pub.VideoEditor['selection']
   declare readonly sync: pub.VideoEditor['sync']
   declare readonly tracks: pub.VideoEditor['tracks']
   declare readonly viewportSize: pub.VideoEditor['viewportSize']
-  declare readonly zoom: pub.VideoEditor['zoom']
+  declare readonly canvasZoom: pub.VideoEditor['canvasZoom']
+  declare readonly timelineZoom: pub.VideoEditor['timelineZoom']
   declare readonly isMobileWorkspace: pub.VideoEditor['isMobileWorkspace']
 
   declare secondsToPixels: pub.VideoEditor['secondsToPixels']
@@ -153,7 +152,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
 }
 
 for (const key of [
-  '_secondsPerPixel',
   '_showStats',
   'activeAssetBin',
   'canvas',
@@ -161,13 +159,12 @@ for (const key of [
   'effectRenderer',
   'effects',
   'exportProgress',
-  'exportResult',
   'playback',
   'selection',
   'sync',
   'tracks',
   'viewportSize',
-  'zoom',
+  'canvasZoom',
   'isMobileWorkspace',
 ] satisfies (keyof pub.VideoEditor)[])
   Object.defineProperty(VideoEditorElement.prototype, key, {

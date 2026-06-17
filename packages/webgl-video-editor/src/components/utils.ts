@@ -1,7 +1,6 @@
 import { computed } from 'fine-jsx'
 import { inject, provide } from 'fine-jsx/jsx-runtime'
 
-import { MIN_CLIP_WIDTH_PX } from '#constants'
 import type * as pub from '#core'
 import type { AnyClip } from '#core'
 import { Rational } from 'shared/utils/math.ts'
@@ -37,7 +36,7 @@ export const useTrackChildEdges = (editor: VideoEditor, node: pub.AnyTrackChild)
   computed(() => {
     const { start, duration } = node.time
     const left = editor.secondsToPixels(start)
-    const right = left + Math.max(MIN_CLIP_WIDTH_PX, editor.secondsToPixels(duration))
+    const right = left + editor.secondsToPixels(duration)
 
     return { left, right }
   })

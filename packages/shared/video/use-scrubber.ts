@@ -13,11 +13,20 @@ export const useScrubber = (
   },
   container: MaybeRefOrGetter<HTMLElement | undefined>,
   cursor: MaybeRefOrGetter<HTMLElement | undefined>,
+  condition = (_event: PointerEvent) => true,
 ): void => {
   const isScrubbing = ref(false)
 
   const onScrubberDown = (event: PointerEvent): void => {
-    if (isScrubbing.value || event.button !== 0) return
+    if (
+      isScrubbing.value ||
+      !condition(event) ||
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return
 
     const target = event.currentTarget as HTMLElement
 

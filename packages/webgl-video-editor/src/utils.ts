@@ -1,4 +1,8 @@
+import { type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
+
+import type { Size } from 'shared/types.ts'
+import { clamp, remap } from 'shared/utils/math.ts'
 
 import type { AnyRenderClip } from './document-views/render/render-nodes.ts'
 
@@ -50,4 +54,61 @@ export const getClipTransformMatrix = (
   if (translateX !== 0 || translateY !== 0) matrix.translate(translateX, translateY)
 
   return matrix
+}
+
+const PPS_CHANGE_AMOUNT = 0.05
+const INITIAL_SECONDS_PER_PIXEL = 0.01
+
+export class TimelineZoom {
+  private readonly _containerSize: MaybeRefOrGetter<Size>
+  private readonly _mediaProps: MaybeRefOrGetter<{ frameRate: number; duration: number }>
+  private readonly _spp = ref(INITIAL_SECONDS_PER_PIXEL)
+
+  constructor(
+    containerSize: MaybeRefOrGetter<Size>,
+    mediaProps: MaybeRefOrGetter<{ frameRate: number; duration: number }>,
+  ) {
+    this._containerSize = containerSize
+    this._mediaProps = mediaProps
+  }
+
+  get min(): number {
+    return 10 / toValue(this._mediaProps).frameRate / toValue(this._containerSize).width
+  }
+  get max(): number {
+    return Math.max(0, toValue(this._mediaProps).duration / toValue(this._containerSize).width) * 4
+  }
+
+  get secondsPerPixel(): number {
+    return this._spp.value
+  }
+  set secondsPerPixel(value) {
+    this._spp.value = clamp(value, this.min, this.max)
+  }
+  get zeroToOne(): number {
+    return remap(this._spp.value, this.min, this.max, 1, 0) ** 2
+  }
+  set zeroToOne(value) {
+    this.secondsPerPixel = remap(Math.sqrt(value), 1, 0, this.min, this.max)
+  }
+
+  bump(decrease: boolean): void {
+    this.secondsPerPixel **= 1 + PPS_CHANGE_AMOUNT * (decrease ? -1 : 1)
+  }
+
+  inc(): void {
+    this.bump(false)
+  }
+
+  dec(): void {
+    this.bump(true)
+  }
+
+  secondsToPixels(time: number): number {
+    return time / this.secondsPerPixel
+  }
+
+  pixelsToSeconds(offset: number): number {
+    return offset * this.secondsPerPixel
+  }
 }

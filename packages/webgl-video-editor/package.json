@@ -96,7 +96,7 @@
     "gl-matrix": "catalog:",
     "idb-keyval": "catalog:",
     "mediabunny": "catalog:",
-    "pixi.js": "^8.16.0",
+    "pixi.js": "^8.19.0",
     "stats.js": "catalog:",
     "throttle-debounce": "catalog:",
     "twgl.js": "catalog:",

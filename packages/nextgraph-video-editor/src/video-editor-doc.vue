@@ -75,7 +75,7 @@ const backUrl = import.meta.env.BASE_URL
       <input
         v-model="doc.name"
         class="border-none bg-transparent p-0.5rem rounded-lg text-center w-full"
-        :aria-label="$t('title')"
+        :aria-label="$t('project_title')"
       />
     </template>
   </VideoEditorDoc>

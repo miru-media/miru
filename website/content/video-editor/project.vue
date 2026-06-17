@@ -3,13 +3,11 @@ import { useLocalStorage } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { computed, ref } from 'vue'
 
-import { VideoEditorDoc, VideoEditorDocError } from 'app-video-editor'
+import { VideoEditorDoc, VideoEditorDocError, type DocListItem } from 'app-video-editor'
 import { useVideoEditorStore } from './video-editor-demo-store'
 import { toRef } from 'vue'
 
-const projects = import.meta.env.SSR
-  ? ([] as never)
-  : useLocalStorage<{ name: string; id: string; createdAt: string }[]>('video-editor-docs', [])
+const projects = import.meta.env.SSR ? ([] as never) : useLocalStorage<DocListItem[]>('video-editor-docs', [])
 const id = computed(() => router.currentRoute.value.query.id || '')
 const name = computed({
   get: () => projects.value.find((p) => p.id == id.value)?.name,
@@ -38,7 +36,7 @@ const showConnectionToggle = import.meta.env.DEV
   <VideoEditorDocError v-if="error" backUrl="/video-editor" />
   <VideoEditorDoc v-else-if="sync" class="fullscreen-app" :sync>
     <template #header-start>
-      <router-link to="/" class="nav-brand mt-[-6px] px-2" :title="$t('close_project')">
+      <router-link to="/" class="nav-brand mt-[-6px] px-2 flex-shrink-0" :title="$t('close_project')">
         <span class="sr-only">{{ $t('close_project') }}</span>
         <img
           src="../../../website/content/media/logo/white-logo.svg"
@@ -50,8 +48,8 @@ const showConnectionToggle = import.meta.env.DEV
     <template #header-middle>
       <input
         v-model="name"
-        class="border-none bg-transparent p-0.5rem rounded-lg text-center w-full"
-        :aria-label="$t('title')"
+        class="border-none bg-transparent p-0.5rem rounded-lg text-center w-fit-content flex-grow-1 flex-shrink-1"
+        :aria-label="$t('project_title')"
       />
     </template>
   </VideoEditorDoc>

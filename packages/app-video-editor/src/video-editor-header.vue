@@ -23,10 +23,31 @@ const onBlur = (event: FocusEvent) => {
 }
 
 const ids = { menuButton: useId(), menu: useId(), resolution: useId(), frameRate: useId() }
+
+const exportResult = ref<{ blob: Blob; url: string }>()
+const abortExport = ref<AbortController>()
+
+const onClickExport = async () => {
+  if (exportResult.value) {
+    URL.revokeObjectURL(exportResult.value?.url)
+    exportResult.value = undefined
+  }
+
+  try {
+    abortExport.value = new AbortController()
+    const blob = await editor.export({ signal: abortExport.value.signal })
+    exportResult.value = { blob, url: URL.createObjectURL(blob) }
+  } catch (error) {
+    if (abortExport.value?.signal.aborted) return
+    console.error(error)
+  } finally {
+    abortExport.value = undefined
+  }
+}
 </script>
 
 <template>
-  <div class="settings-root">
+  <div class="header-root">
     <div>
       <slot name="start"></slot>
     </div>
@@ -34,31 +55,46 @@ const ids = { menuButton: useId(), menu: useId(), resolution: useId(), frameRate
     <div>
       <div><slot name="end" /></div>
 
-      <button class="button primary px-4 py-2 rounded-lg" @click="() => editor.export()">
-        {{ $t('export') }}
+      <template v-if="exportResult">
+        <a :href="exportResult.url" target="_blank" class="button primary px-4 py-2 rounded-lg">
+          {{ $t('download') }}
+        </a>
+        <button
+          class="button px-4 py-2 rounded-lg"
+          @click="() => (exportResult = undefined)"
+          :aria-label="$t('clear')"
+        >
+          <div class="icon i-material-symbols:close-rounded" />
+        </button>
+      </template>
+      <button
+        v-else-if="abortExport"
+        class="relative button tertiary px-4 py-2 rounded-lg"
+        @click="() => abortExport?.abort()"
+      >
+        {{ $t('cancel') }}
+        <div class="icon i-material-symbols:close-rounded" />
+        <progress
+          class="absolute bottom-0 left-0 w-full h-0.25rem border-none"
+          :value="editor.exportProgress"
+        ></progress>
+      </button>
+      <button v-else class="button primary px-4 py-2 rounded-lg" @click="onClickExport">
+        <span :class="editor.isMobileWorkspace && 'sr-only'">{{ $t('export') }}</span>
         <div class="icon i-material-symbols:download-rounded" />
       </button>
-
-      <a
-        v-if="editor.exportResult"
-        :href="editor.exportResult.url"
-        target="_blank"
-        class="button secondary px-4 py-2 rounded-lg"
-      >
-        {{ editor.exportResult.blob.type }} {{ filesize(editor.exportResult.blob.size) }}
-      </a>
 
       <div ref="menuRoot" @blur.capture="onBlur">
         <button
           :id="ids.menuButton"
-          class="button tertiary px-4 py-2 rounded-lg"
+          class="button px-4 py-2 rounded-lg"
           :aria-expanded="isOpen"
           aria-haspopup="true"
           :aria-controls="ids.menu"
           @click="() => (isOpen = !isOpen)"
         >
-          <div class="i-tabler-settings" />
-          {{ $t('settings') }}
+          <span :class="editor.isMobileWorkspace && 'sr-only'">{{ $t('settings') }}</span>
+          <div class="i-material-symbols:settings-outline-rounded" />
         </button>
         <div :id="ids.menu" role="menu" tabindex="0" :aria-labelledby="ids.menuButton">
           <div role="menuitem">
@@ -95,7 +131,8 @@ const ids = { menuButton: useId(), menu: useId(), resolution: useId(), frameRate
 </template>
 
 <style scoped>
-.settings-root {
+.header-root {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr minmax(auto, 1fr) 1fr;
   justify-content: end;
@@ -151,9 +188,14 @@ const ids = { menuButton: useId(), menu: useId(), resolution: useId(), frameRate
   }
 }
 
-.button.square {
-  aspect-ratio: 1;
-  padding: 0.5rem;
-  font-size: 1.5rem;
+.export-progress {
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 100%;
+}
+
+.hidden {
+  display: none;
 }
 </style>

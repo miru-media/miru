@@ -25,7 +25,7 @@ export const MobileToolbar = ({ onClickHelp }: { onClickHelp?: () => unknown }) 
                 aria-label={t(action.localeKey)}
                 title={t(action.localeKey)}
                 class={styles.mobileToolbarButton}
-                hidden={() => !action.canPerform(editor)}
+                disabled={() => !action.canPerform(editor)}
                 onClick={() => action.exec(editor)}
               >
                 <action.Icon />

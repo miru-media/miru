@@ -139,6 +139,7 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
             color: () => original.color,
             size: () => original.doc.resolution,
             onLoad: () => {
+              if (this.isDisposed) return
               texture.source.update()
               this.#placeholderIsLoading.value = false
             },

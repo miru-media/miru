@@ -45,13 +45,12 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
         return selection.isNode ? node : { ...selection, node }
       }),
       effects: toVue(() => editor.effects),
-      exportResult: toVue(() => editor.exportResult),
       exportProgress: toVue(() => editor.exportProgress),
       viewportSize: toVue(() => editor.viewportSize),
       isMobileWorkspace: toVue(() => editor.isMobileWorkspace),
-      zoom: toVue(() => editor.zoom),
+      canvasZoom: toVue(() => editor.canvasZoom),
+      timelineZoom: toVue(() => editor.timelineZoom),
       playback: toVue(() => editor.playback),
-      _secondsPerPixel: toVue(() => editor._secondsPerPixel),
       _showStats: toVue(
         () => editor._showStats,
         (value) => (editor._showStats = value),

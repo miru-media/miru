@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import alias from '@rollup/plugin-alias'
@@ -15,8 +16,8 @@ import glslOptimize from 'rollup-plugin-glsl-optimize'
 import postcss from 'rollup-plugin-postcss'
 import autoImport from 'unplugin-auto-import/rollup'
 import icons from 'unplugin-icons/rollup'
+import * as YAML from 'yaml'
 
-import rootPkg from '../package.json' with { type: 'json' }
 import { autoImportOptions } from '../scripts/auto-import-options.js'
 import { globImportFrag } from '../scripts/glob-import-frag.js'
 import { packageOptions } from '../scripts/package-build-options.cjs'
@@ -25,7 +26,8 @@ import { getPublickPackageDirs, ROOT } from '../scripts/utils.js'
 const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
 const PUBLIC_PACKAGE_DIRS = getPublickPackageDirs()
-const PATCHED_DEPS = Object.keys(rootPkg.pnpm.patchedDependencies)
+const pnpmWorkspace = YAML.parse(readFileSync(resolve(ROOT, 'pnpm-workspace.yaml')).toString())
+const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies)
 
 const opusWasmFile = resolve(
   ROOT,

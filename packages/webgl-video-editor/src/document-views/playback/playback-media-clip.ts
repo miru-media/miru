@@ -57,10 +57,11 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
           ([everHadEnoughData, isPlaceholder], _prev) => {
             if (!everHadEnoughData || isPlaceholder) return
 
-            const textureSource = renderClip.sprite.texture.source
+            const { texture } = renderClip.sprite
 
-            textureSource.resource = this.mediaElement as HTMLVideoElement
-            textureSource.update()
+            texture.source.resource = this.mediaElement as HTMLVideoElement
+            texture.source.update()
+            texture.update()
           },
         )
       })

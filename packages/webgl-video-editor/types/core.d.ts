@@ -347,7 +347,7 @@ export interface VideoEditor {
   readonly viewportSize: { width: number; height: number }
   readonly isMobileWorkspace: boolean
 
-  readonly zoom: number
+  readonly canvasZoom: number
 
   playback: {
     /** Playback is paused */
@@ -365,12 +365,19 @@ export interface VideoEditor {
     stats: any
   }
 
-  /** @internal */
-  readonly _secondsPerPixel: { value: number }
-  /** @internal */
-
   secondsToPixels: (seconds: number) => number
   pixelsToSeconds: (pixels: number) => number
+
+  timelineZoom: {
+    secondsPerPixel: number
+    zeroToOne: number
+    readonly min: number
+    readonly max: number
+    inc: () => void
+    dec: () => void
+    secondsToPixels: (seconds: number) => number
+    pixelsToSeconds: (pixels: number) => number
+  }
 
   /** Select the given track item */
   select: (node: AnyTrackChild | GapSelection | undefined) => void
@@ -426,12 +433,9 @@ export interface VideoEditor {
   /**
    * Render and encode the video composition.
    *
-   * @returns A promise that resolves to an object with a `blob` field and a "blob:" `url` field to the
-   *   resulting video file.
+   * @returns A promise that resolves to a `Blob`.
    */
-  export: () => Promise<{ blob: Blob; url: string } | undefined>
-  /** The most recent export result. */
-  exportResult: { blob: Blob; url: string } | undefined
+  export: (options?: { signal?: AbortSignal }) => Promise<Blob>
 
   /** Release resources of the video editor and allow it to be garbage collected. */
   dispose: () => void

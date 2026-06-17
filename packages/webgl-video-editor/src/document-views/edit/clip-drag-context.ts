@@ -10,6 +10,7 @@ import type { EditView } from './edit-nodes.ts'
 export class ClipDragContext {
   _clip = ref<EditView.AnyTrackChild>()
   _newStart = ref(Rational.ZERO)
+  _offsetY = ref(0)
   _targetTrack = ref<{ id: string; before: boolean }>()
   _trackType = ref<pub.Track['trackType']>('video')
   _clipWasAloneInTrack = ref(false)
@@ -136,6 +137,7 @@ export class ClipDragContext {
     const { parent } = clip
 
     this._newStart.value = clip.timeRational.start
+    this._offsetY.value = 0
     this._targetTrack.value = { id: parent.id, before: false }
     this._trackType.value = parent.trackType
     this._clipWasAloneInTrack.value = parent.head?.id === clip.id && parent.children.length === 1

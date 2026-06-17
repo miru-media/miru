@@ -1,6 +1,6 @@
 import { uid } from 'uid'
 
-import type { AnyClip, AnyVideoClip, AudioClip, VideoEditor } from '#core'
+import type { AnyClip, AnyVideoClip, AudioClip } from '#core'
 import type { InputEvent } from 'shared/types.ts'
 import { clamp, useI18n } from 'shared/utils'
 
@@ -12,9 +12,7 @@ const PERCENT = 100
 const HALF_TURN_DEG = 180
 
 interface SubComponentProps<T extends AnyClip> {
-  editor: VideoEditor
   clip: T
-  i18n: ReturnType<typeof useI18n>
 }
 
 const getNumberInputProps = (
@@ -44,7 +42,6 @@ const getNumberInputProps = (
 
 export const ClipProperties = () => {
   const editor = useEditor()
-  const i18n = useI18n()
 
   return (
     <>
@@ -56,8 +53,8 @@ export const ClipProperties = () => {
         return (
           <section class={styles.workspaceProperties}>
             <div class={styles.panelBody}>
-              {() => selection.isVideo() && <VideoClipProperties {...{ editor, i18n, clip: selection }} />}
-              {() => selection.isAudio() && <AudioClipProperties {...{ editor, i18n, clip: selection }} />}
+              {() => selection.isVideo() && <VideoClipProperties {...{ clip: selection }} />}
+              {() => selection.isAudio() && <AudioClipProperties {...{ clip: selection }} />}
             </div>
           </section>
         )
@@ -66,7 +63,8 @@ export const ClipProperties = () => {
   )
 }
 
-const VideoClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AnyVideoClip>) => {
+const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
+  const { t } = useI18n()
   const id = uid()
   const scaleId = `scale-${id}`
   const positionId = `x-${id}`
@@ -147,7 +145,7 @@ const VideoClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AnyVideoCl
       </div>
 
       <h2 id={rotateId} class={styles.panelSubheading}>
-        {t('rotate')}
+        {t('rotation')}
       </h2>
 
       <div class={styles.inputRow}>
@@ -162,7 +160,8 @@ const VideoClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AnyVideoCl
   )
 }
 
-const AudioClipProperties = ({ clip, i18n: { t } }: SubComponentProps<AudioClip>) => {
+const AudioClipProperties = ({ clip }: SubComponentProps<AudioClip>) => {
+  const { t } = useI18n()
   const headingId = uid()
 
   const volumeInputProps = getNumberInputProps(

@@ -54,7 +54,7 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   }
 
   get isReady(): boolean {
-    return this.#noRender.value > 0 || !this.#delayedActiveClipIsStalled.value
+    return this.renderView.isReady && (this.#noRender.value > 0 || !this.#delayedActiveClipIsStalled.value)
   }
 
   constructor(options: { renderView: RenderDocument }) {
@@ -80,9 +80,12 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
     const listenerOptions = { signal: this._abort.signal }
     const markAsNeedsRender = this.#markAsNeedsRender.bind(this)
-    ;(['node:move', 'node:update', 'node:delete', 'settings:update'] as const).forEach((type) => {
-      doc.on(type, markAsNeedsRender, listenerOptions)
-    })
+    ;(['node:move', 'node:update', 'node:delete', 'settings:update', 'playback:seek'] as const).forEach(
+      (type) => {
+        doc.on(type, markAsNeedsRender, listenerOptions)
+      },
+    )
+    effect(() => this.isReady && this.isPaused && this.#markAsNeedsRender())
 
     this.ticker.add(this.tick.bind(this))
 

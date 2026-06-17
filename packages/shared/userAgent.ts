@@ -1,4 +1,4 @@
-import { win } from 'shared/utils/window.ts'
+import { HTMLElementOrStub, win } from 'shared/utils/window.ts'
 
 const { userAgent = '' } = (win.navigator as Navigator | undefined) ?? {}
 const majorVersion = /Version\/(?:\d+)/u.exec(userAgent)?.[1]
@@ -15,3 +15,6 @@ export const SUPPORTS_2D_OFFSCREEN_CANVAS =
   typeof OffscreenCanvas !== 'undefined' && (OffscreenCanvas as unknown) != null
 // safari 16 only supports 2D offscreen canvas
 export const FULLY_SUPPORTS_OFFSCREEN_CANVAS = !IS_SAFARI_16 && SUPPORTS_2D_OFFSCREEN_CANVAS
+
+export const SUPPORTS_FULLSCREEN =
+  typeof HTMLElementOrStub.prototype.requestFullscreen === 'function' && document.fullscreenEnabled

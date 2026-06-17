@@ -117,31 +117,26 @@ export const Clip = ({ context }: { context: TrimmerUiContext }) => {
         `--clip-box-left:${boxEdges.value.left}px;--clip-box-right:${boxEdges.value.right}px;--clip-color:transparent`
       }
     >
-      <div class={styles.clipBox}>
-        <div class={styles.clipControls}>
-          <div
-            ref={resizeLeft}
-            class={styles.clipResizeLeft}
-            ariaValueText={() => formatDuration(state.value.start, 'long')}
-            ariaValueNow={() => state.value.start}
-            ariaValueMin={0}
-            ariaValueMax={() => state.value.end}
-            tabindex="0"
-          >
-            <IconTablerChevronLeft />
-          </div>
-          <div
-            ref={resizeRight}
-            class={styles.clipResizeRight}
-            ariaValueText={() => formatDuration(state.value.end, 'long')}
-            ariaValueNow={() => state.value.end}
-            ariaValueMin={() => state.value.start}
-            ariaValueMax={() => context.mediaDuration.value}
-            tabindex="0"
-          >
-            <IconTablerChevronRight />
-          </div>
-        </div>
+      <div class={styles.clipBox}></div>
+      <div class={styles.clipControls}>
+        <div
+          ref={resizeLeft}
+          class={styles.clipResizeLeft}
+          ariaValueText={() => formatDuration(state.value.start, 'long')}
+          ariaValueNow={() => state.value.start}
+          ariaValueMin={0}
+          ariaValueMax={() => state.value.end}
+          tabindex="0"
+        ></div>
+        <div
+          ref={resizeRight}
+          class={styles.clipResizeRight}
+          ariaValueText={() => formatDuration(state.value.end, 'long')}
+          ariaValueNow={() => state.value.end}
+          ariaValueMin={() => state.value.start}
+          ariaValueMax={() => context.mediaDuration.value}
+          tabindex="0"
+        ></div>
       </div>
     </div>
   )

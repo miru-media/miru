@@ -7,10 +7,10 @@ const config = (async () => {
       import('postcss-import'),
       import('postcss-preset-env'),
       import('postcss-url'),
-      // import('postcss-hover-media-feature')
+      import('@jetbrains/postcss-require-hover'),
     ])
   )
-  const [cssnano, postcssImport, presetEnv, url] = imports
+  const [cssnano, postcssImport, presetEnv, url, hover] = imports
 
   /** @type {import('postcss-load-config').Config} */
   const config = {
@@ -18,6 +18,7 @@ const config = (async () => {
       postcssImport.default(),
       url.default(),
       presetEnv.default(),
+      hover.default(),
       isProd && cssnano.default({ preset: 'default' }),
     ],
   }

@@ -18,7 +18,7 @@ export const useTrackDropzone = (editor: VideoEditor) => {
       context: container,
       getRect(element) {
         const left = 0
-        const right = editor._timelineSize.value.width
+        const right = editor.secondsToPixels(editor.doc.duration)
         const { top, bottom } = element.getBoundingClientRect()
 
         return { left, right, top, bottom }

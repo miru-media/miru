@@ -205,6 +205,10 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
+  updateVisibility(): void {
+    updateVisibility(this)
+  }
+
   dispose(): void {
     void this.audioSamples?.return(null)
     void this.videoSamples?.return(null)
@@ -234,7 +238,14 @@ export class ExportNonMediaVideoClip extends NodeView<ExportDocument, pub.AnyVid
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   updateVisibility(): void {
-    if (this.original.isInClipTime) this.renderClip.pixiNode.visible ||= true
-    else this.renderClip.pixiNode.visible &&= false
+    updateVisibility(this)
   }
+}
+
+const updateVisibility = (exportClip: ExportMediaClip | ExportNonMediaVideoClip) => {
+  const { renderClip } = exportClip
+  if (!renderClip) return
+
+  if (exportClip.original.isInClipTime) renderClip.pixiNode.visible ||= true
+  else renderClip.pixiNode.visible &&= false
 }

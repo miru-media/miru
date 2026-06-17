@@ -1,28 +1,27 @@
 import { computed, ref, type Ref } from 'fine-jsx'
 import { uid } from 'uid'
-import { Renderer as EffectRenderer, type ExportResult } from 'webgl-effects'
+import { Renderer as EffectRenderer } from 'webgl-effects'
 
 import type * as pub from '#core'
 import type { ClipResize } from '#internal'
 import type * as Schema from '#schema'
 import type { Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
-import { useElementSize } from 'shared/utils/composables.ts'
+import { useElementSize, useFullscreen } from 'shared/utils/composables.ts'
 import { getWebgl2Context } from 'shared/utils/images.ts'
-import { Rational, remap0 } from 'shared/utils/math'
+import { Rational } from 'shared/utils/math'
 
 import { useClipDragResize } from './components/interactions/clip-drag-resize.ts'
 import { useTrackDropzone } from './components/interactions/track-dropzone.ts'
 import type { AssetBin } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
 import type { EditView } from './document-views/edit/edit-nodes.ts'
-import { ExportDocument } from './document-views/export/exporter-document.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
 import type { NodeDeleteEvent } from './events.ts'
+import { TimelineZoom } from './utils.ts'
 
-const INITIAL_SECONDS_PER_PIXEL = 0.01
 const MOBILE_SCREEN_CUTOFF_PX = 1000
 
 export class VideoEditor implements pub.VideoEditor {
@@ -33,13 +32,17 @@ export class VideoEditor implements pub.VideoEditor {
   readonly sync?: pub.VideoEditorDocumentSync
 
   readonly #selection = ref<pub.AnyTrackChild | pub.GapSelection>()
-  readonly _secondsPerPixel = ref(INITIAL_SECONDS_PER_PIXEL)
   readonly _timelineContainer = ref<HTMLElement>()
   readonly _timelineSize = useElementSize(this._timelineContainer)
+  readonly _viewportContainer = ref<HTMLElement>()
+  readonly _fullscreen = useFullscreen(this._viewportContainer)
   readonly _viewportSize: Ref<Size>
+  readonly _viewport = ref<HTMLElement>()
   readonly _workspaceContainer = ref<HTMLElement>()
   readonly _workspaceSize = useElementSize(this._workspaceContainer)
   readonly _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
+
+  readonly timelineZoom = new TimelineZoom(this._workspaceSize, () => this.doc)
 
   get drag() {
     return this.doc.clipDrag
@@ -98,11 +101,6 @@ export class VideoEditor implements pub.VideoEditor {
     this.#activeAssetBin.value = value
   }
 
-  readonly #exportResult = ref<ExportResult>()
-  get exportResult(): ExportResult | undefined {
-    return this.#exportResult.value
-  }
-
   readonly #exportProgress = ref(-1)
   get exportProgress(): number {
     return this.#exportProgress.value
@@ -121,7 +119,7 @@ export class VideoEditor implements pub.VideoEditor {
     return this._viewportSize.value
   }
 
-  get zoom(): number {
+  get canvasZoom(): number {
     return this._zoom.value
   }
 
@@ -315,39 +313,35 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   secondsToPixels(time: number): number {
-    const timelineWidth = this._timelineSize.value.width
-    return remap0(time, timelineWidth * this._secondsPerPixel.value, timelineWidth)
+    return this.timelineZoom.secondsToPixels(time)
   }
 
   pixelsToSeconds(offset: number): number {
-    return offset * this._secondsPerPixel.value
+    return this.timelineZoom.pixelsToSeconds(offset)
   }
 
-  async export(): Promise<{ blob: Blob; url: string } | undefined> {
-    this.#exportResult.value = undefined
-
+  async export(options?: { signal?: AbortSignal }): Promise<Blob> {
     const onProgress = (value: number): void => void (this.#exportProgress.value = value)
 
     this.playback.pause()
     onProgress(0)
 
     try {
+      const { ExportDocument } = await import('./document-views/export/exporter-document.ts')
       const exporter = new ExportDocument({ doc: this.doc, renderOptions: this.playback.renderView })
+      let result
 
       await this.playback
         .withoutRendering(async () => {
-          const blob = await exporter.start({ onProgress })
-          this.#exportResult.value = { blob, url: URL.createObjectURL(blob) }
+          const blob = await exporter.start({ onProgress, signal: options?.signal })
+          result = blob
         })
         .finally(() => exporter.dispose())
-    } catch (error) {
-      // eslint-disable-next-line no-alert -- TODO
-      alert(`Encountered an error while exporting: ${String(error)}`)
-    } finally {
-      this.#exportProgress.value = -1
-    }
 
-    return this.exportResult
+      return result!
+    } finally {
+      onProgress(-1)
+    }
   }
 
   dispose(): void {

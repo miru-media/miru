@@ -1,3 +1,4 @@
+import { ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
 import type * as pub from '../../../types/core'
@@ -29,9 +30,14 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   readonly renderer: Pixi.WebGLRenderer
   declare stage: Pixi.Container
   declare whenRendererIsReady: Promise<void>
+  readonly #isReady = ref(false)
 
   readonly #ownsRenderer: boolean
   readonly applyVideoRotation: boolean
+
+  get isReady(): boolean {
+    return this.#isReady.value
+  }
 
   constructor(options: RenderDocumentOptions) {
     const { doc } = options
@@ -56,7 +62,9 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
 
     this._init()
 
-    this.whenRendererIsReady = this.#ownsRenderer ? this.#initPixi() : Promise.resolve()
+    this.whenRendererIsReady = (this.#ownsRenderer ? this.#initPixi() : Promise.resolve()).then(
+      () => void (this.#isReady.value = true),
+    )
   }
 
   async #initPixi(): Promise<void> {

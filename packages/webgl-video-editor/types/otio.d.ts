@@ -30,11 +30,11 @@ export namespace Otio {
     name: string
     enabled: boolean
     color: string | null
-    metadata: {
+    metadata?: {
       [index: string]: unknown
       Miru?: { [index: string]: unknown; id: string; type: string }
     }
-    effects: {
+    effects?: {
       [index: string]: any
       OTIO_SCHEMA: 'Effect.1'
       name: string

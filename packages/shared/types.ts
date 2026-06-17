@@ -63,6 +63,6 @@ export type InputEvent = Event & { target: HTMLInputElement }
 
 export interface I18nOptions {
   messages: MaybeRefOrGetter<Record<string, Record<string, string>>>
-  languages?: MaybeRefOrGetter<string[]>
+  languages?: MaybeRefOrGetter<string[] | undefined>
   fallbackLanguage?: MaybeRefOrGetter<string>
 }

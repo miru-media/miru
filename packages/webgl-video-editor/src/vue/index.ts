@@ -67,7 +67,7 @@ export default Vue.defineComponent({
           onClickHelp: props.onClickHelp,
           i18n: {
             messages: fromVue(() => props.messages ?? {}),
-            languages: fromVue(() => props.languages ?? []),
+            languages: fromVue(() => props.languages),
           },
         },
         host,

@@ -284,7 +284,7 @@
   }
 }
 
-.workspaceViewport {
+.workspaceViewportContainer {
   --workspace-viewport-spacing-left: var(--panel-width);
   --workspace-viewport-spacing-right: calc(var(--workspace-properties-width) + var(--workspace-gap));
 
@@ -294,9 +294,12 @@
   grid-area: viewport;
   width: calc(100% - var(--workspace-viewport-spacing-right) - var(--workspace-viewport-spacing-left));
   height: 100%;
-  aspect-ratio: var(--viewport-aspect-ratio);
   margin-left: var(--workspace-viewport-spacing-left);
   overflow: hidden;
+
+  &:fullscreen .transformControls {
+    display: none;
+  }
 
   .workspace:has(.panel) & {
     --workspace-viewport-spacing-left: 0px;
@@ -309,6 +312,19 @@
   .mobile & {
     --workspace-viewport-spacing-left: var(--workspace-gap);
     --workspace-viewport-spacing-right: var(--workspace-gap);
+    width: 100%;
+    height: auto;
+    aspect-ratio: unset;
+    margin: 0;
+  }
+}
+
+.workspaceViewport {
+  composes: viewport;
+
+  &,
+  .viewportCanvas {
+    aspect-ratio: var(--viewport-aspect-ratio);
   }
 }
 
@@ -316,6 +332,7 @@
   display: flex;
   flex-direction: column;
   grid-area: timeline;
+  max-height: min(60vh, calc(100dvh - 22rem));
 
   .desktop & {
     background-color: var(--secondary-bg);
@@ -491,12 +508,21 @@
 .mobilePlaybackControls {
   composes: triColumn safePaddingX;
   grid-area: controls;
+  width: 100%;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   border-bottom: solid 1px #2c3033;
 
   button {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.5rem;
     background-color: transparent;
+    border: none;
+
+    &:hover {
+      background-color: #fff2;
+    }
   }
 }
 

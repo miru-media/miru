@@ -97,14 +97,15 @@ export const VideoEditorUI = (props: {
         })}
       </>
 
-      <div class={[styles.viewport, styles.workspaceViewport]}>
-        {h(editor.canvas, { class: styles.viewportCanvas })}
-        <TransformControls />
-        <LoadingOverlay loading={() => !playback.isReady} />
+      <div ref={editor._editor._viewportContainer} class={styles.workspaceViewportContainer}>
+        <div ref={editor._editor._viewport} class={styles.workspaceViewport}>
+          {h(editor.canvas, { class: styles.viewportCanvas })}
+          <TransformControls />
+          <LoadingOverlay loading={() => !playback.isReady} />
+        </div>
         {() => !editor.isMobileWorkspace && <DesktopPlaybackControls />}
+        {() => editor.isMobileWorkspace && <MobileControls />}
       </div>
-
-      {() => editor.isMobileWorkspace && <MobileControls />}
 
       {() =>
         !editor.isMobileWorkspace && (
@@ -124,11 +125,6 @@ export const VideoEditorUI = (props: {
             <MobileToolbar onClickHelp={props.onClickHelp}>{getSlot('toolbar')}</MobileToolbar>
           )
         }
-
-        <progress
-          style={() => (editor.exportProgress >= 0 ? 'width:100%' : 'display:none')}
-          value={() => editor.exportProgress}
-        ></progress>
 
         {() => editor._showStats && <Debug />}
       </div>

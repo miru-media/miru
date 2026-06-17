@@ -42,14 +42,18 @@ class OtioImporter {
 
   async readZipFile(file: Blob): Promise<void> {
     const { entries } = await unzip(file)
+    const jsonFileName =
+      OTIO_BUNDLE_INDEX_FILENAME in entries
+        ? OTIO_BUNDLE_INDEX_FILENAME
+        : Object.keys(entries).find((key) => key.endsWith('.otio'))
 
-    if (!(OTIO_BUNDLE_INDEX_FILENAME in entries)) throw new Error('Missing content.otio in bundle')
+    if (!jsonFileName) throw new Error('Missing .otio file in bundle')
 
-    const otio = (this.otio = await entries[OTIO_BUNDLE_INDEX_FILENAME].json())
+    const otio = (this.otio = await entries[jsonFileName].json())
 
     await Promise.all(
       Object.entries(entries).map(async ([name, entry]) => {
-        if (!Object.hasOwn(entries, name) || name === OTIO_BUNDLE_INDEX_FILENAME) return
+        if (!Object.hasOwn(entries, name) || name.endsWith('.otio')) return
 
         try {
           const blob = await entry.blob()
@@ -134,7 +138,7 @@ class OtioImporter {
       const childInit =
         trackType === 'audio'
           ? this.audioClip(child)
-          : child.metadata.Miru?.type === 'clip:text'
+          : child.metadata?.Miru?.type === 'clip:text'
             ? textClip(child)
             : this.videoClip(child)
 
@@ -195,7 +199,7 @@ class OtioImporter {
     const json: Schema.AudioClip = this.clip(item, 'clip:audio')
     const effects: Schema.AudioClip['effects'] = []
 
-    item.effects.forEach((effect) => {
+    item.effects?.forEach((effect) => {
       if (effect.effect_name === 'AudioGain') json.volume = (effect as unknown as { gain: number }).gain
       else effects.push(effect as any)
     })
@@ -218,9 +222,7 @@ class OtioImporter {
 }
 
 const baseNode = <TO extends Otio.BaseItem, TT extends pub.AnyNode['type']>(item: TO, type: TT) => {
-  const {
-    metadata: { Miru, ...metadata },
-  } = item
+  const { metadata: { Miru, ...metadata } = {} } = item
 
   return {
     id: Miru?.id ?? uid(),
@@ -228,7 +230,7 @@ const baseNode = <TO extends Otio.BaseItem, TT extends pub.AnyNode['type']>(item
     name: item.name,
     enabled: item.enabled,
     color: item.color ?? undefined,
-    effects: item.effects.map((effect): any => effect.metadata.Miru ?? effect),
+    effects: item.effects?.map((effect): any => effect.metadata.Miru ?? effect) ?? [],
     metadata,
   }
 }
@@ -239,7 +241,7 @@ const trackChild = <TO extends Otio.Clip, TT extends Schema.AnyClip['type']>(ite
 })
 
 const textClip = (item: Otio.Clip): Schema.SerializedTextClip => {
-  const metadata = item.metadata.Miru as unknown as Schema.TextClip
+  const metadata = item.metadata?.Miru as unknown as Schema.TextClip
   const json: Schema.TextClip = {
     content: metadata.content,
     fontFamily: metadata.fontFamily,
@@ -257,7 +259,7 @@ const textClip = (item: Otio.Clip): Schema.SerializedTextClip => {
 }
 
 const applyTransformEffect = (json: Partial<Schema.TransformProps>, item: Otio.Clip): void => {
-  const transform = item.effects.find((e: any) => e.effect_name === 'SpatialTransformEffect')
+  const transform = item.effects?.find((e: any) => e.effect_name === 'SpatialTransformEffect')
   if (!transform) return
 
   json.translateX = transform.translate.x

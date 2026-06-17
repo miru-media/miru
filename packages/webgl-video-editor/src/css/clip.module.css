@@ -1,9 +1,8 @@
 @scope (.host) {
   :scope {
-    --clip-height-default: 2.125rem;
     --clip-height-primary: 3.75rem;
-    --clip-height: var(--clip-height-default);
-    --clip-resize-handle-width: 1.5rem;
+    --clip-height: 2.125rem;
+    --clip-resize-handle-width: 0.75rem;
     --clip-selected-color-accent: var(--yellow);
     --clip-selected-color-text: var(--black);
 
@@ -19,14 +18,22 @@
   &:focus-visible {
     outline: none;
   }
-}
 
-.clip.isSelected {
-  touch-action: pan-y;
-}
+  &.isLoading {
+    filter: saturate(20%);
 
-.clip.isDragging {
-  z-index: 20;
+    --clip-color: #444;
+  }
+
+  &.isSelected {
+    z-index: 1;
+    touch-action: none;
+  }
+
+  &.isDragging {
+    z-index: 20;
+    translate: 0 var(--clip-drag-offset-y);
+  }
 }
 
 .clipBoxBase {
@@ -34,6 +41,12 @@
   left: var(--clip-box-left);
   width: calc(var(--clip-box-right) - var(--clip-box-left));
   height: var(--clip-height);
+  border: solid var(--clip-border-width) var(--clip-color-light);
+  border-radius: var(--clip-radius);
+
+  .clip.isSelected & {
+    border-color: var(--clip-selected-color-accent);
+  }
 
   --clip-color-light: oklch(from var(--clip-color) calc(l + 0.1) c h);
   --clip-color-dark: oklch(from var(--clip-color) calc(l - 0.15) calc(c * 0.8) h);
@@ -45,14 +58,11 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  padding: 0 0.5rem;
   overflow: hidden;
   cursor: pointer;
   user-select: none;
 
   background-color: var(--clip-color);
-  border: solid var(--clip-border-width) var(--clip-color-light);
-  border-radius: var(--clip-radius);
 
   transition: background-color 0.25s;
 
@@ -60,24 +70,15 @@
     background-image: var(--clip-thumbnail);
     background-size: auto 100%;
     border-color: var(--clip-color);
-
-    .clipName {
-      pointer-events: none;
-      opacity: 0;
-    }
   }
 
-  .clip.isSelected & {
-    border-color: var(--clip-selected-color-accent);
+  & > :first-child {
+    margin-left: 0.5rem;
   }
 }
 
 .clipBoxFlowContent {
   transition: transform 0.25s;
-
-  .clip.canResizeLeft.isSelected & {
-    transform: translate(1.5rem, 0);
-  }
 }
 
 .clipIcon {
@@ -129,54 +130,45 @@
 }
 
 .clipControls {
-  position: absolute;
-  inset: calc(0px - var(--clip-border-width));
-  pointer-events: none;
-  border-color: var(--clip-selected-color-accent);
-  border-style: solid;
-  border-width: 0.125rem;
-  border-radius: calc(var(--clip-radius));
-  opacity: 0;
-}
+  composes: clipBoxBase;
 
-.clip.isSelected .clipControls {
-  pointer-events: auto;
-  opacity: 1;
+  .clip.isSelected & {
+    border-width: 0.125rem;
+  }
 }
 
 .clipResizeLeft,
 .clipResizeRight {
   position: absolute;
+  top: calc(50% - 0.75rem);
   display: flex;
-  visibility: hidden;
   align-items: center;
   justify-content: center;
   width: var(--clip-resize-handle-width);
-  height: 100%;
+  height: 1.5rem;
   color: var(--clip-selected-color-text);
   touch-action: none;
   cursor: ew-resize;
-  background-color: var(--clip-selected-color-accent);
+  background: white;
+  border: inherit;
+  border-width: 0.25rem;
+  border-radius: 0.6225rem;
+
+  .clip.isSelected & {
+    background: black;
+  }
 }
 
 .clipResizeLeft {
-  left: 0;
-  border-radius: 0.5rem 0 0 0.5rem;
+  left: calc(-1px - var(--clip-resize-handle-width) / 2);
 }
 
 .clipResizeRight {
-  right: 0;
-  border-radius: 0 0.5rem 0.5rem 0;
-}
-
-.clip.isSelected.canResizeLeft .clipResizeLeft,
-.clip.isSelected .clipResizeRight {
-  visibility: visible;
+  right: calc(-1px - var(--clip-resize-handle-width) / 2);
 }
 
 .clipGap {
   composes: clipBoxBase;
-  border-radius: var(--clip-radius);
 
   &:hover,
   &.isSelected {

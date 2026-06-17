@@ -64,6 +64,7 @@ export const Clip = ({
       </div>
 
       <div
+        data-clip-id={clip.id}
         tabindex="0"
         class={() => [
           styles.clip,
@@ -85,7 +86,7 @@ export const Clip = ({
         onFocus={selectClip}
         onClick={selectClip}
       >
-        <div ref={mainContainer} data-clip-id={clip.id} class={styles.clipBox}>
+        <div ref={mainContainer} class={styles.clipBox}>
           {() =>
             editor._showStats && (
               <pre class="z-1 bg-#0004 pointer-events-node line-height-1em">
@@ -101,14 +102,10 @@ export const Clip = ({
               </span>
             )
           }
-          <div class={styles.clipControls}>
-            <div class={styles.clipResizeLeft}>
-              <IconTablerChevronLeft />
-            </div>
-            <div class={styles.clipResizeRight}>
-              <IconTablerChevronRight />
-            </div>
-          </div>
+        </div>
+        <div class={styles.clipControls}>
+          <div class={styles.clipResizeLeft}></div>
+          <div class={styles.clipResizeRight}></div>
         </div>
       </div>
     </>

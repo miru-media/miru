@@ -2,6 +2,13 @@
   position: relative;
   flex-grow: 1;
   overflow: hidden;
+  user-select: none;
+
+  --timeline-padding-right: var(--timeline-duration);
+
+  .mobile & {
+    --timeline-padding-right: var(--timeline-padding-left);
+  }
 }
 
 .timelineScroller {
@@ -9,30 +16,21 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: auto hidden;
-}
-
-.timelineScrollerChild {
-  position: relative;
-  box-sizing: content-box;
-  display: flex;
-  flex-direction: column;
-  width: var(--timeline-duration);
-  height: 100%;
-  padding: 0 var(--timeline-offset);
+  overflow: auto;
+  touch-action: pan-x pan-y;
 }
 
 .timelinePlayhead {
   position: absolute;
   top: var(--ruler-spacing-top);
-  left: var(--timeline-offset);
-  z-index: 10;
+  left: var(--timeline-padding-left);
+  z-index: 1;
   display: flex;
   user-select: none;
   translate: var(--timeline-current-time);
 
   .mobile & {
-    top: calc(var(--ruler-spacing-top) + var(--ruler-height) + 0.5rem);
+    top: calc(var(--ruler-height) + 0.5rem);
     translate: 0;
   }
 }
@@ -66,9 +64,8 @@
 
 .timelineCursor {
   position: absolute;
-  z-index: 10;
   width: 0.125rem;
-  height: var(--timeline-height);
+  height: calc(var(--timeline-height) + var(--ruler-height) + var(--ruler-spacing-bottom));
   pointer-events: none;
   background-color: var(--yellow);
   translate: -50%;
@@ -82,13 +79,14 @@
   position: relative;
   display: flex;
   flex-grow: 1;
-  flex-shrink: 1;
+  flex-shrink: 0;
   flex-direction: column;
-  width: calc(var(--timeline-duration) + var(--timeline-width));
+  width: var(--timeline-duration);
+  min-width: calc(100% - var(--timeline-padding-left) - var(--timeline-padding-right));
+  height: fit-content;
   min-height: calc(var(--clip-height) * 2.5);
-  padding-bottom: 1rem;
-  padding-left: var(--timeline-offset);
-  overflow: hidden auto;
+  padding-bottom: max(4rem, env(safe-padding-inset-bottom, 0px));
+  margin: 0 var(--timeline-padding-right) 0 var(--timeline-padding-left);
 }
 
 .track {
@@ -98,6 +96,11 @@
 
   &.primary {
     --clip-height: var(--clip-height-primary);
+    --clip-border-width: var(--clip-border-width-primary);
+  }
+
+  .clip {
+    position: sticky;
   }
 }
 
@@ -119,36 +122,20 @@
 }
 
 .ruler {
-  position: relative;
+  position: sticky;
+  top: 0;
+  left: 0;
+  display: flex;
   flex-shrink: 0;
-  width: 100%;
-  width: calc(var(--timeline-width) + var(--timeline-duration));
-  height: var(--ruler-height);
-  margin-top: var(--ruler-spacing-top);
-  margin-bottom: var(--ruler-spacing-bottom);
+  align-items: center;
+  width: max(
+    calc(var(--timeline-duration) + var(--timeline-padding-left) + var(--timeline-padding-right)),
+    100%
+  );
+  padding: var(--ruler-spacing-top) 0 var(--ruler-spacing-bottom) 0;
   overflow: hidden;
-  color: var(--white-3);
-  cursor: pointer;
-  user-select: none;
-}
-
-.rulerMarkings {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background-size: var(--ruler-interval) 100%;
-  translate: var(--ruler-markings-offset);
-}
-
-.rulerLabel {
-  position: absolute;
-  display: inline-block;
-  padding-top: 0.25em;
-}
-
-.rulerMarkings,
-.rulerLabel {
+  font-size: 0.625rem;
+  color: #aaacc2;
   background-color: var(--secondary-bg);
 
   .mobile & {
@@ -156,8 +143,34 @@
   }
 }
 
+.rulerMarkings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  translate: var(--ruler-markings-offset);
+
+  line {
+    stroke-width: 0.0625rem;
+  }
+}
+
+.rulerSizer {
+  position: relative;
+  width: 100%;
+  height: var(--ruler-height);
+}
+
+.rulerLabel {
+  position: absolute;
+  display: inline-block;
+  margin-left: 0.875rem;
+  line-height: 0.75rem;
+}
+
 .clipDragTrackSpace {
   position: relative;
+  flex-shrink: 0;
   height: 0.675rem;
 
   &.active::after {

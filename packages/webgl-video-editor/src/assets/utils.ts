@@ -1,4 +1,4 @@
-import * as Mb from 'mediabunny'
+import type * as Mb from 'mediabunny'
 
 import { CLIP_COLORS, THUMBNAIL_QUALITY } from '#constants'
 import type * as Schema from '#schema'
@@ -26,7 +26,8 @@ const getAudioCoverArtDataUrl = async (input: Mb.Input): Promise<string | undefi
 }
 
 const getVideoThumbnailDataUrl = async (videoTrack: Mb.InputVideoTrack): Promise<string | undefined> => {
-  const sink = new Mb.CanvasSink(videoTrack, { width: 320 })
+  const { CanvasSink } = await import('mediabunny')
+  const sink = new CanvasSink(videoTrack, { width: 320 })
   const timestamp = await videoTrack.getFirstTimestamp()
   const wrappedCanvas = await sink.getCanvas(timestamp)
   if (!wrappedCanvas) return
@@ -39,6 +40,8 @@ export const getMediaAssetInfo = async (
   source: string | Blob | File,
   requestInit?: RequestInit,
 ): Promise<Schema.MediaAsset> => {
+  const { BlobSource, UrlSource, Input, ALL_FORMATS } = await import('mediabunny')
+
   const isBlobSource = typeof source !== 'string'
   let mimeType = isBlobSource ? source.type : ''
   const name = isBlobSource ? ('name' in source ? source.name : undefined) : source
@@ -47,7 +50,7 @@ export const getMediaAssetInfo = async (
   let size: number
 
   if (isBlobSource) {
-    mbSource = new Mb.BlobSource(source)
+    mbSource = new BlobSource(source)
     ;({ size } = source)
   } else {
     try {
@@ -60,10 +63,10 @@ export const getMediaAssetInfo = async (
       const contentLength = res.headers.get('content-length')
       if (contentLength) {
         size = parseInt(contentLength, 10)
-        mbSource = new Mb.UrlSource(source)
+        mbSource = new UrlSource(source)
       } else {
         const blob = await res.blob()
-        mbSource = new Mb.BlobSource(blob)
+        mbSource = new BlobSource(blob)
         ;({ size } = blob)
       }
     } catch (error) {
@@ -71,8 +74,8 @@ export const getMediaAssetInfo = async (
     }
   }
 
-  const input = new Mb.Input({
-    formats: Mb.ALL_FORMATS,
+  const input = new Input({
+    formats: ALL_FORMATS,
     source: mbSource,
   })
 

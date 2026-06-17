@@ -23,15 +23,16 @@
   --white-1: rgb(255 255 255 / 10%);
   --white-2: rgb(255 255 255 / 30%);
   --white-3: rgb(255 255 255 / 60%);
-  --ruler-height: 1rem;
+  --ruler-height: 0.75rem;
   --ruler-spacing-top: 0.25rem;
-  --ruler-spacing-bottom: 0rem;
+  --ruler-spacing-bottom: 0.25rem;
   --primary-bg: #17191a;
   --primary-bg-05: #17191a88;
   --secondary-bg: #1c2023;
   --focus-outline: 0.25rem solid white;
   --clip-radius: 0.875rem;
-  --clip-border-width: 0.125rem;
+  --clip-border-width: 0.0625rem;
+  --clip-border-width-primary: 0.125rem;
   --workspace-gap: 1.25rem;
   --workspace-properties-width: 20.625rem;
   --panel-toolbar-width: 4.75rem;
@@ -40,7 +41,7 @@
   .mobile {
     --primary-bg: black;
     --secondary-bg: #17191a;
-    --ruler-spacing-bottom: 2.625rem;
+    --ruler-spacing-bottom: 2.25rem;
   }
 
   &,
@@ -60,8 +61,7 @@
 .viewport {
   position: relative;
   display: flex;
-  display: grid;
-  place-items: center;
+  place-content: center;
   width: 100%;
   min-height: 0;
 }
@@ -71,6 +71,10 @@
   height: 100%;
   background-color: black;
   border-radius: 0.625rem;
+
+  .viewport:fullscreen & {
+    border-radius: 0;
+  }
 }
 
 .host :global(.miru-icon) {

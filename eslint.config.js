@@ -143,6 +143,14 @@ export default tseslint.config(
       'no-console': 'error',
       'import/no-relative-packages': 'error',
       'jsdoc/no-undefined-types': 'error',
+      'jsdoc/tag-lines': 'off',
+    },
+  },
+  {
+    files: ['**/*.?(c|m)js?(x)'],
+    ignores: ['**/*.md/*'],
+    rules: {
+      'jsdoc/check-tag-names': ['error', { typed: false }],
     },
   },
   {

@@ -1,4 +1,5 @@
 import { Button } from 'shared/components/button.tsx'
+import { SUPPORTS_FULLSCREEN } from 'shared/userAgent.ts'
 import { useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'
@@ -13,7 +14,19 @@ export const MobileControls = () => {
 
   return (
     <div class={[styles.mobilePlaybackControls, styles.safePaddingX]}>
-      <div />
+      {SUPPORTS_FULLSCREEN ? (
+        <Button label={t('fullscreen')} onClick={() => editor._fullscreen.toggle()}>
+          {() =>
+            editor._fullscreen.isFullscreen.value ? (
+              <IconMsFullscreenExitRounded />
+            ) : (
+              <IconMsFullscreenRounded />
+            )
+          }
+        </Button>
+      ) : (
+        <div></div>
+      )}
 
       <Button
         label={playOrPause}

@@ -117,8 +117,8 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
               return {
                 left: editor.secondsToPixels(minStartTime),
                 right: editor.secondsToPixels(maxEndTime),
-                top: 0,
-                bottom: 0,
+                top: -Infinity,
+                bottom: Infinity,
               }
             },
             inner: () => {
@@ -131,8 +131,8 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
               return {
                 left: editor.secondsToPixels(time.end - minDuration),
                 right: editor.secondsToPixels(time.start + minDuration),
-                top: 0,
-                bottom: 0,
+                top: Infinity,
+                bottom: -Infinity,
               }
             },
           }),
@@ -161,11 +161,12 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
             if (clip) editor.drag.start(clip)
             else event.interaction.end()
           },
-          move({ rect }: DragEvent): void {
+          move({ rect, pageY, y0 }: DragEvent): void {
             editor.drag.newStart = Rational.fromDecimal(
               editor.pixelsToSeconds(rect.left),
               editor.doc.frameRate,
             )
+            editor.drag._offsetY.value = pageY - y0
           },
           end(): void {
             editor.drag.end(editor)

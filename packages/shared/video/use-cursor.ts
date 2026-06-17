@@ -1,7 +1,7 @@
 import { isRef, toValue } from 'fine-jsx'
 import type { MaybeRefOrGetter } from 'fine-jsx'
 
-import { useEventListener } from 'shared/utils/index.ts'
+import { useEventListener, useI18n } from 'shared/utils/index.ts'
 import { formatDuration } from 'shared/video/utils.ts'
 
 import { ARROW_KEY_DELTA_S } from './constants.ts'
@@ -14,6 +14,7 @@ export const useCursor = (
   },
   cursor: MaybeRefOrGetter<HTMLElement | undefined>,
 ): Record<string, unknown> => {
+  const { t } = useI18n()
   useEventListener(cursor, 'keydown', (event: KeyboardEvent) => {
     switch (event.key) {
       case 'ArrowLeft':
@@ -33,7 +34,7 @@ export const useCursor = (
     tabindex: 0,
     role: 'slider',
     // TODO: i18n
-    'aria-label': 'Cursor',
+    'aria-label': t('cursor'),
     'aria-valuetext': () => formatDuration(toValue(context.currentTime), 'long'),
     'aria-valuenow': isRef(context.currentTime) ? context.currentTime : () => toValue(context.currentTime),
     'aria-valuemin': '0',

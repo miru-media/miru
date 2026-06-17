@@ -200,6 +200,9 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     const { audioEncoderConfig } = this
 
     await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
+
+    signal?.throwIfAborted()
+
     this.clips.forEach((clip) => {
       clip.init()
       this.hasVideo ||= clip.original.isVideo()
@@ -213,7 +216,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
       video: this.hasVideo ? videoEncoderConfig : undefined,
       audio: this.hasAudio ? audioEncoderConfig : undefined,
       onOutput: (type, timestamp) => {
-        if (type === 'video' || !this.hasVideo) onProgress?.(timestamp / durationUs)
+        if (!signal?.aborted && (type === 'video' || !this.hasVideo)) onProgress?.(timestamp / durationUs)
       },
     }).init())
 
@@ -244,7 +247,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     await renderView.whenRendererIsReady
 
     /* eslint-disable no-await-in-loop -- sequential */
-    for (let i = startFrame; i < endFrame && !signal?.aborted; i++) {
+    for (let i = startFrame; i < endFrame; i++) {
       await this.#seekAndWaitForVideoClips(docDuration * (i / totalFrames), signal)
 
       this.renderView.render()
@@ -270,11 +273,17 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     const seekPromise = Promise.all(
       this.clips.map(async (exportClip) => {
         const { original } = exportClip
-        if (!original.isVideo() || !original.isInClipTime) return
+        if (!original.isVideo()) return
+
+        if (!original.isInClipTime) {
+          exportClip.updateVisibility()
+          return
+        }
 
         if (exportClip.isExportMediaClip()) await exportClip.seekVideo()
         else exportClip.updateVisibility()
 
+        signal?.throwIfAborted()
         if (!exportClip.isReady) await exportClip.whenReady(this._abort.signal)
       }),
     )
@@ -309,7 +318,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
         await exportClip.seekAudio(clipTime.start)
 
         /* eslint-disable no-await-in-loop -- sequential */
-        while (exportClip.currentAudioData && !signal?.aborted) {
+        while (exportClip.currentAudioData) {
           const { buffer, timestamp, duration } = exportClip.currentAudioData
           const bufferOffsetS = timestamp / 1e6 - clipTime.source
           const trimStartS = -Math.min(bufferOffsetS, 0)
@@ -327,13 +336,14 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
           }
 
           await exportClip.readNextAudio()
+          signal?.throwIfAborted()
         }
         /* eslint-enable no-await-in-loop */
       }),
     )
 
     const rendered = await ctx.startRendering()
-    if (signal?.aborted) return
+    signal?.throwIfAborted()
 
     const f32Planar = new Float32Array(rendered.length * rendered.numberOfChannels)
     for (let i = 0; i < rendered.numberOfChannels; i++)

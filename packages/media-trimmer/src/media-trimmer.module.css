@@ -58,17 +58,12 @@
 
 .timeline {
   position: relative;
-  margin: 0 1.5rem;
+  margin: 0 calc(var(--clip-resize-handle-width) / 2);
   touch-action: none;
 
   .clip {
     position: relative;
     border-radius: 0;
-  }
-
-  .clipBox {
-    left: calc(var(--clip-box-left) - var(--clip-resize-handle-width));
-    width: calc(var(--clip-box-right) - var(--clip-box-left) + 2 * var(--clip-resize-handle-width));
   }
 }
 

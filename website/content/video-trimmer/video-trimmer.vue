@@ -79,7 +79,7 @@ const onInputFile = (event: Event) => {
     <progress class="w-full border-0" :value="progress" max="1" />
     <div class="flex justify-evenly">
       <button class="button tertiary" @click="() => (source = '')">
-        <div class="i-tabler:x text-2rem"></div>
+        <div class="i-material-symbols:close text-2rem"></div>
         Cancel
       </button>
       <button :class="['button', !resultUrl && 'primary']" @click="exportVideo">Export</button>
@@ -90,7 +90,7 @@ const onInputFile = (event: Event) => {
         target="_blank"
         :download="`trimmed${inputFile ? '-' + inputFile.name : ''}.mp4`"
       >
-        <div class="icon i-tabler:download"></div>
+        <div class="icon i-material-symbols:download"></div>
         Download
       </a>
     </div>
@@ -107,11 +107,11 @@ const onInputFile = (event: Event) => {
     <img src="../media/illustrations/2.svg" alt="" class="w-full max-w-50vw max-h-50vh block m-auto" />
     <div class="flex justify-center gap-10 p-10">
       <button id="back-button" class="button tertiary" @click="onClickBack">
-        <div class="i-tabler:chevron-left text-2rem"></div>
+        <div class="i-material-symbols:chevron-left text-2rem"></div>
         Back
       </button>
       <label id="file-button" class="button primary">
-        <div class="i-tabler:photo text-2rem"></div>
+        <div class="i-material-symbols:photo-rounded text-2rem"></div>
         Choose a file
         <input type="file" name="video source" accept="video/*" @input="onInputFile" hidden />
       </label>

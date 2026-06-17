@@ -10,6 +10,7 @@ import Header from './video-editor-header.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
 import { state } from './state.ts'
+import { ARROW_KEY_DELTA_S } from 'shared/video/constants.ts'
 
 const { sync, editor: editorProp } = defineProps<{
   sync?: VideoEditorDocumentSync
@@ -68,17 +69,15 @@ if (!import.meta.env.SSR) {
         EDITOR_SELECTION_ACTIONS_BY_ID.split.exec(editor)
         break
 
-      case 'ArrowLeft': {
-        const prev = editor.selection?.prev
-        if (prev) editor.select(prev)
-
-        event.preventDefault()
-        break
-      }
-
-      case 'ArrowRight': {
-        const next = editor.selection?.next
-        if (next) editor.select(next)
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowUp':
+      case 'ArrowDown': {
+        const { frameRate } = editor.doc
+        const deltaS =
+          (event.shiftKey ? ARROW_KEY_DELTA_S : 1 / frameRate) *
+          (event.code === 'ArrowLeft' || event.code === 'ArrowUp' ? -1 : 1)
+        editor.seekTo(editor.currentTime + deltaS)
         event.preventDefault()
         break
       }
@@ -132,12 +131,13 @@ if (!import.meta.env.SSR) {
   --white-1: rgb(255 255 255 / 10%);
   --white-2: rgb(255 255 255 / 30%);
   --white-3: rgb(255 255 255 / 60%);
-  --ruler-height: 1rem;
-  --ruler-spacing-top: 0.25rem;
-  --ruler-spacing-bottom: 2.625rem;
   --primary-bg: #171717;
   --primary-bg-05: #17171788;
 
+  --font-size-m: 0.865rem;
+  --line-height-ui-m: revert;
+
+  accent-color: #006aeb;
   color-scheme: dark;
 }
 

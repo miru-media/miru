@@ -1,15 +1,13 @@
 import { computed, ref, type Ref, toValue, watch } from 'fine-jsx'
 
 import { useI18n } from 'shared/utils'
-import { useCursor } from 'shared/video/use-cursor.ts'
-import { useScrubber } from 'shared/video/use-scrubber.ts'
 import { formatDuration } from 'shared/video/utils'
 
 import styles from '../css/index.module.css'
 
 import { useEditor } from './utils.ts'
 
-const RULER_INTERVAL_MULTIPLIER = 32
+const RULER_INTERVAL_MULTIPLIER = 128
 
 export const Ruler = ({
   scrollOffset,
@@ -22,20 +20,8 @@ export const Ruler = ({
   const { languages } = useI18n()
   const root = ref<HTMLElement>()
 
-  const scrubberContext = {
-    pixelsPerSecond: () => 1 / editor._secondsPerPixel.value,
-    currentTime: () => editor.currentTime,
-    mediaDuration: () => editor.doc.duration,
-    offsetX: timelineOffset,
-    seekTo: editor.seekTo.bind(editor),
-  }
-
-  useScrubber(scrubberContext, root, undefined)
-
-  const cursorProps = useCursor(scrubberContext, root)
-
   const intervalS = computed(() => {
-    const range = editor._secondsPerPixel.value
+    const range = editor.timelineZoom.secondsPerPixel
     const exponent = Math.floor(Math.log2(range))
     const magnitude = 2 ** exponent
 
@@ -50,7 +36,7 @@ export const Ruler = ({
       <svg class={styles.rulerMarkings} style={() => `--ruler-markings-offset: ${offset.value}px`}>
         <defs>
           <pattern id="Pattern" x="0" y="0" width={size} height="100%" patternUnits="userSpaceOnUse">
-            <circle cx="0.125rem" cy="50%" r="0.125rem" fill="currentColor" />
+            <line x1="0.125rem" x2="0.125rem" y1="0" y2="100%" stroke="currentColor" />
           </pattern>
         </defs>
 
@@ -65,12 +51,11 @@ export const Ruler = ({
     watch([languages], formattedDurations.clear.bind(formattedDurations))
 
     const getChildren = (): JSX.Element[] => {
-      const timelineWidth = editor._timelineSize.value.width
-      const timelineRangeS = editor.pixelsToSeconds(timelineWidth)
+      const timelineRangeS = editor.pixelsToSeconds(editor._workspaceSize.value.width)
       const offset = timelineOffset.value
 
       const children: JSX.Element[] = []
-      const labelSpacing = intervalS.value < 1 ? 4 : 5
+      const labelSpacing = 2
       const labelIntervalS = intervalS.value * labelSpacing
       const nLabels = Math.ceil(timelineRangeS / labelIntervalS) + 1
 
@@ -91,7 +76,7 @@ export const Ruler = ({
         }
 
         children.push(
-          <div class={[styles.rulerLabel, styles.textSmall]} style={`translate:calc(${left}px - 50%)`}>
+          <div class={styles.rulerLabel} style={`translate:calc(${left}px)`}>
             {durationText}
           </div>,
         )
@@ -100,22 +85,17 @@ export const Ruler = ({
       return children
     }
 
-    return <div>{getChildren}</div>
+    return <>{getChildren}</>
   }
 
   return (
-    <div
-      ref={root}
-      {...cursorProps}
-      class={styles.ruler}
-      onPointerdown={(event: Event) => event.stopPropagation()}
-    >
+    <div ref={root} inert class={styles.ruler} onPointerdown={(event: Event) => event.stopPropagation()}>
       {() =>
-        editor._timelineSize.value.width === 0 ? undefined : (
-          <>
+        editor._workspaceSize.value.width > 0 && (
+          <div class={styles.rulerSizer}>
             <Markings />
             <Labels />
-          </>
+          </div>
         )
       }
     </div>

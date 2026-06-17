@@ -883,6 +883,14 @@ iframe {
   }
 }
 
+@supports (-webkit-text-size-adjust: none) and (font: -apple-system-body) {
+  body:has(.fullscreen-app) {
+    position: fixed;
+    inset: 0;
+    height: -webkit-fill-available;
+  }
+}
+
 .fullscreen-app {
   height: 100dvh;
 }

@@ -114,7 +114,7 @@ const mediaClip = <T extends pub.AnyClip>(node: T): Otio.Clip => {
 const audioClip = (node: pub.AudioClip): Otio.Clip => {
   const otio = mediaClip(node)
 
-  otio.effects.unshift({
+  ;(otio.effects ??= []).unshift({
     OTIO_SCHEMA: 'Effect.1',
     name: 'AudioGain',
     effect_name: 'AudioGain',
@@ -150,7 +150,7 @@ const gap = (duration: Rational): Otio.Gap => ({
 })
 
 const addTransformEffect = (otio: Otio.BaseItem, node: Schema.TransformProps): void => {
-  const json = otio.metadata.Miru as Partial<Schema.VideoClip>
+  const json = (otio.metadata?.Miru ?? {}) as Partial<Schema.VideoClip>
 
   if (
     !!(json.translateX ?? 0) ||
@@ -160,7 +160,7 @@ const addTransformEffect = (otio: Otio.BaseItem, node: Schema.TransformProps): v
     (json.scaleY ?? 1) !== 1
   ) {
     // https://github.com/AcademySoftwareFoundation/OpenTimelineIO/discussions/1794
-    otio.effects.unshift({
+    ;(otio.effects ??= []).unshift({
       OTIO_SCHEMA: 'Effect.1',
       name: 'transform',
       effect_name: 'SpatialTransformEffect',

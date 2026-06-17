@@ -57,10 +57,10 @@ export const TransformControls = () => {
         move(event: DragEvent) {
           const clip = clipProps.value
 
-          const { zoom } = editor
+          const { canvasZoom } = editor
           const { delta } = event
-          clip.translateX += delta.x / zoom
-          clip.translateY += delta.y / zoom
+          clip.translateX += delta.x / canvasZoom
+          clip.translateY += delta.y / canvasZoom
         },
         end() {
           getSelectedClip()?._applyEdits()
@@ -78,7 +78,7 @@ export const TransformControls = () => {
       editor.playback.renderView
         ._getNode(getSelectedClip())
         ?.matrix.value.clone()
-        .scale(editor.zoom, editor.zoom) ?? new Pixi.Matrix(),
+        .scale(editor.canvasZoom, editor.canvasZoom) ?? new Pixi.Matrix(),
   )
 
   const boxPoints = computed(() => {

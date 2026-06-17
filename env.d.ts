@@ -69,7 +69,7 @@ declare module '*.vue' {
 declare module 'postcss-url' {}
 declare module 'postcss-import' {}
 declare module 'postcss-preset-env' {}
-declare module 'postcss-hover-media-feature' {}
+declare module '@jetbrains/postcss-require-hover' {}
 
 declare module '@lokesh.dhakar/quantize' {
   const quantize = (await import('quantize')).default
