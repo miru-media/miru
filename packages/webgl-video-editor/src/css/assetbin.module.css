@@ -186,3 +186,12 @@
 .assetBinFilterIntensitySlider {
   align-self: stretch;
 }
+
+.assetBinScreenRecordButton {
+  align-self: flex-end;
+
+  :global(.miru-icon){
+    font-size: 1.25rem;
+    color: var(--red);
+  }
+}
