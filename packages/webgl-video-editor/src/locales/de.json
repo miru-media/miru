@@ -56,6 +56,8 @@
   "asset_bin_media_upload": "Medien hochladen",
   "asset_bin_delete_video": "Löschen",
   "asset_bin_delete_video_disabled": "Kann nicht gelöscht werden, solange das Video verwendet wird",
+  "asset_bin_screen_record_start": "Bildschirm aufzeichnen",
+  "asset_bin_screen_record_stop": "Bildschirmaufzeichnung beenden",
   "music": "Musik",
   "asset_bin_music_empty": "Hier ist nichts, versuch doch mal, etwas Musik hochzuladen!",
   "asset_bin_music_search_empty": "Keine Suchergebnisse :(",
@@ -84,5 +86,6 @@
   "error_cannot_create_clip": "Der Clip konnte nicht erstellt werden",
   "error_cannot_delete_video": "Das Video konnte nicht gelöscht werden",
   "error_cannot_delete_music": "konnte die Audiodatei nicht löschen",
+  "error_cannot_record_screen": "Bildschirmaufzeichnung war nicht möglich",
   "confirm_delete_project": "Bist du sicher, dass du dieses Project löschen willst?"
 }
