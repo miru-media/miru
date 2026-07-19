@@ -143,6 +143,7 @@ async function pushAndPublish() {
   }
 
   await run('pnpm', [
+    'stage',
     'publish',
     '--recursive',
     ...(cliArgs.tag ? ['--tag', cliArgs.tag] : []),
