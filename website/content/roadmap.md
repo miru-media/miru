@@ -31,11 +31,11 @@ Miru is under active development. Here's what we've done <span class="task-done"
 
   Use Mediabunny, a robust WebCodecs-focused library that will give us support for more formats and enable a smoother editing experience.
 
-- ## <span class="task-date">2026-Q2</span> <span class="task-wip"></span> Documentation
+- ## <span class="task-date">2026-Q3</span> <span class="task-wip"></span> Documentation
 
   Make it clear how to get started using Miru's various tools on a web site or app, how to create custom effects, and how to contribute to Miru's development. API reference pages should be generated with TypeDoc or something similar. Write guidelines for contributing translations for Miru's UIs.
 
-- ## <span class="task-date">2026-Q2</span> <span class="task-wip"></span> Video editor improvements
+- ## <span class="task-date">2026-Q3</span> <span class="task-wip"></span> Video editor improvements
 
   <!---->
   - Improve the desktop UX
@@ -44,7 +44,7 @@ Miru is under active development. Here's what we've done <span class="task-done"
   - Add keyframe animation
   - OpenTimelineIO import and export
 
-- ## <span class="task-date">2026-H1</span> <span class="task-wip"></span> Collaborative video editing
+- ## <span class="task-date">2026-H2</span> <span class="task-wip"></span> Collaborative video editing
 
   Add local-first collaborative editing to Miru's video editor using CRDTs. Implement project management, invitations, to run on an existing a self-hostable platform like Nextcloud or NextGraph.
 

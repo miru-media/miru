@@ -12,7 +12,7 @@ eleventyNavigation: { key: 'Apps', order: 20 }
 
 ## Video editor
 
-[<img src="/media/webgl-video-editor-screenshot.jpg" alt="Screenshot" class="w-25rem max-w-full">](/video-editor/index.njk)
+[<img src="/media/video-editor-mobile.webp" alt="Screenshot" class="w-25rem max-w-full">](/video-editor/index.njk)
 
 [Open video editor demo](/video-editor/index.njk)
 

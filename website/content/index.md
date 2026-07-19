@@ -24,6 +24,60 @@ title: 'Miru: photo and video editing tools'
   </div>
 </section>
 
+<section>
+  <div class="cards-with-icons-container home-features">
+    <div class="card-with-icon horizontal">
+      <img src="/media/illustrations/3.svg" loading="lazy" alt="">
+      <div class="feature-heading">
+        <h3>Create anywhere</h3>
+        <p class="paragraph s secondary">
+          Run the same tools on your laptop or your phone with responsive, intuitive user interfaces; online or offline.
+        </p>
+      </div>
+    </div>
+    <div class="card-with-icon horizontal">
+      <img src="/media/illustrations/5.svg" class="light-only" loading="lazy" alt="" class="px-2">
+      <img src="/media/illustrations/5-dark.svg" class="dark-only" loading="lazy" alt="">
+      <div class="feature-heading">
+        <h3>Privacy included</h3>
+        <p class="paragraph s secondary">
+          Your data stays with you and your collaborators.
+        </p>
+      </div>
+    </div>
+    <div class="card-with-icon horizontal">
+      <img src="/media/illustrations/4.svg" loading="lazy" alt="">
+      <div class="feature-heading">
+        <h3>Open source</h3>
+        <p class="paragraph s secondary">
+          Miru is free software released under the AGPL-3.0 license. Use it, learn from it, remix and share it.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="promo-cta">
+  <div class="heading centered">
+    <h2>Try it out and get creative</h2>
+    <div class="button-group centered">
+      <a href="/video-editor" class="button primary">Start editing video</a>
+      <a href="/photo-editor" class="button tertiary">Edit a photo</a>
+    </div>
+  </div>
+</section>
+
+<style>
+.home-features {
+  text-align: center;
+  img {
+    width: 50%;
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+}
+</style>
+
 ---
 
 <br>

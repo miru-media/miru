@@ -8,7 +8,7 @@ Miru is a set of modular, extensible Web platform tools and components for still
 
 <p class="flex justify-evenly flex-wrap">
     <img src="/media/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" class="h-20rem w-auto">
-    <img src="/media/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" class="h-20rem w-auto">
+    <img src="/media/video-editor-mobile.webp" alt="Video editor screenshot" class="h-20rem w-auto">
 </p>
 
 ## Who is it for?
@@ -57,9 +57,10 @@ We've outlined our development plans in our [roadmap here](https://miru.media/ro
 
 Miru's tools are published to npm as the following packages:
 
-| npm package                                                              | Description                                                      | Docs                               |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------- | ---------------------------------- |
-| [`webgl-media-editor`](https://www.npmjs.com/package/webgl-media-editor) | A simple image editor with cropping, rotation, and WebGL filters | [docs](/guide/webgl-media-editor/) |
-| [`media-trimmer`](https://www.npmjs.com/package/media-trimmer)           | A simple MP4 video trimmer using the WebCodecs API               | [docs](/guide/media-trimmer/)      |
-| [`webgl-effects`](https://www.npmjs.com/package/webgl-effects)           | A library for applying filters and effects to images with WebGL2 |                                    |
-| [`webgl-video-editor`](https://www.npmjs.com/package/webgl-video-editor) | A mobile-friendly, multi-track video editor with WebGL effects   | [docs](/guide/webgl-video-editor/) |
+| Module                                             | Description                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------- |
+| [`webgl-media-editor`](/guide/webgl-media-editor/) | A simple image editor with cropping, rotation, and WebGL filters |
+| [`media-trimmer`](/guide/media-trimmer/)           | A simple MP4 video trimmer using the WebCodecs API               |
+| [`webgl-video-editor`](/guide/webgl-video-editor/) | A mobile-friendly, multi-track video editor with WebGL effects   |
+| `webgl-effects`                                    | A library for applying filters and effects to images with WebGL2 |
+| `fine-jsx`                                         | A minimal JSX runtime with fine-grained reactivity               |

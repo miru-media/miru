@@ -25,5 +25,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["../website/dist", "../packages/*/dist"]
+  "exclude": ["../website/dist", "../website/content/api", "../website/public", "../packages/*/dist"]
 }

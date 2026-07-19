@@ -1,0 +1,12 @@
+diff --git a/src/Plugins/IdAttributePlugin.js b/src/Plugins/IdAttributePlugin.js
+index a55a13e216582d190b3f14bd06dfa266593c13bf..e5e74a3a02f05701e6261d4168706d6a5e11b6d0 100644
+--- a/src/Plugins/IdAttributePlugin.js
++++ b/src/Plugins/IdAttributePlugin.js
+@@ -62,6 +62,7 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
+ 								// Rename conflicting assigned heading id
+ 								let newId = `${id}-${conflictCheck[id]}`;
+ 								headingNodes[newId] = headingNodes[id];
++								headingNodes[newId].attrs ||= {}
+ 								headingNodes[newId].attrs.id = newId;
+ 								delete headingNodes[id];
+ 							} else if (options.checkDuplicates === "error") {

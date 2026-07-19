@@ -19,7 +19,7 @@
     "@11ty/eleventy-navigation": "^1.0.5",
     "@11ty/eleventy-plugin-rss": "^3.0.0",
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
-    "@11ty/eleventy-plugin-vite": "7.1.0-alpha.2",
+    "@11ty/eleventy-plugin-vite": "8.0.0",
     "@types/luxon": "^3.7.1",
     "cross-env": "^10.1.0",
     "luxon": "^3.7.2",

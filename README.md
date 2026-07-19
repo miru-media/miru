@@ -13,8 +13,8 @@
 [Miru](https://miru.media) is a set of modular, extensible Web platform tools and components for still image and multi-track video editing and state-of-the-art, real-time AR. Using WebGL, WebAssembly, and open source, mobile-optimized machine learning models, Miru will give people on the social web the tools to edit images and apply interactive effects to recorded video without compromising on privacy and transparency. Miru aims to provide intuitive and user-friendly UIs which developers can easily integrate into their Web apps regardless of the front-end frameworks they use.
 
 <p align="center">
-    <img src="./website/content/media/webgl-media-editor-screenshot.jpg" alt="Photo editor screenshot" height="320">
-    <img src="./website/content/media/webgl-video-editor-screenshot.jpg" alt="Video editor screenshot" height="320">
+  <img src="./website/content/media/video-editor-desktop.webp" alt="Video editor screenshot" height="320">
+  <img src="./website/content/media/video-editor-mobile.webp" alt="Video editor screenshot" height="320">
 </p>
 
 <!-- #region main -->

@@ -1,6 +1,6 @@
 # An embeddable, framework-agnostic, browser-based video editor
 
-[<img src="https://miru.media/webgl-video-editor-screenshot.jpg" alt="Screenshot">](https://miru.media/video-editor)
+[<img src="https://miru.media/video-editor-desktop.webp" alt="Screenshot">](https://miru.media/video-editor)
 
 <https://miru.media/video-editor>
 
@@ -36,15 +36,17 @@ npm install webgl-video-editor
 </script>
 ```
 
+<!-- #endregion main -->
+
+## API Reference
+
+<https://miru.media/api/webgl-video-editor/>
+
 Powered by:
 
 - [Mediabunny](https://mediabunny.dev/)
 - [WebCodecs API](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API)
 - [LibAVJS-WebCodecs-Polyfill](https://github.com/ennuicastr/libavjs-webcodecs-polyfill)
-
-Design adapted from [Vladimir Palyanov's work](https://www.figma.com/community/file/991274033166018675/occamus-video-editor)
-
-<!-- #endregion main -->
 
 ## Funding
 

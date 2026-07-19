@@ -1,12 +1,3 @@
-patchedDependencies:
-  glsl-tokenizer: 'patches/glsl-tokenizer.patch'
-  libavjs-webcodecs-polyfill: 'patches/libavjs-webcodecs-polyfill.patch'
-  '@interactjs/core': 'patches/@interactjs__core.patch'
-
-onlyBuiltDependencies:
-  - esbuild
-  - rollup-plugin-glsl-optimize
-
 packages:
   - packages/*
   - website
@@ -18,11 +9,11 @@ catalog:
   '@gltf-transform/functions': ^4.2.1
   '@libav.js/variant-opus': ^6.8.8
   '@lokesh.dhakar/quantize': ^1.4.0
-  '@types/base64-js': '^1.5.0'
+  '@types/base64-js': ^1.5.0
   '@types/three': ^0.177.0
   '@vitejs/plugin-vue': ^6.0.1
   '@vueuse/core': 13.4.0
-  base64-js: '^1.5.1'
+  base64-js: ^1.5.1
   color-diff: ^1.4.0
   comlink: ^4.4.2
   filesize: ^10.1.6
@@ -30,13 +21,13 @@ catalog:
   gl-matrix: ^3.4.4
   idb-keyval: ^6.2.2
   libavjs-webcodecs-polyfill: ^0.5.5
-  mediabunny: '^1.40.0'
+  mediabunny: ^1.40.0
   stats.js: ^0.17.0
   three: ^0.177.0
   throttle-debounce: ^5.0.2
   twgl.js: ^6.2.0
   uid: ^2.0.2
-  vite: '7.3.1'
+  vite: 7.3.1
   vue: ^3.5.26
   vue-i18n-lite: ^1.0.2
   yjs: ^13.6.29
@@ -44,3 +35,19 @@ catalog:
   yjs-orderedtree: 1.0.1-beta.3
   y-webrtc: ^10.3.0
   y-websocket: ^3.0.0
+
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - sharp
+  - unrs-resolver
+
+onlyBuiltDependencies:
+  - core-js
+  - esbuild
+  - rollup-plugin-glsl-optimize
+
+patchedDependencies:
+  glsl-tokenizer: patches/glsl-tokenizer.patch
+  libavjs-webcodecs-polyfill: patches/libavjs-webcodecs-polyfill.patch
+  '@interactjs/core': patches/@interactjs__core.patch
+  '@11ty/eleventy': patches/@11ty__eleventy.patch

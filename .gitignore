@@ -9,6 +9,9 @@ lerna-debug.log*
 
 node_modules
 dist
+website/content/api
+website/public/api
+website/.cache
 *.local
 
 /types
@@ -30,3 +33,4 @@ dist
 *.sw?
 
 *.tsbuildinfo
+.pnpm-store

@@ -877,8 +877,8 @@ iframe {
   padding: 0;
   margin: 0;
 
-  > header,
-  > footer {
+  > .nav-container,
+  > .footer {
     display: none;
   }
 }
@@ -889,6 +889,15 @@ iframe {
     inset: 0;
     height: -webkit-fill-available;
   }
+}
+
+.footer {
+  max-width: 100%;
+}
+
+.nav-container {
+  width: 100%;
+  margin: 0 auto;
 }
 
 .fullscreen-app {

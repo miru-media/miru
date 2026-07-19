@@ -5,19 +5,20 @@
   "packageManager": "pnpm@10.12.4",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run website:build --serve",
+    "dev": "pnpm run website:eleventy --serve",
     "dev:slow": "VITE_DEV_SLOW_DOWN_MS=5000 pnpm run dev",
     "libs:build": "NODE_ENV=production rollup --config config/rollup.config.js",
     "libs:build:dev": "NODE_ENV=development rollup --config config/rollup.config.js",
     "check": "pnpm --prefix packages/nextgraph-video-editor run orm:build && vue-tsc -b config/tsconfig.check.json --incremental",
     "lint:css": "stylelint --ignore-path .gitignore '**/*.{css,scss}'",
     "lint:markdown": "markdownlint --ignore-path .gitignore --ignore '**/CHANGELOG.md' '**/*.md'",
-    "lint:prettier": "prettier --check '**/*.{ts,js,tsx,jsx,cjs,vue,md,html,yaml,yml,json}'",
+    "lint:prettier": "prettier --check '**/*.{ts,js,tsx,jsx,cjs,vue,md,html,njk,yaml,yml,json}'",
     "lint": "pnpm run lint:css && pnpm run lint:markdown && pnpm eslint --quiet && pnpm run lint:prettier",
     "lint:fix": "pnpm run lint:css --fix && pnpm run lint:markdown --fix && pnpm eslint --quiet --fix && pnpm lint:prettier --write",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prepare": "husky",
-    "website:build": "rm -r website/.11ty-vite; pnpm --prefix website exec eleventy --config=eleventy.config.ts",
+    "website:eleventy": "rm -rf website/dist; pnpm --prefix website exec eleventy --config=eleventy.config.ts",
+    "website:build": "rm -rf website/content/api; typedoc; pnpm run website:eleventy",
     "gltf-optimize": "node --experimental-strip-types ./scripts/gltf-optimize.js",
     "update-deps": "taze minor --recursive --interactive --write --install --update && pnpm dedupe",
     "test": "vitest run"
@@ -31,6 +32,8 @@
     "gltf-ar-effects": "workspace:^",
     "reactive-effects": "workspace:^",
     "shared": "workspace:^",
+    "typedoc": "^0.28.20",
+    "typedoc-github-theme": "^0.4.0",
     "uid": "catalog:",
     "unplugin-vue-markdown": "^29.2.0",
     "vitest": "^4.0.18",
@@ -151,7 +154,11 @@
       "markdownlint --fix",
       "prettier --check --write"
     ],
-    "**/*.{css,scss}": "stylelint --fix",
+    "**/*.(html|njk)": [
+      "eslint --quiet --fix",
+      "prettier --check --write"
+    ],
+    "**/*.(css|scss)": "stylelint --fix",
     "**/*.(yaml|yml|json)": "prettier --check --write"
   },
   "browserslist": [

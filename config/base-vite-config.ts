@@ -14,6 +14,7 @@ import remoteAssets from 'vite-plugin-remote-assets'
 import { autoImportOptions } from '../scripts/auto-import-options.js'
 import { cssModuleHmr } from '../scripts/css-module-hmr.ts'
 import { globImportFrag } from '../scripts/glob-import-frag.js'
+import { ROOT } from '../scripts/utils.js'
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -52,14 +53,24 @@ export const extendViteConfig = (config: UserConfig): UserConfig => {
         content: {
           pipeline: {
             include: [/\.(?:vue|svelte|[jt]sx)(?:$|\?)/u],
-            exclude: resolve(import.meta.dirname, 'website/_site'),
+            exclude: resolve(ROOT, 'website/_site'),
           },
-          filesystem: [resolve(import.meta.dirname, 'website/**/*.{css,md,mdx,tsx,html,njk}')],
+          filesystem: [resolve(ROOT, 'website/**/*.{css,md,mdx,tsx,html,njk}')],
         },
         shortcuts: {
           'task-done': 'inline-block align-middle i-tabler-circle-check-filled text-#30a46c',
           'task-wip': 'inline-block align-middle i-tabler-progress-check text-#da8b17',
           'task-todo': 'inline-block align-middle i-tabler-circle-dashed opacity-50',
+        },
+        layers: {
+          components: -1,
+          default: 1,
+          typeography: 2,
+          utilities: 3,
+          typedoc: 4,
+        },
+        outputToCssLayers: {
+          allLayers: true,
         },
       }),
       globImportFrag(),
