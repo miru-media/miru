@@ -20,7 +20,7 @@ export const assertDecoderConfigIsSupported = async (
 
   const support = await (type === 'audio'
     ? AudioDecoder.isConfigSupported(config as AudioDecoderConfig)
-    : VideoDecoder.isConfigSupported(config as VideoDecoderConfig))
+    : VideoDecoder.isConfigSupported(config))
 
   if (!support.supported)
     throw new Error(`Decoding ${type} config "${config.codec}" is not supported by the user agent.`)

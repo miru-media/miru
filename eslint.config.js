@@ -26,7 +26,6 @@ export default tseslint.config(
     extends: [
       tseslint.configs.strictTypeChecked,
       tseslint.configs.stylisticTypeChecked,
-      // @ts-expect-error harmless(?) type version mismatch
       eslintConfigLove,
       jsdoc({
         config: 'flat/recommended-typescript',

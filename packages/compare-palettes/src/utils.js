@@ -6,7 +6,7 @@ import * as colorDiff from 'color-diff'
  *   ColorLab,
  *   ColorRGB,
  *   Palette
- * } from "."
+ * } from '.'
  */
 
 /**

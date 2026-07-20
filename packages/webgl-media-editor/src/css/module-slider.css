@@ -32,7 +32,7 @@
 
   datalist + div {
     position: absolute;
-    top: calc(50% - var(--height-slider) / 2 -2px);
+    top: calc(50% - var(--height-slider) / 2 - 2px);
     z-index: 1;
     display: block !important;
     grid-column: 3 / -3;

@@ -76,10 +76,10 @@ export const VideoTrimmerUI = (props: {
 
     const input = new Mb.Input({
       formats: Mb.ALL_FORMATS,
-      source: isStringSource
-        ? new Mb.UrlSource(source, { requestInit: { signal: abort.signal } })
-        : new Mb.BlobSource(source),
+      source: isStringSource ? new Mb.UrlSource(source) : new Mb.BlobSource(source),
     })
+
+    abort.signal.addEventListener('abort', input.dispose.bind(input))
 
     const video = await input.getPrimaryVideoTrack()
     const audio = await input.getPrimaryAudioTrack()

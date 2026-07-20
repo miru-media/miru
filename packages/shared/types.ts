@@ -2,12 +2,7 @@ import type { MaybeRefOrGetter } from 'fine-jsx'
 import type { AssetType, CropState } from 'webgl-effects'
 
 export type SyncImageSource =
-  | HTMLImageElement
-  | HTMLVideoElement
-  | HTMLCanvasElement
-  | OffscreenCanvas
-  | ImageData
-  | ImageBitmap
+  HTMLImageElement | HTMLVideoElement | HTMLCanvasElement | OffscreenCanvas | ImageData | ImageBitmap
 export type AsyncImageSource = Blob | string
 export type ImageSource = SyncImageSource | AsyncImageSource
 export type CrossOrigin = 'anonymous' | 'use-credentials' | null

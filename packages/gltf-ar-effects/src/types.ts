@@ -18,16 +18,7 @@ export interface InteractivityGraph {
 }
 
 export type InteractivityTypeSignature =
-  | 'bool'
-  | 'float'
-  | 'float2'
-  | 'float3'
-  | 'float4'
-  | 'float2x2'
-  | 'float3x3'
-  | 'float4x4'
-  | 'int'
-  | 'custom'
+  'bool' | 'float' | 'float2' | 'float3' | 'float4' | 'float2x2' | 'float3x3' | 'float4x4' | 'int' | 'custom'
 
 export interface InteractivityType {
   signature: InteractivityTypeSignature

@@ -218,29 +218,22 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
 
 abstract class EditTrackChild<T extends pub.AnyTrackChild> extends EditView<T> {
   /* eslint-disable @typescript-eslint/unbound-method -- Reflect.apply */
-  _timeRational = computed(
-    (): ClipTimeRational =>
-      Reflect.apply(
-        (this.original as unknown as TrackChild<T>)._computeTimeRational,
-        viewProxies.get(this),
-        [],
-      ),
+  _timeRational = computed((): ClipTimeRational =>
+    Reflect.apply(
+      (this.original as unknown as TrackChild<T>)._computeTimeRational,
+      viewProxies.get(this),
+      [],
+    ),
   )
   _time = computed((): ClipTime => TrackChild.clipTimeRationalToDecimal(this._timeRational.value))
 }
 
 export class EditClip<T extends AnyClip> extends EditTrackChild<T> {
-  _presentationTime = computed(
-    (): ClipTime =>
-      Reflect.apply(
-        (this.original as unknown as Clip<T>)._computePresentationTime,
-        viewProxies.get(this),
-        [],
-      ),
+  _presentationTime = computed((): ClipTime =>
+    Reflect.apply((this.original as unknown as Clip<T>)._computePresentationTime, viewProxies.get(this), []),
   )
-  _playableTime = computed(
-    (): ClipTime =>
-      Reflect.apply((this.original as unknown as Clip<T>)._computePlayableTime, viewProxies.get(this), []),
+  _playableTime = computed((): ClipTime =>
+    Reflect.apply((this.original as unknown as Clip<T>)._computePlayableTime, viewProxies.get(this), []),
   )
   /* eslint-enable @typescript-eslint/unbound-method */
 }

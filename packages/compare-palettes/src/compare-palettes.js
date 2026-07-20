@@ -8,7 +8,7 @@ import { computeDistanceMatrix, getColorDistanceToLineSegment, paletteToLab } fr
  *   ColorLab,
  *   DistanceMatrix,
  *   Palette
- * } from "."
+ * } from '.'
  */
 
 /**

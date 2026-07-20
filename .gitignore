@@ -11,7 +11,8 @@ node_modules
 dist
 website/content/api
 website/public/api
-website/.cache
+.cache
+.11ty-vite
 *.local
 
 /types

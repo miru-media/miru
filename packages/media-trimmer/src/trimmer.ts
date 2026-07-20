@@ -40,11 +40,9 @@ export class Trimmer {
 
     const input = new Mb.Input({
       formats: Mb.ALL_FORMATS,
-      source:
-        typeof source === 'string'
-          ? new Mb.UrlSource(source, { requestInit: { signal: abort.signal } })
-          : new Mb.BlobSource(source),
+      source: typeof source === 'string' ? new Mb.UrlSource(source) : new Mb.BlobSource(source),
     })
+    abort.signal.addEventListener('abort', input.dispose.bind(input))
     const output = new Mb.Output({
       format: new Mb.Mp4OutputFormat(),
       target: new Mb.BufferTarget(),

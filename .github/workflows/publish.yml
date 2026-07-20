@@ -1,14 +1,20 @@
-name: Build
+name: Publish
 
 on:
-  push:
-    branches: ['main']
-  pull_request:
-    branches: ['main']
+  workflow_run:
+    workflows: ['Build']
+    branches: [main]
+    types:
+      - completed
 
 jobs:
-  build:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     runs-on: ubuntu-latest
+    environment:
+      name: npm
+
     steps:
       - uses: actions/checkout@v4
       - name: Setup cache
@@ -27,8 +33,6 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - run: pnpm _check
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm libs:build
-      - run: pnpm website:build
+      - run: node ./scripts/release.js
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

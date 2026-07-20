@@ -121,7 +121,7 @@ async function updateVersions() {
 }
 
 async function build() {
-  await run('pnpm', ['run', 'build'])
+  await run('pnpm', ['run', 'libs:build'])
 }
 
 /** Commit and add new version tag */

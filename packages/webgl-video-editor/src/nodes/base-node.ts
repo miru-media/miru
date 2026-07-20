@@ -113,6 +113,7 @@ export abstract class BaseNode<
     this._fields().forEach((field) => {
       if (field.flags !== 0) return
       const { key } = field
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- tsc and eslint give different types
       this._defineReactive(key as any, (init as any)[key], field as any)
     })
 

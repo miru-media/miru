@@ -5,6 +5,5 @@
     "../packages/webgl-video-editor",
     "../packages/webgl-memdia-editor",
     "../packages/media-trimmer"
-  ],
-  "exclude": ["../packages/app-video-editor"]
+  ]
 }

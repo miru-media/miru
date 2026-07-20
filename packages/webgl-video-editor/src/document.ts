@@ -156,8 +156,8 @@ export class Document implements pub.Document {
     options_?: AddEventListenerOptions,
   ): () => void {
     const options = { signal: this.#disposeAbort.signal, ...options_ }
-    this.#eventTarget.addEventListener(type, listener as any, options)
-    const remove = () => this.#eventTarget.removeEventListener(type, listener as any, options)
+    this.#eventTarget.addEventListener(type, listener, options)
+    const remove = () => this.#eventTarget.removeEventListener(type, listener, options)
     return remove
   }
 

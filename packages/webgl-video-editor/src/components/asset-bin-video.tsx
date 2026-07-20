@@ -43,7 +43,7 @@ export const AssetBinVideo = () => {
   })
 
   const onInputVideoFile = async (event: InputEvent) => {
-    const file = (event.target as HTMLInputElement).files?.[0]
+    const file = event.target.files?.[0]
     if (!file) return
 
     try {
@@ -55,7 +55,7 @@ export const AssetBinVideo = () => {
   }
 
   const onSearchInput = (event: InputEvent) => {
-    assetSearchQuery.value = (event.target as HTMLInputElement).value
+    assetSearchQuery.value = event.target.value
   }
 
   return (

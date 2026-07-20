@@ -315,7 +315,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
 
     this.#add([
       { type: 'node:move', nodeId, from: parent && { parentId: parent.id, index: node.index } },
-      { type: 'node:delete', nodeId, from: node.toJSON() as Schema.AnyNode },
+      { type: 'node:delete', nodeId, from: node.toJSON() },
     ])
   }
 

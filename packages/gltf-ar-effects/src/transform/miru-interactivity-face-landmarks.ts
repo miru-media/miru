@@ -19,8 +19,7 @@ export class InteractivityFaceLandmarks extends gltf.Extension {
     context.jsonDoc.json.meshes?.forEach((meshDef, meshIndex) => {
       meshDef.primitives.forEach((primitivDef, primitiveIndex) => {
         const faceLandmarksDetection = primitivDef.extensions?.[MIRU_INTERACTIVITY_FACE_LANDMARKS] as
-          | FaceLandmarksGeometryProps
-          | undefined
+          FaceLandmarksGeometryProps | undefined
         if (!faceLandmarksDetection) return
 
         const primitive = context.meshes[meshIndex].listPrimitives()[primitiveIndex]

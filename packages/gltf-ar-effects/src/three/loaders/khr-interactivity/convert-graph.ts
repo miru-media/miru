@@ -42,31 +42,25 @@ export const convertGraph = (graphJson: InteractivityGraph): Behave.GraphJSON =>
     return { value: value as Behave.ValueJSON }
   }
 
-  const variables = graphJson.variables?.map(
-    (variable, i): Behave.VariableJSON => ({
-      id: i.toString(10),
-      name: variable.name ?? '',
-      valueTypeName: types[variable.type].signature,
-      initialValue: getValue(variable, types),
-      metadata: variable.extras as BehaveMetadata,
-    }),
-  )
+  const variables = graphJson.variables?.map((variable, i): Behave.VariableJSON => ({
+    id: i.toString(10),
+    name: variable.name ?? '',
+    valueTypeName: types[variable.type].signature,
+    initialValue: getValue(variable, types),
+    metadata: variable.extras as BehaveMetadata,
+  }))
 
-  const customEvents = graphJson.events?.map(
-    (event, index): Behave.CustomEventJSON => ({
-      label: undefined,
-      id: event.id ?? index.toString(10),
-      name: event.name ?? '',
-      parameters: Object.entries(event.values ?? {}).map(
-        ([id, value]): Behave.CustomEventParameterJSON => ({
-          name: `value:${id}`,
-          valueTypeName: types[value.type].signature,
-          defaultValue: getValue(value, types),
-        }),
-      ),
-      metadata: event.extras as BehaveMetadata,
-    }),
-  )
+  const customEvents = graphJson.events?.map((event, index): Behave.CustomEventJSON => ({
+    label: undefined,
+    id: event.id ?? index.toString(10),
+    name: event.name ?? '',
+    parameters: Object.entries(event.values ?? {}).map(([id, value]): Behave.CustomEventParameterJSON => ({
+      name: `value:${id}`,
+      valueTypeName: types[value.type].signature,
+      defaultValue: getValue(value, types),
+    })),
+    metadata: event.extras as BehaveMetadata,
+  }))
 
   const nodes = graphJson.nodes?.map((node, index) => {
     const declaration = graphJson.declarations![node.declaration]
