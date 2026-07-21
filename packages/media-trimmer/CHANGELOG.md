@@ -1,3 +1,17 @@
+# [0.3.0](https://gitea.com/miru/miru/compare/media-trimmer@0.2.0...media-trimmer@0.3.0) (2026-07-21)
+
+
+### Bug Fixes
+
+* avoid shadow DOM in video editor UI ([44b0b8b](https://gitea.com/miru/miru/commits/44b0b8bf70674ff75da36332d5ef7f66f93dd239))
+* improve video editor and trimmer accessibility ([e631c38](https://gitea.com/miru/miru/commits/e631c38d15292c009989f906ac2e1f5b9d39b277))
+* **media-trimmer:** improve keyboard accessibility ([45bf30e](https://gitea.com/miru/miru/commits/45bf30e8470758ba3d4f0341dc9dea2a53370652))
+* **webgl-video-editor:** misc ui and rendering improvements ([ab8c4f5](https://gitea.com/miru/miru/commits/ab8c4f5c4aee1806d079d9fbc00c9faf0340ac7b))
+
+
+### Features
+
+* update website ([6d7a7b3](https://gitea.com/miru/miru/commits/6d7a7b383d2d8a468ced7fbd4378450a46e647f8))
 # [0.2.0](https://gitea.com/miru/miru/compare/media-trimmer@0.1.1...media-trimmer@0.2.0) (2025-06-08)
 
 

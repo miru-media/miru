@@ -1,3 +1,15 @@
+# [0.3.0](https://gitea.com/miru/miru/compare/webgl-effects@0.2.0...webgl-effects@0.3.0) (2026-07-21)
+
+
+### Bug Fixes
+
+* **webgl-video-editor:** fix filter menu ([1fc9e75](https://gitea.com/miru/miru/commits/1fc9e75d7bd18323e56dd931ab02cbfa76468e64))
+* **webgl-video-editor:** misc ui and rendering improvements ([ab8c4f5](https://gitea.com/miru/miru/commits/ab8c4f5c4aee1806d079d9fbc00c9faf0340ac7b))
+
+
+### Features
+
+* **webgl-video-editor:** improve yjs and asset handling ([6918928](https://gitea.com/miru/miru/commits/691892814d9d73ace0132d26f8678b7a4498c035))
 # [0.2.0](https://gitea.com/miru/miru/compare/webgl-effects@0.0.3...webgl-effects@0.2.0) (2025-06-08)
 
 

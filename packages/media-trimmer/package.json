@@ -1,7 +1,7 @@
 {
   "name": "media-trimmer",
   "description": "A simple WebM and MP4 video trimmer using the WebCodecs API",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "module": "dist/media-trimmer.js",
   "main": "dist/media-trimmer.js",
