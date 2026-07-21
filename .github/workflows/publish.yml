@@ -16,7 +16,7 @@ jobs:
       name: npm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup cache
         uses: actions/cache@v4
         with:
@@ -31,6 +31,7 @@ jobs:
         with:
           node-version: 24.x
           cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
       - name: Install dependencies
         run: pnpm install
       - run: pnpm stage publish --recursive
