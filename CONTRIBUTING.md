@@ -38,6 +38,19 @@ pnpm run libs:build
 pnpm run website:build
 ```
 
+## Troubleshooting
+
+### Issues with dynamically linked executables
+
+> Khronos spirv-opt: Optimize spirv failed, exit status: 127
+> Could not start dynamically linked executable: /.../node_modules/rollup-plugin-glsl-optimize/bin/ubuntu64/spirv-opt
+
+Install `spirv-tools` with your system's package manager and set the environment variable `GLSLANG_OPTIMIZER` to point to the `spirv-opt` binary. For example:
+
+```sh
+export GLSLANG_OPTIMIZER=`which spirv-opt`
+```
+
 ## Project structure
 
 We use a monorepo structure with public internal packages in the `packages/` directory, and the source code of the project website in the `website/` directory. For development and building, there are also some scripts in the `scripts/` directory.
@@ -58,7 +71,7 @@ website/
 scripts/
     auto-import-options.js
     glob-import-frag.js
-    release.js
+    bump.ts
     ...
 ```
 

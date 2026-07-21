@@ -1,10 +1,9 @@
 import { resolve } from 'node:path'
 
-import { includeIgnoreFile } from '@eslint/compat'
 import eslint from '@eslint/js'
 import markdown from '@eslint/markdown'
 import vitest from '@vitest/eslint-plugin'
-import { globalIgnores } from 'eslint/config'
+import { defineConfig, globalIgnores, includeIgnoreFile } from 'eslint/config'
 import eslintConfigLove from 'eslint-config-love'
 import importPlugin from 'eslint-plugin-import'
 import { jsdoc } from 'eslint-plugin-jsdoc'
@@ -13,7 +12,7 @@ import * as tseslint from 'typescript-eslint'
 
 const TS_JS_FILES = '**/*.{ts,tsx,js,jsx,cjs,mts,mjs}'
 
-export default tseslint.config(
+export default defineConfig(
   includeIgnoreFile(resolve('.gitignore')),
   globalIgnores(['**/auto-imports.d.ts', 'packages/nextgraph-video-editor/src/shapes/orm']),
   {
@@ -26,7 +25,7 @@ export default tseslint.config(
     extends: [
       tseslint.configs.strictTypeChecked,
       tseslint.configs.stylisticTypeChecked,
-      eslintConfigLove,
+      /** @type {any} */ (eslintConfigLove),
       jsdoc({
         config: 'flat/recommended-typescript',
         settings: {
@@ -150,6 +149,7 @@ export default tseslint.config(
     ignores: ['**/*.md/*'],
     rules: {
       'jsdoc/check-tag-names': ['error', { typed: false }],
+      'jsdoc/no-types': 'off',
     },
   },
   {

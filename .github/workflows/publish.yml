@@ -33,6 +33,6 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - run: node ./scripts/release.js
+      - run: pnpm stage publish --recursive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

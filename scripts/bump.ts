@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc, @typescript-eslint/explicit-function-return-type -- internal */
 import fs from 'node:fs'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
@@ -14,7 +15,7 @@ const { values: cliArgs } = parseArgs({
   options: {
     // the versions of these packages will be bumped, but `pnpm publish --recursive` will try to publish
     // all packages that have a version that isn't in the registry, not just the packages to be bumped now.
-    bumpPackages: { type: 'string', multiple: true, default: allPublicPackageDirs },
+    packages: { type: 'string', multiple: true, default: allPublicPackageDirs },
     tag: { type: 'string' },
     registry: { type: 'string' },
     skipGit: { type: 'boolean' },
@@ -24,12 +25,11 @@ const { values: cliArgs } = parseArgs({
   strict: true,
 })
 
-const bumpPackages = cliArgs.bumpPackages
+const bumpPackages = cliArgs.packages
   .map((name) => resolve(ROOT, 'packages', name))
   .filter((dir) => allPublicPackageDirs.includes(dir))
 
-/** @type {string[]} */
-const newTags = []
+const newTags: string[] = []
 
 try {
   await main()
@@ -43,7 +43,7 @@ async function main() {
   await updateVersions()
   await build()
   await commit()
-  await pushAndPublish()
+  await push()
 }
 
 /** Make sure the repo is clean */
@@ -60,20 +60,16 @@ async function indexIsDirty() {
   }
 }
 
-/**
- * @param {string} oldVersion
- * @param {string} bump
- */
-function getTargetVersion(oldVersion, bump) {
-  if (!oldVersion || !bump)
+function getTargetVersion(oldVersion: string | semver.SemVer, bump: string | semver.SemVer = '') {
+  if (oldVersion === '' || bump === '')
     throw new Error(`Missing target version ${JSON.stringify({ prev: oldVersion, newVersion: bump })}`)
 
-  if (bump === 'patch' || bump === 'minor' || bump === 'major')
-    return /** @type {string} */ (semver.inc(oldVersion, bump))
+  const version =
+    bump === 'patch' || bump === 'minor' || bump === 'major' ? semver.inc(oldVersion, bump) : bump
 
-  if (semver.valid(bump)) return bump
+  if (semver.valid(version)) return version
 
-  throw new Error(`Invalid version "${bump}"`)
+  throw new Error(`Invalid version ${JSON.stringify(bump)}`)
 }
 
 async function updateVersions() {
@@ -98,10 +94,11 @@ async function updateVersions() {
       const targetVersion = getTargetVersion(pkg.version, releaseType)
       pkg.version = targetVersion
       await writePackageJson(packageDir, pkg)
-      newTags.push(`${tagPrefix}${targetVersion}`)
+      newTags.push(`${tagPrefix}${targetVersion?.toString() ?? ''}`)
 
       if (!cliArgs.skipChangelog)
-        await run('conventional-changelog', [
+        await run('pnpm', [
+          'conventional-changelog',
           '--preset',
           'angular',
           '--infile',
@@ -130,50 +127,30 @@ async function commit() {
 
   if (await indexIsDirty()) {
     await runUnlessDry('git', ['add', '--all'])
-    await runUnlessDry('git', ['commit', '--no-verify', '--message', `release: ${newTags.join(' ')}`])
+    await runUnlessDry('git', ['commit', '--no-verify', '--message', `bump: ${newTags.join(' ')}`])
   }
 }
 
-async function pushAndPublish() {
-  if (!cliArgs.skipGit) {
-    await Promise.all(
-      newTags.map((tag) => runUnlessDry('git', ['push', '--no-verify', 'origin', `HEAD:refs/tags/${tag}`])),
-    )
-    await runUnlessDry('git', ['push', '--no-verify'])
-  }
+async function push() {
+  if (cliArgs.skipGit) return
 
-  await run('pnpm', [
-    'stage',
-    'publish',
-    '--recursive',
-    ...(cliArgs.tag ? ['--tag', cliArgs.tag] : []),
-    ...(cliArgs.registry ? ['--registry', cliArgs.registry] : []),
-    ...(cliArgs.skipGit === true || cliArgs.dryRun ? ['--no-git-checks'] : []),
-    ...(cliArgs.dryRun ? ['--dry-run'] : []),
-  ])
+  await Promise.all(
+    newTags.map((tag) => runUnlessDry('git', ['push', '--no-verify', 'origin', `HEAD:refs/tags/${tag}`])),
+  )
+  await runUnlessDry('git', ['push', '--no-verify'])
 }
 
-/**
- * @param {string} packageDir
- * @returns {Promise<Record<string, any>>}
- */
-async function getPackageJson(packageDir) {
+async function getPackageJson(packageDir: string) {
   const filePath = resolve(packageDir, 'package.json')
   return JSON.parse((await fs.promises.readFile(filePath)).toString())
 }
 
-/**
- * @param {string} packageDir
- * @param {Record<string, any>} pkg
- * @returns {Promise<void>}
- */
-async function writePackageJson(packageDir, pkg) {
+async function writePackageJson(packageDir: string, pkg: any) {
   const filePath = resolve(packageDir, 'package.json')
   await fs.promises.writeFile(filePath, `${JSON.stringify(pkg, null, 2)}\n`)
 }
 
-/** @type {typeof run} */
-async function runUnlessDry(file, args) {
-  if (cliArgs.dryRun) console.info('[would run]', file, ...(args ?? []))
+async function runUnlessDry(file: string, args: readonly string[] | undefined) {
+  if (cliArgs.dryRun) console.info(pico.bgYellow('[would run]'), file, ...(args?.map(s => /\s/u.test(s) ? JSON.stringify(s): s) ?? []))
   else await run(file, args)
 }
