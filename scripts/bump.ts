@@ -151,6 +151,11 @@ async function writePackageJson(packageDir: string, pkg: any) {
 }
 
 async function runUnlessDry(file: string, args: readonly string[] | undefined) {
-  if (cliArgs.dryRun) console.info(pico.bgYellow('[would run]'), file, ...(args?.map(s => /\s/u.test(s) ? JSON.stringify(s): s) ?? []))
+  if (cliArgs.dryRun)
+    console.info(
+      pico.bgYellow('[would run]'),
+      file,
+      ...(args?.map((s) => (/\s/u.test(s) ? JSON.stringify(s) : s)) ?? []),
+    )
   else await run(file, args)
 }

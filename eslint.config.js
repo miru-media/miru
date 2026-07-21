@@ -11,6 +11,7 @@ import globals from 'globals'
 import * as tseslint from 'typescript-eslint'
 
 const TS_JS_FILES = '**/*.{ts,tsx,js,jsx,cjs,mts,mjs}'
+const LANG_OPTS_JS_GLOBALS = { globals: { ...globals.browser, ...globals.node } }
 
 export default defineConfig(
   includeIgnoreFile(resolve('.gitignore')),
@@ -147,6 +148,7 @@ export default defineConfig(
   {
     files: ['**/*.?(c|m)js?(x)'],
     ignores: ['**/*.md/*'],
+    languageOptions: LANG_OPTS_JS_GLOBALS,
     rules: {
       'jsdoc/check-tag-names': ['error', { typed: false }],
       'jsdoc/no-types': 'off',
@@ -183,18 +185,10 @@ export default defineConfig(
     ignores: ['**/CHANGELOG.md'],
     extends: [markdown.configs.processor],
     language: 'markdown/gfm',
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-      },
-    },
+    languageOptions: LANG_OPTS_JS_GLOBALS,
   },
   {
     files: [`**/*.md/${TS_JS_FILES}`],
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-      },
-    },
+    languageOptions: LANG_OPTS_JS_GLOBALS,
   },
 )
