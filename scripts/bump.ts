@@ -41,7 +41,6 @@ try {
 async function main() {
   await ensureCleanIndex()
   await updateVersions()
-  await build()
   await commit()
   await push()
 }
@@ -115,10 +114,6 @@ async function updateVersions() {
   )
 
   if (!newTags.length) console.warn(pico.bgYellow('No packages were bumped.'))
-}
-
-async function build() {
-  await run('pnpm', ['run', 'libs:build'])
 }
 
 /** Commit and add new version tag */
