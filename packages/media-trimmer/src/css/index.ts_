@@ -1,0 +1,14 @@
+import { type CssModuleHmrData, getCssModuleHmrProxy } from 'shared/css/hmr'
+
+import styles_ from './media-trimmer.module.css'
+
+export const styles = import.meta.hot ? getCssModuleHmrProxy(import.meta.hot, styles_) : styles_
+
+if (import.meta.hot) {
+  import.meta.hot.accept('./media-trimmer.module.css', (mod) => {
+    if (mod) {
+      Object.assign(styles, mod.default)
+      ;(import.meta.hot!.data as CssModuleHmrData).ref.value = mod.default
+    }
+  })
+}
