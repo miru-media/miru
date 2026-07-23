@@ -26,6 +26,10 @@
       }
     }
   },
+  "sideEffects": [
+    "dist/webgl-media-editor.js",
+    "src/index.ts"
+  ],
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
   "homepage": "https://miru.media",

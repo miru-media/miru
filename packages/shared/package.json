@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "sideEffects": false,
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
   "dependencies": {

@@ -22,6 +22,7 @@
       "import": "./src/transform/effect-creation-utils.ts"
     }
   },
+  "sideEffects": false,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -9,6 +9,7 @@
       "import": "./src/index.js"
     }
   },
+  "sideEffects": false,
   "keywords": [],
   "author": "",
   "license": "MIT",
