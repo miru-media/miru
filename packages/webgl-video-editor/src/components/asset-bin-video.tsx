@@ -9,6 +9,7 @@ import styles from '../css/index.module.css'
 
 import { AssetBinVideoPreview } from './asset-bin-video-preview'
 import { useEditor } from './utils.ts'
+import { AssetBinScreenRecordButton } from './asset-bin-screen-record-button.tsx'
 
 export const AssetBinVideo = () => {
   const editor = useEditor()
@@ -60,6 +61,8 @@ export const AssetBinVideo = () => {
 
   return (
     <div class={styles.panelBody}>
+        <AssetBinScreenRecordButton onRecorded={(asset) => (activeVideo.value = asset)} />
+
       <label class={[styles.wideButton, styles.textBodyBold]}>
         <input
           type="file"
