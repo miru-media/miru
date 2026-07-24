@@ -30,14 +30,21 @@ It also comes with a Web Component UI:
 
 ```html
 <!-- after importing the library, the <media-trimmer> custom element will be defined -->
-<media-trimmer id="trimmer" source="video.webm"></media-trimmer>
+<media-trimmer id="trimmer"></media-trimmer>
 <button id="export" type="buton">Get trimmed video</button>
-<progress id="export-progress" max="1" />
+<input id="input" type="file" accept="video/*" />
+<progress id="export-progress" max="1"></progress>
 
 <script type="module">
   const trimmer = document.getElementById('trimmer')
+  const input = document.getElementById('input')
   const button = document.getElementById('export')
   const progress = document.getElementById('export-progress')
+
+  // use the file that the user picks
+  input.addEventListener('input', (event) => {
+    trimmer.source = event.target.files[0]
+  })
 
   // save the trimmed video to a file
   button.addEventListener('click', async () => {
@@ -54,7 +61,7 @@ It also comes with a Web Component UI:
   })
 
   // display the trimming progress
-  trimmer.addEventListener('progress', (event) => (progress.value = event.detail.progress))
+  trimmer.addEventListener('progress', (event) => (progress.value = event.target.progress))
 </script>
 ```
 

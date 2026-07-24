@@ -58,13 +58,7 @@ const packageOptions = (async () => {
         otio: 'src/otio/index.ts',
       },
       copy: (options) => ({
-        targets: [
-          {
-            src: path.resolve(options.root, 'src/locales/*.json'),
-            dest: path.resolve(options.dist, 'locales'),
-          },
-          { src: path.resolve(options.root, 'src/types/*'), dest: options.dist },
-        ],
+        targets: [{ src: path.resolve(options.root, 'src/types/*'), dest: options.dist }],
       }),
     },
   ]

@@ -2,9 +2,9 @@
 import { useEventListener } from '@vueuse/core'
 import { ref } from 'vue'
 
+import de from 'shared/locales/de.json'
+import en from 'shared/locales/en.json'
 import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from 'webgl-video-editor'
-import de from 'webgl-video-editor/locales/de.json'
-import en from 'webgl-video-editor/locales/en.json'
 import VideoEditorUI, { EDITOR_SELECTION_ACTIONS_BY_ID } from 'webgl-video-editor/vue'
 import Header from './video-editor-header.vue'
 import { isElement } from 'shared/utils'

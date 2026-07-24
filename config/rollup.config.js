@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 
 import alias from '@rollup/plugin-alias'
 import commonjs from '@rollup/plugin-commonjs'
+import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import terser from '@rollup/plugin-terser'
@@ -76,7 +77,9 @@ export default (await packageOptions).map((options) => {
     alwaysBundle = [],
     external = (id) => {
       if (
-        [...alwaysBundle, ...PATCHED_DEPS].some((dep) => id === dep || id.includes(`/node_modules/${dep}/`))
+        [...alwaysBundle, ...PATCHED_DEPS, 'style-inject'].some(
+          (dep) => id === dep || id.includes(`/node_modules/${dep}/`),
+        )
       )
         return false
 
@@ -95,6 +98,7 @@ export default (await packageOptions).map((options) => {
     plugins: [
       clearDist && del({ targets: resolve(dist, '*'), runOnce: true }),
       nodeResolve({ extensions: ['.mjs', '.js', '.json', '.node', '.ts', '.tsx'] }),
+      json(),
       globImportFrag(),
       commonjs(),
       alias(aliases),

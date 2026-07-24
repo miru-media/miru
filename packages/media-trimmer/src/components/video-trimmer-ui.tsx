@@ -1,12 +1,12 @@
 import { effect, h, type MaybeRefOrGetter, ref, toRef, toValue } from 'fine-jsx'
 import * as Mb from 'mediabunny'
 
+import de from 'shared/locales/de.json'
+import en from 'shared/locales/en.json'
 import { provideI18n, useEventListener } from 'shared/utils'
 import { clamp } from 'shared/utils/math.ts'
 import { useCursor } from 'shared/video/use-cursor.ts'
 import { useScrubber } from 'shared/video/use-scrubber.ts'
-import de from 'webgl-video-editor/locales/de.json'
-import en from 'webgl-video-editor/locales/en.json'
 
 import styles from '../media-trimmer.module.css'
 import { TrimmerUiContext } from '../trimmer-ui-context.ts'

@@ -1,9 +1,9 @@
 import type { App } from 'vue'
 import { createI18n, useI18n } from 'vue-i18n-lite'
 
+import de_ from 'shared/locales/de.json'
+import en_ from 'shared/locales/en.json'
 import { win } from 'shared/utils'
-import de_ from 'webgl-video-editor/locales/de.json'
-import en_ from 'webgl-video-editor/locales/en.json'
 
 export const setupApp = {
   install(app: App): void {
