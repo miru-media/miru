@@ -1,3 +1,10 @@
+## [0.3.2](https://gitea.com/miru/miru/compare/media-trimmer@0.3.1...media-trimmer@0.3.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* bundle style-inject dep ([ae28ec5](https://gitea.com/miru/miru/commits/ae28ec54d960ab427949082a043a9629216e851d))
+* set package `sideEffects` fields ([b533806](https://gitea.com/miru/miru/commits/b5338069a47749798e80171ac3385b3c12599e9e))
 ## [0.3.1](https://gitea.com/miru/miru/compare/media-trimmer@0.3.0...media-trimmer@0.3.1) (2026-07-23)
 # [0.3.0](https://gitea.com/miru/miru/compare/media-trimmer@0.2.0...media-trimmer@0.3.0) (2026-07-21)
 

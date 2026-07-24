@@ -1,3 +1,9 @@
+## [0.3.2](https://gitea.com/miru/miru/compare/webgl-media-editor@0.3.1...webgl-media-editor@0.3.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* set package `sideEffects` fields ([b533806](https://gitea.com/miru/miru/commits/b5338069a47749798e80171ac3385b3c12599e9e))
 ## [0.3.1](https://gitea.com/miru/miru/compare/webgl-media-editor@0.3.0...webgl-media-editor@0.3.1) (2026-07-23)
 # [0.3.0](https://gitea.com/miru/miru/compare/webgl-media-editor@0.2.0...webgl-media-editor@0.3.0) (2026-07-21)
 

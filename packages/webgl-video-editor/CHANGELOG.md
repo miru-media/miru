@@ -1,3 +1,9 @@
+## [0.2.2](https://gitea.com/miru/miru/compare/webgl-video-editor@0.2.1...webgl-video-editor@0.2.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* bundle style-inject dep ([ae28ec5](https://gitea.com/miru/miru/commits/ae28ec54d960ab427949082a043a9629216e851d))
 ## [0.2.1](https://gitea.com/miru/miru/compare/webgl-video-editor@0.2.0...webgl-video-editor@0.2.1) (2026-07-23)
 # [0.2.0](https://gitea.com/miru/miru/compare/webgl-video-editor@0.1.0...webgl-video-editor@0.2.0) (2026-07-21)
 
