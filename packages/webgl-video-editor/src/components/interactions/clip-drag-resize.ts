@@ -56,12 +56,13 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
 
     clip.duration = newDuration
 
-    if (edges?.right === true) ensureDurationIsPlayable(clip)
-
     if (GAPPED) {
       if (edges?.left === true) clip.gap = clip.gap.subtract(delta)
       else if (next) next.gap = next.gap.subtract(delta)
-    } else if (prev) prev.duration = newStart.subtract(Rational.fromDecimal(prev.time.start, frameRate))
+    } else {
+      if (edges?.right === true) ensureDurationIsPlayable(clip)
+      if (prev) prev.duration = newStart.subtract(Rational.fromDecimal(prev.time.start, frameRate))
+    }
   }
 
   const onResizeEnd = (): void => {

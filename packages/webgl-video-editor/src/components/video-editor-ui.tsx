@@ -1,6 +1,5 @@
 /* eslint-disable no-alert -- TODO */
-import type { Ref } from 'fine-jsx'
-import { h } from 'fine-jsx/jsx-runtime'
+import { h, type Ref } from 'fine-jsx'
 
 import { Drawer } from '#atoms'
 import type { VideoEditor } from '#core'
@@ -19,7 +18,7 @@ import { DesktopControls } from './desktop-controls.jsx'
 import { MobileControls } from './mobile-controls.jsx'
 import { MobileToolbar } from './mobile-toolbar.jsx'
 import { PanelToolbar } from './panel-toolbar.jsx'
-import { DesktopPlaybackControls } from './playback-controls-overlay.jsx'
+import { PlaybackControlsOverlay } from './playback-controls-overlay.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
 import { provideEditor } from './utils.ts'
@@ -103,7 +102,7 @@ export const VideoEditorUI = (props: {
           <TransformControls />
           <LoadingOverlay loading={() => !playback.isReady} />
         </div>
-        {() => !editor.isMobileWorkspace && <DesktopPlaybackControls />}
+        {() => !editor.isMobileWorkspace && <PlaybackControlsOverlay />}
         {() => editor.isMobileWorkspace && <MobileControls />}
       </div>
 

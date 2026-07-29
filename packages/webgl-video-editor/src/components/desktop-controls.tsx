@@ -62,7 +62,7 @@ export const DesktopControls = () => {
 
       <div>
         <button
-          label={t('zoom_out')}
+          aria-label={t('zoom_out')}
           class={styles.desktopControlsButton}
           onClick={() => editor.timelineZoom.dec()}
         >
@@ -79,7 +79,7 @@ export const DesktopControls = () => {
           onInput={(event: InputEvent) => (editor.timelineZoom.zeroToOne = event.target.valueAsNumber)}
         />
         <button
-          label={t('zoom_in')}
+          aria-label={t('zoom_in')}
           class={styles.desktopControlsButton}
           onClick={() => editor.timelineZoom.inc()}
         >
@@ -87,7 +87,7 @@ export const DesktopControls = () => {
         </button>
         {SUPPORTS_FULLSCREEN ? (
           <button
-            label={t('fullscreen')}
+            aria-label={t('fullscreen')}
             class={styles.desktopControlsButton}
             onClick={() => editor._fullscreen.toggle()}
           >

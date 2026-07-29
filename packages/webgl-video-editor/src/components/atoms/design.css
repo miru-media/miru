@@ -216,7 +216,6 @@
   position: relative;
   gap: 1rem;
   align-items: center;
-  max-height: 80%;
   padding-bottom: 0.5rem;
 
   border-bottom: solid gray 1px;
@@ -288,10 +287,12 @@
   --workspace-viewport-spacing-left: var(--panel-width);
   --workspace-viewport-spacing-right: calc(var(--workspace-properties-width) + var(--workspace-gap));
 
+  position: relative;
   display: flex;
   flex-grow: 1;
   flex-direction: column;
   grid-area: viewport;
+  place-items: center;
   width: calc(100% - var(--workspace-viewport-spacing-right) - var(--workspace-viewport-spacing-left));
   height: 100%;
   margin-left: var(--workspace-viewport-spacing-left);
@@ -537,7 +538,7 @@
   border-radius: 999px;
   opacity: 0;
 
-  .viewport:hover &,
+  .workspaceViewportContainer:hover &,
   &:has(:focus-visible) {
     opacity: 1;
   }
@@ -564,6 +565,7 @@
 
 .mobileToolbar {
   display: flex;
+  flex-shrink: 0;
   grid-area: toolbar;
   gap: 0.5rem;
   align-items: flex-start;

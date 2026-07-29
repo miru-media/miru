@@ -18,59 +18,27 @@
     "#internal": "./types/internal.d.ts"
   },
   "exports": {
-    ".": {
-      "import": "./src/index.ts"
-    },
-    "./elements": {
-      "import": "./src/elements/index.ts"
-    },
-    "./vue": {
-      "import": "./src/vue/index.ts"
-    },
-    "./locales/": {
-      "import": "./src/locales/"
-    },
-    "./sync": {
-      "import": "./src/sync/index.ts"
-    },
-    "./yjs": {
-      "import": "./src/yjs/index.ts"
-    },
-    "./yjs/utils": {
-      "import": "./src/yjs/utils.ts"
-    },
-    "./otio": {
-      "import": "./src/otio/index.ts"
-    }
+    ".": "./src/index.ts",
+    "./elements": "./src/elements/index.ts",
+    "./vue": "./src/vue/index.ts",
+    "./locales/": "./src/locales/",
+    "./sync": "./src/sync/index.ts",
+    "./yjs": "./src/yjs/index.ts",
+    "./yjs/utils": "./src/yjs/utils.ts",
+    "./otio": "./src/otio/index.ts"
   },
   "publishConfig": {
     "module": "dist/webgl-video-editor.js",
     "main": "dist/webgl-video-editor.js",
     "exports": {
-      ".": {
-        "import": "./dist/webgl-video-editor.js"
-      },
-      "./elements": {
-        "import": "./dist/elements.js"
-      },
-      "./vue": {
-        "import": "./dist/vue.js"
-      },
-      "./locales/*": {
-        "import": "./dist/locales/"
-      },
-      "./sync": {
-        "import": "./dist/sync.js"
-      },
-      "./yjs": {
-        "import": "./dist/yjs.js"
-      },
-      "./yjs/utils": {
-        "import": "./dist/yjs/utils.ts"
-      },
-      "./otio": {
-        "import": "./dist/otio.js"
-      }
+      ".": "./dist/webgl-video-editor.js",
+      "./elements": "./dist/elements.js",
+      "./vue": "./dist/vue.js",
+      "./locales/*": "./dist/locales/",
+      "./sync": "./dist/sync.js",
+      "./yjs": "./dist/yjs.js",
+      "./yjs/utils": "./dist/yjs/utils.ts",
+      "./otio": "./dist/otio.js"
     }
   },
   "sideEffects": [

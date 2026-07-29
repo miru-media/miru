@@ -6,7 +6,7 @@ import styles from '../css/index.module.css'
 
 import { useEditor } from './utils.ts'
 
-export const DesktopPlaybackControls = () => {
+export const PlaybackControlsOverlay = () => {
   const editor = useEditor()
   const { t } = useI18n()
   const playOrPause = () => (editor.playback.isPaused ? t('play') : t('pause'))

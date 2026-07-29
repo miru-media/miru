@@ -45,7 +45,7 @@ export const Drawer = (props: {
             <div class={styles.drawerHeader}>
               <button
                 type="button"
-                label={t('close')}
+                aria-label={t('close')}
                 class={styles.drawerButton}
                 command="close"
                 commandfor={props.id}
@@ -59,7 +59,7 @@ export const Drawer = (props: {
               {props.onConfirm && (
                 <button
                   type="button"
-                  label={t('dialog_confirm')}
+                  aria-label={t('dialog_confirm')}
                   class={styles.drawerButton}
                   onClick={onClickConfirm}
                 >

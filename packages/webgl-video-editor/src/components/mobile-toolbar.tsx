@@ -16,7 +16,11 @@ export const MobileToolbar = ({ onClickHelp }: { onClickHelp?: () => unknown }) 
       {() =>
         editor.selection ? (
           <>
-            <button class={styles.mobileToolbarBackButton} onClick={editor.select.bind(editor, undefined)}>
+            <button
+              aria-label={t('back')}
+              class={styles.mobileToolbarBackButton}
+              onClick={editor.select.bind(editor, undefined)}
+            >
               <IconMsArrowBackRounded />
             </button>
 

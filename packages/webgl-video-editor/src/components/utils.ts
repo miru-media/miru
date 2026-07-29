@@ -1,5 +1,4 @@
-import { computed } from 'fine-jsx'
-import { inject, provide } from 'fine-jsx/jsx-runtime'
+import { computed, inject, provide } from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { AnyClip } from '#core'

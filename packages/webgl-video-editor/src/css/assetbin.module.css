@@ -64,6 +64,10 @@
   background-color: var(--gray);
   border: none;
   border-radius: 0.75rem;
+
+  video {
+    max-height: 50vh;
+  }
 }
 
 .dialogueButtonContainer {

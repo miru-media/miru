@@ -66,6 +66,11 @@ declare module '*.vue' {
   export default component
 }
 
+declare module '~icons/material-symbols/*.jsx' {
+  const Icon: (props?: Record<string, unknown>) => JSX.Element
+  export default Icon
+}
+
 declare module 'postcss-url' {}
 declare module 'postcss-import' {}
 declare module 'postcss-preset-env' {}

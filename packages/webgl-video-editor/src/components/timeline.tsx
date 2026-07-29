@@ -87,13 +87,13 @@ export const Timeline = ({
     editor.seekTo(editor.pixelsToSeconds((scrollOffset.value = scrollEl.scrollLeft)))
   }
 
-  const changeSpp = (newValue: number): void => {
+  const changeSpp = (newValue: number, origin = 0): void => {
     const scroller = scrollContainer.value
-    const prevScrollTime = editor.pixelsToSeconds(scroller?.scrollLeft ?? 0)
+    const prevScrollTime = editor.pixelsToSeconds((scroller?.scrollLeft ?? 0) + origin)
     editor.timelineZoom.secondsPerPixel = newValue
 
     if (scroller) {
-      scrollOffset.value = scroller.scrollLeft = editor.secondsToPixels(prevScrollTime)
+      scrollOffset.value = scroller.scrollLeft = editor.secondsToPixels(prevScrollTime) - origin
     }
   }
 
@@ -106,6 +106,7 @@ export const Timeline = ({
       changeSpp(
         editor.timelineZoom.secondsPerPixel +
           editor.pixelsToSeconds(deltaY) / WHEEL_ZOOM_DELTA_MODE_SCALE[deltaMode],
+        event.clientX - scroller.getBoundingClientRect().left - timelineOffset.value,
       )
     } else {
       if (deltaMode === 0) return
@@ -173,7 +174,10 @@ export const Timeline = ({
         onPointerdown={onPointerdownScroller}
         onWheel={onWheel}
       >
-        <Ruler {...{ scrollOffset, timelineOffset }} />
+        <div class={styles.timelineHeader}>
+          <Ruler {...{ scrollOffset, timelineOffset }} />
+          {() => !editor.isMobileWorkspace && <Playhead />}
+        </div>
 
         <div class={styles.trackList} ref={editor._timelineContainer}>
           {() =>
@@ -212,8 +216,6 @@ export const Timeline = ({
             )
           }
         </div>
-
-        {() => !editor.isMobileWorkspace && <Playhead />}
       </div>
 
       {() => editor.isMobileWorkspace && <Playhead />}

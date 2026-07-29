@@ -83,11 +83,15 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
       <video src={videoSrc} aria-label={() => activeVideo.value?.name} controls autoplay playsInline />
       <span>{() => activeVideo.value?.name ?? ''}</span>
       <div class={styles.dialogueButtonContainer}>
+        <button onClick={closeDialogue} class={[styles.ctaButton]}>
+          {t('close')}
+          <IconMsCloseRounded />
+        </button>
         <button
           disabled={() => isDeleting.value || isVideoInUse.value}
           onClick={deleteVideo}
           class={[styles.ctaButton, styles.danger, styles.textBodyBold]}
-          label={deleteLabel}
+          aria-label={deleteLabel}
         >
           {t('asset_bin_delete_video')}
           <IconMsDeleteOutlineRounded />
@@ -95,7 +99,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
         <button
           onClick={createClip}
           disabled={() => isDeleting.value}
-          label={t('asset_bin_media_create_clip')}
+          aria-label={t('asset_bin_media_create_clip')}
           class={[styles.ctaButton, styles.primary, styles.textBodyBold]}
         >
           {t('asset_bin_media_create_clip')}

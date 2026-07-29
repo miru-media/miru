@@ -72,11 +72,15 @@ export class TimelineZoom {
     this._mediaProps = mediaProps
   }
 
+  get containerSize(): Size {
+    return toValue(this._containerSize)
+  }
+
   get min(): number {
-    return 10 / toValue(this._mediaProps).frameRate / toValue(this._containerSize).width
+    return 10 / toValue(this._mediaProps).frameRate / this.containerSize.width
   }
   get max(): number {
-    return Math.max(0, toValue(this._mediaProps).duration / toValue(this._containerSize).width) * 4
+    return Math.max(0, toValue(this._mediaProps).duration / this.containerSize.width) * 4
   }
 
   get secondsPerPixel(): number {

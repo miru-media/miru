@@ -111,7 +111,7 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
   readonly isReady = computed(
     () => !this.pixiFilters.value.some((f) => f.isLoading) && !this.#placeholderIsLoading.value,
   )
-  readonly matrix = computed(() => getClipTransformMatrix(this, this.docView.applyVideoRotation))
+  readonly matrix = computed(() => getClipTransformMatrix(this, false))
   readonly #placeholderIsLoading = ref(false)
   readonly #scope = createEffectScope()
 
@@ -150,11 +150,18 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
     })
   }
 
+  setSpriteMatrix(): void {
+    this.pixiNode.setFromMatrix(getClipTransformMatrix(this, this.docView.applyVideoRotation))
+  }
+
   getSize(): Size | undefined {
     const { asset } = this.original
     if (!asset) return this.docView.doc.resolution
+    if (!asset.video) return
 
-    return asset.video
+    const { width, height, rotation } = asset.video
+
+    return rotation === 90 || rotation === 270 ? { width: height, height: width } : { width, height }
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
@@ -174,7 +181,7 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
       case 'scaleX':
       case 'scaleY':
       case 'mediaRef':
-        this.pixiNode.setFromMatrix(this.matrix.value)
+        this.setSpriteMatrix()
         break
       case 'effects':
         {

@@ -35,15 +35,12 @@ export const Clip = ({
 
   const boxEdges = useTrackChildEdges(editor, clip)
 
-  const selectClip = editor.select.bind(editor, clip, false)
+  const selectClip = () => editor.select(clip, false)
   const selectGap = (): void => editor.select({ node: clip, isNode: false }, false)
 
   const isVideoMedia = () => clip.isVideo() && clip.isMediaClip()
-  const Icon = clip.isAudio()
-    ? IconMsMusicNoteRounded
-    : clip.isTextClip()
-      ? IconMsTextFieldsRounded
-      : undefined
+  const getIcon = () =>
+    clip.isAudio() ? IconMsMusicNoteRounded : clip.isTextClip() ? IconMsTextFieldsRounded : undefined
 
   return (
     <>
@@ -94,10 +91,13 @@ export const Clip = ({
               </pre>
             )
           }
-          {Icon !== undefined && <Icon class={styles.clipIcon} />}
+          {() => {
+            const Icon = getIcon()
+            return Icon && <Icon class={[styles.clipIcon, styles.first]} />
+          }}
           {() =>
             !clip.asset?.thumbnailUri && (
-              <span class={styles.clipName}>
+              <span class={[styles.clipName, !getIcon() && styles.first]}>
                 {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
               </span>
             )

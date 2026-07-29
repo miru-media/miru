@@ -20,11 +20,18 @@
   touch-action: pan-x pan-y;
 }
 
+.timelineHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  width: 100%;
+}
+
 .timelinePlayhead {
   position: absolute;
   top: var(--ruler-spacing-top);
   left: var(--timeline-padding-left);
-  z-index: 1;
+  z-index: 2;
   display: flex;
   user-select: none;
   translate: var(--timeline-current-time);
@@ -122,9 +129,6 @@
 }
 
 .ruler {
-  position: sticky;
-  top: 0;
-  left: 0;
   display: flex;
   flex-shrink: 0;
   align-items: center;
