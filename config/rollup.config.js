@@ -61,6 +61,8 @@ const replacements = {
     'import.meta.hot': 'undefined',
     'import.meta.env.DEV': JSON.stringify(!isProd),
     'import.meta.env.PROD': JSON.stringify(isProd),
+    'import.meta.env.SSR': JSON.stringify(false),
+    'import.meta.env.TEST': 'undefined',
     'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
     'import.meta.env.ASSETS_PATH': '"/assets/"',
     'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
