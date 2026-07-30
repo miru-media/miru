@@ -67,6 +67,7 @@ const replacements = {
     'import.meta.env.ASSETS_PATH': '"/assets/"',
     'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
     'import.meta.env.VITE_SHOW_ENV_MATCHER_DEBUG': 'undefined',
+    './storage-worker.ts': './storage-worker.js',
   },
   preventAssignment: true,
 }

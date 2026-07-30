@@ -56,6 +56,7 @@ const packageOptions = (async () => {
         yjs: 'src/yjs/index.ts',
         'yjs/utils': 'src/yjs/utils.ts',
         otio: 'src/otio/index.ts',
+        'storage-worker': 'src/storage/storage-worker.ts',
       },
       copy: (options) => ({
         targets: [
