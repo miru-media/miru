@@ -26,7 +26,6 @@ const packageOptions = (async () => {
           { src: path.resolve(options.root, 'src/glsl'), dest: options.dist },
         ],
       }),
-      alwaysBundle: ['@libav.js/variant-opus'],
     },
     {
       root: 'packages/webgl-media-editor',
@@ -58,6 +57,7 @@ const packageOptions = (async () => {
         otio: 'src/otio/index.ts',
         'storage-worker': 'src/storage/storage-worker.ts',
       },
+      alwaysBundle: ['@libav.js/variant-opus'],
       copy: (options) => ({
         targets: [
           { src: path.resolve(options.root, 'src/types/*'), dest: options.dist },
