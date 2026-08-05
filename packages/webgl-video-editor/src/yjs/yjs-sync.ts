@@ -41,7 +41,7 @@ const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): voi
   }
 }
 
-export class YjsSync implements pub.VideoEditorDocumentSync {
+export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync {
   doc!: pub.Document
 
   readonly ydoc: Y.Doc
@@ -70,6 +70,7 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
   isDisposed = false
 
   constructor(ydocOrMap: Y.Doc | Y.Map<any>, assets?: pub.VideoEditorAssetStore) {
+    super()
     const doc = (this.doc = new Document({ assets }))
 
     const { ytree, settings, ydoc } = initYjsRoot(ydocOrMap)
@@ -184,6 +185,8 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
         ;(node as Record<string, any>)[key] = newValue
       })
     })
+
+    this.dispatchEvent(new Event('change'))
   }
 
   readonly #onYnodeGapChange = (event: Y.YMapEvent<Schema.Rational>): void => {
@@ -196,6 +199,8 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
         ;(node as pub.AnyClip).setGap(key, gapMap.get(key) ?? { rate: 1, value: 0 })
       })
     })
+
+    this.dispatchEvent(new Event('change'))
   }
 
   #ensureObserved(ynode: Y.Map<unknown>): void {
@@ -229,6 +234,8 @@ export class YjsSync implements pub.VideoEditorDocumentSync {
         (this.doc.nodes.get(id) as pub.AnyNode | undefined)?.delete(),
       )
       this.#pendingNodeDeletions.clear()
+
+      this.dispatchEvent(new Event('change'))
     })
 
   #onYtreeChange_(parentKey: string): void {

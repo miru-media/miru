@@ -453,7 +453,7 @@ export interface VideoEditorAction {
   exec: (editor: VideoEditor) => unknown
 }
 
-export interface VideoEditorDocumentSync {
+export interface VideoEditorDocumentSync extends EventTarget {
   doc: Document
 
   /** The editor has a change that can be undone */

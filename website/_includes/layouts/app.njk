@@ -1,5 +1,9 @@
 ---
-layout: layouts/page
+layout: layouts/base
 ---
 
-<div id="app">{{ content | safe }}</div>
+<div class="{{ pageContainerClass or 'page-container' }}">
+  <main {% if mainId %}id="{{ mainId }}"{% endif %} {% if pageClass %}class="{{ pageClass }}"{% endif %}>
+    <div id="app" class="fullscreen-app">{{ content | safe }}</div>
+  </main>
+</div>

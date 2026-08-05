@@ -1,6 +1,6 @@
-export * from './public-constants.ts'
+import type * as pub from '#core'
 
-declare const VideoEditor: {
+declare const VideoEditorComponent: {
   name: 'VideoEditor'
   props: {
     messages: { type: typeof Object; required: false }
@@ -16,4 +16,9 @@ declare const VideoEditor: {
   ) => any
 }
 
-export default VideoEditor
+/** VideoEditor class with props wrapped for vue reactivity */
+export class VideoEditor implements pub.VideoEditor {} // eslint-disable-line @typescript-eslint/no-extraneous-class -- for jsdoc
+
+export default VideoEditorComponent
+
+export * from './public-constants.ts'

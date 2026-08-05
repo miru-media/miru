@@ -54,6 +54,7 @@ export interface BaseAsset<T extends string> {
   name?: string
   color?: string
   metadata?: Record<string, unknown>
+  thumbnailUri?: string
 }
 
 export interface MediaAsset extends BaseAsset<'media:av'> {
@@ -77,7 +78,6 @@ export interface MediaAsset extends BaseAsset<'media:av'> {
     firstTimestamp: Rational
   }
   uri?: string
-  thumbnailUri?: string
 }
 
 export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {

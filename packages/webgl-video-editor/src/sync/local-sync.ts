@@ -62,7 +62,7 @@ class HistoryAction extends Array<HistoryOp> {
   timestamp = Date.now()
 }
 
-export class LocalSync implements core.VideoEditorDocumentSync {
+export class LocalSync extends EventTarget implements core.VideoEditorDocumentSync {
   doc!: pub.Document
   readonly #actions: HistoryAction[] = []
   #index = -1
@@ -87,6 +87,7 @@ export class LocalSync implements core.VideoEditorDocumentSync {
   readonly #abort = new AbortController()
 
   constructor(assets = new FileSystemAssetStore()) {
+    super()
     const doc = (this.doc = new Document({ assets }))
     this.#restoreFromLocalStorage()
 
@@ -170,6 +171,8 @@ export class LocalSync implements core.VideoEditorDocumentSync {
       this.#canUndo.value = true
       this.#canRedo.value = false
     }
+
+    this.dispatchEvent(new Event('change'))
   }
 
   #undoRedo(redo: boolean) {
@@ -259,6 +262,8 @@ export class LocalSync implements core.VideoEditorDocumentSync {
 
     this.#canUndo.value = newIndex > -1
     this.#canRedo.value = newIndex < actions.length - 1
+
+    this.dispatchEvent(new Event('change'))
   }
 
   undo(): void {

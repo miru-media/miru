@@ -3,6 +3,7 @@ import 'media-trimmer'
 import { ref, watchEffect } from 'vue'
 import { MediaTrimmerElement, trim } from 'media-trimmer'
 import type { TrimEvent } from 'media-trimmer/elements'
+import { navigateBack } from '../utils.ts'
 
 const trimmer = ref<MediaTrimmerElement>()
 const source = ref('')
@@ -31,14 +32,6 @@ const exportVideo = async () => {
     })
   } catch (error) {
     alert(error)
-  }
-}
-
-const onClickBack = () => {
-  if ((navigator as Navigator & { canGoBack: boolean }).canGoBack) history.back()
-  else {
-    window.close()
-    location.href = '/demos/'
   }
 }
 
@@ -106,7 +99,7 @@ const onInputFile = (event: Event) => {
   <div v-else>
     <img src="../media/illustrations/2.svg" alt="" class="w-full max-w-50vw max-h-50vh block m-auto" />
     <div class="flex justify-center gap-10 p-10">
-      <button id="back-button" class="button tertiary" @click="onClickBack">
+      <button id="back-button" class="button tertiary" @click="navigateBack">
         <div class="i-material-symbols:chevron-left text-2rem"></div>
         Back
       </button>

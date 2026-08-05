@@ -22,7 +22,14 @@ const docList = computed(() =>
       console.log(entry)
       const id: string = entry['@id']
 
-      return { id, name: entry.name, url: getDocUrl(id), createdAt: entry.createdAt }
+      return {
+        id,
+        name: entry.name,
+        url: getDocUrl(id),
+        createdAt: entry.createdAt,
+        // TODO:
+        updatedAt: entry.createdAt,
+      }
     })
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
 )

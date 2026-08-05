@@ -6,6 +6,7 @@ import { extendViteConfig } from '../config/base-vite-config.ts'
 const WEBSITE_DIR = import.meta.dirname
 
 export default extendViteConfig({
+  server: { hmr: { port: 5173 } },
   plugins: [
     {
       name: 'app:resolve-eleventy-website-content-scripts',

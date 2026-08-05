@@ -6,7 +6,7 @@ import de from 'shared/locales/de.json'
 import en from 'shared/locales/en.json'
 import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from 'webgl-video-editor'
 import VideoEditorUI, { EDITOR_SELECTION_ACTIONS_BY_ID } from 'webgl-video-editor/vue'
-import Header from './video-editor-header.vue'
+import DocHeader from './video-editor-doc-header.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
 import { state } from './state.ts'
@@ -98,16 +98,15 @@ if (!import.meta.env.SSR) {
       class="video-editor"
     >
       <template #header>
-        <Header v-if="editorRef" :editor="editorRef">
-          <template v-if="$slots['header-start']" #start><slot name="header-start"></slot></template>
+        <DocHeader v-if="editorRef" :editor="editorRef">
+          <template #start><slot name="header-start"></slot></template>
           <template #middle><slot name="header-middle"></slot></template>
-        </Header>
+        </DocHeader>
       </template>
     </VideoEditorUI>
     <IntroModal />
   </div>
 </template>
-
 <style scoped>
 .video-editor-app {
   --black: #000;

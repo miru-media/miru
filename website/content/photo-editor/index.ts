@@ -3,6 +3,8 @@ import 'webgl-media-editor'
 
 import { downloadBlob } from 'shared/utils'
 
+import { navigateBack } from '../utils.ts'
+
 const editor = document.getElementById('editor') as MediaEditorElement
 const fileInput = document.getElementById('file-input') as HTMLInputElement
 const downloadButton = document.getElementById('download-button') as HTMLButtonElement
@@ -33,16 +35,9 @@ const onClickDownload = (): void => {
   void editor.toBlob().then((blob) => downloadBlob(blob, `edit-${inputFile?.name ?? ''}`))
 }
 
-const onClickBack = (): void => {
-  if ((navigator as Navigator & { canGoBack: boolean }).canGoBack) history.back()
-  else {
-    window.close()
-    location.href = '/demos/'
-  }
-}
 const onClickCancel = toggleEmptyState
 
-backButton.addEventListener('click', onClickBack)
+backButton.addEventListener('click', navigateBack)
 fileInput.addEventListener('input', onInputFile)
 cancelButton.addEventListener('click', onClickCancel)
 downloadButton.addEventListener('click', onClickDownload)

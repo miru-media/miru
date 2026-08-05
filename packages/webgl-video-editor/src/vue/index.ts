@@ -12,8 +12,6 @@ import { VideoEditor } from '../video-editor.ts'
 
 import { editorToVue } from './vue-video-editor.ts'
 
-export type { VideoEditor } from '#core'
-
 export * from '../constants.ts'
 
 export default Vue.defineComponent({
@@ -40,15 +38,14 @@ export default Vue.defineComponent({
   },
   emits: ['error'],
   setup(props, ctx) {
-    const editor =
-      props.editor ??
-      new VideoEditor({
-        sync: props.sync,
-        assets: props.assets,
-      })
+    const editor = props.editor
+      ? editorToVue(props.editor, false)
+      : new VideoEditorVue({
+          sync: props.sync,
+          assets: props.assets,
+        })
     const container = Vue.ref<HTMLElement>()
 
-    const vueEditor = editorToVue(editor, !props.editor)
     const children = {
       header: ref<unknown>(),
       timelineEmpty: ref<unknown>(),
@@ -76,9 +73,9 @@ export default Vue.defineComponent({
       onCleanup(stop)
     })
 
-    ctx.expose(vueEditor)
+    ctx.expose(editor)
 
-    Vue.onScopeDispose(() => vueEditor.dispose())
+    Vue.onScopeDispose(() => editor.dispose())
 
     const { h } = Vue
     const { slots } = ctx
@@ -101,6 +98,17 @@ export default Vue.defineComponent({
       h('div', { ...ctx.attrs, ref: container }, [createSlotNode('header'), createSlotNode('timelineEmpty')])
   },
 })
+
+/* eslint-disable no-constructor-return -- return object adapted for vue */
+class VideoEditorVue extends VideoEditor {
+  constructor(...args: ConstructorParameters<typeof pub.VideoEditor>) {
+    super(...args)
+    return editorToVue(this, true) as VideoEditor
+  }
+}
+/* eslint-enable no-constructor-return */
+
+export { VideoEditorVue as VideoEditor }
 
 export class VideoEditorLocalStore extends VideoEditorLocalStore_ {
   readonly #canUndo = toVue(() => super.canUndo)

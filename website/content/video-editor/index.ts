@@ -2,9 +2,9 @@ import 'virtual:uno.css'
 
 import { setupApp } from 'app-video-editor'
 import { createApp } from 'vue'
-import { createRouter, createWebHistory, RouterView } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw, RouterView } from 'vue-router'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   { path: '/', component: () => import('./project-list.vue') },
   { path: '/project', component: () => import('./project.vue') },
 ]

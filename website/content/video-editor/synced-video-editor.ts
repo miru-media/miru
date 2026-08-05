@@ -3,24 +3,27 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import { WebrtcProvider } from 'y-webrtc'
 import * as Y from 'yjs'
 
+import { VideoEditor } from 'webgl-video-editor/vue'
 import { YjsAssetStore, YjsSync } from 'webgl-video-editor/yjs'
 
-export const useVideoEditorStore = (
+export const useSyncedVideoEditor = (
   id: MaybeRefOrGetter<string>,
   onError: (error: unknown) => unknown,
 ): {
   sync: Ref<YjsSync | undefined>
+  editor: Ref<VideoEditor | undefined>
   webrtc: Ref<WebrtcProvider | undefined>
   error: Ref<unknown>
 } => {
   const sync = ref<YjsSync>()
+  const editor = ref<VideoEditor>()
   const webrtc = ref<WebrtcProvider>()
   const error = ref<unknown>()
 
   watch(
     toRef(id),
     (id, _prev, onCleanup) => {
-      if (import.meta.env.SSR) return { sync: sync }
+      if (import.meta.env.SSR) return { sync, editor }
       if (!id) return
 
       let ydoc
@@ -43,15 +46,17 @@ export const useVideoEditorStore = (
         void idb.destroy()
         ydoc.destroy()
         sync.value?.dispose()
-        error.value = sync.value = undefined
+        editor.value?.dispose()
+        error.value = editor.value = sync.value = undefined
       })
 
       void idb.whenSynced
         .then(() => {
           if (isStale) return
           sync.value = markRaw(new YjsSync(ydoc, new YjsAssetStore(ydoc.getMap('assets'))))
+          editor.value = new VideoEditor({ sync: sync.value })
 
-          webrtc.value = new WebrtcProvider(id, ydoc)
+          webrtc.value = markRaw(new WebrtcProvider(id, ydoc))
         })
         .catch((error_: unknown) => {
           error.value = error_
@@ -61,5 +66,5 @@ export const useVideoEditorStore = (
     { immediate: true },
   )
 
-  return { sync, webrtc, error }
+  return { sync, editor, webrtc, error }
 }

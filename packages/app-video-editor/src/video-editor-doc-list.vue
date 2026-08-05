@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import type { Schema } from 'webgl-video-editor'
-import { demoDoc } from './demo-document.ts'
 import { useI18n } from 'vue-i18n-lite'
+
+import { demoDoc } from './demo-document.ts'
+import Header from './video-editor-header.vue'
+import DocCard from './video-editor-doc-list-card.vue'
 
 export interface DocListItem {
   id: string
   name: string
   url: string
+  thumbnail?: Promise<Blob | string | undefined> | Blob | string
   createdAt: string
+  updatedAt: string
 }
 
 const props = defineProps<{ docs: DocListItem[] }>()
@@ -40,102 +45,87 @@ const onInputOtio = async (event: InputEvent) => {
 </script>
 
 <template>
-  <div class="root prose-lg dark:prose-invert">
-    <div class="column">
-      <div class="flex gap-1rem flex-col">
-        <img
-          alt="Video editing illustration"
-          src="../../../website/content/media/illustrations/2.svg"
-          class="<md:hidden max-w-20rem m-auto"
-        />
-        <button @click="() => emit('create')" class="button tertiary">
+  <div class="doc-list-root">
+    <Header class="doc-list-header">
+      <template #start><slot name="header-start"></slot></template>
+      <template #middle><slot name="header-middle"></slot></template>
+      <template #end><slot name="header-end"></slot></template>
+    </Header>
+
+    <div class="doc-list-main">
+      <h1 class="text-2xl">{{ $t('my_projects') }}</h1>
+
+      <p class="create-buttons">
+        <button @click="() => emit('create')" class="button tertiary create-button">
           {{ $t('create_empty_project') }}
           <div class="i-material-symbols:add-circle-outline-rounded text-2xl" />
         </button>
-        <label class="button tertiary">
+        <label class="button tertiary create-button">
           {{ $t('import_project') }} (<code>.otio</code>)
           <div class="i-material-symbols:upload-rounded text-2xl" />
           <input type="file" accept=".otio,.otioz,.json" class="sr-only" @input="onInputOtio" />
         </label>
-        <button @click="() => emit('create', 'Example', demoDoc)" class="button primary">
+        <button @click="() => emit('create', 'Example', demoDoc)" class="button primary create-button">
           {{ $t('create_example_project') }}
           <div class="i-material-symbols:rocket-launch-outline-rounded text-2xl" />
         </button>
-      </div>
-    </div>
-    <div class="column">
-      <h1 class="text-center mb-4">Projects</h1>
-      <ul class="project-list">
-        <li v-for="doc of props.docs" :key="doc.id" class="project-list-item">
-          <a :href="doc.url" class="project-card" @click="(event) => emit('open', doc, event)">
-            <div>{{ doc.name }}</div>
-            <div class="text-[0.75em]">{{ new Date(doc.createdAt).toLocaleString() }}</div>
-          </a>
-          <button class="button tertiary" @click="() => emit('delete', doc.id)">
-            <div class="i-material-symbols:delete-outline-rounded" />
-            <div class="sr-only">{{ $t('delete') }}</div>
-          </button>
-        </li>
+      </p>
+
+      <ul class="card-grid">
+        <DocCard
+          :doc="doc"
+          v-for="doc of props.docs"
+          :key="doc.id"
+          @open="(...args) => emit('open', ...args)"
+          @delete="(...args) => emit('delete', ...args)"
+        />
       </ul>
     </div>
   </div>
 </template>
 
 <style scoped>
-.root {
+.doc-list-root {
   display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.doc-list-header {
+  border-bottom: solid 1px #2c3033;
+  flex-shrink: 0;
+}
+
+.create-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.create-button {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.doc-list-main {
   color-scheme: dark;
   color: var(--white-3);
-  padding-top: 1rem;
   justify-content: stretch;
   gap: 2rem;
-
-  @media (width < 768px) {
-    flex-direction: column;
-  }
-}
-
-.column {
-  flex-grow: 1;
-}
-
-.project-list {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.project-list-item {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
   width: 100%;
-  font-size: 1.5rem;
+  min-height: 0;
+  padding: 1rem 1.875rem 0;
+  overflow: auto;
 }
 
-.project-card {
-  display: flex;
-  gap: 0.675rem;
-  flex-grow: 1;
-  color: inherit;
-  border-color: gray;
-  border-radius: 0.625rem;
-  padding: 0.675rem 0.875rem;
-  text-decoration: none;
-}
-
-.project-card {
-  flex-direction: column;
-  border-style: solid;
-  background-color: rgb(29 107 228 / 10%);
-  border-color: rgb(29 107 228 / 40%);
-}
-
-.project-delete {
-  border-radius: 0.25rem;
-  font-size: 1.75rem;
+.card-grid {
+  padding: 0 0 4rem;
+  margin: 0;
+  display: grid;
+  list-style: none;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  align-items: stretch;
+  gap: 0.75rem;
 }
 </style>

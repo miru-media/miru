@@ -10,6 +10,7 @@ import { YjsSync } from 'webgl-video-editor/yjs'
 import { VideoEditorDocList } from 'app-video-editor'
 import { useRouter } from 'vue-router'
 import type { DocListItem } from '../../../packages/app-video-editor/src/video-editor-doc-list.vue'
+import { thumbnailStorage } from './thumbnail-storage.ts'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -29,6 +30,16 @@ const createDoc = async (name = t('untitled'), content?: Schema.SerializedDocume
   if (content) {
     const ydoc = new Y.Doc()
 
+    const thumbnailUri = content.assets.find(
+      (a) => a.type === 'asset:media:av' && !!a.thumbnailUri,
+    )?.thumbnailUri
+
+    if (thumbnailUri) {
+      fetch(thumbnailUri)
+        .then((res) => res.body && thumbnailStorage.setImage(id, res.body))
+        .catch(() => undefined)
+    }
+
     YjsSync.initYmapFromJson({ root: ydoc, assetsYmap: ydoc.getMap('assets'), content })
 
     const idb = new IndexeddbPersistence(id, ydoc)
@@ -40,7 +51,8 @@ const createDoc = async (name = t('untitled'), content?: Schema.SerializedDocume
     }
   }
 
-  projects.value.push({ name, id, createdAt: new Date().toISOString() })
+  const createdAt = new Date().toISOString()
+  projects.value.push({ name, id, createdAt, updatedAt: createdAt })
   await router.push(getDocUrl(id))
 }
 
@@ -56,77 +68,26 @@ const getDocUrl = (id: string) => `/project/?id=${id}`
 
 <template>
   <VideoEditorDocList
-    :docs="projects.map((p) => ({ ...p, url: '/video-editor' + getDocUrl(p.id) }))"
+    :docs="
+      projects.map((p) => ({
+        ...p,
+        url: '/video-editor' + getDocUrl(p.id),
+        thumbnail: thumbnailStorage.get(p.id),
+      }))
+    "
     @open="openDoc"
     @create="createDoc"
     @delete="onDelete"
-  />
+  >
+    <template #header-start>
+      <a href="/" class="nav-brand mt-[-6px] px-2 flex-shrink-0" :title="$t('back')">
+        <span class="sr-only">{{ $t('back') }}</span>
+        <img
+          src="../../../website/content/media/logo/white-logo.svg"
+          style="width: auto; height: 28px"
+          alt=""
+        />
+      </a>
+    </template>
+  </VideoEditorDocList>
 </template>
-
-<style scoped>
-.root {
-  color-scheme: dark;
-  color: var(--white-3);
-  padding-top: 1rem;
-}
-
-.columns-container {
-  margin: 0;
-}
-
-.project-list {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.project-list-item {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  width: 100%;
-  font-size: 1.5rem;
-}
-
-.project-card,
-.create-button {
-  display: flex;
-  gap: 0.675rem;
-  flex-grow: 1;
-  color: var(--white-3);
-  border-color: gray;
-  border-radius: 0.625rem;
-  padding: 0.675rem 0.875rem;
-  text-decoration: none;
-}
-
-.create-button {
-  align-items: center;
-  justify-content: center;
-  border-style: dashed;
-  border-width: 0.1875rem;
-  font-size: 1.25rem;
-  background-color: rgb(255 255 255 / 3%);
-}
-
-.project-card {
-  flex-direction: column;
-  border-style: solid;
-  background-color: rgb(29 107 228 / 10%);
-  border-color: rgb(29 107 228 / 40%);
-
-  outline-color: rgb(29 107 228);
-}
-
-.project-delete {
-  border-radius: 0.25rem;
-  font-size: 1.75rem;
-
-  &:focus-visible {
-    outline: solid currentColor;
-  }
-}
-</style>

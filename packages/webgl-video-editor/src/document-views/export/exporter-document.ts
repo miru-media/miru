@@ -378,4 +378,41 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     this.sources.clear()
     this.doc.dispose()
   }
+
+  static async exportFrameAtTime({
+    doc,
+    renderOptions,
+    time,
+    signal,
+  }: {
+    doc: pub.Document
+    renderOptions: RenderDocumentOptions
+    time: number
+    signal?: AbortSignal
+  }): Promise<HTMLCanvasElement> {
+    const exporter = new ExportDocument({ doc, renderOptions, start: time, end: time, mute: true })
+
+    try {
+      await Promise.all(Array.from(exporter.sources.values()).map((entry) => exporter.#prepareSource(entry)))
+      exporter.clips.forEach((clip) => clip.init())
+
+      signal?.throwIfAborted()
+
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      const { width, height } = doc.resolution
+
+      await exporter.#seekAndWaitForVideoClips(time, signal)
+
+      exporter.renderView.render()
+      const frame = new VideoFrame(exporter.renderView.canvas, { timestamp: 0 })
+      canvas.width = width
+      canvas.height = height
+      context!.drawImage(frame, 0, 0)
+
+      return canvas
+    } finally {
+      exporter.dispose()
+    }
+  }
 }

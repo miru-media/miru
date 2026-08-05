@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import { useLocalStorage } from '@vueuse/core'
+import { useDebounceFn, useLocalStorage } from '@vueuse/core'
 import { useRouter } from 'vue-router'
-import { computed, ref } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 
-import { VideoEditorDoc, VideoEditorDocError, type DocListItem } from 'app-video-editor'
-import { useVideoEditorStore } from './video-editor-demo-store'
-import { toRef } from 'vue'
+import { useEditorThumbnail, VideoEditorDoc, VideoEditorDocError, type DocListItem } from 'app-video-editor'
 
-const projects = import.meta.env.SSR ? ([] as never) : useLocalStorage<DocListItem[]>('video-editor-docs', [])
+import { thumbnailStorage } from './thumbnail-storage.ts'
+import { useSyncedVideoEditor } from './synced-video-editor.ts'
+
+const UPDATED_AT_DEBOUNCE_MS = 500
+const UPDATED_AT_MAX_WAIT_MS = 2_000
+
+const docs = import.meta.env.SSR ? ([] as never) : useLocalStorage<DocListItem[]>('video-editor-docs', [])
 const id = computed(() => router.currentRoute.value.query.id || '')
 const name = computed({
-  get: () => projects.value.find((p) => p.id == id.value)?.name,
+  get: () => docs.value.find((doc) => doc.id == id.value)?.name,
   set: (value: string) => {
-    projects.value = projects.value.map((p) => (p.id === id.value ? { ...p, name: value } : p))
+    docs.value = docs.value.map((doc) => (doc.id === id.value ? { ...doc, name: value } : doc))
   },
 })
 const router = useRouter()
 
-const { sync, webrtc, error } = useVideoEditorStore(
+const { editor, webrtc, error } = useSyncedVideoEditor(
   toRef(() => id.value.toString()),
   console.error,
 )
@@ -30,11 +34,31 @@ const toggleConnection = () => {
 }
 
 const showConnectionToggle = import.meta.env.DEV
+
+useEditorThumbnail(editor, (canvas: HTMLCanvasElement | OffscreenCanvas) => {
+  thumbnailStorage.setFromCanvas(String(id.value), canvas)
+})
+
+watch(editor, (editor, _prev, onCleanup) => {
+  if (!editor) return
+  const abort = new AbortController()
+  const bumpUpdatedAt = useDebounceFn(
+    () => {
+      docs.value = docs.value.map((doc) =>
+        doc.id === id.value ? { ...doc, updatedAt: new Date().toISOString() } : doc,
+      )
+    },
+    UPDATED_AT_DEBOUNCE_MS,
+    { maxWait: UPDATED_AT_MAX_WAIT_MS },
+  )
+  editor.sync!.addEventListener('change', bumpUpdatedAt, { signal: abort.signal })
+  onCleanup(abort.abort.bind(abort))
+})
 </script>
 
 <template>
   <VideoEditorDocError v-if="error" backUrl="/video-editor" />
-  <VideoEditorDoc v-else-if="sync" class="fullscreen-app" :sync>
+  <VideoEditorDoc v-else-if="editor" class="fullscreen-app" :editor>
     <template #header-start>
       <router-link to="/" class="nav-brand mt-[-6px] px-2 flex-shrink-0" :title="$t('close_project')">
         <span class="sr-only">{{ $t('close_project') }}</span>
