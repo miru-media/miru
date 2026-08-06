@@ -18,7 +18,6 @@
     "#internal": "./types/internal.d.ts"
   },
   "exports": {
-<<<<<<< HEAD
     ".": "./src/index.ts",
     "./elements": "./src/elements/index.ts",
     "./vue": "./src/vue/index.ts",
@@ -26,30 +25,8 @@
     "./sync": "./src/sync/index.ts",
     "./yjs": "./src/yjs/index.ts",
     "./yjs/utils": "./src/yjs/utils.ts",
-    "./otio": "./src/otio/index.ts"
-=======
-    ".": {
-      "import": "./src/index.ts"
-    },
-    "./elements": {
-      "import": "./src/elements/index.ts"
-    },
-    "./vue": {
-      "import": "./src/vue/index.ts"
-    },
-    "./sync": {
-      "import": "./src/sync/index.ts"
-    },
-    "./yjs": {
-      "import": "./src/yjs/index.ts"
-    },
-    "./yjs/utils": {
-      "import": "./src/yjs/utils.ts"
-    },
-    "./otio": {
-      "import": "./src/otio/index.ts"
-    }
->>>>>>> 724c1ae (fix: publish locales with the video editor)
+    "./otio": "./src/otio/index.ts",
+    "./storage-worker": "./src/storage/storage-worker.ts"
   },
   "publishConfig": {
     "module": "dist/webgl-video-editor.js",
@@ -62,7 +39,8 @@
       "./sync": "./dist/sync.js",
       "./yjs": "./dist/yjs.js",
       "./yjs/utils": "./dist/yjs/utils.ts",
-      "./otio": "./dist/otio.js"
+      "./otio": "./dist/otio.js",
+      "./storage-worker": "./dist/storage-worker.js"
     }
   },
   "sideEffects": [

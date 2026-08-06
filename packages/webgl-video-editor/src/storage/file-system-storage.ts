@@ -67,7 +67,7 @@ export class FileSystemStorage {
   constructor() {
     if (import.meta.env.SSR || import.meta.env.TEST === 'true') return
 
-    const worker = new Worker(new URL('./storage-worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('./storage-worker.js', import.meta.url), {
       name: 'webgl-video-editor-storage',
       type: 'module',
     })
