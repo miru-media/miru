@@ -87,6 +87,8 @@
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "idb-keyval": "catalog:",
+    "@libav.js/variant-opus": "catalog:",
+    "libavjs-webcodecs-polyfill": "catalog:",
     "mediabunny": "catalog:",
     "pixi.js": "^8.19.0",
     "stats.js": "catalog:",
@@ -112,9 +114,5 @@
     "vue": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@libav.js/variant-opus": "catalog:",
-    "libavjs-webcodecs-polyfill": "catalog:"
   }
 }

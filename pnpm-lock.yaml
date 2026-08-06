@@ -680,6 +680,9 @@ importers:
       '@interactjs/modifiers':
         specifier: ^1.10.27
         version: 1.10.27(@interactjs/core@1.10.27(patch_hash=e56fa39d789c6096a05db80605c184b686e795cd26ff6dffba007d11c564d3df)(@interactjs/utils@1.10.27))(@interactjs/utils@1.10.27)
+      '@libav.js/variant-opus':
+        specifier: 'catalog:'
+        version: 6.9.8
       comlink:
         specifier: 'catalog:'
         version: 4.4.2
@@ -692,6 +695,9 @@ importers:
       idb-keyval:
         specifier: 'catalog:'
         version: 6.3.0
+      libavjs-webcodecs-polyfill:
+        specifier: 'catalog:'
+        version: 0.5.5(patch_hash=0c29db560acd622704590e08e96841a523e0cd72eded78c30bc4f0a5f2fc4294)
       mediabunny:
         specifier: 'catalog:'
         version: 1.50.9
@@ -728,13 +734,6 @@ importers:
       yjs-orderedtree:
         specifier: 'catalog:'
         version: 1.0.1-beta.3(yjs@13.6.31)
-    devDependencies:
-      '@libav.js/variant-opus':
-        specifier: 'catalog:'
-        version: 6.9.8
-      libavjs-webcodecs-polyfill:
-        specifier: 'catalog:'
-        version: 0.5.5(patch_hash=0c29db560acd622704590e08e96841a523e0cd72eded78c30bc4f0a5f2fc4294)
 
   packages/webxdc-video-editor:
     dependencies:

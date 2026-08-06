@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { basename, resolve } from 'node:path'
+import { resolve } from 'node:path'
 
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
@@ -27,34 +27,7 @@ const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
 const PUBLIC_PACKAGE_DIRS = getPublickPackageDirs()
 const pnpmWorkspace = YAML.parse(readFileSync(resolve(ROOT, 'pnpm-workspace.yaml')).toString())
-const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies)
-
-/** @type {import('rollup').Plugin} */
-const resolveUrlQuery = {
-  name: 'resolve-url-query',
-  async resolveId(source, importer, options) {
-    if (!source.includes('?url')) return
-
-    const [id] = source.split('?')
-    return this.resolve(id, importer, { ...options, skipSelf: true })
-  },
-}
-
-/** @type {import('rollup').Plugin} */
-const emitWasmUrl = {
-  name: 'emit-wasm-url',
-  load(id) {
-    if (!id.endsWith('.wasm')) return null
-
-    const referenceId = this.emitFile({
-      type: 'asset',
-      name: basename(id),
-      source: readFileSync(id)
-    })
-
-    return `export default import.meta.ROLLUP_FILE_URL_${referenceId}`
-  },
-}
+const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies).filter((dep) => dep !== 'libavjs-webcodecs-polyfill')
 
 /** @type {import('rollup-plugin-esbuild-transform').Options[]} */
 const esbuildOptions = [
@@ -115,7 +88,6 @@ export default (await packageOptions).map((options) => {
   return defineConfig({
     plugins: [
       clearDist && del({ targets: resolve(dist, '*'), runOnce: true }),
-      resolveUrlQuery,
       nodeResolve({ extensions: ['.mjs', '.js', '.json', '.node', '.ts', '.tsx'] }),
       json(),
       globImportFrag(),
@@ -126,7 +98,6 @@ export default (await packageOptions).map((options) => {
       autoImport(autoImportOptions),
       icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
       glslOptimize({ optimize: isProd, compress: isProd, glslify: true }),
-      emitWasmUrl,
       url({
         include: ['**/*.svg', '**/*.png', '**/*.jp(e)?g', '**/*.gif', '**/*.webp'],
         limit: 0,
