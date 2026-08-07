@@ -180,7 +180,8 @@ export class VideoEditor implements pub.VideoEditor {
 
   addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {
     const { duration } = asset
-    const { trackType } = track
+    const trackType = (asset.video ?? false) === false ? 'audio' : 'video'
+
 
     const init: Schema.AnyClip = {
       id: this.generateId(),
