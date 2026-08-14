@@ -19,7 +19,7 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
     { key: 'duration', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.Track>[])
 
-  trackType!: 'video' | 'audio'
+  declare trackType: 'video' | 'audio'
 
   readonly #duration = computed(() => this.tail?.timeRational.end ?? Rational.ZERO)
 
