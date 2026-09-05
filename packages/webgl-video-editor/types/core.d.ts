@@ -162,6 +162,7 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   dispose: (deep?: boolean) => void
   /** @internal */
   _fields: <T extends pub.BaseNode>(this: T) => NodeFieldDef<T>[]
+  _reactiveKeys: <T extends pub.BaseNode>(this: T) => Set<keyof T>
 
   [Symbol.dispose]: () => void
 }
