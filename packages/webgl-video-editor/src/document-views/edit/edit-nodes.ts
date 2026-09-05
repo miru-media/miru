@@ -175,8 +175,6 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
 
     if (boundMethod) return boundMethod
 
-    const editedProps = target._editedProps.value
-
     if (original.isTrackChild()) {
       if (key === 'timeRational') return (target as EditView.AnyTrackChild)._timeRational.value
 
@@ -186,7 +184,11 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       }
     }
 
-    if (editedProps && key in editedProps) return editedProps[key as keyof typeof original]
+    // avoid tracking editing status for non editable fields
+    if (original._reactiveKeys().has(key as any)) {
+      const editedProps = target._editedProps.value
+      if (editedProps && key in editedProps) return editedProps[key as keyof typeof original]
+    }
 
     return Reflect.get(original, key, original)
   },

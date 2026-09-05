@@ -11,26 +11,31 @@
   composes: viewportOverlay;
   overflow: visible;
   pointer-events: none;
-  touch-action: none;
-  fill: var(--yellow);
-  stroke: var(--yellow);
-  stroke-width: 0.1875rem;
 }
 
 .transformBox {
   fill: none;
-  stroke-dasharray: 1rem 1rem;
+  stroke: var(--yellow);
+  stroke-width: 0.1875rem;
 }
 
-.transformEdges {
-  pointer-events: stroke;
-  fill: none;
-  stroke: transparent;
-  stroke-width: 1rem;
-}
-
-.transformDrag {
+.transformResizeHandle {
   pointer-events: all;
-  fill: none;
-  stroke: none;
+  stroke: white;
+  stroke-width: 0.625rem;
+  stroke-linecap: round;
+
+  .mobile & {
+    stroke-width: 1rem;
+  }
+}
+
+.transformResizeOutline {
+  composes: transformResizeHandle;
+  stroke: black;
+  stroke-width: 0.75rem;
+
+  .mobile & {
+    stroke-width: 1.25rem;
+  }
 }

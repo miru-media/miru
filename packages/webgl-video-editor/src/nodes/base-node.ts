@@ -39,6 +39,12 @@ export abstract class BaseNode<
     { key: 'nextAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.BaseNode & { type: string }>[]
 
+  static _reactiveKeys: Set<string> | undefined
+  static get REACTIVE_KEYS(): Set<string> {
+    const keys = this._reactiveKeys
+    return keys ?? (this._reactiveKeys = new Set(this.FIELDS.map((f) => f.key as string)))
+  }
+
   declare readonly doc: pub.Document
 
   readonly type: T['type']
@@ -211,6 +217,9 @@ export abstract class BaseNode<
 
   _fields<T extends pub.BaseNode>(this: T): pub.NodeFieldDef<T>[] {
     return (this.constructor as typeof BaseNode).FIELDS as any
+  }
+  _reactiveKeys<T extends pub.BaseNode>(this: T): Set<keyof T> {
+    return (this.constructor as typeof BaseNode).REACTIVE_KEYS as any
   }
 
   _defineReactive<Key extends keyof T>(

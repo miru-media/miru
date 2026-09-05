@@ -297,6 +297,7 @@
   height: 100%;
   margin-left: var(--workspace-viewport-spacing-left);
   overflow: hidden;
+  touch-action: none;
 
   &:fullscreen .transformControls {
     display: none;
@@ -315,7 +316,6 @@
     --workspace-viewport-spacing-right: var(--workspace-gap);
     width: 100%;
     height: auto;
-    aspect-ratio: unset;
     margin: 0;
   }
 }
