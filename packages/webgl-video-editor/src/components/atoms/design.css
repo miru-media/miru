@@ -529,16 +529,21 @@
 
 .playbackControlsOverlay {
   position: absolute;
+  right: 0;
   bottom: 0.625rem;
+  left: 0;
   display: flex;
+  width: fit-content;
   padding: 0 0.365rem;
   margin: auto;
+  margin-inline: auto;
   background-color: #1c2023;
   border: solid 1px #2c3033;
   border-radius: 999px;
   opacity: 0;
 
   .workspaceViewportContainer:hover &,
+  &:hover,
   &:has(:focus-visible) {
     opacity: 1;
   }

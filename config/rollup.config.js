@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import alias from '@rollup/plugin-alias'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -28,18 +27,9 @@ const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
 const PUBLIC_PACKAGE_DIRS = getPublickPackageDirs()
 const pnpmWorkspace = YAML.parse(readFileSync(resolve(ROOT, 'pnpm-workspace.yaml')).toString())
-const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies)
-
-const opusWasmFile = resolve(
-  ROOT,
-  'node_modules/.pnpm/@libav.js+variant-opus@6.5.7/node_modules/@libav.js/variant-opus/dist/libav-6.7.7.1.1-opus.wasm.wasm',
+const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies).filter(
+  (dep) => dep !== 'libavjs-webcodecs-polyfill',
 )
-
-const aliases = {
-  entries: {
-    [`${opusWasmFile}?url`]: opusWasmFile,
-  },
-}
 
 /** @type {import('rollup-plugin-esbuild-transform').Options[]} */
 const esbuildOptions = [
@@ -61,6 +51,8 @@ const replacements = {
     'import.meta.hot': 'undefined',
     'import.meta.env.DEV': JSON.stringify(!isProd),
     'import.meta.env.PROD': JSON.stringify(isProd),
+    'import.meta.env.SSR': JSON.stringify(false),
+    'import.meta.env.TEST': 'undefined',
     'import.meta.env.NODE_ENV': JSON.stringify(NODE_ENV),
     'import.meta.env.ASSETS_PATH': '"/assets/"',
     'import.meta.env.VITE_DEV_SLOW_DOWN_MS': 'undefined',
@@ -101,7 +93,6 @@ export default (await packageOptions).map((options) => {
       json(),
       globImportFrag(),
       commonjs(),
-      alias(aliases),
       esbuild(esbuildOptions),
       replace(replacements),
       postcss({ inject: true }),
@@ -109,7 +100,7 @@ export default (await packageOptions).map((options) => {
       icons({ compiler: 'jsx', jsx: 'preact', defaultClass: 'icon' }),
       glslOptimize({ optimize: isProd, compress: isProd, glslify: true }),
       url({
-        include: ['**/*.svg', '**/*.png', '**/*.jp(e)?g', '**/*.gif', '**/*.webp', '**/*.wasm'],
+        include: ['**/*.svg', '**/*.png', '**/*.jp(e)?g', '**/*.gif', '**/*.webp'],
         limit: 0,
         destDir: resolve(dist, 'assets'),
       }),

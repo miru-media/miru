@@ -102,7 +102,7 @@ export const AssetBinVideo = () => {
           ))
         }}
       </div>
-      <AssetBinVideoPreview activeVideo={activeVideo} />
+      {() => activeVideo.value && <AssetBinVideoPreview activeVideo={activeVideo} />}
     </div>
   )
 }

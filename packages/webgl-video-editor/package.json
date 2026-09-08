@@ -25,7 +25,8 @@
     "./sync": "./src/sync/index.ts",
     "./yjs": "./src/yjs/index.ts",
     "./yjs/utils": "./src/yjs/utils.ts",
-    "./otio": "./src/otio/index.ts"
+    "./otio": "./src/otio/index.ts",
+    "./storage-worker": "./src/storage/storage-worker.ts"
   },
   "publishConfig": {
     "module": "dist/webgl-video-editor.js",
@@ -38,12 +39,13 @@
       "./sync": "./dist/sync.js",
       "./yjs": "./dist/yjs.js",
       "./yjs/utils": "./dist/yjs/utils.ts",
-      "./otio": "./dist/otio.js"
+      "./otio": "./dist/otio.js",
+      "./storage-worker": "./dist/storage-worker.js"
     }
   },
   "sideEffects": [
     "dist/webgl-video-editor.js",
-    "index.ts"
+    "src/index.ts"
   ],
   "author": "Taye Adeyemi",
   "license": "AGPL-3.0-only",
@@ -63,6 +65,8 @@
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "idb-keyval": "catalog:",
+    "@libav.js/variant-opus": "catalog:",
+    "libavjs-webcodecs-polyfill": "catalog:",
     "mediabunny": "catalog:",
     "pixi.js": "^8.19.0",
     "stats.js": "catalog:",
@@ -88,9 +92,5 @@
     "vue": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@libav.js/variant-opus": "catalog:",
-    "libavjs-webcodecs-polyfill": "catalog:"
   }
 }

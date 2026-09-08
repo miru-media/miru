@@ -91,6 +91,7 @@ export const extendViteConfig = (config: UserConfig): UserConfig => {
       jsxImportSource: 'fine-jsx',
     },
     optimizeDeps: {
+      exclude: ['libavjs-webcodecs-polyfill'],
       esbuildOptions: {
         define: {
           global: 'globalThis',

@@ -26,7 +26,6 @@ const packageOptions = (async () => {
           { src: path.resolve(options.root, 'src/glsl'), dest: options.dist },
         ],
       }),
-      alwaysBundle: ['@libav.js/variant-opus'],
     },
     {
       root: 'packages/webgl-media-editor',
@@ -56,9 +55,16 @@ const packageOptions = (async () => {
         yjs: 'src/yjs/index.ts',
         'yjs/utils': 'src/yjs/utils.ts',
         otio: 'src/otio/index.ts',
+        'storage-worker': 'src/storage/storage-worker.ts',
       },
       copy: (options) => ({
-        targets: [{ src: path.resolve(options.root, 'src/types/*'), dest: options.dist }],
+        targets: [
+          { src: path.resolve(options.root, 'src/types/*'), dest: options.dist },
+          {
+            src: path.resolve(options.root, '../shared/locales/*'),
+            dest: path.resolve(options.dist, 'locales'),
+          },
+        ],
       }),
     },
   ]
