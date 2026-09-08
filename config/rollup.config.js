@@ -27,7 +27,9 @@ const { NODE_ENV } = process.env
 const isProd = NODE_ENV === 'production'
 const PUBLIC_PACKAGE_DIRS = getPublickPackageDirs()
 const pnpmWorkspace = YAML.parse(readFileSync(resolve(ROOT, 'pnpm-workspace.yaml')).toString())
-const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies).filter((dep) => dep !== 'libavjs-webcodecs-polyfill')
+const PATCHED_DEPS = Object.keys(pnpmWorkspace.patchedDependencies).filter(
+  (dep) => dep !== 'libavjs-webcodecs-polyfill',
+)
 
 /** @type {import('rollup-plugin-esbuild-transform').Options[]} */
 const esbuildOptions = [

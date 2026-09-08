@@ -60,7 +60,10 @@ const packageOptions = (async () => {
       copy: (options) => ({
         targets: [
           { src: path.resolve(options.root, 'src/types/*'), dest: options.dist },
-          { src: path.resolve(options.root, '../shared/locales/*'), dest: path.resolve(options.dist, 'locales')}
+          {
+            src: path.resolve(options.root, '../shared/locales/*'),
+            dest: path.resolve(options.dist, 'locales'),
+          },
         ],
       }),
     },
