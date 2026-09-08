@@ -2,6 +2,7 @@ import * as Y from 'yjs'
 import { YTree } from 'yjs-orderedtree'
 
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '#constants'
+import type * as pub from '#core'
 import type * as Schema from '#schema'
 
 import { createInitialDocument } from '../sync/utils.ts'
@@ -27,9 +28,13 @@ const createYarrayOfYmaps = (values: Record<string, unknown>[]): Y.Array<Y.Map<u
 
 export const initYjsRoot = (
   root: Y.Doc | Y.Map<any>,
-): { ytree: YTree; settings: Y.Map<any>; ydoc: Y.Doc } => {
+): { ytree: YTree; settings: Y.Map<any>; links: Y.Array<Schema.NodeLink>; ydoc: Y.Doc } => {
   const ytree = new YTree(getOrCreateYmap(root, YTREE_YMAP_KEY))
   const settignsYmap = getOrCreateYmap(root, 'settings')
+  const linksArray =
+    'getArray' in root
+      ? root.getArray<Schema.NodeLink>('links')
+      : (root.get('links') as Y.Array<Schema.NodeLink>)
 
   const settings: Schema.DocumentSettings = {
     resolution: DEFAULT_RESOLUTION,
@@ -47,7 +52,38 @@ export const initYjsRoot = (
 
   ytree.recomputeParentsAndChildren()
 
-  return { ytree, settings: settignsYmap, ydoc: settignsYmap.doc! }
+  return { ytree, settings: settignsYmap, links: linksArray, ydoc: settignsYmap.doc! }
+}
+
+export const getValidLinksFromYarray = (
+  doc: pub.Document,
+  links: Y.Array<Schema.NodeLink>,
+): Map<string, Schema.NodeLink> => {
+  const valid = new Map<string, Schema.NodeLink>()
+  const linkedNodeIds = new Set<string>()
+
+  for (let i = links.length - 1; i >= 0; i--) {
+    const link = links.get(i)
+
+    if (link.nodes.some(({ id }) => linkedNodeIds.has(id))) continue
+
+    const resolvableItems = link.nodes.filter(({ id }) => doc.nodes.has(id))
+    if (resolvableItems.length < 2) continue
+
+    // clips must not be on the same track
+    const trackIds = new Set<string>()
+    for (const item of link.nodes) {
+      if (item.type === 'track') continue
+
+      const { id: parentId } = doc.nodes.get(item.id).parent!
+      if (trackIds.has(parentId)) continue
+      trackIds.add(parentId)
+    }
+
+    valid.set(link.id, link)
+  }
+
+  return valid
 }
 
 const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void => {
@@ -103,7 +139,7 @@ export const initYmapFromJson = ({
   const ydoc = 'doc' in root ? root.doc : root
 
   const init = (): void => {
-    const { ytree, settings } = initYjsRoot(root)
+    const { ytree, settings, links } = initYjsRoot(root)
 
     const addNodeAndChildren = (
       parentKey: string,
@@ -128,6 +164,7 @@ export const initYmapFromJson = ({
     }
 
     addNodeAndChildren('', content.timeline, '', false)
+    links.push(content.links)
 
     // update doc settings
     const { resolution, frameRate } = content

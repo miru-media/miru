@@ -8,7 +8,14 @@ import { AudioClip, VideoClip } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
-import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
+import {
+  DocDisposeEvent,
+  LinkCreateEvent,
+  LinkDeleteEvent,
+  LinkUpdateEvent,
+  PlaybackSeekEvent,
+  SettingsUpdateEvent,
+} from './events.ts'
 import { TextClip } from './nodes/clips/text-clip.ts'
 import { Timeline } from './nodes/timeline.ts'
 import { Track } from './nodes/track.ts'
@@ -43,6 +50,11 @@ export class Document implements pub.Document {
   declare parent?: undefined
 
   nodes = new NodeMap()
+  readonly #links = ref(new Map<string, Schema.NodeLink>())
+  get links(): Map<string, Schema.NodeLink> {
+    return this.#links.value
+  }
+
   declare assets: pub.VideoEditorAssetStore
   readonly #ownsAssetStore: boolean = false
 
@@ -140,6 +152,35 @@ export class Document implements pub.Document {
     return node as pub.NodesByType[T['type']]
   }
 
+  createLink(init: Schema.NodeLink) {
+    ;(this.#links.value = new Map(this.links)).set(init.id, init)
+    this.emit(new LinkCreateEvent(init))
+    return init
+  }
+
+  updateLink(id: string, nodes: Schema.NodeLink['nodes']) {
+    const link = this.links.get(id)!
+    const from = link.nodes
+
+    if (from.length === nodes.length && from.every((n, i) => n.id === nodes[i].id)) return
+
+    this.#links.value = new Map(this.links)
+    link.nodes = nodes.map(({ id, type }) => ({ id, type }))
+    this.emit(new LinkUpdateEvent(link, from))
+  }
+
+  deleteLink(id: string) {
+    const init = this.links.get(id)
+    if (!init) return
+
+    ;(this.#links.value = new Map(this.links)).delete(id)
+    this.emit(new LinkDeleteEvent(init))
+  }
+
+  getLinkOf(nodeId: string): Schema.NodeLink | undefined {
+    for (const link of this.links.values()) if (link.nodes.some((n) => n.id === nodeId)) return link
+  }
+
   seekTo(time: number): void {
     this._setCurrentTime(Rational.fromDecimal(time, this.frameRate).valueOf())
     this.emit(SEEK_EVENT)
@@ -185,6 +226,8 @@ export class Document implements pub.Document {
     }
 
     createChildren(this.timeline, content.timeline.children)
+
+    content.links.forEach((init) => void this.links.set(init.id, init))
   }
 
   toJSON(): Schema.SerializedDocument {
@@ -206,6 +249,7 @@ export class Document implements pub.Document {
         .filter((asset) => !asset.isBuiltIn)
         .map((asset) => asset.toJSON()),
       timeline: serialize(this.timeline),
+      links: Array.from(this.links.values()),
     }
   }
 

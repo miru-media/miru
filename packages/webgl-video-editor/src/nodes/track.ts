@@ -17,6 +17,7 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
   static FIELDS = super.FIELDS.concat([
     { key: 'trackType', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'duration', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'link', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.Track>[])
 
   declare trackType: 'video' | 'audio'
@@ -25,6 +26,11 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
 
   get duration(): Rational {
     return this.#duration.value
+  }
+
+  readonly #link = computed(() => this.doc.getLinkOf(this.id))
+  get link(): Schema.NodeLink | undefined {
+    return this.#link.value
   }
 
   protected _init(init: Schema.Track): void {

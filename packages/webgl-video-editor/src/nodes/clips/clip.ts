@@ -28,6 +28,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     { key: 'isInClipTime', flags: NODE_FIELD_FLAGS.Readonly },
 
     { key: 'gap', flags: NODE_FIELD_FLAGS.Gap },
+    { key: 'link', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.Clip>[])
 
   static TRANSFORM_FIELDS = [
@@ -71,6 +72,11 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   }
   get isInClipTime(): boolean {
     return this.#isInClipTime.value
+  }
+
+  readonly #link = computed(() => this.doc.getLinkOf(this.id))
+  get link(): Schema.NodeLink | undefined {
+    return this.#link.value
   }
 
   protected _init(): void {

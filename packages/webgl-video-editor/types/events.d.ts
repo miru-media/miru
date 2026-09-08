@@ -1,7 +1,6 @@
+import type * as pub from '#core'
+import type { ChildNodePosition, Schema } from '#core'
 import type { KeyofUnion } from '#internal'
-
-import type { ChildNodePosition } from './core'
-import type * as pub from './core'
 
 export class DocDisposeEvent extends Event {
   declare readonly type: 'doc:dispose'
@@ -89,6 +88,24 @@ export class AssetDeleteEvent extends Event {
 
   constructor(asset: pub.AnyAsset)
   clone(asset?: pub.AnyAsset): this
+}
+
+export class LinkCreateEvent extends Event {
+  readonly type: 'link:create'
+  readonly link: Schema.NodeLink
+
+  constructor(link: Schema.NodeLink)
+  clone(link?: Schema.NodeLink): this
+}
+
+export class LinkUpdateEvent extends LinkCreateEvent {
+  readonly type: 'link:update'
+  constructor(link: Schema.NodeLink, from: Schema.NodeLink['nodes'])
+  clone(link?: Schema.NodeLink, from?: Schema.NodeLink['nodes']): this
+}
+
+export class LinkDeleteEvent extends LinkCreateEvent {
+  readonly type: 'link:delete'
 }
 
 export class PlaybackPlayEvent extends Event {

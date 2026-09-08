@@ -33,10 +33,6 @@ export abstract class BaseNode<
     { key: 'index', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'prev', flags: NODE_FIELD_FLAGS.Node },
     { key: 'next', flags: NODE_FIELD_FLAGS.Node },
-    { key: 'prevVideo', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
-    { key: 'nextVideo', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
-    { key: 'prevAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
-    { key: 'nextAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.BaseNode & { type: string }>[]
 
   static _reactiveKeys: Set<string> | undefined
@@ -83,19 +79,6 @@ export abstract class BaseNode<
     this.#next.value = other
   }
 
-  get prevVideo() {
-    for (let other = this.prev; other; other = other.prev) if (other.isVideo()) return other
-  }
-  get nextVideo() {
-    for (let other = this.next; other; other = other.next) if (other.isVideo()) return other
-  }
-  get prevAudio() {
-    for (let other = this.prev; other; other = other.prev) if (other.isAudio()) return other
-  }
-  get nextAudio() {
-    for (let other = this.next; other; other = other.next) if (other.isAudio()) return other
-  }
-
   protected readonly _abort = new AbortController()
   isDisposed = false
 
@@ -117,7 +100,7 @@ export abstract class BaseNode<
     this.type = init.type
 
     this._fields().forEach((field) => {
-      if (field.flags !== 0) return
+      if (field.flags !== 0 /* NODE_FIELD_FLAGS.ReactiveProp */) return
       const { key } = field
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- tsc and eslint give different types
       this._defineReactive(key as any, (init as any)[key], field as any)

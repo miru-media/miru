@@ -17,7 +17,13 @@ export const Track = ({ track, ...props }: { track: pub.Track; [index: string]: 
     >
       {() =>
         track.children.map((node) => {
-          const isSelected = () => !!editor.selection?.isNode && editor.selection.id === node.id
+          const isSelected = () => {
+            const { selection } = editor
+            return !!(
+              selection?.isNode &&
+              (selection.id === node.id || (selection.link && selection.link.id === node.link?.id))
+            )
+          }
 
           return <Clip {...{ editor, node, isSelected }} />
         })

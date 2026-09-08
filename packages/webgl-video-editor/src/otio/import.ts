@@ -94,6 +94,7 @@ class OtioImporter {
       ...settings,
       assets: [],
       timeline: this.timelineStack(otio.tracks),
+      links: [],
     }
   }
 

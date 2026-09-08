@@ -1,5 +1,8 @@
 import type * as pub from '#core'
+import type { Schema } from '#core'
 import type { KeyofUnion } from '#internal'
+
+const getConstructor = (o: any): new (...args: unknown[]) => any => o.constructor
 
 export class DocDisposeEvent extends Event implements pub.DocDisposeEvent {
   declare readonly type: 'doc:dispose'
@@ -11,7 +14,7 @@ export class DocDisposeEvent extends Event implements pub.DocDisposeEvent {
   }
 
   clone(doc = this.doc): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(doc)
+    return new (getConstructor(this))(doc)
   }
 }
 
@@ -24,7 +27,7 @@ export class SettingsUpdateEvent extends Event implements pub.SettingsUpdateEven
     this.from = from
   }
   clone(from = this.from): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(from)
+    return new (getConstructor(this))(from)
   }
 }
 
@@ -37,7 +40,7 @@ export class NodeCreateEvent extends Event implements pub.NodeCreateEvent {
     this.node = node
   }
   clone(node = this.node): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(node)
+    return new (getConstructor(this))(node)
   }
 }
 
@@ -60,7 +63,7 @@ export class NodeUpdateEvent<
     this.from = from
   }
   clone(node = this.node, key = this.key, from = this.from): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(node, key, from)
+    return new (getConstructor(this))(node, key, from)
   }
 }
 
@@ -77,7 +80,7 @@ export class NodeGapUpdateEvent extends Event implements pub.NodeGapUpdateEvent 
     this.from = from
   }
   clone(node = this.node, key = this.key, from = this.from): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(node, key, from)
+    return new (getConstructor(this))(node, key, from)
   }
 }
 
@@ -92,7 +95,7 @@ export class NodeMoveEvent extends Event implements pub.NodeMoveEvent {
     this.from = from
   }
   clone(node = this.node, from = this.from): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(node, from)
+    return new (getConstructor(this))(node, from)
   }
 }
 
@@ -105,7 +108,43 @@ export class NodeDeleteEvent extends Event implements pub.NodeDeleteEvent {
     this.node = node
   }
   clone(node = this.node): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(node)
+    return new (getConstructor(this))(node)
+  }
+}
+
+class LinkEvent_<T extends string> extends Event {
+  declare readonly type: `link:${T}`
+  readonly link: Schema.NodeLink
+
+  constructor(subtype: T, link: Schema.NodeLink) {
+    super(`link:${subtype}`)
+    this.link = link
+  }
+  clone(link?: Schema.NodeLink): this {
+    return new (getConstructor(this))(link)
+  }
+}
+
+export class LinkCreateEvent extends LinkEvent_<'create'> implements pub.LinkCreateEvent {
+  constructor(link: Schema.NodeLink) {
+    super('create', link)
+  }
+}
+
+export class LinkDeleteEvent extends LinkEvent_<'delete'> implements pub.LinkDeleteEvent {
+  constructor(link: Schema.NodeLink) {
+    super('delete', link)
+  }
+}
+
+export class LinkUpdateEvent extends LinkEvent_<'update'> implements pub.LinkUpdateEvent {
+  readonly from: Schema.NodeLink['nodes']
+  constructor(link: Schema.NodeLink, from: Schema.NodeLink['nodes']) {
+    super('update', link)
+    this.from = from
+  }
+  clone(link: Schema.NodeLink = this.link, from: Schema.NodeLink['nodes'] = this.from): this {
+    return new (getConstructor(this))(link, from)
   }
 }
 
@@ -120,7 +159,7 @@ export class AssetCreateEvent extends Event implements pub.AssetCreateEvent {
     this.source = source
   }
   clone(asset = this.asset, source = this.source): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(asset, source)
+    return new (getConstructor(this))(asset, source)
   }
 }
 
@@ -133,7 +172,7 @@ export class AssetDeleteEvent extends Event implements pub.AssetDeleteEvent {
     this.asset = asset
   }
   clone(asset = this.asset): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(asset)
+    return new (getConstructor(this))(asset)
   }
 }
 
@@ -180,6 +219,6 @@ export class CanvasEvent<T extends string> extends Event implements pub.CanvasEv
     this.node = node
   }
   clone(node = this.node): this {
-    return new (this.constructor as new (...args: unknown[]) => any)(this.canvasEventType, node)
+    return new (getConstructor(this))(this.canvasEventType, node)
   }
 }
