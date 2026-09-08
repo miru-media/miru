@@ -67,6 +67,7 @@ test('populates document from Yjs data', () => {
     frameRate: 60,
     assets: [],
     timeline: makeTimeline([trackInit]),
+    links: [],
   } satisfies Schema.SerializedDocument)
 })
 

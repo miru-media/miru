@@ -17,4 +17,5 @@ export const docWithTracks = (tracks: Schema.SerializedTrack[]) =>
     frameRate: 25,
     assets: [],
     timeline: { id: 'timeline', type: 'timeline', children: tracks },
+    links: [],
   }) satisfies Schema.SerializedDocument

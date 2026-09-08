@@ -21,6 +21,18 @@ export interface TransformProps {
 export type FontStyle = 'normal' | 'italic' | 'oblique'
 export type TextAlign = 'left' | 'center' | 'right' | 'justify'
 
+export interface NodeRef {
+  nodeId: string
+}
+export interface AssetRef {
+  assetId: string
+}
+
+export interface NodeLink {
+  id: string
+  nodes: Pick<Track | AnyClip, 'id' | 'type'>[]
+}
+
 interface Base {
   id: string
   type: string
@@ -108,10 +120,6 @@ export interface TrackChild extends Base {
   duration: Rational
 }
 
-export interface MediaAssetRef {
-  assetId: string
-}
-
 export interface MediaAssetPlaceholderRef {
   assetId?: undefined
 }
@@ -119,7 +127,7 @@ export interface MediaAssetPlaceholderRef {
 export interface BaseClip extends TrackChild {
   type: `clip:${string}`
   sourceStart: Rational
-  mediaRef?: MediaAssetRef | MediaAssetPlaceholderRef
+  mediaRef?: AssetRef | MediaAssetPlaceholderRef
   transition?: { assetId: string; duration: Rational }
 }
 
@@ -185,4 +193,5 @@ export type AnySerializedNode = SerializedNodeSchemasByType[keyof SerializedNode
 export interface SerializedDocument extends DocumentSettings {
   assets: AnyAssetSchema[]
   timeline: SerializedTimeline
+  links: NodeLink[]
 }

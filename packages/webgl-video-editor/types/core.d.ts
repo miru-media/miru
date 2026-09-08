@@ -9,6 +9,9 @@ import type {
   AssetDeleteEvent,
   CanvasEvent,
   ErrorEvent,
+  LinkCreateEvent,
+  LinkDeleteEvent,
+  LinkUpdateEvent,
   NodeCreateEvent,
   NodeDeleteEvent,
   NodeGapUpdateEvent,
@@ -45,6 +48,7 @@ export interface ClipTimeRational {
 }
 
 export interface NodeFieldFlags {
+  ReactiveProp: number
   Readonly: number
   Node: number
   NodeArray: number
@@ -76,6 +80,10 @@ export interface VideoEditorEvents {
   'asset:create': AssetCreateEvent
   'asset:delete': AssetDeleteEvent
 
+  'link:create': LinkCreateEvent
+  'link:update': LinkUpdateEvent
+  'link:delete': LinkDeleteEvent
+
   'playback:play': PlaybackPlayEvent
   'playback:pause': PlaybackPauseEvent
   'playback:update': PlaybackUpdateEvent
@@ -95,6 +103,7 @@ export interface Document extends Schema.DocumentSettings {
   readonly timeline: Timeline
   readonly assets: VideoEditorAssetStore
   readonly nodes: NodeMap
+  readonly links: Map<string, Schema.NodeLink>
   /** True if the video has no clips */
   readonly isEmpty: boolean
 
@@ -104,6 +113,11 @@ export interface Document extends Schema.DocumentSettings {
   activeClipIsStalled: Ref<boolean>
 
   createNode: <T extends Schema.AnyNode>(init: T) => NodesByType[T['type']]
+
+  createLink: (init: Schema.NodeLink) => Schema.NodeLink
+  updateLink: (id: string, nodes: Schema.NodeLink['nodes']) => void
+  deleteLink: (id: string) => void
+  getLinkOf: (nodeId: string) => Schema.NodeLink | undefined
 
   /**
    * Seek to the given time of the video.
@@ -139,10 +153,6 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   readonly index: number
   prev?: AnyNode
   next?: AnyNode
-  readonly prevVideo: AnyVideoNode | undefined
-  readonly nextVideo: AnyVideoNode | undefined
-  readonly prevAudio: AnyAudioNode | undefined
-  readonly nextAudio: AnyAudioNode | undefined
   enabled: boolean
   effects: NonNullable<Schema.Base['effects']>
   isDisposed: boolean
@@ -189,12 +199,9 @@ export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
   readonly trackType: TrackType
   readonly parent?: Timeline
   readonly duration: Rational
+  readonly link: Schema.NodeLink | undefined
   prev?: Track
   next?: Track
-  readonly prevVideo: VideoTrack | undefined
-  readonly nextVideo: VideoTrack | undefined
-  readonly prevAudio: AudioTrack | undefined
-  readonly nextAudio: AudioTrack | undefined
   toJSON: () => Schema.Track
 }
 export interface VideoTrack extends Track {
@@ -227,6 +234,7 @@ export interface Clip extends TrackChild, Schema.BaseClip {
   readonly expectedMediaTime: number
   readonly isInClipTime: boolean
   readonly mediaSize: { width: number; height: number }
+  readonly link: Schema.NodeLink | undefined
 }
 
 export interface VideoClip

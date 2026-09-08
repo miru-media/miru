@@ -136,6 +136,77 @@ const assets = {
 
 export const demoDoc = createInitialDocument()
 
+const mainVideoTrack: Schema.SerializedTrack = {
+  id: uid(),
+  type: 'track',
+  trackType: 'video',
+  children: [
+    {
+      id: uid(),
+      type: 'clip:video',
+      name: assets.waves.name,
+      sourceStart: { value: 90000, rate: 30000 },
+      duration: { value: 90000, rate: 30000 },
+      mediaRef: { assetId: assets.waves.id },
+      ...scale1080p,
+      effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
+    },
+    {
+      id: uid(),
+      type: 'clip:video',
+      name: assets.wavesRocks.name,
+      sourceStart: { value: 60000, rate: 30000 },
+      duration: { value: 120000, rate: 30000 },
+      mediaRef: { assetId: assets.wavesRocks.id },
+      ...scale1080p,
+      effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 0.5 }],
+    },
+    {
+      id: uid(),
+      type: 'clip:video',
+      name: assets.waveBreaking.name,
+      sourceStart: { value: 38400, rate: 12800 },
+      duration: { value: 38400, rate: 12800 },
+      mediaRef: { assetId: assets.waveBreaking.id },
+      ...scale720p,
+      effects: [{ id: uid(), assetId: 'filter:Chromatic', intensity: 0.75 }],
+    },
+    {
+      id: uid(),
+      type: 'clip:video',
+      name: assets.turtle.name,
+      sourceStart: { value: 33484, rate: 15360 },
+      duration: { value: 76800, rate: 15360 },
+      mediaRef: { assetId: assets.turtle.id },
+      ...scale720p,
+      effects: [{ id: uid(), assetId: 'filter:Vintage', intensity: 0.3 }],
+    },
+    {
+      id: uid(),
+      type: 'clip:video',
+      name: assets.waves.name,
+      sourceStart: { value: 30000, rate: 30000 },
+      duration: { value: 60000, rate: 30000 },
+      mediaRef: { assetId: assets.waves.id },
+      ...scale1080p,
+      effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
+    },
+  ],
+}
+
+const mainAudioTrack: Schema.SerializedTrack = {
+  id: uid(),
+  type: 'track',
+  trackType: 'audio',
+  children: mainVideoTrack.children.map(({ name, sourceStart, duration }) => ({
+    id: uid(),
+    type: 'clip:audio',
+    name,
+    sourceStart,
+    duration,
+  })),
+}
+
 demoDoc.resolution = { width: 1080, height: 1920 }
 demoDoc.frameRate = 24
 demoDoc.assets = Object.values(assets)
@@ -161,63 +232,8 @@ demoDoc.timeline.children.push(
       },
     ],
   },
-  {
-    id: uid(),
-    type: 'track',
-    trackType: 'video',
-    children: [
-      {
-        id: uid(),
-        type: 'clip:video',
-        name: assets.waves.name,
-        sourceStart: { value: 90000, rate: 30000 },
-        duration: { value: 90000, rate: 30000 },
-        mediaRef: { assetId: assets.waves.id },
-        ...scale1080p,
-        effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
-      },
-      {
-        id: uid(),
-        type: 'clip:video',
-        name: assets.wavesRocks.name,
-        sourceStart: { value: 60000, rate: 30000 },
-        duration: { value: 120000, rate: 30000 },
-        mediaRef: { assetId: assets.wavesRocks.id },
-        ...scale1080p,
-        effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 0.5 }],
-      },
-      {
-        id: uid(),
-        type: 'clip:video',
-        name: assets.waveBreaking.name,
-        sourceStart: { value: 38400, rate: 12800 },
-        duration: { value: 38400, rate: 12800 },
-        mediaRef: { assetId: assets.waveBreaking.id },
-        ...scale720p,
-        effects: [{ id: uid(), assetId: 'filter:Chromatic', intensity: 0.75 }],
-      },
-      {
-        id: uid(),
-        type: 'clip:video',
-        name: assets.turtle.name,
-        sourceStart: { value: 33484, rate: 15360 },
-        duration: { value: 76800, rate: 15360 },
-        mediaRef: { assetId: assets.turtle.id },
-        ...scale720p,
-        effects: [{ id: uid(), assetId: 'filter:Vintage', intensity: 0.3 }],
-      },
-      {
-        id: uid(),
-        type: 'clip:video',
-        name: assets.waves.name,
-        sourceStart: { value: 30000, rate: 30000 },
-        duration: { value: 60000, rate: 30000 },
-        mediaRef: { assetId: assets.waves.id },
-        ...scale1080p,
-        effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
-      },
-    ],
-  },
+  mainVideoTrack,
+  mainAudioTrack,
   {
     id: uid(),
     type: 'track',
@@ -249,4 +265,20 @@ demoDoc.timeline.children.push(
       },
     ],
   },
+)
+
+const toLinkItem = (node: Schema.Linkable): Schema.NodeLink['nodes'][number] => ({
+  id: node.id,
+  type: node.type,
+})
+
+demoDoc.links.push(
+  {
+    id: uid(),
+    nodes: [toLinkItem(mainVideoTrack), toLinkItem(mainAudioTrack)],
+  },
+  ...demoDoc.timeline.children[1].children.map((video, index) => ({
+    id: uid(),
+    nodes: [toLinkItem(video), toLinkItem(mainAudioTrack.children[index])],
+  })),
 )

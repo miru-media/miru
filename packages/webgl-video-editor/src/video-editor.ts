@@ -32,6 +32,10 @@ export class VideoEditor implements pub.VideoEditor {
   readonly sync?: pub.VideoEditorDocumentSync
 
   readonly #selection = ref<pub.AnyTrackChild | pub.GapSelection>()
+  readonly #linkedSelection = computed(() => {
+    const { selection } = this
+    return selection?.isNode && selection.isClip() ? (selection.link?.nodes ?? []) : []
+  })
   readonly _timelineContainer = ref<HTMLElement>()
   readonly _timelineSize = useElementSize(this._timelineContainer)
   readonly _viewportContainer = ref<HTMLElement>()
@@ -110,6 +114,9 @@ export class VideoEditor implements pub.VideoEditor {
   get selection(): EditView.AnyTrackChild | pub.GapSelection | undefined {
     const selection = this.#selection.value
     return selection?.isNode ? this.doc._getNode(selection) : selection
+  }
+  get linkedSelection(): EditView.AnyClip[] {
+    return this.#linkedSelection.value
   }
 
   get tracks(): pub.Track[] {

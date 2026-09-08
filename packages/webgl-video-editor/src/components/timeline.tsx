@@ -199,20 +199,23 @@ export const Timeline = ({
                 </div>
               </>
             ) : (
-              doc.timeline.children.map((track) => (
-                <>
-                  <div
-                    data-before-track-id={track.id}
-                    class={() => [
-                      styles.clipDragTrackSpace,
-                      editor.drag.targetTrack?.id === track.id &&
-                        editor.drag.targetTrack.before &&
-                        styles.active,
-                    ]}
-                  />
-                  <Track data-track-id={track.id} track={track} />
-                </>
-              ))
+              doc.timeline.children.map((track) =>
+                // hide linked audio tracks of video
+                track.link && track.trackType === 'audio' ? null : (
+                  <>
+                    <div
+                      data-before-track-id={track.id}
+                      class={() => [
+                        styles.clipDragTrackSpace,
+                        editor.drag.targetTrack?.id === track.id &&
+                          editor.drag.targetTrack.before &&
+                          styles.active,
+                      ]}
+                    />
+                    <Track data-track-id={track.id} track={track} />
+                  </>
+                ),
+              )
             )
           }
         </div>

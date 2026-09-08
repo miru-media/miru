@@ -71,7 +71,7 @@ export namespace Otio {
   export interface MediaReference {
     OTIO_SCHEMA: 'ExternalReference.1'
     metadata: {
-      Miru: Schema.MediaAssetRef | Schema.MediaAssetPlaceholderRef | undefined
+      Miru: Schema.AssetRef | Schema.MediaAssetPlaceholderRef | undefined
       [index: string]: unknown
     }
     name: string | null

@@ -11,6 +11,7 @@ import type { ViewType } from '../document-view.ts'
 import { NodeView } from '../node-view.ts'
 
 import type { EditDocument, ViewTypeMap } from './edit-document.ts'
+import type { EditNodeLink } from './edit-node-link.ts'
 
 declare module 'webgl-video-editor' {
   export interface BaseNode {
@@ -53,6 +54,11 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
   declare prev?: ViewType<ViewTypeMap, T['prev']>
   declare next?: ViewType<ViewTypeMap, T['next']>
   declare children?: T extends { children: any[] } ? ViewType<ViewTypeMap, T['children'][number]>[] : never
+
+  get link(): T extends EditNodeLink.Linkable ? EditNodeLink<T> | undefined : never {
+    const { link } = this.original as EditNodeLink.Linkable
+    return (link && this.docView.links.get(link.id)) as never
+  }
 
   _move = super._move.bind(this)
   _update = super._update.bind(this)
@@ -144,6 +150,11 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case '_editedProps':
       case '_isEnding':
         return target[key]
+
+      // link
+      case 'link': {
+        return target.link
+      }
 
       // node array properties
       case 'children':

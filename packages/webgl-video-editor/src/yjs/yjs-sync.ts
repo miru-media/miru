@@ -16,10 +16,10 @@ import type {
 
 import { TIMELINE_ID } from '../constants.ts'
 import { Document } from '../document.ts'
-import { NodeCreateEvent } from '../events.ts'
+import { LinkCreateEvent, NodeCreateEvent } from '../events.ts'
 
 import { YTREE_ROOT_KEY } from './constants.ts'
-import { createYnodeFromJson, initYjsRoot, initYmapFromJson } from './utils.ts'
+import { createYnodeFromJson, getValidLinksFromYarray, initYjsRoot, initYmapFromJson } from './utils.ts'
 
 const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
   if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
@@ -41,11 +41,18 @@ const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): voi
   }
 }
 
+const findIndexByIdProp = (yarray: Y.Array<any>, id: string): number => {
+  const { length } = yarray
+  for (let i = 0; i < length; i++) if (yarray.get(i).id === id) return i
+  return -1
+}
+
 export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync {
   doc!: pub.Document
 
   readonly ydoc: Y.Doc
   readonly settingsYmap: Y.Map<unknown>
+  readonly linksYarray: Y.Array<Schema.NodeLink>
   readonly #ytree!: YTree
   readonly #yundo!: Y.UndoManager
 
@@ -63,7 +70,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
   readonly #abort = new AbortController()
 
   #isSyncingYdocToVideoDoc = false
-  get #shouldSkipNodeEvent(): boolean {
+  get #shouldSkipDocEvent(): boolean {
     return this.#yundo.undoing || this.#yundo.redoing || this.#isSyncingYdocToVideoDoc
   }
 
@@ -73,7 +80,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     super()
     const doc = (this.doc = new Document({ assets }))
 
-    const { ytree, settings, ydoc } = initYjsRoot(ydocOrMap)
+    const { ytree, settings, links, ydoc } = initYjsRoot(ydocOrMap)
 
     // update ndoes with old 'clip' type
     {
@@ -91,8 +98,9 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
 
     this.ydoc = ydoc
     this.#ytree = ytree
-    this.#yundo = new Y.UndoManager([ytree._ymap, settings])
+    this.#yundo = new Y.UndoManager([ytree._ymap, settings, links])
     this.settingsYmap = settings
+    this.linksYarray = links
 
     doc.resolution = settings.get('resolution') as Size
     doc.frameRate = settings.get('frameRate') as number
@@ -101,35 +109,44 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     this.#ytree._ymap.observe(onYtreeMapEvent)
 
     this.#ytree.observe(this.#onYtreeChange)
+    this.linksYarray.observe(this.#onLinksYarrayChange)
 
     this.#abort.signal.addEventListener('abort', () => {
       this.#ytree._ymap.unobserve(onYtreeMapEvent)
       this.#ytree.unobserve(this.#onYtreeChange)
     })
 
-    doc.nodes.forEach((node) => this.#onNodeCreate(new NodeCreateEvent(node)))
+    this.#withSyncingTrue(() => {
+      doc.nodes.forEach((node) => this.#onNodeCreate(new NodeCreateEvent(node)))
+      doc.links.forEach((link) => this.#onLinkEvent(new LinkCreateEvent(link)))
+    })
 
-    const bindNodeListener = <T extends unknown[]>(
+    const bindDocListener = <T extends unknown[]>(
       listener_: (...args: T) => unknown,
     ): ((...args: T) => void) => {
       const listener = listener_.bind(this)
       return (...args) => {
-        if (!this.#shouldSkipNodeEvent) this.transact(() => listener(...args))
+        if (!this.#shouldSkipDocEvent) this.transact(() => listener(...args))
       }
     }
 
     const listenerOptions: AddEventListenerOptions = { signal: this.#abort.signal }
     doc.on('doc:dispose', this.dispose.bind(this), listenerOptions)
+
     /* eslint-disable @typescript-eslint/unbound-method -- false positive */
-    doc.on('settings:update', bindNodeListener(this.#onSettingsUpdate), listenerOptions)
-    doc.on('node:create', bindNodeListener(this.#onNodeCreate), listenerOptions)
-    doc.on('node:move', bindNodeListener(this.#onMove), listenerOptions)
-    doc.on('node:update', bindNodeListener(this.#onUpdate), listenerOptions)
-    doc.on('node:gap-update', bindNodeListener(this.#onGapUpdate), listenerOptions)
-    doc.on('node:delete', bindNodeListener(this.#onDelete), listenerOptions)
+    doc.on('settings:update', bindDocListener(this.#onSettingsUpdate), listenerOptions)
+    doc.on('node:create', bindDocListener(this.#onNodeCreate), listenerOptions)
+    doc.on('node:move', bindDocListener(this.#onMove), listenerOptions)
+    doc.on('node:update', bindDocListener(this.#onUpdate), listenerOptions)
+    doc.on('node:gap-update', bindDocListener(this.#onGapUpdate), listenerOptions)
+    doc.on('node:delete', bindDocListener(this.#onDelete), listenerOptions)
+    const linkEventListener = bindDocListener(this.#onLinkEvent)
+    doc.on('link:create', linkEventListener, listenerOptions)
+    doc.on('link:delete', linkEventListener, listenerOptions)
     /* eslint-enable @typescript-eslint/unbound-method */
 
     this.#onYtreeChange()
+    this.#onLinksYarrayChange()
 
     const onStackChange = (): void => {
       const yundo = this.#yundo
@@ -235,6 +252,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
       )
       this.#pendingNodeDeletions.clear()
 
+      this.#onLinksYarrayChange()
       this.dispatchEvent(new Event('change'))
     })
 
@@ -282,6 +300,23 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
         case 'update':
           throw new Error(`Unexpected update to YTree map value at ${key}`)
       }
+    })
+  }
+
+  readonly #onLinksYarrayChange = (): void => {
+    const { doc } = this
+
+    this.#withSyncingTrue(() => {
+      const validLinks = getValidLinksFromYarray(doc, this.linksYarray)
+
+      validLinks.forEach((link) => {
+        if (doc.links.has(link.id)) doc.updateLink(link.id, link.nodes)
+        else doc.createLink(link)
+      })
+
+      doc.links.forEach((link) => {
+        if (!validLinks.has(link.id)) doc.deleteLink(link.id)
+      })
     })
   }
 
@@ -390,6 +425,30 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     this.#ytree.deleteNodeAndDescendants(node.id)
   }
 
+  #onLinkEvent(event: pub.VideoEditorEvents[Extract<keyof pub.VideoEditorEvents, `link:${string}`>]): void {
+    const { link, type } = event
+    // links may not be updated in shared state
+    if (type === 'link:update') return
+
+    const { linksYarray } = this
+    const index = findIndexByIdProp(linksYarray, link.id)
+
+    switch (type) {
+      case 'link:create':
+        if (index !== -1) return
+        linksYarray.push([{ id: link.id, nodes: link.nodes.map(({ id, type }) => ({ id, type })) }])
+        break
+      case 'link:delete':
+        linksYarray.delete(index)
+        break
+    }
+
+    // delete all other intersecting links
+    const nodeIds = new Set(link.nodes.map((n) => n.id))
+    for (let i = linksYarray.length - 1; i >= 0; i--)
+      if (linksYarray.get(i).nodes.some((n) => nodeIds.has(n.id))) linksYarray.delete(i)
+  }
+
   reset(): void {
     this.#yundo.clear()
   }
@@ -412,6 +471,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     return {
       ...(this.settingsYmap.toJSON() as Schema.DocumentSettings),
       timeline: serialize(this.doc.timeline.id),
+      links: this.linksYarray.toArray(),
     }
   }
 

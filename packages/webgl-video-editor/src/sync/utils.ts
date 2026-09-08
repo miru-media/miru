@@ -10,4 +10,5 @@ export const createInitialDocument = (): Schema.SerializedDocument =>
       type: 'timeline',
       children: [],
     },
+    links: [],
   }) satisfies Schema.SerializedDocument

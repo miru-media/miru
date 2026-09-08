@@ -1,13 +1,15 @@
-import { createEffectScope } from 'fine-jsx'
+import { createEffectScope, ref } from 'fine-jsx'
 import * as Vue from 'vue'
 
 import type * as pub from '#core'
+import type { Schema } from '#core'
 import type { Valueof } from '#internal'
 
 import { DocumentView, type ViewType } from '../document-view.ts'
 import { defineWrapperProps } from '../utils.ts'
 
 import { ClipDragContext } from './clip-drag-context.ts'
+import { EditNodeLink } from './edit-node-link.ts'
 import { EditClip, EditView } from './edit-nodes.ts'
 
 export interface ViewTypeMap {
@@ -26,7 +28,7 @@ export interface ViewTypeMap {
 export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Document {
   readonly vueScope = Vue.effectScope()
   readonly fineJsxScope = createEffectScope()
-  edits = new Map<pub.AnyNode, pub.Schema.AnyNode>()
+  readonly edits = new Map<pub.AnyNode, pub.Schema.AnyNode>()
 
   declare resolution: pub.Document['resolution']
   declare frameRate: pub.Document['frameRate']
@@ -41,7 +43,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   readonly #eventTarget = new EventTarget()
   readonly ownEvents = new WeakSet<Event>()
 
-  nodes = {
+  readonly nodes = {
     get: <T extends pub.AnyNode>(id: string) =>
       this._getNode(this.doc.nodes.get(id)) as unknown as T & EditView<T>,
     set: () => {
@@ -52,19 +54,26 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
     forEach: this.doc.nodes.forEach,
   }
 
+  readonly #links = ref(new Map<string, EditNodeLink>())
+
+  get links() {
+    return this.#links.value
+  }
+
   seekTo = this.doc.seekTo.bind(this.doc)
   _setCurrentTime = this.doc._setCurrentTime.bind(this.doc)
   importFromJson = this.doc.importFromJson.bind(this.doc)
   toJSON = this.doc.toJSON.bind(this.doc)
   emit = this.doc.emit.bind(this.doc)
 
-  clipDrag = new ClipDragContext()
+  readonly clipDrag = new ClipDragContext()
 
   constructor(doc: pub.Document) {
     super(doc)
 
     const listenerOptions: AddEventListenerOptions = { signal: this._abort.signal }
     const onEventWithNode = this.#onEventWithNode.bind(this)
+    const onEventWithLink = this.#onEventWithLink.bind(this)
 
     // must be before the delete listener is added in this._init()
     this.doc.on('node:delete', onEventWithNode, listenerOptions)
@@ -81,8 +90,12 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
         'canvas:pointerup',
       ] satisfies (keyof pub.VideoEditorEvents)[]
     ).forEach((type) => void this.doc.on(type, onEventWithNode, listenerOptions))
+    ;(['link:create', 'link:update', 'link:delete'] satisfies (keyof pub.VideoEditorEvents)[]).forEach(
+      (type) => void this.doc.on(type, onEventWithLink, listenerOptions),
+    )
 
     this.timeline = this._getNode(doc.timeline)
+    doc.links.forEach((init) => void this.links.set(init.id, new EditNodeLink(this, init)))
   }
 
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
@@ -140,6 +153,62 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
         break
       default:
         newEvent = event.clone(view as any)
+    }
+
+    this.#eventTarget.dispatchEvent(newEvent)
+  }
+
+  createLink(init: pub.Schema.NodeLink): EditNodeLink {
+    this.doc.createLink(init)
+    return this.links.get(init.id)!
+  }
+
+  updateLink(id: string, nodes: Schema.NodeLink['nodes']): void {
+    this.doc.updateLink(id, nodes)
+  }
+
+  deleteLink(id: string): void {
+    this.doc.deleteLink(id)
+  }
+
+  getLinkOf<T extends EditNodeLink.Linkable = EditNodeLink.Linkable>(
+    nodeId: string,
+  ): EditNodeLink<T> | undefined {
+    const link = this.doc.getLinkOf(nodeId)
+    return link && (this.links.get(link.id) as unknown as EditNodeLink<T>)
+  }
+
+  #onEventWithLink(event: pub.VideoEditorEvents[Extract<keyof pub.VideoEditorEvents, `link:${string}`>]) {
+    const linkInit = event.link
+    const { id } = linkInit
+
+    let newEvent
+
+    switch (event.type) {
+      case 'link:create': {
+        const link = new EditNodeLink(this, linkInit)
+        const map = (this.#links.value = new Map(this.links))
+        map.set(id, link)
+
+        newEvent = event.clone(link)
+        break
+      }
+      case 'link:update': {
+        const link = this.links.get(id)
+        if (!link) return
+        newEvent = event.clone(link)
+        break
+      }
+      case 'link:delete': {
+        const map = (this.#links.value = new Map(this.links))
+        const link = map.get(id)
+        if (!link) return
+
+        newEvent = event.clone(link)
+        link.dispose()
+        map.delete(id)
+        break
+      }
     }
 
     this.#eventTarget.dispatchEvent(newEvent)
