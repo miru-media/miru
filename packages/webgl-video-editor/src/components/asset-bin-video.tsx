@@ -8,10 +8,11 @@ import type { MediaAsset } from '../assets/media-asset.ts'
 import styles from '../css/index.module.css'
 
 import { AssetBinVideoPreview } from './asset-bin-video-preview'
-import { useEditor } from './utils.ts'
+import { useEditor, useImportMediaFiles } from './utils.ts'
 
 export const AssetBinVideo = () => {
   const editor = useEditor()
+  const importMediaFiles = useImportMediaFiles()
   const { t } = useI18n()
   const getVideoAssets = (): MediaAsset[] =>
     Array.from(editor.doc.assets.values()).filter(
@@ -22,6 +23,9 @@ export const AssetBinVideo = () => {
   const assets = ref<MediaAsset[]>(getVideoAssets())
   const assetSearchQuery = ref('')
   const activeVideo = ref<MediaAsset | undefined>()
+  const fileInput = ref<HTMLInputElement>()
+
+  const buttonLabel = importMediaFiles ? 'asset_bin_media_import' : 'asset_bin_media_upload'
 
   const assetsFiltered = computed(() => {
     const query = assetSearchQuery.value.trim().toLowerCase()
@@ -42,16 +46,34 @@ export const AssetBinVideo = () => {
     })
   })
 
-  const onInputVideoFile = async (event: InputEvent) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      await editor.createMediaAsset(file)
-    } catch {
-      // eslint-disable-next-line no-alert -- TODO
-      alert(t('error_cannot_play_type'))
+  const addFiles = async (files: File[]) => {
+    for (const file of files) {
+      try {
+        // eslint-disable-next-line no-await-in-loop -- TODO
+        await editor.createMediaAsset(file)
+      } catch {
+        // eslint-disable-next-line no-alert -- TODO
+        alert(t('error_cannot_play_type'))
+      }
     }
+  }
+
+  const onInputVideoFile = async (event: InputEvent) => {
+    const input = event.target
+    const file = input.files?.[0]
+    if (!file) return
+    await addFiles([file])
+    input.value = ''
+  }
+
+  const onUploadClick = async () => {
+    if (importMediaFiles) {
+      const files = await importMediaFiles('video')
+      if (files.length === 0) return
+      await addFiles(files)
+      return
+    }
+    fileInput.value?.click()
   }
 
   const onSearchInput = (event: InputEvent) => {
@@ -60,18 +82,24 @@ export const AssetBinVideo = () => {
 
   return (
     <div class={styles.panelBody}>
-      <label class={[styles.wideButton, styles.textBodyBold]}>
-        <input
-          type="file"
-          accept={ACCEPT_VIDEO_FILE_TYPES}
-          aria-label={t('asset_bin_media_upload')}
-          class={styles.srOnly}
-          onInput={(event: InputEvent) => void onInputVideoFile(event)}
-        />
+      <button
+        type="button"
+        class={[styles.wideButton, styles.textBodyBold]}
+        aria-label={t(buttonLabel)}
+        onClick={() => onUploadClick()}
+      >
         <IconMsUploadRounded />
-        <span>{t('asset_bin_media_upload')}</span>
-      </label>
-
+        <span>{t(buttonLabel)}</span>
+      </button>
+      <input
+        ref={fileInput}
+        type="file"
+        accept={ACCEPT_VIDEO_FILE_TYPES}
+        class={styles.srOnly}
+        tabIndex={-1}
+        aria-hidden="true"
+        onInput={(e: InputEvent) => onInputVideoFile(e)}
+      />
       <input
         type="search"
         value={assetSearchQuery}

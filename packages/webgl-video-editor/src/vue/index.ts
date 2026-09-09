@@ -4,6 +4,7 @@ import * as Vue from 'vue'
 import { renderComponentTo } from 'shared/video/render-to'
 
 import type * as pub from '../../types/webgl-video-editor.ts'
+import type { importMediaBin } from '../components/utils.ts'
 import { VideoEditorUI } from '../components/video-editor-ui.jsx'
 import styles from '../css/index.module.css'
 import { fromVue, toVue } from '../document-views/vue/utils.ts'
@@ -31,6 +32,10 @@ export default Vue.defineComponent({
     },
     onClickHelp: {
       type: Function as Vue.PropType<() => unknown>,
+      required: false,
+    },
+    importMediaFiles: {
+      type: Function as Vue.PropType<(bin: importMediaBin) => Promise<File[]>>,
       required: false,
     },
     messages: { type: Object as Vue.PropType<Record<string, Record<string, string>>>, required: false },
@@ -62,6 +67,7 @@ export default Vue.defineComponent({
           editor,
           children,
           onClickHelp: props.onClickHelp,
+          importMediaFiles: props.importMediaFiles,
           i18n: {
             messages: fromVue(() => props.messages ?? {}),
             languages: fromVue(() => props.languages),
