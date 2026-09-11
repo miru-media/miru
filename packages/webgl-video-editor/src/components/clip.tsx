@@ -11,7 +11,7 @@ import { CLIP_COLORS } from '../constants.ts'
 import styles from '../css/index.module.css'
 import type { VideoEditor } from '../video-editor.ts'
 
-import { useTrackChildEdges } from './utils.ts'
+import { nodesAreLinked, useTrackChildEdges } from './utils.ts'
 
 const GAPPED = true as boolean
 
@@ -51,7 +51,9 @@ export const Clip = ({
         hidden={() => clip.gap.value <= 0}
         class={() => [
           styles.clipGap,
-          editor.selection?.isNode === false && editor.selection.node.id === clip.id && styles.isSelected,
+          editor.selection?.isNode === false &&
+            nodesAreLinked(editor.selection.node, clip) &&
+            styles.isSelected,
         ]}
         style={() => `
         --clip-box-left: ${editor.secondsToPixels(clip.prev?.time.end ?? 0)}px;
@@ -61,7 +63,7 @@ export const Clip = ({
       </div>
 
       <div
-        data-clip-id={clip.id}
+        data-interactive-clip-id={clip.id}
         tabindex="0"
         class={() => [
           styles.clip,
@@ -86,7 +88,7 @@ export const Clip = ({
         <div ref={mainContainer} class={styles.clipBox}>
           {() =>
             editor._showStats && (
-              <pre class="z-1 bg-#0004 pointer-events-node line-height-1em">
+              <pre class="z-1 bg-#0004 pointer-events-node line-height-1em" data-id={clip.id}>
                 …{clip.id.slice(clip.id.length / 2)}
               </pre>
             )

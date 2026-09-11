@@ -161,4 +161,10 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
     return transform
   }
+
+  delete(): void {
+    const { link } = this
+    if (link) this.doc.deleteLink(link.id)
+    super.delete()
+  }
 }

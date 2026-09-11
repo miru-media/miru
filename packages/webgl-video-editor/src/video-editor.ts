@@ -19,6 +19,7 @@ import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
+import { EDITOR_SELECTION_ACTIONS_BY_ID } from './editor-actions.ts'
 import type { NodeDeleteEvent } from './events.ts'
 import { TimelineZoom } from './utils.ts'
 
@@ -321,6 +322,10 @@ export class VideoEditor implements pub.VideoEditor {
 
   _transact<T>(fn: () => T): T {
     return this.sync ? this.sync.transact(fn) : fn()
+  }
+
+  action(id: string) {
+    this._transact(() => EDITOR_SELECTION_ACTIONS_BY_ID[id].exec(this))
   }
 
   secondsToPixels(time: number): number {

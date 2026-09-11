@@ -54,7 +54,8 @@ export const Timeline = ({
     () => (editor.isMobileWorkspace ? undefined : scrollContainer.value),
     undefined,
     (event) =>
-      event.target === event.currentTarget || !(event.target as HTMLElement).closest('[data-clip-id'),
+      event.target === event.currentTarget ||
+      !(event.target as HTMLElement).closest('[data-interactive-clip-id'),
   )
 
   const scrollIsClose = (): boolean =>

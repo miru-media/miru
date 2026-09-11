@@ -3,7 +3,7 @@ import type * as pub from '#core'
 import styles from '../css/index.module.css'
 
 import { Clip } from './clip.jsx'
-import { useEditor } from './utils.js'
+import { nodesAreLinked, useEditor } from './utils.js'
 
 export const Track = ({ track, ...props }: { track: pub.Track; [index: string]: unknown }): JSX.Element => {
   const editor = useEditor()
@@ -19,10 +19,7 @@ export const Track = ({ track, ...props }: { track: pub.Track; [index: string]: 
         track.children.map((node) => {
           const isSelected = () => {
             const { selection } = editor
-            return !!(
-              selection?.isNode &&
-              (selection.id === node.id || (selection.link && selection.link.id === node.link?.id))
-            )
+            return !!(selection?.isNode && nodesAreLinked(node, selection))
           }
 
           return <Clip {...{ editor, node, isSelected }} />

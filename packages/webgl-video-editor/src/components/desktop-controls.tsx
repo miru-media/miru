@@ -46,7 +46,7 @@ export const DesktopControls = () => {
             title={t(action.localeKey)}
             disabled={() => !editor.selection || !action.canPerform(editor)}
             class={styles.desktopControlsButton}
-            onClick={() => action.exec(editor)}
+            onClick={() => editor.action(action.id)}
           >
             <action.Icon />
           </button>

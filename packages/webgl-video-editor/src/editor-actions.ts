@@ -1,6 +1,6 @@
 import { h } from 'fine-jsx/jsx-runtime'
 
-import type { AnyClip, Track, VideoEditor, VideoEditorAction } from '#core'
+import type * as pub from '#core'
 import { Rational } from 'shared/utils/math.ts'
 
 import { useEditor } from './components/utils.ts'
@@ -8,7 +8,7 @@ import { useEditor } from './components/utils.ts'
 const RETURN_TRUE = (): true => true
 const GAPPED = true as boolean
 
-const getClipAtTime = (track: Track, time: number): AnyClip | undefined => {
+const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined => {
   for (let clip = track.head; clip; clip = clip.next) {
     const clipTime = clip.time
 
@@ -16,7 +16,7 @@ const getClipAtTime = (track: Track, time: number): AnyClip | undefined => {
   }
 }
 
-const getSplitTarget = (editor: VideoEditor): AnyClip | undefined => {
+const getSplitTarget = (editor: pub.VideoEditor): pub.AnyClip | undefined => {
   const { currentTime } = editor.doc
   const { selection } = editor
   const trackOfSelectedClip = selection && (selection.isNode ? selection : selection.node).parent
@@ -25,22 +25,39 @@ const getSplitTarget = (editor: VideoEditor): AnyClip | undefined => {
   return trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
 }
 
-const getLinkFromSelection = (editor: VideoEditor) => {
+const getLinkFromSelection = (editor: pub.VideoEditor) => {
   const { selection } = editor._editor
   return selection?.isNode && selection.isClip() ? selection.link : undefined
 }
 
-export const EDITOR_SELECTION_ACTIONS: VideoEditorAction[] = [
+export const EDITOR_SELECTION_ACTIONS: pub.VideoEditorAction[] = [
   {
     id: 'split',
     localeKey: 'split',
     Icon: IconMsSplitSceneOutlineRounded,
     canPerform: (editor) => !!getSplitTarget(editor),
     exec: (editor) => {
-      const clip = getSplitTarget(editor)
-      if (!clip) return
+      const targetClip = getSplitTarget(editor)
+      if (!targetClip) return
 
-      editor._editor._transact(() => editor.splitClip(clip, editor.currentTime))
+      const { doc } = editor
+
+      const linkedClips = targetClip.link?.nodes ?? [targetClip]
+      const startNodes: typeof linkedClips = []
+      const endNodes: typeof linkedClips = []
+
+      linkedClips.forEach((clip) => {
+        const result = editor.splitClip(doc.nodes.get(clip.id), editor.currentTime)
+        if (result) {
+          startNodes.push(result[0])
+          endNodes.push(result[1])
+        }
+      })
+
+      if (startNodes.length > 1) {
+        doc.createLink({ id: editor.generateId(), nodes: startNodes })
+        doc.createLink({ id: editor.generateId(), nodes: endNodes })
+      }
     },
   },
   {
@@ -49,26 +66,28 @@ export const EDITOR_SELECTION_ACTIONS: VideoEditorAction[] = [
     Icon: IconMsDeleteOutlineRounded,
     canPerform: RETURN_TRUE,
     exec: (editor) => {
-      const { selection, doc } = editor
+      const { selection, doc } = editor._editor
       if (!selection) return
 
       if (!selection.isNode) {
-        selection.node.gap = Rational.ZERO
+        ;(selection.node.link?.nodes ?? [selection.node]).forEach((node) => {
+          doc.nodes.get<pub.AnyClip>(node.id).gap = Rational.ZERO
+        })
         return
       }
 
-      const { next, parent } = selection
-      const link = doc.getLinkOf(selection.id)
+      const { link } = selection
 
-      editor._editor._transact(() => {
-        if (link) doc.deleteLink(link.id)
+      const nodes = link?.nodes.slice() ?? [selection]
 
+      nodes.forEach((node) => {
+        const { next, parent } = node
         const newGapDuration =
-          GAPPED && selection.isClip() && next
-            ? selection.gap.add(selection.duration).add(selection.next?.gap ?? Rational.ZERO)
+          GAPPED && node.isClip() && next
+            ? node.gap.add(node.duration).add(node.next?.gap ?? Rational.ZERO)
             : Rational.ZERO
 
-        selection.delete()
+        node.delete()
         if (next) next.gap = newGapDuration
         if (!parent?.head) parent?.delete()
       })
@@ -85,18 +104,18 @@ export const EDITOR_SELECTION_ACTIONS: VideoEditorAction[] = [
               children: () => h(getLinkFromSelection(editor) ? IconMsLinkOffRounded : IconMsLinkRounded, {}),
             })
           },
-          canPerform: (editor: VideoEditor) => !!getLinkFromSelection(editor),
-          exec(editor: VideoEditor) {
+          canPerform: (editor: pub.VideoEditor) => !!getLinkFromSelection(editor),
+          exec(editor: pub.VideoEditor) {
             const link = getLinkFromSelection(editor)
             if (!link) return
 
-            editor._editor._transact(() => editor.doc.deleteLink(link.id))
+            editor.doc.deleteLink(link.id)
           },
         },
       ]
     : []),
 ]
 
-export const EDITOR_SELECTION_ACTIONS_BY_ID: Record<string, VideoEditorAction> = Object.fromEntries(
+export const EDITOR_SELECTION_ACTIONS_BY_ID: Record<string, pub.VideoEditorAction> = Object.fromEntries(
   EDITOR_SELECTION_ACTIONS.map((action) => [action.id, action]),
 )

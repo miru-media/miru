@@ -28,9 +28,10 @@ export interface AssetRef {
   assetId: string
 }
 
+export type Linkable = Track | AnyClip
 export interface NodeLink {
   id: string
-  nodes: Pick<Track | AnyClip, 'id' | 'type'>[]
+  nodes: Pick<Linkable, 'id' | 'type'>[]
 }
 
 interface Base {

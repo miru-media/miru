@@ -5,7 +5,7 @@ import { ref } from 'vue'
 import de from 'shared/locales/de.json'
 import en from 'shared/locales/en.json'
 import type { VideoEditor, VideoEditorAssetStore, VideoEditorDocumentSync } from 'webgl-video-editor'
-import VideoEditorUI, { EDITOR_SELECTION_ACTIONS_BY_ID } from 'webgl-video-editor/vue'
+import VideoEditorUI from 'webgl-video-editor/vue'
 import DocHeader from './video-editor-doc-header.vue'
 import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
@@ -62,12 +62,12 @@ if (!import.meta.env.SSR) {
         break
 
       case 'Delete':
-        EDITOR_SELECTION_ACTIONS_BY_ID.delete.exec(editor)
+        editor.action('delete')
         break
 
       case 'KeyS':
         if (event.repeat) break
-        EDITOR_SELECTION_ACTIONS_BY_ID.split.exec(editor)
+        editor.action('split')
         break
 
       case 'ArrowLeft':

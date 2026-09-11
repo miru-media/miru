@@ -40,8 +40,10 @@ export interface ClipDrag {
   clipWasAloneInTrack: Ref<boolean>
 }
 
+type ClipResizeClips = [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip]
 export interface ClipResize {
   docDuration: Ref<number>
   isResizing: Ref<boolean>
-  clips: [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip]
+  clips: ClipResizeClips
+  linkedClips: ClipResizeClips[]
 }

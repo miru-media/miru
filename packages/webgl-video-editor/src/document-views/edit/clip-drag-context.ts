@@ -3,15 +3,21 @@ import { computed, ref } from 'fine-jsx'
 import type * as pub from '#core'
 import { Rational } from 'shared/utils/math.ts'
 
-import { getNodeAtTargetPosition, moveAndFillGaps } from '../../components/utils.ts'
+import { getNodeAtTargetPosition, moveAndFillGaps, nodesAreLinked } from '../../components/utils.ts'
 
 import type { EditView } from './edit-nodes.ts'
 
+interface TargetTrack {
+  id: string
+  before: boolean
+}
+
 export class ClipDragContext {
   _clip = ref<EditView.AnyTrackChild>()
+  _linkedClips = ref<EditView.AnyClip[]>([])
   _newStart = ref(Rational.ZERO)
   _offsetY = ref(0)
-  _targetTrack = ref<{ id: string; before: boolean }>()
+  _targetTrack = ref<TargetTrack>()
   _trackType = ref<pub.Track['trackType']>('video')
   _clipWasAloneInTrack = ref(false)
   _gapsAround = computed<[Rational, Rational]>(() => {
@@ -80,6 +86,9 @@ export class ClipDragContext {
   get clip(): EditView.AnyTrackChild | undefined {
     return this._clip.value
   }
+  get linkedClips(): EditView.AnyTrackChild[] {
+    return this._linkedClips.value
+  }
   get parent(): pub.AnyTrackChild['parent'] {
     return this._clip.value?.parent
   }
@@ -89,7 +98,7 @@ export class ClipDragContext {
   set newStart(value) {
     this._newStart.value = value
   }
-  get targetTrack(): this['_targetTrack']['value'] {
+  get targetTrack(): TargetTrack | undefined {
     return this._targetTrack.value
   }
   set targetTrack(value) {
@@ -113,22 +122,37 @@ export class ClipDragContext {
     return otherClip.parent?.id === newPosition.parentId && otherClip.index === newPosition.index
   }
 
-  getAdjustedGap(otherClip: EditView.AnyTrackChild): Rational | undefined {
+  isValidTarget(track: pub.Track | undefined): boolean {
+    return (
+      !!track &&
+      this.trackType === track.trackType &&
+      // TODO: improve for more than 2 linked clips
+      // if dragged clip is linked, only allow dragging into a track with a link
+      // don't allow dragging unlinked clips into tracks with links
+      this.linkedClips.length > 1 === !!track.link
+    )
+  }
+
+  isDraggedOrLinked(clip: EditView.AnyTrackChild | undefined): boolean {
+    return !!clip && this.isDragging() && nodesAreLinked(clip, this.clip)
+  }
+
+  getAdjustedGap(clip: EditView.AnyTrackChild): Rational | undefined {
     if (!this.isDragging()) return
 
     const draggedClip = this.clip
 
-    if (otherClip === draggedClip) return this._gapsAround.value[0]
-    if (otherClip.prev === draggedClip) return this._gapsAround.value[1]
+    if (this.isDraggedOrLinked(clip)) return this._gapsAround.value[0]
+    if (this.isDraggedOrLinked(clip.prev)) return this._gapsAround.value[1]
 
     const newPosition = this._newPosition.value
 
     if (
       newPosition &&
-      otherClip.parent !== this.parent &&
-      otherClip === getNodeAtTargetPosition(draggedClip.doc, newPosition)
+      clip.parent !== this.parent &&
+      clip === getNodeAtTargetPosition(draggedClip.doc, newPosition)
     ) {
-      return Rational.max(otherClip.original.gap, draggedClip.duration)
+      return Rational.max(clip.original.gap, draggedClip.duration)
     }
   }
 
@@ -143,32 +167,67 @@ export class ClipDragContext {
     this._clipWasAloneInTrack.value = parent.head?.id === clip.id && parent.children.length === 1
 
     this._clip.value = clip
+    this._linkedClips.value = clip.link?.nodes ?? [clip]
   }
 
   end(editor: pub.VideoEditor): void {
     if (!this.isDragging()) return
 
-    const { clip, parent, newStart, targetTrack } = this
+    const { clip: dragClip, linkedClips, parent: prevParent, newStart, targetTrack } = this
+    const { doc } = dragClip
     const newPosition = this._newPosition.value
     this._clip.value = this._targetTrack.value = undefined
+    this._linkedClips.value = []
 
     editor._editor._transact(() => {
       if (targetTrack.before) {
-        const beforeTrack = clip.doc.nodes.get<pub.Track>(targetTrack.id)
-        const newTrack = clip.doc.createNode({
-          id: editor.generateId(),
-          type: 'track',
-          trackType: parent.trackType,
+        const beforeTrack = doc.nodes.get<pub.Track>(targetTrack.id)
+        const newLinkedTracks: pub.Track[] = []
+
+        linkedClips.forEach((clip) => {
+          const newTrack = clip.doc.createNode({
+            id: editor.generateId(),
+            type: 'track',
+            trackType: clip.parent!.trackType,
+          })
+
+          const position = { parentId: newTrack.id, index: 0 }
+          moveAndFillGaps(clip, position, newStart)
+          newTrack.move({ parentId: beforeTrack.parent!.id, index: beforeTrack.index })
+          newLinkedTracks.push(newTrack)
         })
 
-        const position = { parentId: newTrack.id, index: 0 }
-        moveAndFillGaps(clip, position, newStart)
-        newTrack.move({ parentId: beforeTrack.parent!.id, index: beforeTrack.index })
-      } else
-        moveAndFillGaps(clip.original, newPosition ?? { parentId: parent.id, index: clip.index }, newStart)
-    })
+        if (newLinkedTracks.length > 1) doc.createLink({ id: editor.generateId(), nodes: newLinkedTracks })
+      } else {
+        // clip without modified gaps for showing drag position
+        const originalDragClip = dragClip.original
+        const finalDragClipPosition = newPosition ?? { parentId: prevParent.id, index: dragClip.index }
+        const finalParent = originalDragClip.doc.nodes.get<pub.Track>(finalDragClipPosition.parentId)
 
-    if (!parent.head) parent.delete()
+        linkedClips.forEach((clip) => {
+          const linkedPosition =
+            clip.id === dragClip.id
+              ? finalDragClipPosition
+              : // TODO: handle more than 2 clips and tracks better
+                {
+                  parentId:
+                    finalParent.link?.nodes.find(
+                      (track) =>
+                        track.id !== finalParent.id &&
+                        clip.doc.nodes.get<pub.Track>(track.id).trackType ===
+                          (clip.isAudio() ? 'audio' : 'video'),
+                    )?.id ?? clip.parent!.id,
+                  index: finalDragClipPosition.index,
+                }
+
+          moveAndFillGaps(clip.original, linkedPosition, newStart)
+        })
+      }
+
+      const editViewTrack = editor._editor.doc._getNode(prevParent)
+      const linkedParents = editViewTrack.link?.nodes ?? [editViewTrack]
+      if (linkedParents.every(({ count }) => count === 0)) linkedParents.forEach((node) => node.delete())
+    })
   }
 }
 

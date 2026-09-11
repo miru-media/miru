@@ -64,6 +64,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare replaceClipAsset: pub.VideoEditor['replaceClipAsset']
   declare createMediaAsset: pub.VideoEditor['createMediaAsset']
   declare splitClip: pub.VideoEditor['splitClip']
+  declare action: pub.VideoEditor['action']
   declare importJson: pub.VideoEditor['importJson']
   declare export: pub.VideoEditor['export']
   declare generateId: pub.VideoEditor['generateId']
@@ -186,6 +187,7 @@ for (const key of [
   'replaceClipAsset',
   'createMediaAsset',
   'splitClip',
+  'action',
   'importJson',
   'export',
   'generateId',
