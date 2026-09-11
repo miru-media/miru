@@ -55,4 +55,10 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
       trackType: this.trackType,
     }
   }
+
+  delete(): void {
+    const { link } = this
+    if (link) this.doc.deleteLink(link.id)
+    super.delete()
+  }
 }

@@ -75,8 +75,8 @@ export const getValidLinksFromYarray = (
     for (const item of link.nodes) {
       if (item.type === 'track') continue
 
-      const { id: parentId } = doc.nodes.get(item.id).parent!
-      if (trackIds.has(parentId)) continue
+      const parentId = doc.nodes.get(item.id).parent?.id
+      if (!parentId || trackIds.has(parentId)) continue
       trackIds.add(parentId)
     }
 

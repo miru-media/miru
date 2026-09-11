@@ -445,8 +445,10 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
 
     // delete all other intersecting links
     const nodeIds = new Set(link.nodes.map((n) => n.id))
-    for (let i = linksYarray.length - 1; i >= 0; i--)
-      if (linksYarray.get(i).nodes.some((n) => nodeIds.has(n.id))) linksYarray.delete(i)
+    for (let i = linksYarray.length - 1; i >= 0; i--) {
+      const ylink = linksYarray.get(i)
+      if (ylink.id !== link.id && ylink.nodes.some((n) => nodeIds.has(n.id))) linksYarray.delete(i)
+    }
   }
 
   reset(): void {

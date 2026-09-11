@@ -34,10 +34,11 @@ export const AssetBinFonts = () => {
       let firstVideoTrack: Track | undefined
       let targetTrack: Track | undefined
 
-      // use the first video track only if there are multiple video tracks in the timeline
+      // use the first video valid track only if there are multiple video tracks in the timeline
       for (const track of editor.tracks) {
         if (track.isVideo()) {
-          if (firstVideoTrack) {
+          // TODO: allow mixing linked and unlinked clips
+          if (firstVideoTrack && !track.link) {
             targetTrack = firstVideoTrack
             break
           } else firstVideoTrack = track

@@ -74,6 +74,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
         return newClips && [docView._getNode(newClips[0]), docView._getNode(newClips[1])]
       },
       replaceClipAsset: editor.replaceClipAsset.bind(editor),
+      action: editor.action.bind(editor),
       importJson: editor.importJson.bind(editor),
       export: editor.export.bind(editor),
       secondsToPixels: editor.secondsToPixels.bind(editor),

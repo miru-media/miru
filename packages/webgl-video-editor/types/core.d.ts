@@ -273,6 +273,8 @@ export type AnyParentNode = Timeline | Track
 export type AnyVideoNode = Timeline | VideoTrack | VideoClip | TextClip
 export type AnyAudioNode = Timeline | AudioTrack | AudioClip
 
+export type Linkable = Track | AnyClip
+
 interface BaseAsset extends Schema.BaseAsset {
   isBuiltIn?: boolean
   dispose: () => void
@@ -432,6 +434,9 @@ export interface VideoEditor {
    * @returns The newly created clip or `undefined.`.
    */
   splitClip: (clip: AnyClip, time: number) => [AnyClip, AnyClip] | undefined
+
+  /** Perform an action on the current selection */
+  action: (id: string) => void
 
   generateId: () => string
 

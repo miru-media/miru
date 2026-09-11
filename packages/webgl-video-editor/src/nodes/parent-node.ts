@@ -54,10 +54,12 @@ export abstract class ParentNode<
   _positionChildAt(node: TChild, index: number): void {
     if (node.index === index && node.parent === (this as unknown as AnyParentNode)) return
 
-    let other = this.head
-    for (; !!other && other.index < index; other = other.next as TChild);
+    let before = this.head
+    for (; !!before && before.index < index; before = before.next as TChild);
 
-    this.#insertBefore(node, other)
+    if (before === node.next) before = before?.next as TChild | undefined
+
+    this.#insertBefore(node, before)
   }
 
   #pushChild(node: TChild): void {
