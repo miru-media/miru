@@ -2,12 +2,12 @@ import type { Schema } from '#core'
 import type * as pub from '#core'
 import type { NonOverlappingUnion } from '#internal'
 
-import { Clip } from './clip.ts'
+import { BaseClip } from './base-clip.ts'
 
-export interface VideoClip extends NonOverlappingUnion<Clip<Schema.VideoClip>, pub.VideoClip> {}
+export interface VideoClip extends NonOverlappingUnion<BaseClip<Schema.VideoClip>, pub.VideoClip> {}
 
-export class VideoClip extends Clip<Schema.VideoClip> implements pub.VideoClip {
-  static FIELDS = super.FIELDS.concat(Clip.TRANSFORM_FIELDS satisfies pub.NodeFieldDef<pub.VideoClip>[])
+export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoClip {
+  static FIELDS = super.FIELDS.concat(BaseClip.TRANSFORM_FIELDS satisfies pub.NodeFieldDef<pub.VideoClip>[])
 
   declare effects: pub.VideoClip['effects']
 

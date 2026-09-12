@@ -136,10 +136,9 @@ const assets = {
 
 export const demoDoc = createInitialDocument()
 
-const mainVideoTrack: Schema.SerializedTrack = {
+const mainVideoTrack: Schema.SerializedVideoTrack = {
   id: uid(),
-  type: 'track',
-  trackType: 'video',
+  type: 'track:video',
   children: [
     {
       id: uid(),
@@ -194,10 +193,9 @@ const mainVideoTrack: Schema.SerializedTrack = {
   ],
 }
 
-const mainAudioTrack: Schema.SerializedTrack = {
+const mainAudioTrack: Schema.SerializedAudioTrack = {
   id: uid(),
-  type: 'track',
-  trackType: 'audio',
+  type: 'track:audio',
   children: mainVideoTrack.children.map(({ name, sourceStart, duration }) => ({
     id: uid(),
     type: 'clip:audio',
@@ -213,8 +211,7 @@ demoDoc.assets = Object.values(assets)
 demoDoc.timeline.children.push(
   {
     id: uid(),
-    type: 'track',
-    trackType: 'video',
+    type: 'track:video',
     children: [
       {
         id: uid(),
@@ -236,8 +233,7 @@ demoDoc.timeline.children.push(
   mainAudioTrack,
   {
     id: uid(),
-    type: 'track',
-    trackType: 'audio',
+    type: 'track:audio',
     children: [
       {
         id: uid(),

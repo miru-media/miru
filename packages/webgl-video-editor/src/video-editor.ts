@@ -120,7 +120,7 @@ export class VideoEditor implements pub.VideoEditor {
     return this.#linkedSelection.value
   }
 
-  get tracks(): pub.Track[] {
+  get tracks(): pub.AnyTrack[] {
     return this.doc.timeline.children
   }
 
@@ -190,13 +190,12 @@ export class VideoEditor implements pub.VideoEditor {
     return await this.doc.assets.createMediaAsset(source)
   }
 
-  addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {
+  addClip(track: pub.AnyTrack, asset: pub.MediaAsset): pub.AnyClip {
     const { duration } = asset
-    const { trackType } = track
 
     const init: Schema.AnyClip = {
       id: this.generateId(),
-      type: `clip:${trackType}`,
+      type: `clip:${track.isVideo() ? 'video' : 'audio'}`,
       mediaRef: { assetId: asset.id },
       sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
       duration: Rational.fromDecimal(duration, this.doc.frameRate),
@@ -264,14 +263,14 @@ export class VideoEditor implements pub.VideoEditor {
     const trackType = (asset.video ?? false) === false ? 'audio' : 'video'
 
     // add to the last track of the correct type
-    return [...this.tracks].reverse().find((t) => t.trackType === trackType) ?? this.addTrack(trackType)
+    return [...this.tracks].reverse().find((t) => t.type === `track:${trackType}`) ?? this.addTrack(trackType)
   }
 
-  addTrack(trackType: 'video' | 'audio'): pub.Track {
+  addTrack(trackType: 'video' | 'audio'): pub.AnyTrack {
     const { doc } = this
 
     return this._transact(() => {
-      const track = doc.createNode({ id: this.generateId(), trackType, type: 'track' })
+      const track = doc.createNode({ id: this.generateId(), type: `track:${trackType}` })
       track.move({ parentId: doc.timeline.id, index: 0 })
       return track
     })

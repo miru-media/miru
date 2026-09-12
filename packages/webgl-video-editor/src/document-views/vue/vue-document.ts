@@ -8,17 +8,19 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import { _vuePlainReadonly, _vueWritable } from './utils.ts'
 import {
   type VueAudioClip,
+  type VueAudioTrack,
   VueNodeView,
   VueParentNode,
   type VueTextClip,
   type VueTimeline,
-  type VueTrack,
   type VueVideoClip,
+  type VueVideoTrack,
 } from './vue-nodes.ts'
 
 export interface VueTypeMap {
   timeline: VueTimeline
-  track: VueTrack
+  'track:video': VueVideoTrack
+  'track:audio': VueAudioTrack
   'clip:video': VueVideoClip
   'clip:audio': VueAudioClip
   'clip:text': VueTextClip
@@ -87,7 +89,8 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
 
     switch (original.type) {
       case 'timeline':
-      case 'track':
+      case 'track:video':
+      case 'track:audio':
         view = new VueParentNode(this, original)
         break
       default:

@@ -70,7 +70,8 @@ export class VueParentNode<T extends pub.AnyParentNode> extends VueNodeView<T> {
 }
 
 export interface VueTimeline extends VueParentNode<pub.Timeline>, pub.Timeline {}
-export interface VueTrack extends VueParentNode<pub.Track>, pub.Track {}
+export interface VueVideoTrack extends VueParentNode<pub.VideoTrack>, pub.VideoTrack {}
+export interface VueAudioTrack extends VueParentNode<pub.AudioTrack>, pub.AudioTrack {}
 export interface VueVideoClip extends VueNodeView<pub.VideoClip>, pub.VideoClip {}
 export interface VueAudioClip extends VueNodeView<pub.AudioClip>, pub.AudioClip {}
 export interface VueTextClip extends VueNodeView<pub.TextClip>, pub.TextClip {}

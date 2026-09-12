@@ -73,7 +73,7 @@ export const getValidLinksFromYarray = (
     // clips must not be on the same track
     const trackIds = new Set<string>()
     for (const item of link.nodes) {
-      if (item.type === 'track') continue
+      if (item.type.startsWith('track')) continue
 
       const parentId = doc.nodes.get(item.id).parent?.id
       if (!parentId || trackIds.has(parentId)) continue

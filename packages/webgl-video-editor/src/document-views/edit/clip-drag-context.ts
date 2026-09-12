@@ -18,7 +18,6 @@ export class ClipDragContext {
   _newStart = ref(Rational.ZERO)
   _offsetY = ref(0)
   _targetTrack = ref<TargetTrack>()
-  _trackType = ref<pub.Track['trackType']>('video')
   _clipWasAloneInTrack = ref(false)
   _gapsAround = computed<[Rational, Rational]>(() => {
     const { clip, newStart } = this
@@ -47,7 +46,7 @@ export class ClipDragContext {
     const duration = clip.duration.valueOf()
     const newStartTime = newStart.valueOf()
     const newCenterTime = newStartTime + duration / 2
-    const track = clip.docView._getNode(clip.doc.nodes.get<pub.Track>(targetTrack.id))
+    const track = clip.docView._getNode(clip.doc.nodes.get<pub.AnyTrack>(targetTrack.id))
 
     let insertBefore: EditView.AnyTrackChild | undefined
     const toSameParent = track.id === this.parent.id
@@ -104,9 +103,6 @@ export class ClipDragContext {
   set targetTrack(value) {
     this._targetTrack.value = value
   }
-  get trackType(): pub.Track['trackType'] {
-    return this._trackType.value
-  }
   get clipWasAloneInTrack(): boolean {
     return this._clipWasAloneInTrack.value
   }
@@ -122,10 +118,10 @@ export class ClipDragContext {
     return otherClip.parent?.id === newPosition.parentId && otherClip.index === newPosition.index
   }
 
-  isValidTarget(track: pub.Track | undefined): boolean {
+  isValidTarget(track: pub.AnyTrack | undefined): boolean {
     return (
       !!track &&
-      this.trackType === track.trackType &&
+      this.clip?.isVideo() === track.isVideo() &&
       // TODO: improve for more than 2 linked clips
       // if dragged clip is linked, only allow dragging into a track with a link
       // don't allow dragging unlinked clips into tracks with links
@@ -163,7 +159,6 @@ export class ClipDragContext {
     this._newStart.value = clip.timeRational.start
     this._offsetY.value = 0
     this._targetTrack.value = { id: parent.id, before: false }
-    this._trackType.value = parent.trackType
     this._clipWasAloneInTrack.value = parent.head?.id === clip.id && parent.children.length === 1
 
     this._clip.value = clip
@@ -181,14 +176,13 @@ export class ClipDragContext {
 
     editor._editor._transact(() => {
       if (targetTrack.before) {
-        const beforeTrack = doc.nodes.get<pub.Track>(targetTrack.id)
-        const newLinkedTracks: pub.Track[] = []
+        const beforeTrack = doc.nodes.get<pub.AnyTrack>(targetTrack.id)
+        const newLinkedTracks: pub.AnyTrack[] = []
 
         linkedClips.forEach((clip) => {
           const newTrack = clip.doc.createNode({
             id: editor.generateId(),
-            type: 'track',
-            trackType: clip.parent!.trackType,
+            type: clip.parent!.type,
           })
 
           const position = { parentId: newTrack.id, index: 0 }
@@ -202,7 +196,7 @@ export class ClipDragContext {
         // clip without modified gaps for showing drag position
         const originalDragClip = dragClip.original
         const finalDragClipPosition = newPosition ?? { parentId: prevParent.id, index: dragClip.index }
-        const finalParent = originalDragClip.doc.nodes.get<pub.Track>(finalDragClipPosition.parentId)
+        const finalParent = originalDragClip.doc.nodes.get<pub.AnyTrack>(finalDragClipPosition.parentId)
 
         linkedClips.forEach((clip) => {
           const linkedPosition =
@@ -212,10 +206,8 @@ export class ClipDragContext {
                 {
                   parentId:
                     finalParent.link?.nodes.find(
-                      (track) =>
-                        track.id !== finalParent.id &&
-                        clip.doc.nodes.get<pub.Track>(track.id).trackType ===
-                          (clip.isAudio() ? 'audio' : 'video'),
+                      (trackLinkItem) =>
+                        trackLinkItem.id !== finalParent.id && trackLinkItem.type === clip.parent!.type,
                     )?.id ?? clip.parent!.id,
                   index: finalDragClipPosition.index,
                 }

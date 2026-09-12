@@ -6,21 +6,21 @@ import type { Schema } from '#core'
 import type { NonOverlappingUnion } from '#internal'
 import { Rational } from 'shared/utils/math.ts'
 
-import { ParentNode } from './parent-node.ts'
+import { ParentNode } from '../parent-node.ts'
 
-export interface Track extends NonOverlappingUnion<
-  ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild>,
-  pub.Track
-> {}
+export interface BaseTrack<
+  T extends Schema.AnyTrack,
+  TChild extends pub.AnyTrackChild,
+> extends NonOverlappingUnion<ParentNode<T, pub.Timeline, TChild>, pub.AnyTrack> {}
 
-export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackChild> implements pub.Track {
+export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.AnyTrackChild>
+  extends ParentNode<T, pub.Timeline, TChild>
+  implements pub.BaseTrack<TChild>
+{
   static FIELDS = super.FIELDS.concat([
-    { key: 'trackType', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'duration', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'link', flags: NODE_FIELD_FLAGS.Readonly },
-  ] satisfies pub.NodeFieldDef<pub.Track>[])
-
-  declare trackType: 'video' | 'audio'
+  ] satisfies pub.NodeFieldDef<pub.AnyTrack>[])
 
   readonly #duration = computed(() => this.tail?.timeRational.end ?? Rational.ZERO)
 
@@ -33,28 +33,15 @@ export class Track extends ParentNode<Schema.Track, pub.Timeline, pub.AnyTrackCh
     return this.#link.value
   }
 
-  protected _init(init: Schema.Track): void {
-    this.trackType = init.trackType
+  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  protected _init(): void {
+    // noop
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isTrack(): this is Track {
+  isTrack(): this is pub.AnyTrack {
     return true
   }
-  isVideo(): this is pub.VideoTrack {
-    return this.trackType === 'video'
-  }
-  isAudio(): this is pub.AudioTrack {
-    return this.trackType === 'audio'
-  }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
-
-  toJSON(): Schema.Track {
-    return {
-      ...super.toJSON(),
-      trackType: this.trackType,
-    }
-  }
 
   delete(): void {
     const { link } = this

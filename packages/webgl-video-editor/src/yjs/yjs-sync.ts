@@ -82,7 +82,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
 
     const { ytree, settings, links, ydoc } = initYjsRoot(ydocOrMap)
 
-    // update ndoes with old 'clip' type
+    // update nodes with old 'clip' and 'track' types
     {
       const allIds: string[] = []
       ytree.getAllDescendants(YTREE_ROOT_KEY, allIds)
@@ -91,6 +91,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
         if ((ynode as any)?.get == null) return
         const type: string = ynode.get('type')
         if (type === 'clip') ynode.set('type', `clip:${ynode.get('clipType')}`)
+        if (type === 'track') ynode.set('type', `track:${ynode.get('trackType')}`)
       })
     }
 

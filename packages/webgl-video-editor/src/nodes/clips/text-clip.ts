@@ -2,12 +2,12 @@ import type { Schema } from '#core'
 import type * as pub from '#core'
 import type { NonOverlappingUnion } from '#internal'
 
-import { Clip } from './clip.ts'
+import { BaseClip } from './base-clip.ts'
 
-export interface TextClip extends NonOverlappingUnion<Clip<Schema.TextClip>, pub.TextClip> {}
+export interface TextClip extends NonOverlappingUnion<BaseClip<Schema.TextClip>, pub.TextClip> {}
 
-export class TextClip extends Clip<Schema.TextClip> implements pub.TextClip {
-  static FIELDS = super.FIELDS.concat(Clip.TRANSFORM_FIELDS, [
+export class TextClip extends BaseClip<Schema.TextClip> implements pub.TextClip {
+  static FIELDS = super.FIELDS.concat(BaseClip.TRANSFORM_FIELDS, [
     { key: 'content', flags: 0 },
     { key: 'fontFamily', flags: 0 },
     { key: 'fontSize', flags: 0 },

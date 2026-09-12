@@ -8,7 +8,7 @@ import { useEditor } from './components/utils.ts'
 const RETURN_TRUE = (): true => true
 const GAPPED = true as boolean
 
-const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined => {
+const getClipAtTime = (track: pub.AnyTrack, time: number): pub.AnyClip | undefined => {
   for (let clip = track.head; clip; clip = clip.next) {
     const clipTime = clip.time
 

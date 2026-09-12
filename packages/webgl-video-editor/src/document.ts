@@ -4,7 +4,7 @@ import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
-import { AudioClip, VideoClip } from '#nodes'
+import { AudioClip, AudioTrack, VideoClip, VideoTrack } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
@@ -18,7 +18,6 @@ import {
 } from './events.ts'
 import { TextClip } from './nodes/clips/text-clip.ts'
 import { Timeline } from './nodes/timeline.ts'
-import { Track } from './nodes/track.ts'
 
 const SEEK_EVENT = new PlaybackSeekEvent()
 
@@ -132,8 +131,11 @@ export class Document implements pub.Document {
       case 'timeline':
         node = new Timeline(this)
         break
-      case 'track':
-        node = new Track(this, init)
+      case 'track:video':
+        node = new VideoTrack(this, init)
+        break
+      case 'track:audio':
+        node = new AudioTrack(this, init)
         break
       case 'clip:video':
         node = new VideoClip(this, init)

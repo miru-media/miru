@@ -2,11 +2,11 @@ import type { Schema } from '#core'
 import type * as pub from '#core'
 import type { NonOverlappingUnion } from '#internal'
 
-import { Clip } from './clip.ts'
+import { BaseClip } from './base-clip.ts'
 
-export interface AudioClip extends NonOverlappingUnion<Clip<Schema.AudioClip>, pub.AudioClip> {}
+export interface AudioClip extends NonOverlappingUnion<BaseClip<Schema.AudioClip>, pub.AudioClip> {}
 
-export class AudioClip extends Clip<Schema.AudioClip> implements pub.AudioClip {
+export class AudioClip extends BaseClip<Schema.AudioClip> implements pub.AudioClip {
   static FIELDS = super.FIELDS.concat([
     { key: 'volume', flags: 0, defaultValue: 1 },
   ] satisfies pub.NodeFieldDef<pub.AudioClip>[])

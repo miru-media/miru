@@ -9,11 +9,14 @@ import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import { TrackChild } from '../track-child.ts'
 
-export interface Clip<T extends Schema.AnyClip> extends NonOverlappingUnion<TrackChild<T>, pub.Clip> {}
+export interface BaseClip<T extends Schema.AnyClip> extends NonOverlappingUnion<
+  TrackChild<T>,
+  pub.BaseClip
+> {}
 
-export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
+export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
   extends TrackChild<T>
-  implements pub.Clip
+  implements pub.BaseClip
 {
   static FIELDS = super.FIELDS.concat([
     { key: 'sourceStart', flags: 0, transform: Rational.from },
@@ -29,7 +32,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
 
     { key: 'gap', flags: NODE_FIELD_FLAGS.Gap },
     { key: 'link', flags: NODE_FIELD_FLAGS.Readonly },
-  ] satisfies pub.NodeFieldDef<pub.Clip>[])
+  ] satisfies pub.NodeFieldDef<pub.BaseClip>[])
 
   static TRANSFORM_FIELDS = [
     { key: 'translateX', flags: 0, defaultValue: 0 },
@@ -148,7 +151,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   }
 
   _transformToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.TransformProps>>>(
-    this: Clip<T> & Schema.TransformProps,
+    this: BaseClip<T> & Schema.TransformProps,
   ): Partial<Schema.TransformProps> {
     const { translateX, translateY, rotate, scaleX, scaleY } = this
     const transform: Partial<Schema.TransformProps> = {}

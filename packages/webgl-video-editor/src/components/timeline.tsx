@@ -202,7 +202,7 @@ export const Timeline = ({
             ) : (
               doc.timeline.children.map((track) =>
                 // hide linked audio tracks of video
-                track.link && track.trackType === 'audio' ? null : (
+                track.link && track.isAudio() ? null : (
                   <>
                     <div
                       data-before-track-id={track.id}

@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { Rational } from 'shared/utils'
 
 import { docWithTracks } from '../../../tests/test-content.ts'
-import { makeTrack, makeVideoClip } from '../../../tests/utils.ts'
+import { makeVideoClip, makeVideoTrack } from '../../../tests/utils.ts'
 import { Document } from '../../document.ts'
 
 import { EditDocument } from './edit-document.ts'
@@ -13,12 +13,12 @@ test('x', () => {
   const doc = new Document({})
   doc.importFromJson(
     docWithTracks([
-      makeTrack('track-0', 'video', [
+      makeVideoTrack('track-0', [
         makeVideoClip({ id: 'clip-0', duration: { value: 5, rate: 1 } }),
         makeVideoClip({ id: 'clip-1', duration: { value: 5, rate: 1 }, gap: { value: 5, rate: 1 } }),
         makeVideoClip({ id: 'clip-2', duration: { value: 5, rate: 1 }, gap: { value: 1, rate: 1 } }),
       ]),
-      makeTrack('track-1', 'video', [
+      makeVideoTrack('track-1', [
         makeVideoClip({ id: 'clip-a', duration: { value: 5, rate: 1 } }),
         makeVideoClip({ id: 'clip-b', duration: { value: 5, rate: 1 }, gap: { value: 5, rate: 1 } }),
         makeVideoClip({ id: 'clip-c', duration: { value: 5, rate: 1 }, gap: { value: 1, rate: 1 } }),

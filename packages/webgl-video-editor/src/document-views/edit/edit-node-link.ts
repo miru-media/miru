@@ -8,7 +8,7 @@ import type { ViewType } from '../document-view.ts'
 import type { EditDocument, ViewTypeMap } from './edit-document.ts'
 
 export namespace EditNodeLink {
-  export type Linkable = pub.Track | pub.AnyClip
+  export type Linkable = pub.AnyTrack | pub.AnyClip
 }
 
 export class EditNodeLink<T extends EditNodeLink.Linkable = EditNodeLink.Linkable>
@@ -17,7 +17,6 @@ export class EditNodeLink<T extends EditNodeLink.Linkable = EditNodeLink.Linkabl
   doc: EditDocument
   nodeIds = ref<string[]>([])
   id: string
-  nodeType: 'track' | 'clip'
 
   readonly #nodes = computed(() =>
     this.nodeIds.value.map((n) => this.doc.nodes.get<ViewType<ViewTypeMap, T>>(n)),
@@ -30,8 +29,6 @@ export class EditNodeLink<T extends EditNodeLink.Linkable = EditNodeLink.Linkabl
   constructor(doc: EditDocument, init: Schema.NodeLink) {
     this.doc = doc
     this.id = init.id
-    this.nodeType = init.nodes[0].type === 'track' ? 'track' : 'clip'
-
     this.nodeIds.value = init.nodes.map((n) => n.id)
   }
 

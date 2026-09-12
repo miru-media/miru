@@ -3,7 +3,7 @@ import type * as pub from '#core'
 
 import { ParentNode } from './parent-node.ts'
 
-export class Timeline extends ParentNode<Schema.Timeline, never, pub.Track> implements pub.Timeline {
+export class Timeline extends ParentNode<Schema.Timeline, never, pub.AnyTrack> implements pub.Timeline {
   declare readonly id: 'timeline'
 
   constructor(doc: pub.Document) {

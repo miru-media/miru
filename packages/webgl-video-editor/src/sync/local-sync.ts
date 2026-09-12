@@ -117,12 +117,20 @@ export class LocalSync extends EventTarget implements core.VideoEditorDocumentSy
       ? (JSON.parse(savedJson) as core.Schema.SerializedDocument)
       : createInitialDocument()
 
-    // update ndoes with old 'clip' type
-    content.timeline.children.forEach(({ trackType, children }) =>
+    // update nodes with old 'clip' and 'track' types
+    content.timeline.children.forEach((track) => {
+      {
+        const { type, trackType } = track as any
+        if (type === 'track') track.type = `track:${trackType as 'video' | 'audio'}`
+      }
+
+      const { children } = track
+      const trackType = track.type === 'track:audio' ? 'audio' : 'video'
+
       children.forEach((node) => {
         if ((node.type as string) === 'clip') node.type = `clip:${trackType}`
-      }),
-    )
+      })
+    })
 
     this.doc.importFromJson(content)
   }

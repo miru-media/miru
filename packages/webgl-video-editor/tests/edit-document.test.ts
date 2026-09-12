@@ -11,7 +11,7 @@ import { Document } from '../src/document.ts'
 import * as events from '../src/events.ts'
 
 import { docWithTracks } from './test-content.ts'
-import { makeAudioClip, makeAvAsset, makeTrack, makeVideoClip } from './utils.ts'
+import { makeAudioClip, makeAudioTrack, makeAvAsset, makeVideoClip, makeVideoTrack } from './utils.ts'
 
 class TestView extends NodeView<TestDocument, any> {
   _move = vi.fn()
@@ -37,10 +37,10 @@ let originalClip1: pub.AudioClip
 let originalClip2: pub.VideoClip
 
 const clipInit1 = makeAudioClip({ id: 'clip-1' })
-const clipInit2 = makeVideoClip({ id: 'clip-2' })
+const clipInit2 = makeAudioClip({ id: 'clip-2' })
 const clipInit3 = makeVideoClip({ id: 'clip-3' })
-const trackInit1 = makeTrack('test-track', 'audio', [clipInit1, clipInit2])
-const trackInit2 = makeTrack('test-track', 'video', [clipInit3])
+const trackInit1 = makeAudioTrack('track-1', [clipInit1, clipInit2])
+const trackInit2 = makeVideoTrack('track-2', [clipInit3])
 
 const onDocUpdate = vi.fn()
 const onDocMove = vi.fn()
@@ -137,7 +137,8 @@ test('views on top of the edit document see the proxied nodes', () => {
   expect(testDoc._createView).toHaveBeenNthCalledWith(3, viewMarkerMatcher)
   expect(testDoc._createView).toHaveBeenNthCalledWith(4, viewMarkerMatcher)
   expect(testDoc._createView).toHaveBeenNthCalledWith(5, viewMarkerMatcher)
-  expect(testDoc._createView).toHaveBeenCalledTimes(5)
+  expect(testDoc._createView).toHaveBeenNthCalledWith(6, viewMarkerMatcher)
+  expect(testDoc._createView).toHaveBeenCalledTimes(6)
 })
 
 test('while editing, update events to original node are suppressed', () => {
