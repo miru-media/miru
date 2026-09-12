@@ -7,9 +7,17 @@ import { Rational } from 'shared/utils/math.ts'
 import type { VideoEditor } from '../video-editor.ts'
 
 const VIDEO_EDITOR_CONTEXT = Symbol('video-editor-context')
+const IMPORT_MEDIA_FILES_CONTEXT = Symbol('import-media-files-context')
+
+export type importMediaBin = 'video' | 'audio'
 
 export const useEditor = (): VideoEditor => inject<VideoEditor>(VIDEO_EDITOR_CONTEXT)!
 export const provideEditor = (editor: VideoEditor): void => provide(VIDEO_EDITOR_CONTEXT, editor)
+
+export const useImportMediaFiles = (): ((bin: importMediaBin) => Promise<File[]>) | undefined =>
+  inject(IMPORT_MEDIA_FILES_CONTEXT)
+export const provideImportMediaFiles = (importMediaFiles?: (bin: importMediaBin) => Promise<File[]>): void =>
+  provide(IMPORT_MEDIA_FILES_CONTEXT, importMediaFiles)
 
 export const ensureDurationIsPlayable = (clip: AnyClip): void => {
   const { asset } = clip

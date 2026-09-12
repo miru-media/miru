@@ -21,19 +21,21 @@ import { PanelToolbar } from './panel-toolbar.jsx'
 import { PlaybackControlsOverlay } from './playback-controls-overlay.jsx'
 import { Timeline } from './timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
-import { provideEditor } from './utils.ts'
+import { type importMediaBin, provideEditor, provideImportMediaFiles } from './utils.ts'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor
   children?: Record<string, Ref>
   i18n?: I18nOptions
   onClickHelp?: () => unknown
+  importMediaFiles?: (bin: importMediaBin) => Promise<File[]>
 }): JSX.Element => {
   const { editor } = props
   const i18n = provideI18n(props.i18n ?? { messages: {} })
   const { t } = i18n
 
   provideEditor(editor._editor)
+  provideImportMediaFiles(props.importMediaFiles)
 
   if (hasVideoDecoder())
     Promise.all(

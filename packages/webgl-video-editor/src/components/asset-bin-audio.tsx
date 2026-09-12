@@ -7,10 +7,11 @@ import type { MediaAsset } from '../assets/media-asset.ts'
 import styles from '../css/index.module.css'
 
 import { AssetBinAudioPreview } from './asset-bin-audio-preview'
-import { useEditor } from './utils.ts'
+import { useEditor, useImportMediaFiles } from './utils.ts'
 
 export const AssetBinAudio = () => {
   const editor = useEditor()
+  const importMediaFiles = useImportMediaFiles()
   const { t } = useI18n()
   const getAudioAssets = (): MediaAsset[] =>
     Array.from(editor.doc.assets.values()).filter(
@@ -19,6 +20,9 @@ export const AssetBinAudio = () => {
 
   const assets = ref<MediaAsset[]>(getAudioAssets())
   const assetSearchQuery = ref('')
+  const fileInput = ref<HTMLInputElement>()
+
+  const buttonLabel = importMediaFiles ? 'asset_bin_music_import' : 'asset_bin_music_upload'
 
   const assetsFiltered = computed(() => {
     const query = assetSearchQuery.value.trim().toLowerCase()
@@ -39,16 +43,33 @@ export const AssetBinAudio = () => {
     })
   })
 
+  const addFiles = async (files: File[]) => {
+    for (const file of files) {
+      try {
+        // eslint-disable-next-line no-await-in-loop -- TODO
+        await editor.createMediaAsset(file)
+      } catch {
+        // eslint-disable-next-line no-alert -- TODO
+        alert(t('error_cannot_play_type'))
+      }
+    }
+  }
+
   const onInputAudioFile = async (event: InputEvent) => {
     const file = (event.target as HTMLInputElement).files?.[0]
     if (!file) return
+    await addFiles([file])
+    ;(event.target as HTMLInputElement).value = ''
+  }
 
-    try {
-      await editor.createMediaAsset(file)
-    } catch {
-      // eslint-disable-next-line no-alert -- TODO
-      alert(t('error_cannot_play_type'))
+  const onUploadClick = async () => {
+    if (importMediaFiles) {
+      const files = await importMediaFiles('audio')
+      if (files.length === 0) return
+      await addFiles(files)
+      return
     }
+    fileInput.value?.click()
   }
 
   const onSearchInput = (event: InputEvent) => {
@@ -57,17 +78,24 @@ export const AssetBinAudio = () => {
 
   return (
     <div class={styles.panelBody}>
-      <label class={[styles.wideButton, styles.textBodyBold]}>
-        <input
-          type="file"
-          accept={ACCEPT_AUDIO_FILE_TYPES}
-          aria-label={t('asset_bin_music_upload')}
-          class={styles.srOnly}
-          onInput={(event: InputEvent) => void onInputAudioFile(event)}
-        />
+      <button
+        type="button"
+        class={[styles.wideButton, styles.textBodyBold]}
+        aria-label={t(buttonLabel)}
+        onClick={() => onUploadClick()}
+      >
         <IconMsUploadRounded />
-        <span>{t('asset_bin_music_upload')}</span>
-      </label>
+        <span>{t(buttonLabel)}</span>
+      </button>
+      <input
+        ref={fileInput}
+        type="file"
+        accept={ACCEPT_AUDIO_FILE_TYPES}
+        class={styles.srOnly}
+        tabIndex={-1}
+        aria-hidden="true"
+        onInput={(e: InputEvent) => onInputAudioFile(e)}
+      />
       <input
         type="search"
         value={assetSearchQuery}
