@@ -66,7 +66,9 @@ export const VideoEditorUI = (props: {
       ]}
       style={() => {
         const { width, height } = editor.doc.resolution
-        return `--viewport-width:${editor.viewportSize.width}px;
+        return `
+        --viewport-container-height:${editor.viewportContainerSize.height}px;
+        --viewport-width:${editor.viewportSize.width}px;
         --viewport-height:${editor.viewportSize.height}px;
         --viewport-aspect-ratio:${width / height};`
       }}
@@ -118,15 +120,21 @@ export const VideoEditorUI = (props: {
         {() => !editor.isMobileWorkspace && <DesktopControls />}
 
         <Timeline>{{ empty: props.children?.timelineEmpty }}</Timeline>
-
-        {() =>
-          editor.isMobileWorkspace && (
-            <MobileToolbar onClickHelp={props.onClickHelp}>{getSlot('toolbar')}</MobileToolbar>
-          )
-        }
-
-        {() => editor._showStats && <Debug />}
       </div>
+
+      {() =>
+        editor.isMobileWorkspace && (
+          <MobileToolbar onClickHelp={props.onClickHelp}>{getSlot('toolbar')}</MobileToolbar>
+        )
+      }
+
+      {() =>
+        editor._showStats && (
+          <div style="grid-area:debug">
+            <Debug />
+          </div>
+        )
+      }
     </div>
   )
 }

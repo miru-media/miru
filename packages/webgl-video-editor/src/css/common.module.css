@@ -64,6 +64,7 @@
   place-content: center;
   width: 100%;
   min-height: 0;
+  margin-block: auto;
 }
 
 .viewportCanvas {

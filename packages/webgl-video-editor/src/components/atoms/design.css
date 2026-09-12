@@ -248,22 +248,23 @@
 .workspace {
   display: grid;
   grid-template:
-    'header  header header header   header     header' auto
-    'toolbar panel  gap-l  gap-t    gap-t      gap-r' var(--workspace-gap)
-    'toolbar panel  gap-l  viewport properties gap-r' auto
-    'toolbar panel  gap-l  gap-m    gap-m      gap-r' var(--workspace-gap)
-    'toolbar panel  gap-l  timeline timeline   gap-r' 1fr;
+    'header  header header header   header     header' max-content
+    'toolbar panel  .      .        .          .     ' var(--workspace-gap)
+    'toolbar panel  .      viewport properties .     ' minmax(40%, 1fr)
+    'toolbar panel  .      .        .          .     ' var(--workspace-gap)
+    'toolbar panel  .      timeline timeline   .     ' auto
+    'debug   debug  debug  debug    debug      debug ' auto;
   grid-template-columns: var(--panel-toolbar-width) auto var(--workspace-gap) 1fr auto var(--workspace-gap);
   justify-content: stretch;
   background-color: var(--primary-bg);
 
   &.mobile {
     grid-template:
-      'header' minmax(var(--workspace-gap), auto)
-      'viewport' auto
-      'controls' auto
-      'timeline' 1fr
+      'header' minmax(var(--workspace-gap), max-content)
+      'viewport' minmax(50%, 1fr)
+      'timeline' auto
       'toolbar' auto
+      'debug' auto
       / 100%;
     padding-right: 0;
 
@@ -333,7 +334,7 @@
   display: flex;
   flex-direction: column;
   grid-area: timeline;
-  max-height: min(60vh, calc(100dvh - 22rem));
+  min-height: 0;
 
   .desktop & {
     background-color: var(--secondary-bg);
@@ -455,7 +456,7 @@
 .workspaceProperties {
   composes: panelBase;
   width: var(--workspace-properties-width);
-  height: var(--viewport-height);
+  height: var(--viewport-container-height);
   padding: 0 1rem;
   border: solid 1px #2c3033;
   border-radius: 1.25rem;
@@ -508,7 +509,6 @@
 
 .mobilePlaybackControls {
   composes: triColumn safePaddingX;
-  grid-area: controls;
   width: 100%;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;

@@ -49,6 +49,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare readonly selection: pub.VideoEditor['selection']
   declare readonly sync: pub.VideoEditor['sync']
   declare readonly tracks: pub.VideoEditor['tracks']
+  declare readonly viewportContainerSize: pub.VideoEditor['viewportContainerSize']
   declare readonly viewportSize: pub.VideoEditor['viewportSize']
   declare readonly canvasZoom: pub.VideoEditor['canvasZoom']
   declare readonly timelineZoom: pub.VideoEditor['timelineZoom']
@@ -163,6 +164,7 @@ for (const key of [
   'selection',
   'sync',
   'tracks',
+  'viewportContainerSize',
   'viewportSize',
   'canvasZoom',
   'isMobileWorkspace',

@@ -345,6 +345,7 @@ export interface VideoEditor {
   /** Progress from 0 to 1 while exporting */
   readonly exportProgress: number
 
+  readonly viewportContainerSize: { width: number; height: number }
   readonly viewportSize: { width: number; height: number }
   readonly isMobileWorkspace: boolean
 

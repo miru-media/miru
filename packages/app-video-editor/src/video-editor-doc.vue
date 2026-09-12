@@ -28,7 +28,8 @@ if (!import.meta.env.SSR) {
 
     if (
       !editor ||
-      (isElement(target) && target.closest('select,input,textarea,[contenteditable=true],dialog'))
+      (isElement(target) &&
+        target.closest('label:has(select,input),select,input,textarea,[contenteditable=true],dialog'))
     )
       return
 
