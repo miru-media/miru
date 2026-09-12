@@ -58,6 +58,11 @@ export const makeAudioClip = (
   ...init,
 })
 
+export const makeLink = (id: string, nodes: Schema.NodeLink['nodes']) => ({
+  id,
+  nodes: nodes.map(({ id, type }) => ({ id, type })),
+})
+
 export const makeAvAsset = (id: string, duration: number, uri?: string): Schema.MediaAsset => ({
   id,
   type: 'asset:media:av',
