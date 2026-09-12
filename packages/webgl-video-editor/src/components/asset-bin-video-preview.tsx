@@ -35,7 +35,7 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     if (!activeVideo.value || !dialogRef.value) return
     try {
       const asset = activeVideo.value
-      const clip = editor.addClip(editor.getTrackForMedia(asset), asset)
+      const clip = editor.addMediaClip(asset)
       editor.select(clip)
       dialogRef.value.close()
       editor.activeAssetBin = null

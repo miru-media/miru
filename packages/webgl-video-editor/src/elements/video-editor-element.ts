@@ -60,7 +60,7 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
   declare select: pub.VideoEditor['select']
   declare seekTo: pub.VideoEditor['seekTo']
   declare addTrack: pub.VideoEditor['addTrack']
-  declare addClip: pub.VideoEditor['addClip']
+  declare addMediaClip: pub.VideoEditor['addMediaClip']
   declare replaceClipAsset: pub.VideoEditor['replaceClipAsset']
   declare createMediaAsset: pub.VideoEditor['createMediaAsset']
   declare splitClip: pub.VideoEditor['splitClip']
@@ -183,7 +183,7 @@ for (const key of [
   'select',
   'seekTo',
   'addTrack',
-  'addClip',
+  'addMediaClip',
   'replaceClipAsset',
   'createMediaAsset',
   'splitClip',

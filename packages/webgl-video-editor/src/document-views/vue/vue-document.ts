@@ -71,7 +71,6 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   createLink = this.doc.createLink.bind(this.doc)
   updateLink = this.doc.updateLink.bind(this.doc)
   deleteLink = this.doc.deleteLink.bind(this.doc)
-  getLinkOf = this.doc.getLinkOf.bind(this.doc)
 
   seekTo = this.doc.seekTo.bind(this.doc)
   _setCurrentTime = this.doc._setCurrentTime.bind(this.doc)

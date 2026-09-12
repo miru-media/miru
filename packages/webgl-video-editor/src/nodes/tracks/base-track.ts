@@ -1,4 +1,4 @@
-import { computed } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 
 import { NODE_FIELD_FLAGS } from '#constants'
 import type * as pub from '#core'
@@ -28,14 +28,14 @@ export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.An
     return this.#duration.value
   }
 
-  readonly #link = computed(() => this.doc.getLinkOf(this.id))
+  declare _link: Ref<Schema.NodeLink | undefined>
   get link(): Schema.NodeLink | undefined {
-    return this.#link.value
+    return this._link.value
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   protected _init(): void {
-    // noop
+    this._link = ref()
   }
 
   isTrack(): this is pub.AnyTrack {

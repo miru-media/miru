@@ -1,4 +1,4 @@
-import { computed, type Ref } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 
 import { NODE_FIELD_FLAGS, VIDEO_PREPLAY_TIME_S } from '#constants'
 import type { ClipTime, ClipTimeRational, Schema } from '#core'
@@ -77,19 +77,22 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     return this.#isInClipTime.value
   }
 
-  readonly #link = computed(() => this.doc.getLinkOf(this.id))
+  declare _link: Ref<Schema.NodeLink | undefined>
   get link(): Schema.NodeLink | undefined {
-    return this.#link.value
+    return this._link.value
   }
 
   protected _init(): void {
     super._init()
 
     this._asset = computed((): pub.MediaAsset | undefined =>
-      this.mediaRef?.assetId ? this.doc.assets.getAsset(this.mediaRef.assetId) : undefined,
+      !this.isDisposed && this.mediaRef?.assetId
+        ? this.doc.assets.getAsset(this.mediaRef.assetId)
+        : undefined,
     )
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())
+    this._link = ref()
   }
 
   _computeTimeRational(): ClipTimeRational {

@@ -53,14 +53,17 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
 
     if (start < 0 || end < start) return
 
-    this.audio = audio
-    this.video = video
+    if (this.original.isVideo()) {
+      if (!video) throw new Error('Missing video stream.')
 
-    if (audioBuffer) this.audioBuffer = audioBuffer
-    else if (audio) this.audioSamples = new Mb.AudioSampleSink(audio).samples(start, end)
-
-    if (video) {
+      this.video = video
       this.videoSamples = new Mb.VideoSampleSink(video).samples(start, end)
+    } else {
+      if (!audio) throw new Error('Missing audio stream.')
+
+      this.audio = audio
+      if (audioBuffer) this.audioBuffer = audioBuffer
+      else this.audioSamples = new Mb.AudioSampleSink(audio).samples(start, end)
     }
   }
 
