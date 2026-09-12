@@ -1,3 +1,4 @@
+import { createEffectScope } from 'fine-jsx'
 import * as Vue from 'vue'
 
 import { NODE_FIELD_FLAGS } from '#constants'
@@ -30,15 +31,19 @@ const BASE_METHOD_KEYS = [
 ] satisfies MethodKey<pub.BaseNode>[]
 
 export class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, T> {
+  readonly #scope = createEffectScope()
+
   constructor(docView: VueDocument, original: any) {
     super(docView, original)
     Vue.markRaw(this)
 
-    this.original._fields().forEach(({ key, flags }) => {
-      if (flags & NODE_FIELD_FLAGS.Node) _vueNodeProp(this, original, key)
-      else if (flags & NODE_FIELD_FLAGS.NodeArray) _vueNodeArrayProp(this, original, key)
-      else if (flags & NODE_FIELD_FLAGS.Readonly) _vuePlainReadonly(this, original, key)
-      else _vueWritable(this, original, key)
+    this.#scope.run(() => {
+      this.original._fields().forEach(({ key, flags }) => {
+        if (flags & NODE_FIELD_FLAGS.Node) _vueNodeProp(this, original, key)
+        else if (flags & NODE_FIELD_FLAGS.NodeArray) _vueNodeArrayProp(this, original, key)
+        else if (flags & NODE_FIELD_FLAGS.Readonly) _vuePlainReadonly(this, original, key)
+        else _vueWritable(this, original, key)
+      })
     })
 
     BASE_METHOD_KEYS.forEach((key) => _bindMethod(this, original, key))
@@ -51,6 +56,7 @@ export class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, T>
   dispose(deep?: boolean): void {
     this.original.dispose(deep)
     super.dispose()
+    this.#scope.stop()
   }
 }
 
