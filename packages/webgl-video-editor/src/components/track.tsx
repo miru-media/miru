@@ -5,14 +5,19 @@ import styles from '../css/index.module.css'
 import { Clip } from './clip.jsx'
 import { nodesAreLinked, useEditor } from './utils.js'
 
-export const Track = ({ track, ...props }: { track: pub.Track; [index: string]: unknown }): JSX.Element => {
+export const Track = ({
+  track,
+  ...props
+}: {
+  track: pub.AnyTrack
+  [index: string]: unknown
+}): JSX.Element => {
   const editor = useEditor()
 
   return (
     <div
       {...props}
       class={() => [styles.track, editor.getTrackForMedia({ video: true }).id === track.id && styles.primary]}
-      data-track-type={track.trackType}
       style={() => `--track-width: ${editor.secondsToPixels(track.duration.valueOf())}px;`}
     >
       {() =>

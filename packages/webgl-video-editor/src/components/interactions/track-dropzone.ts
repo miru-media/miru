@@ -35,7 +35,7 @@ export const useTrackDropzone = (editor: VideoEditor) => {
 
           const { trackId, beforeTrackId } = event.target.dataset
           const id = trackId ?? beforeTrackId ?? ''
-          const track = id ? editor.doc.nodes.get<pub.Track>(id) : undefined
+          const track = id ? editor.doc.nodes.get<pub.AnyTrack>(id) : undefined
 
           if (!track || !clipDrag.isValidTarget(track)) return
 
@@ -49,7 +49,7 @@ export const useTrackDropzone = (editor: VideoEditor) => {
               (track.prev !== undefined && !track.prev.head) ||
               ((track.id === clipParentId || track.prev?.id === clipParentId) && clipDrag.clipWasAloneInTrack)
             ) {
-              if (track.trackType === clipDrag.trackType) clipDrag.targetTrack = { id, before: false }
+              clipDrag.targetTrack = { id, before: false }
             } else clipDrag.targetTrack = { id, before: true }
           }
         },

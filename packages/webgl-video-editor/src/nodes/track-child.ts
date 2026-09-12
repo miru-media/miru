@@ -8,9 +8,8 @@ import { Rational } from 'shared/utils/math.ts'
 import { NodeGapUpdateEvent } from '../events.ts'
 
 import { BaseNode } from './base-node.ts'
-import type { Track } from './track.ts'
 
-export abstract class TrackChild<T extends Schema.TrackChild> extends BaseNode<T, Track> {
+export abstract class TrackChild<T extends Schema.TrackChild> extends BaseNode<T, pub.AnyTrack> {
   static FIELDS = super.FIELDS.concat([
     { key: 'duration', flags: 0, transform: Rational.from },
 

@@ -1,17 +1,17 @@
 import type { Schema } from '#core'
 
-import { makeAudioClip, makeTrack, makeVideoClip } from './utils.ts'
+import { makeAudioClip, makeAudioTrack, makeVideoClip, makeVideoTrack } from './utils.ts'
 
 export const simpleDocWithAudioVideoClips = () =>
   docWithTracks([
-    makeTrack('track-0', 'video', [
+    makeVideoTrack('track-0', [
       makeVideoClip({ id: 'clip-0-0', mediaRef: undefined }),
       makeVideoClip({ id: 'clip-0-1', mediaRef: undefined }),
     ]),
-    makeTrack('track-1', 'audio', [makeAudioClip({ id: 'clip-1-0', mediaRef: undefined })]),
+    makeAudioTrack('track-1', [makeAudioClip({ id: 'clip-1-0', mediaRef: undefined })]),
   ])
 
-export const docWithTracks = (tracks: Schema.SerializedTrack[]) =>
+export const docWithTracks = (tracks: Schema.AnySerializedTrack[]) =>
   ({
     resolution: { height: 1920, width: 1080 },
     frameRate: 25,

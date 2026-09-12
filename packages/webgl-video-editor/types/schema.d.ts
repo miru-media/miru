@@ -28,7 +28,7 @@ export interface AssetRef {
   assetId: string
 }
 
-export type Linkable = Track | AnyClip
+export type Linkable = AnyTrack | AnyClip
 export interface NodeLink {
   id: string
   nodes: Pick<Linkable, 'id' | 'type'>[]
@@ -112,9 +112,12 @@ export interface AssetSchemasByType {
 
 export type AnyAssetSchema = AssetSchemasByType[keyof AssetSchemasByType]
 
-export interface Track extends Base {
-  type: 'track'
-  trackType: 'audio' | 'video'
+export interface VideoTrack extends Base {
+  type: 'track:video'
+}
+
+export interface AudioTrack extends Base {
+  type: 'track:audio'
 }
 
 export interface TrackChild extends Base {
@@ -155,23 +158,28 @@ export interface TextClip extends BaseClip, Partial<TransformProps> {
 }
 
 export interface SerializedTimeline extends Timeline {
-  children: SerializedTrack[]
+  children: (SerializedVideoTrack | SerializedAudioTrack)[]
 }
 
-export interface SerializedTrack extends Track {
-  children: AnySerializedClip[]
+export interface SerializedVideoTrack extends VideoTrack {
+  children: (SerializedVideoClip | SerializedTextClip)[]
 }
+export interface SerializedAudioTrack extends AudioTrack {
+  children: SerializedAudioClip[]
+}
+export type AnySerializedTrack = SerializedVideoTrack | SerializedAudioTrack
 
 export type SerializedVideoClip = WithGap<VideoClip>
 export type SerializedAudioClip = WithGap<AudioClip>
 export type SerializedTextClip = WithGap<TextClip>
-export type AnySerializedClip = WithGap<AnyClip>
+export type AnySerializedClip = SerializedVideoClip | SerializedAudioClip | SerializedTextClip
 
 type WithGap<T> = T & { gap?: Rational }
 
 export interface NodeSchemasByType {
   timeline: Timeline
-  track: Track
+  'track:video': VideoTrack
+  'track:audio': AudioTrack
   'clip:video': VideoClip
   'clip:audio': AudioClip
   'clip:text': TextClip
@@ -179,16 +187,19 @@ export interface NodeSchemasByType {
 
 export interface SerializedNodeSchemasByType {
   timeline: SerializedTimeline
-  track: SerializedTrack
+  'track:video': SerializedVideoTrack
+  'track:audio': SerializedAudioTrack
   'clip:video': SerializedVideoClip
   'clip:audio': SerializedAudioClip
   'clip:text': SerializedTextClip
 }
 
+export type AnyTrack = VideoTrack | AudioTrack
 export type AnyNode = NodeSchemasByType[keyof NodeSchemasByType]
 export type AnyClip = NodeSchemasByType[Extract<keyof NodeSchemasByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
 export type AnyVideoClip = VideoClip | TextClip
+export type AnyAudioClip = AudioClip
 export type AnySerializedNode = SerializedNodeSchemasByType[keyof SerializedNodeSchemasByType]
 
 export interface SerializedDocument extends DocumentSettings {

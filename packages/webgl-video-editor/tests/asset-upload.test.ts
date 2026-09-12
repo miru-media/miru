@@ -7,7 +7,7 @@ import { Document } from '../src/document.ts'
 import type { FileSystemStorage } from '../src/storage/file-system-storage.ts'
 
 import { docWithTracks } from './test-content.ts'
-import { makeAvAsset, makeTrack, makeVideoClip } from './utils.ts'
+import { makeAvAsset, makeVideoClip, makeVideoTrack } from './utils.ts'
 
 vi.mock('../src/storage/file-system-storage.ts', () => {
   const FileSystemStorage = vi.fn(
@@ -38,7 +38,7 @@ test('creating a new media asset from user-selected file saves it to FS storage'
 
   doc.importFromJson(
     docWithTracks([
-      makeTrack('track-0', 'audio', [makeVideoClip({ id: 'clip-0', mediaRef: { assetId: 'asset-0' } })]),
+      makeVideoTrack('track-0', [makeVideoClip({ id: 'clip-0', mediaRef: { assetId: 'asset-0' } })]),
     ]),
   )
 

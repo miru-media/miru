@@ -7,7 +7,7 @@ import {
   FONT_WEIGHT_BOLD,
   FONT_WEIGHT_NORMAL,
 } from '#constants'
-import type { Track } from '#core'
+import type { AnyTrack } from '#core'
 import { Rational, useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'
@@ -31,8 +31,8 @@ export const AssetBinFonts = () => {
 
   const createClip = () => {
     try {
-      let firstVideoTrack: Track | undefined
-      let targetTrack: Track | undefined
+      let firstVideoTrack: AnyTrack | undefined
+      let targetTrack: AnyTrack | undefined
 
       // use the first video valid track only if there are multiple video tracks in the timeline
       for (const track of editor.tracks) {

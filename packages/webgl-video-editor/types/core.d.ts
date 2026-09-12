@@ -4,28 +4,10 @@ import type { EffectDefinition, Renderer } from 'webgl-effects'
 import type { AssetBin } from '../src/constants.ts'
 import type { VideoEditor as VideoEditorInternal } from '../src/video-editor.ts'
 
-import type {
-  AssetCreateEvent,
-  AssetDeleteEvent,
-  CanvasEvent,
-  ErrorEvent,
-  LinkCreateEvent,
-  LinkDeleteEvent,
-  LinkUpdateEvent,
-  NodeCreateEvent,
-  NodeDeleteEvent,
-  NodeGapUpdateEvent,
-  NodeMoveEvent,
-  NodeUpdateEvent,
-  PlaybackPauseEvent,
-  PlaybackPlayEvent,
-  PlaybackSeekEvent,
-  PlaybackUpdateEvent,
-  SettingsUpdateEvent,
-} from './events.d.ts'
+import type * as events from './events.d.ts'
 import type * as Schema from './schema.d.ts'
-export * from './events.d.ts'
 
+export type * from './events.d.ts'
 export type { Schema }
 
 export interface ChildNodePosition {
@@ -66,33 +48,33 @@ export interface NodeFieldDef<T extends {}, K extends keyof T = keyof T> {
 }
 
 export interface VideoEditorEvents {
-  error: ErrorEvent
+  error: events.ErrorEvent
 
   'doc:dispose': DocDisposeEvent
-  'settings:update': SettingsUpdateEvent
+  'settings:update': events.SettingsUpdateEvent
 
-  'node:create': NodeCreateEvent
-  'node:move': NodeMoveEvent
-  'node:update': NodeUpdateEvent
-  'node:gap-update': NodeGapUpdateEvent
-  'node:delete': NodeDeleteEvent
+  'node:create': events.NodeCreateEvent
+  'node:move': events.NodeMoveEvent
+  'node:update': events.NodeUpdateEvent
+  'node:gap-update': events.NodeGapUpdateEvent
+  'node:delete': events.NodeDeleteEvent
 
-  'asset:create': AssetCreateEvent
-  'asset:delete': AssetDeleteEvent
+  'asset:create': events.AssetCreateEvent
+  'asset:delete': events.AssetDeleteEvent
 
-  'link:create': LinkCreateEvent
-  'link:update': LinkUpdateEvent
-  'link:delete': LinkDeleteEvent
+  'link:create': events.LinkCreateEvent
+  'link:update': events.LinkUpdateEvent
+  'link:delete': events.LinkDeleteEvent
 
-  'playback:play': PlaybackPlayEvent
-  'playback:pause': PlaybackPauseEvent
-  'playback:update': PlaybackUpdateEvent
-  'playback:seek': PlaybackSeekEvent
+  'playback:play': events.PlaybackPlayEvent
+  'playback:pause': events.PlaybackPauseEvent
+  'playback:update': events.PlaybackUpdateEvent
+  'playback:seek': events.PlaybackSeekEvent
 
-  'canvas:click': CanvasEvent<'click'>
-  'canvas:pointerdown': CanvasEvent<'pointerdown'>
-  'canvas:pointermove': CanvasEvent<'pointermove'>
-  'canvas:pointerup': CanvasEvent<'pointerup'>
+  'canvas:click': events.CanvasEvent<'click'>
+  'canvas:pointerdown': events.CanvasEvent<'pointerdown'>
+  'canvas:pointermove': events.CanvasEvent<'pointermove'>
+  'canvas:pointerup': events.CanvasEvent<'pointerup'>
 }
 
 export type AssetEventType = Extract<keyof VideoEditorEvents, `asset:${string}`>
@@ -160,7 +142,7 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   remove: () => void
   isNode: true
   isTimeline: () => this is Timeline
-  isTrack: () => this is Track
+  isTrack: () => this is AnyTrack
   isTrackChild: () => this is AnyTrackChild
   isClip: () => this is AnyClip
   isMediaClip: () => this is AnyMediaClip
@@ -188,27 +170,23 @@ export interface ParentNode<TChild extends AnyNode> extends BaseNode {
   _positionChildAt: (node: TChild, index: number) => void
 }
 
-export interface Timeline extends ParentNode<Track>, Schema.Timeline {
+export interface Timeline extends ParentNode<AnyTrack>, Schema.Timeline {
   readonly parent?: undefined
   toJSON: () => Schema.Timeline
 }
 
-type TrackType = 'video' | 'audio'
-
-export interface Track extends ParentNode<AnyTrackChild>, Schema.Track {
-  readonly trackType: TrackType
+export interface BaseTrack<TChild extends TrackChild> extends ParentNode<TChild> {
   readonly parent?: Timeline
   readonly duration: Rational
   readonly link: Schema.NodeLink | undefined
-  prev?: Track
-  next?: Track
-  toJSON: () => Schema.Track
+  prev?: AnyTrack
+  next?: AnyTrack
 }
-export interface VideoTrack extends Track {
-  trackType: 'video'
+export interface VideoTrack extends BaseTrack<AnyVideoClip>, Schema.VideoTrack {
+  toJSON: () => Schema.VideoTrack
 }
-export interface AudioTrack extends Track {
-  trackType: 'audio'
+export interface AudioTrack extends BaseTrack<AnyAudioClip>, Schema.AudioTrack {
+  toJSON: () => Schema.AudioTrack
 }
 
 export interface TrackChild extends BaseNode {
@@ -216,14 +194,14 @@ export interface TrackChild extends BaseNode {
   gap: Rational
   readonly timeRational: ClipTimeRational
   readonly time: ClipTime
-  readonly parent?: Track
+  readonly parent?: AnyTrack
   prev?: AnyTrackChild | undefined
   next?: AnyTrackChild | undefined
   getGap: (prevClipId: string | undefined) => Rational
   setGap: (prevClipId: string | undefined, duration: Schema.Rational) => void
 }
 
-export interface Clip extends TrackChild, Schema.BaseClip {
+export interface BaseClip extends TrackChild, Schema.BaseClip {
   type: `clip:${string}`
   name: string
   sourceStart: Rational
@@ -238,18 +216,18 @@ export interface Clip extends TrackChild, Schema.BaseClip {
 }
 
 export interface VideoClip
-  extends Clip, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends BaseClip, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
   type: 'clip:video'
   effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
 }
-export interface AudioClip extends Clip, Schema.AudioClip {
+export interface AudioClip extends BaseClip, Schema.AudioClip {
   type: 'clip:audio'
   volume: number
   toJSON: () => Schema.AudioClip
 }
 export interface TextClip
-  extends Clip, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends BaseClip, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
   type: 'clip:text'
   fontWeight: number
   fontStyle: Schema.FontStyle
@@ -258,22 +236,25 @@ export interface TextClip
 
 export interface NodesByType {
   timeline: Timeline
-  track: Track
+  'track:video': VideoTrack
+  'track:audio': AudioTrack
   'clip:video': VideoClip
   'clip:audio': AudioClip
   'clip:text': TextClip
 }
 
 export type AnyNode = NodesByType[keyof NodesByType]
+export type AnyTrack = NodesByType[Extract<keyof NodesByType, `track:${string}`>]
 export type AnyClip = NodesByType[Extract<keyof NodesByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
 export type AnyVideoClip = VideoClip | TextClip
+export type AnyAudioClip = AudioClip
 export type AnyTrackChild = AnyClip
-export type AnyParentNode = Timeline | Track
+export type AnyParentNode = Timeline | AnyTrack
 export type AnyVideoNode = Timeline | VideoTrack | VideoClip | TextClip
 export type AnyAudioNode = Timeline | AudioTrack | AudioClip
 
-export type Linkable = Track | AnyClip
+export type Linkable = AnyTrack | AnyClip
 
 interface BaseAsset extends Schema.BaseAsset {
   isBuiltIn?: boolean
@@ -344,7 +325,7 @@ export interface VideoEditor {
   selection?: AnyClip | GapSelection
 
   /** The audio and video tracks which contain clips */
-  tracks: Track[]
+  tracks: AnyTrack[]
 
   /** The state of the asset bin ui */
   activeAssetBin: AssetBin
@@ -404,9 +385,9 @@ export interface VideoEditor {
   /**
    * Add a new track to the timeline.
    *
-   * @param trackType The track the clip will be added to.
+   * @param type The track the clip will be added to.
    */
-  addTrack: (trackType: Track['trackType']) => Track
+  addTrack: (type: 'video' | 'audio') => AnyTrack
 
   /**
    * Add a new clip at the end of the specified track.
@@ -414,7 +395,7 @@ export interface VideoEditor {
    * @param track The track the clip will be added to.
    * @param asset The media asset attached to the clip.
    */
-  addClip: (track: Track, asset: MediaAsset) => AnyClip
+  addClip: (track: AnyTrack, asset: MediaAsset) => AnyClip
 
   /** Change the media of the selected clip */
   replaceClipAsset: (asset: MediaAsset) => void

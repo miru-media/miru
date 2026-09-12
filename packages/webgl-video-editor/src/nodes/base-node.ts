@@ -170,7 +170,7 @@ export abstract class BaseNode<
   isTimeline(): this is pub.Timeline {
     return false
   }
-  isTrack(): this is pub.Track {
+  isTrack(): this is pub.AnyTrack {
     return false
   }
   isTrackChild(): this is pub.AnyTrackChild {

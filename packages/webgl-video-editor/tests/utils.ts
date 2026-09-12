@@ -19,13 +19,18 @@ export const makeTimeline = (children: Schema.SerializedTimeline['children']): S
   id: 'timeline',
   children,
 })
-export const makeTrack = (
+export const makeVideoTrack = (
   id: string,
-  trackType: Schema.SerializedTrack['trackType'],
-  children: Schema.SerializedTrack['children'],
-): Schema.SerializedTrack => ({
-  ...makeBase(id, 'track'),
-  trackType,
+  children: Schema.SerializedVideoTrack['children'],
+): Schema.AnySerializedTrack => ({
+  ...makeBase(id, 'track:video'),
+  children,
+})
+export const makeAudioTrack = (
+  id: string,
+  children: Schema.SerializedAudioTrack['children'],
+): Schema.AnySerializedTrack => ({
+  ...makeBase(id, 'track:audio'),
   children,
 })
 

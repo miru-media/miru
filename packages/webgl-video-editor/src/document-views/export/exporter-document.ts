@@ -3,7 +3,6 @@ import * as Mb from 'mediabunny'
 
 import type { MediaAsset } from '#core'
 import type * as pub from '#core'
-import { Track } from '#nodes'
 import { Rational, setObjectSize } from 'shared/utils'
 import { rangesIntersect, setVideoEncoderConfigCodec } from 'shared/video/utils'
 
@@ -82,7 +81,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     this._init()
 
     originalDoc.timeline.children.forEach((track_, trackIndex) => {
-      const track = new Track(doc, track_.toJSON())
+      const track = doc.createNode(track_.toJSON())
       track.move({ parentId: doc.timeline.id, index: trackIndex })
 
       if (track_.isAudio() && this.mute) return

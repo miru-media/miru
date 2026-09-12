@@ -62,7 +62,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       ),
 
       seekTo: editor.seekTo.bind(editor),
-      addClip: (track: pub.Track, asset: pub.MediaAsset) =>
+      addClip: (track: pub.AnyTrack, asset: pub.MediaAsset) =>
         editor.addClip(editor.doc.nodes.get(track.id), asset),
       select: (item: pub.AnyClip | pub.GapSelection | undefined) =>
         editor.select(item?.isNode ? editor.doc.nodes.get<pub.AnyTrackChild>(item.id) : item),
