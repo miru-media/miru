@@ -12,7 +12,7 @@
   place-items: start center;
   justify-content: center;
   width: 100%;
-  padding-top: 0.5rem;
+  padding: 0.5rem 0 2rem;
   overflow: auto;
 }
 
@@ -114,8 +114,7 @@
   gap: 0.5rem;
   align-items: center;
   width: 100%;
-  max-height: 15rem;
-  padding-top: 0.5rem;
+  padding: 0.5rem 0 2rem;
   margin: auto;
   overflow: scroll;
   overflow-y: auto;

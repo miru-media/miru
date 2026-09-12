@@ -365,7 +365,8 @@
   composes: panelBase;
   grid-area: panel;
   width: var(--panel-width);
-  padding: 0.625rem;
+  padding: 0.625rem 0.625rem 0;
+  overflow: hidden;
 }
 
 .panelBody {
@@ -373,6 +374,7 @@
   flex-direction: column;
   gap: 0.625rem;
   align-items: start;
+  overflow-y: auto;
 }
 
 .panelHeadingBase {
