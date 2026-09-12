@@ -152,10 +152,12 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case '_isEnding':
         return target[key]
 
-      // link
-      case 'link': {
+      // links
+      case 'link':
         return target.link
-      }
+      case 'linkedAudio':
+      case 'linkedVideo':
+        return target.docView._getNode((original as pub.VideoClip & pub.AudioClip)[key])
 
       // node array properties
       case 'children':

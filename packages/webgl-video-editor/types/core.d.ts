@@ -36,6 +36,7 @@ export interface NodeFieldFlags {
   NodeArray: number
   Asset: number
   Gap: number
+  Constant: number
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional
@@ -99,7 +100,6 @@ export interface Document extends Schema.DocumentSettings {
   createLink: (init: Schema.NodeLink) => Schema.NodeLink
   updateLink: (id: string, nodes: Schema.NodeLink['nodes']) => void
   deleteLink: (id: string) => void
-  getLinkOf: (nodeId: string) => Schema.NodeLink | undefined
 
   /**
    * Seek to the given time of the video.
@@ -218,12 +218,14 @@ export interface BaseClip extends TrackChild, Schema.BaseClip {
 export interface VideoClip
   extends BaseClip, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
   type: 'clip:video'
+  linkedAudio?: AudioClip
   effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
 }
 export interface AudioClip extends BaseClip, Schema.AudioClip {
   type: 'clip:audio'
   volume: number
+  linkedVideo?: VideoClip
   toJSON: () => Schema.AudioClip
 }
 export interface TextClip
@@ -390,12 +392,11 @@ export interface VideoEditor {
   addTrack: (type: 'video' | 'audio') => AnyTrack
 
   /**
-   * Add a new clip at the end of the specified track.
+   * Add a new clip at the end of the most appropriate track.
    *
-   * @param track The track the clip will be added to.
    * @param asset The media asset attached to the clip.
    */
-  addClip: (track: AnyTrack, asset: MediaAsset) => AnyClip
+  addMediaClip: (asset: MediaAsset) => AnyClip
 
   /** Change the media of the selected clip */
   replaceClipAsset: (asset: MediaAsset) => void

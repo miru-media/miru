@@ -154,10 +154,20 @@ export class Document implements pub.Document {
     return node as pub.NodesByType[T['type']]
   }
 
+  #setNodeLinkProps(link: Schema.NodeLink, clear = false): void {
+    const newLink = clear ? undefined : link
+    link.nodes.forEach((n) => {
+      this.nodes.get<VideoTrack | AudioTrack | VideoClip /* | etc. */>(n.id)._link.value = newLink
+    })
+  }
+
   createLink(init: Schema.NodeLink) {
-    ;(this.#links.value = new Map(this.links)).set(init.id, init)
-    this.emit(new LinkCreateEvent(init))
-    return init
+    const link = { id: init.id, nodes: init.nodes.map(({ id, type }) => ({ id, type })) }
+
+    ;(this.#links.value = new Map(this.links)).set(link.id, link)
+    this.#setNodeLinkProps(link)
+    this.emit(new LinkCreateEvent(link))
+    return link
   }
 
   updateLink(id: string, nodes: Schema.NodeLink['nodes']) {
@@ -166,8 +176,10 @@ export class Document implements pub.Document {
 
     if (from.length === nodes.length && from.every((n, i) => n.id === nodes[i].id)) return
 
+    this.#setNodeLinkProps(link, true)
     this.#links.value = new Map(this.links)
     link.nodes = nodes.map(({ id, type }) => ({ id, type }))
+    this.#setNodeLinkProps(link)
     this.emit(new LinkUpdateEvent(link, from))
   }
 
@@ -175,12 +187,9 @@ export class Document implements pub.Document {
     const init = this.links.get(id)
     if (!init) return
 
+    this.#setNodeLinkProps(init, true)
     ;(this.#links.value = new Map(this.links)).delete(id)
     this.emit(new LinkDeleteEvent(init))
-  }
-
-  getLinkOf(nodeId: string): Schema.NodeLink | undefined {
-    for (const link of this.links.values()) if (link.nodes.some((n) => n.id === nodeId)) return link
   }
 
   seekTo(time: number): void {
@@ -229,7 +238,7 @@ export class Document implements pub.Document {
 
     createChildren(this.timeline, content.timeline.children)
 
-    content.links.forEach((init) => void this.links.set(init.id, init))
+    content.links.forEach((init) => void this.createLink(init))
   }
 
   toJSON(): Schema.SerializedDocument {

@@ -20,7 +20,7 @@ const PAUSE_EVENT = new PlaybackPauseEvent()
 
 interface ViewTypeMap {
   'clip:video': PlaybackMediaClip<pub.VideoClip>
-  'clip:audio': PlaybackMediaClip<pub.AudioClip>
+  'clip:audio': PlaybackMediaClip<pub.AudioClip> | undefined
 }
 
 export class PlaybackDocument extends DocumentView<ViewTypeMap> {
@@ -128,8 +128,11 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
     let view
 
-    if (original.isMediaClip()) view = new PlaybackMediaClip(this, original)
-    else if (original.isTextClip()) view = new PlaybackClip(this, original)
+    if (original.isMediaClip()) {
+      // TODO: improve linking UX
+      if (original.isAudio() && original.linkedVideo) view = undefined
+      else view = new PlaybackMediaClip(this, original)
+    } else if (original.isTextClip()) view = new PlaybackClip(this, original)
     else view = undefined
 
     return view as ViewType<ViewTypeMap, T>

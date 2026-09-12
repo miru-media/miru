@@ -51,7 +51,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
 
   const createClip = () => {
     try {
-      const clip = editor.addClip(editor.getTrackForMedia(asset), asset)
+      const clip = editor.addMediaClip(asset)
       editor.select(clip)
       editor.activeAssetBin = null
     } catch {

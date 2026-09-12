@@ -39,13 +39,16 @@ export const TIMELINE_ID = 'timeline'
 
 export const PIXI_LUT_UPLOADER_ID = 'webgl-video-editor:lut'
 export const PIXI_HALD_LUT_UPLOADER_ID = 'webgl-video-editor:hald-lut'
+
+const Readonly = 1 << 0
 export const NODE_FIELD_FLAGS: NodeFieldFlags = {
   ReactiveProp: 0,
-  Readonly: 1 << 0,
+  Readonly,
   Node: 1 << 1,
   NodeArray: 1 << 2,
   Asset: 1 << 3,
   Gap: 1 << 4,
+  Constant: (1 << 5) | Readonly,
 }
 
 export const CLIP_COLORS = [

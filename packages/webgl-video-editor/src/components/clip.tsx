@@ -69,7 +69,7 @@ export const Clip = ({
           styles.clip,
           isVideoMedia() && styles.isVideoMedia,
           isSelected() && [styles.isSelected, editor.drag.isDragging() && styles.isDragging],
-          clip.isMediaClip() && !editor.playback._getNode(clip).everHadEnoughData && styles.isLoading,
+          clip.isMediaClip() && !editor.playback._getNode(clip)?.everHadEnoughData && styles.isLoading,
           (GAPPED || clip.prev) && styles.canResizeLeft,
           clip.next &&
             editor.selection?.isNode &&

@@ -55,6 +55,17 @@ export const ClipProperties = () => {
             <div class={styles.panelBody}>
               {() => selection.isVideo() && <VideoClipProperties {...{ clip: selection }} />}
               {() => selection.isAudio() && <AudioClipProperties {...{ clip: selection }} />}
+              {/* TODO: improve linking UX */}
+              {() => {
+                const linkedAudio =
+                  selection.isVideo() && selection.isMediaClip() && selection.asset?.audio
+                    ? selection.linkedAudio
+                    : undefined
+
+                return (
+                  linkedAudio && <AudioClipProperties {...{ clip: editor.doc.nodes.get(linkedAudio.id) }} />
+                )
+              }}
             </div>
           </section>
         )
@@ -109,11 +120,11 @@ const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
 
   return (
     <>
-      <h1 class={styles.panelHeading}>{t('transform')}</h1>
+      <h2 class={styles.panelHeading}>{t('transform')}</h2>
 
-      <h2 id={scaleId} class={styles.panelSubheading}>
+      <h3 id={scaleId} class={styles.panelSubheading}>
         {t('scale')}
-      </h2>
+      </h3>
 
       <div class={styles.inputRow}>
         <input type="range" {...scaleInputProps} />
@@ -175,11 +186,11 @@ const AudioClipProperties = ({ clip }: SubComponentProps<AudioClip>) => {
 
   return (
     <>
-      <h1 class={styles.panelHeading}>{t('audio_properties')}</h1>
+      <h2 class={styles.panelHeading}>{t('audio_properties')}</h2>
 
-      <h2 id={headingId} class={styles.panelSubheading}>
+      <h3 id={headingId} class={styles.panelSubheading}>
         {t('volume')}
-      </h2>
+      </h3>
 
       <div class={styles.inputRow}>
         <input type="range" {...volumeInputProps} />

@@ -172,13 +172,6 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
     this.doc.deleteLink(id)
   }
 
-  getLinkOf<T extends EditNodeLink.Linkable = EditNodeLink.Linkable>(
-    nodeId: string,
-  ): EditNodeLink<T> | undefined {
-    const link = this.doc.getLinkOf(nodeId)
-    return link && (this.links.get(link.id) as unknown as EditNodeLink<T>)
-  }
-
   #onEventWithLink(event: pub.VideoEditorEvents[Extract<keyof pub.VideoEditorEvents, `link:${string}`>]) {
     const linkInit = event.link
     const { id } = linkInit

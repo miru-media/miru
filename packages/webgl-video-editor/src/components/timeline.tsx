@@ -131,7 +131,7 @@ export const Timeline = ({
 
     try {
       const asset = await editor.createMediaAsset(file)
-      editor.addClip(editor.getTrackForMedia(asset), asset)
+      editor.addMediaClip(asset)
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))

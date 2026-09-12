@@ -25,20 +25,26 @@ export abstract class BaseNode<
     { key: 'color', flags: 0 },
     { key: 'metadata', flags: 0, defaultValue: {} },
 
-    { key: 'isNode', flags: NODE_FIELD_FLAGS.Readonly },
+    { key: 'isNode', flags: NODE_FIELD_FLAGS.Constant },
     { key: 'doc', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'id', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'type', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'parent', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
     { key: 'index', flags: NODE_FIELD_FLAGS.Readonly },
-    { key: 'prev', flags: NODE_FIELD_FLAGS.Node },
-    { key: 'next', flags: NODE_FIELD_FLAGS.Node },
+    { key: 'prev', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
+    { key: 'next', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.BaseNode & { type: string }>[]
 
   static _reactiveKeys: Set<string> | undefined
   static get REACTIVE_KEYS(): Set<string> {
-    const keys = this._reactiveKeys
-    return keys ?? (this._reactiveKeys = new Set(this.FIELDS.map((f) => f.key as string)))
+    let keys = this._reactiveKeys
+    if (!keys) {
+      keys = this._reactiveKeys = new Set()
+      this.FIELDS.forEach((f) => {
+        if (!(f.flags & NODE_FIELD_FLAGS.Constant)) keys?.add(f.key as string)
+      })
+    }
+    return keys
   }
 
   declare readonly doc: pub.Document
