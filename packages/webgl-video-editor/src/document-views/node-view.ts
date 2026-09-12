@@ -19,7 +19,7 @@ export class NodeView<TDocView, T extends pub.AnyNode> {
 
   dispose(): void {
     this.isDisposed = true
-    this.original = undefined as never
+    this.docView = this.original = undefined as never
   }
 
   [Symbol.dispose](): void {

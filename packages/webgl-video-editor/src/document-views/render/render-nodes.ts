@@ -229,6 +229,8 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
     super.dispose()
     texture.destroy(true)
 
+    this.#scope.stop()
+
     const { pixiFilters } = this
     pixiFilters.value.forEach((f) => f.destroy())
     pixiFilters.value.length = 0
