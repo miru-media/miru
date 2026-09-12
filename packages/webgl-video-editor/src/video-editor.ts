@@ -19,6 +19,7 @@ import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/render-document.ts'
 import { Document } from './document.ts'
+import { EDITOR_SELECTION_ACTIONS_BY_ID } from './editor-actions.ts'
 import type { NodeDeleteEvent } from './events.ts'
 import { TimelineZoom } from './utils.ts'
 
@@ -32,6 +33,10 @@ export class VideoEditor implements pub.VideoEditor {
   readonly sync?: pub.VideoEditorDocumentSync
 
   readonly #selection = ref<pub.AnyTrackChild | pub.GapSelection>()
+  readonly #linkedSelection = computed(() => {
+    const { selection } = this
+    return selection?.isNode && selection.isClip() ? (selection.link?.nodes ?? []) : []
+  })
   readonly _timelineContainer = ref<HTMLElement>()
   readonly _timelineSize = useElementSize(this._timelineContainer)
   readonly _viewportContainer = ref<HTMLElement>()
@@ -111,8 +116,11 @@ export class VideoEditor implements pub.VideoEditor {
     const selection = this.#selection.value
     return selection?.isNode ? this.doc._getNode(selection) : selection
   }
+  get linkedSelection(): EditView.AnyClip[] {
+    return this.#linkedSelection.value
+  }
 
-  get tracks(): pub.Track[] {
+  get tracks(): pub.AnyTrack[] {
     return this.doc.timeline.children
   }
 
@@ -182,21 +190,41 @@ export class VideoEditor implements pub.VideoEditor {
     return await this.doc.assets.createMediaAsset(source)
   }
 
-  addClip(track: pub.Track, asset: pub.MediaAsset): pub.AnyClip {
-    const { duration } = asset
-    const { trackType } = track
-
-    const init: Schema.AnyClip = {
-      id: this.generateId(),
-      type: `clip:${trackType}`,
-      mediaRef: { assetId: asset.id },
-      sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
-      duration: Rational.fromDecimal(duration, this.doc.frameRate),
-    }
-
+  addMediaClip(asset: pub.MediaAsset): pub.AnyClip {
     return this._transact(() => {
+      const { duration } = asset
+
+      const track = this.getOrCreateTrackForMedia(asset)
+
+      const init: Schema.AnyClip = {
+        id: this.generateId(),
+        type: `clip:${track.isVideo() ? 'video' : 'audio'}`,
+        name: asset.name,
+        color: asset.color,
+        mediaRef: { assetId: asset.id },
+        sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
+        duration: Rational.fromDecimal(duration, this.doc.frameRate),
+      }
+
       const clip = this.doc.createNode(init)
       clip.move({ parentId: track.id, index: track.children.length })
+
+      // Create a linked audio clip for video clips
+      // TODO: improve linking UX
+      if (track.isVideo() && track.link) {
+        const linkedAudioTrack = track.link.nodes.find((n) => n.type === 'track:audio')
+        if (linkedAudioTrack) {
+          const audioClip = this.doc.createNode({
+            ...init,
+            id: this.generateId(),
+            type: 'clip:audio',
+            mediaRef: asset.audio ? init.mediaRef : undefined,
+          })
+          audioClip.move({ parentId: linkedAudioTrack.id, index: track.children.length })
+          this.doc.createLink({ id: this.generateId(), nodes: [clip, audioClip] })
+        }
+      }
+
       return clip
     })
   }
@@ -252,19 +280,40 @@ export class VideoEditor implements pub.VideoEditor {
     return [startClip, endClip]
   }
 
-  getTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }) {
-    const trackType = (asset.video ?? false) === false ? 'audio' : 'video'
+  getTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }): pub.AnyTrack | undefined {
+    const hasVideo = (asset.video ?? false) !== false
 
     // add to the last track of the correct type
-    return [...this.tracks].reverse().find((t) => t.trackType === trackType) ?? this.addTrack(trackType)
+    return [...this.tracks].reverse().find(
+      (t) =>
+        t.isVideo() === hasVideo &&
+        // if the asset is video, the track must be linked to an audio track
+        // TODO: consider relaxing this requirement when improving linking UX
+        hasVideo === !!t.link,
+    )
+  }
+  getOrCreateTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }): pub.AnyTrack {
+    const found = this.getTrackForMedia(asset)
+    if (found) return found
+
+    const newTrack = this.addTrack((asset.video ?? false) === false ? 'audio' : 'video')
+
+    // always create and linked audio tracks for video tracks
+    // TODO: reconsider when improving linking UX
+    if (newTrack.isVideo()) {
+      const audioTrack = this.addTrack('audio')
+      this.doc.createLink({ id: this.generateId(), nodes: [newTrack, audioTrack] })
+    }
+
+    return newTrack
   }
 
-  addTrack(trackType: 'video' | 'audio'): pub.Track {
+  addTrack(trackType: 'video' | 'audio'): pub.AnyTrack {
     const { doc } = this
 
     return this._transact(() => {
-      const track = doc.createNode({ id: this.generateId(), trackType, type: 'track' })
-      track.move({ parentId: doc.timeline.id, index: 0 })
+      const track = doc.createNode({ id: this.generateId(), type: `track:${trackType}` })
+      track.move({ parentId: doc.timeline.id, index: track.isVideo() ? 0 : doc.timeline.count })
       return track
     })
   }
@@ -314,6 +363,10 @@ export class VideoEditor implements pub.VideoEditor {
 
   _transact<T>(fn: () => T): T {
     return this.sync ? this.sync.transact(fn) : fn()
+  }
+
+  action(id: string) {
+    this._transact(() => EDITOR_SELECTION_ACTIONS_BY_ID[id].exec(this))
   }
 
   secondsToPixels(time: number): number {

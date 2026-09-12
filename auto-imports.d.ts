@@ -27,6 +27,8 @@ declare global {
   const IconMsFullscreenExitRounded: typeof import('~icons/material-symbols/fullscreen-exit-rounded.jsx')['default']
   const IconMsFullscreenRounded: typeof import('~icons/material-symbols/fullscreen-rounded.jsx')['default']
   const IconMsHelpOutlineRounded: typeof import('~icons/material-symbols/help-outline-rounded.jsx')['default']
+  const IconMsLinkOffRounded: typeof import('~icons/material-symbols/link-off-rounded.jsx')['default']
+  const IconMsLinkRounded: typeof import('~icons/material-symbols/link-rounded.jsx')['default']
   const IconMsMusicNoteRounded: typeof import('~icons/material-symbols/music-note-rounded.jsx')['default']
   const IconMsPauseRounded: typeof import('~icons/material-symbols/pause-rounded.jsx')['default']
   const IconMsPlayArrowRounded: typeof import('~icons/material-symbols/play-arrow-rounded.jsx')['default']

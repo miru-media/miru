@@ -1,4 +1,4 @@
-import { computed, type Ref } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 
 import { NODE_FIELD_FLAGS, VIDEO_PREPLAY_TIME_S } from '#constants'
 import type { ClipTime, ClipTimeRational, Schema } from '#core'
@@ -9,11 +9,14 @@ import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import { TrackChild } from '../track-child.ts'
 
-export interface Clip<T extends Schema.AnyClip> extends NonOverlappingUnion<TrackChild<T>, pub.Clip> {}
+export interface BaseClip<T extends Schema.AnyClip> extends NonOverlappingUnion<
+  TrackChild<T>,
+  pub.BaseClip
+> {}
 
-export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
+export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
   extends TrackChild<T>
-  implements pub.Clip
+  implements pub.BaseClip
 {
   static FIELDS = super.FIELDS.concat([
     { key: 'sourceStart', flags: 0, transform: Rational.from },
@@ -28,7 +31,8 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     { key: 'isInClipTime', flags: NODE_FIELD_FLAGS.Readonly },
 
     { key: 'gap', flags: NODE_FIELD_FLAGS.Gap },
-  ] satisfies pub.NodeFieldDef<pub.Clip>[])
+    { key: 'link', flags: NODE_FIELD_FLAGS.Readonly },
+  ] satisfies pub.NodeFieldDef<pub.BaseClip>[])
 
   static TRANSFORM_FIELDS = [
     { key: 'translateX', flags: 0, defaultValue: 0 },
@@ -73,14 +77,22 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     return this.#isInClipTime.value
   }
 
+  declare _link: Ref<Schema.NodeLink | undefined>
+  get link(): Schema.NodeLink | undefined {
+    return this._link.value
+  }
+
   protected _init(): void {
     super._init()
 
     this._asset = computed((): pub.MediaAsset | undefined =>
-      this.mediaRef?.assetId ? this.doc.assets.getAsset(this.mediaRef.assetId) : undefined,
+      !this.isDisposed && this.mediaRef?.assetId
+        ? this.doc.assets.getAsset(this.mediaRef.assetId)
+        : undefined,
     )
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())
+    this._link = ref()
   }
 
   _computeTimeRational(): ClipTimeRational {
@@ -142,7 +154,7 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
   }
 
   _transformToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.TransformProps>>>(
-    this: Clip<T> & Schema.TransformProps,
+    this: BaseClip<T> & Schema.TransformProps,
   ): Partial<Schema.TransformProps> {
     const { translateX, translateY, rotate, scaleX, scaleY } = this
     const transform: Partial<Schema.TransformProps> = {}
@@ -154,5 +166,11 @@ export abstract class Clip<T extends Schema.AnyClip = Schema.AnyClip>
     if (scaleY !== 1) transform.scaleY = scaleY
 
     return transform
+  }
+
+  delete(): void {
+    const { link } = this
+    if (link) this.doc.deleteLink(link.id)
+    super.delete()
   }
 }

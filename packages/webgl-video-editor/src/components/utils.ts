@@ -24,7 +24,7 @@ export const ensureDurationIsPlayable = (clip: AnyClip): void => {
   clip.duration = Rational.min(clip.duration, sourceDuration)
 }
 
-export const getClipAtTime = (track: pub.Track, time: number): pub.AnyClip | undefined => {
+export const getClipAtTime = (track: pub.AnyTrack, time: number): pub.AnyClip | undefined => {
   for (let clip = track.head; clip; clip = clip.next) {
     const { start, end } = clip.time
     if (start <= time && time < end) return clip
@@ -48,7 +48,7 @@ export const moveAndFillGaps = (
   const nodeAtPosition = getNodeAtTargetPosition<pub.AnyTrackChild>(node.doc, position)
   const nodeBeforePosition = nodeAtPosition
     ? nodeAtPosition.prev
-    : node.doc.nodes.get<pub.Track>(position.parentId).children[position.index - 1]
+    : node.doc.nodes.get<pub.AnyTrack>(position.parentId).children[position.index - 1]
   const newNextNode = node === nodeAtPosition ? node.next : nodeAtPosition
   const newPrevClipEnd = nodeBeforePosition?.timeRational.end ?? Rational.ZERO
 
@@ -76,15 +76,6 @@ export const moveAndFillGaps = (
   node.move(position)
 }
 
-export const moveAndLeaveZeroGap = (node: pub.AnyTrackChild, position: pub.ChildNodePosition) => {
-  if (node.parent?.id === position.parentId && node.index === position.index) return
-  const { next } = node
-
-  if (next) next.setGap(node.prev?.id, node.gap.add(next.gap))
-
-  node.move(position)
-}
-
 export const nodeFitsBetween = (
   node: pub.AnyTrackChild,
   a: pub.AnyTrackChild | undefined,
@@ -106,4 +97,7 @@ export const slideNodeBy = (node: pub.AnyTrackChild, delta: Rational) => {
 export const getNodeAtTargetPosition = <T extends pub.AnyNode>(
   doc: pub.Document,
   position: pub.ChildNodePosition,
-): T | undefined => doc.nodes.get<pub.Track>(position.parentId).children[position.index] as T
+): T | undefined => doc.nodes.get<pub.AnyTrack>(position.parentId).children[position.index] as T
+
+export const nodesAreLinked = (a: pub.Linkable, b: pub.Linkable): boolean =>
+  a.id === b.id || !!(b.link && a.link?.id === b.link.id)

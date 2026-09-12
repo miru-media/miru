@@ -3,7 +3,7 @@ import { computed, ref } from 'fine-jsx'
 import type * as pub from '#core'
 import type { AnyClip, AnyNode, AnyParentNode, ClipTime, ClipTimeRational } from '#core'
 import type { KeyofUnion } from '#internal'
-import type { Clip } from '#nodes'
+import type { BaseClip } from '#nodes'
 
 import { NodeUpdateEvent } from '../../events.ts'
 import { TrackChild } from '../../nodes/track-child.ts'
@@ -11,6 +11,7 @@ import type { ViewType } from '../document-view.ts'
 import { NodeView } from '../node-view.ts'
 
 import type { EditDocument, ViewTypeMap } from './edit-document.ts'
+import type { EditNodeLink } from './edit-node-link.ts'
 
 declare module 'webgl-video-editor' {
   export interface BaseNode {
@@ -25,7 +26,8 @@ const viewProxies = new WeakMap<EditView<any>, EditView.ProxyOf<AnyNode>>()
 export namespace EditView {
   export type ProxyOf<T extends AnyNode> = EditView<T> & T
   export type Timeline = ProxyOf<pub.Timeline>
-  export type Track = ProxyOf<pub.Track>
+  export type VideoTrack = ProxyOf<pub.VideoTrack>
+  export type AudioTrack = ProxyOf<pub.AudioTrack>
   export type VideoClip = EditClip<pub.VideoClip> & ProxyOf<pub.VideoClip>
   export type AudioClip = EditClip<pub.AudioClip> & ProxyOf<pub.AudioClip>
   export type TextClip = EditClip<pub.TextClip> & ProxyOf<pub.TextClip>
@@ -53,6 +55,11 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
   declare prev?: ViewType<ViewTypeMap, T['prev']>
   declare next?: ViewType<ViewTypeMap, T['next']>
   declare children?: T extends { children: any[] } ? ViewType<ViewTypeMap, T['children'][number]>[] : never
+
+  get link(): T extends EditNodeLink.Linkable ? EditNodeLink<T> | undefined : never {
+    const { link } = this.original as EditNodeLink.Linkable
+    return (link && this.docView.links.get(link.id)) as never
+  }
 
   _move = super._move.bind(this)
   _update = super._update.bind(this)
@@ -145,9 +152,16 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case '_isEnding':
         return target[key]
 
+      // links
+      case 'link':
+        return target.link
+      case 'linkedAudio':
+      case 'linkedVideo':
+        return target.docView._getNode((original as pub.VideoClip & pub.AudioClip)[key])
+
       // node array properties
       case 'children':
-        return (original as pub.Track)[key].map((node) => target.docView._getNode(node))
+        return (original as pub.AnyTrack)[key].map((node) => target.docView._getNode(node))
 
       // clip time properties and methods
       case 'time':
@@ -232,10 +246,14 @@ abstract class EditTrackChild<T extends pub.AnyTrackChild> extends EditView<T> {
 
 export class EditClip<T extends AnyClip> extends EditTrackChild<T> {
   _presentationTime = computed((): ClipTime =>
-    Reflect.apply((this.original as unknown as Clip<T>)._computePresentationTime, viewProxies.get(this), []),
+    Reflect.apply(
+      (this.original as unknown as BaseClip<T>)._computePresentationTime,
+      viewProxies.get(this),
+      [],
+    ),
   )
   _playableTime = computed((): ClipTime =>
-    Reflect.apply((this.original as unknown as Clip<T>)._computePlayableTime, viewProxies.get(this), []),
+    Reflect.apply((this.original as unknown as BaseClip<T>)._computePlayableTime, viewProxies.get(this), []),
   )
   /* eslint-enable @typescript-eslint/unbound-method */
 }

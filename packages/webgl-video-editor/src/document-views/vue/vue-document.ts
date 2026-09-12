@@ -8,17 +8,19 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import { _vuePlainReadonly, _vueWritable } from './utils.ts'
 import {
   type VueAudioClip,
+  type VueAudioTrack,
   VueNodeView,
   VueParentNode,
   type VueTextClip,
   type VueTimeline,
-  type VueTrack,
   type VueVideoClip,
+  type VueVideoTrack,
 } from './vue-nodes.ts'
 
 export interface VueTypeMap {
   timeline: VueTimeline
-  track: VueTrack
+  'track:video': VueVideoTrack
+  'track:audio': VueAudioTrack
   'clip:video': VueVideoClip
   'clip:audio': VueAudioClip
   'clip:text': VueTextClip
@@ -35,6 +37,7 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   declare readonly timeline: pub.Document['timeline']
   declare readonly assets: pub.Document['assets']
   declare readonly nodes: pub.Document['nodes']
+  declare readonly links: pub.Document['links']
   declare readonly isEmpty: pub.Document['isEmpty']
   /** @internal */
   declare readonly activeClipIsStalled: pub.Document['activeClipIsStalled']
@@ -45,15 +48,30 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
 
     Vue.markRaw(this)
     Vue.markRaw(doc)
-    ;(['resolution', 'frameRate'] as const).forEach((key) => _vueWritable(this, doc, key))
+    ;(['resolution', 'frameRate'] satisfies (keyof pub.Document)[]).forEach((key) =>
+      _vueWritable(this, doc, key),
+    )
     ;(
-      ['currentTime', 'duration', 'timeline', 'assets', 'nodes', 'isEmpty', 'activeClipIsStalled'] as const
+      [
+        'currentTime',
+        'duration',
+        'timeline',
+        'assets',
+        'nodes',
+        'links',
+        'isEmpty',
+        'activeClipIsStalled',
+      ] satisfies (keyof pub.Document)[]
     ).forEach((key) => _vuePlainReadonly(this, doc, key))
 
     this._init()
   }
 
   createNode = this.doc.createNode.bind(this.doc)
+  createLink = this.doc.createLink.bind(this.doc)
+  updateLink = this.doc.updateLink.bind(this.doc)
+  deleteLink = this.doc.deleteLink.bind(this.doc)
+
   seekTo = this.doc.seekTo.bind(this.doc)
   _setCurrentTime = this.doc._setCurrentTime.bind(this.doc)
   importFromJson = this.doc.importFromJson.bind(this.doc)
@@ -70,7 +88,8 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
 
     switch (original.type) {
       case 'timeline':
-      case 'track':
+      case 'track:video':
+      case 'track:audio':
         view = new VueParentNode(this, original)
         break
       default:

@@ -40,6 +40,7 @@ export const TIMELINE_ID = 'timeline'
 export const PIXI_LUT_UPLOADER_ID = 'webgl-video-editor:lut'
 export const PIXI_HALD_LUT_UPLOADER_ID = 'webgl-video-editor:hald-lut'
 export const NODE_FIELD_FLAGS: NodeFieldFlags = {
+  ReactiveProp: 0,
   Readonly: 1 << 0,
   Node: 1 << 1,
   NodeArray: 1 << 2,

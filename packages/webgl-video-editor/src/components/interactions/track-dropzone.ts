@@ -25,7 +25,7 @@ export const useTrackDropzone = (editor: VideoEditor) => {
       },
     })
       .dropzone({
-        accept: '[data-clip-id]',
+        accept: '[data-interactive-clip-id]',
         overlap: 'pointer',
       })
       .on({
@@ -35,12 +35,12 @@ export const useTrackDropzone = (editor: VideoEditor) => {
 
           const { trackId, beforeTrackId } = event.target.dataset
           const id = trackId ?? beforeTrackId ?? ''
-          const track = id ? editor.doc.nodes.get<pub.Track>(id) : undefined
+          const track = id ? editor.doc.nodes.get<pub.AnyTrack>(id) : undefined
 
-          if (!track) return
+          if (!track || !clipDrag.isValidTarget(track)) return
 
-          if (trackId && clipDrag.trackType === track.trackType) {
-            clipDrag.targetTrack = { id: trackId, before: false }
+          if (trackId) {
+            clipDrag.targetTrack = { id, before: false }
           } else if (beforeTrackId) {
             const clipParentId = clipDrag.clip.parent?.id
 
@@ -49,9 +49,8 @@ export const useTrackDropzone = (editor: VideoEditor) => {
               (track.prev !== undefined && !track.prev.head) ||
               ((track.id === clipParentId || track.prev?.id === clipParentId) && clipDrag.clipWasAloneInTrack)
             ) {
-              if (track.trackType === clipDrag.trackType)
-                clipDrag.targetTrack = { id: beforeTrackId, before: false }
-            } else clipDrag.targetTrack = { id: beforeTrackId, before: true }
+              clipDrag.targetTrack = { id, before: false }
+            } else clipDrag.targetTrack = { id, before: true }
           }
         },
         dragleave() {

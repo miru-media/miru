@@ -5,7 +5,7 @@ import type { Schema } from '#core'
 import type { EditView } from '../src/document-views/edit/edit-nodes.ts'
 
 export interface SchemaTypes {
-  track: Schema.Track
+  track: Schema.AnyTrack
   clip: Schema.AnyClip
   'asset:media:av': Schema.MediaAsset
   'asset:effect:video': Schema.VideoEffectAsset
@@ -35,13 +35,14 @@ export interface ClipDrag {
   x: Ref<number>
   targetTrack: Ref<{ id: string; before: boolean } | undefined>
   targetIndex: Ref<number>
-  trackType: Schema.Track['trackType'] | undefined
   clip: Ref<EditView.AnyClip | undefined>
   clipWasAloneInTrack: Ref<boolean>
 }
 
+type ClipResizeClips = [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip]
 export interface ClipResize {
   docDuration: Ref<number>
   isResizing: Ref<boolean>
-  clips: [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip]
+  clips: ClipResizeClips
+  linkedClips: ClipResizeClips[]
 }

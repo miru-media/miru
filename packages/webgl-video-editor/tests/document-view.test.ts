@@ -5,7 +5,7 @@ import { NodeView } from '../src/document-views/node-view.ts'
 import { Document } from '../src/document.ts'
 
 import { docWithTracks } from './test-content.ts'
-import { makeAudioClip, makeTrack } from './utils.ts'
+import { makeAudioClip, makeAudioTrack } from './utils.ts'
 
 class TestView extends NodeView<TestDocument, any> {
   _move = vi.fn()
@@ -24,7 +24,7 @@ let doc: Document
 let testDoc: TestDocument
 
 const clipInit = makeAudioClip({ id: 'clip', mediaRef: { assetId: 'unknown' } })
-const trackInit = makeTrack('test-track', 'audio', [clipInit])
+const trackInit = makeAudioTrack('test-track', [clipInit])
 
 beforeEach(() => {
   doc = new Document({})

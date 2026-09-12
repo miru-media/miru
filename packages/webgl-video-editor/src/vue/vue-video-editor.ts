@@ -62,8 +62,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       ),
 
       seekTo: editor.seekTo.bind(editor),
-      addClip: (track: pub.Track, asset: pub.MediaAsset) =>
-        editor.addClip(editor.doc.nodes.get(track.id), asset),
+      addMediaClip: (asset: pub.MediaAsset) => editor.addMediaClip(asset),
       select: (item: pub.AnyClip | pub.GapSelection | undefined) =>
         editor.select(item?.isNode ? editor.doc.nodes.get<pub.AnyTrackChild>(item.id) : item),
       async createMediaAsset(source: string | Blob) {
@@ -74,6 +73,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
         return newClips && [docView._getNode(newClips[0]), docView._getNode(newClips[1])]
       },
       replaceClipAsset: editor.replaceClipAsset.bind(editor),
+      action: editor.action.bind(editor),
       importJson: editor.importJson.bind(editor),
       export: editor.export.bind(editor),
       secondsToPixels: editor.secondsToPixels.bind(editor),

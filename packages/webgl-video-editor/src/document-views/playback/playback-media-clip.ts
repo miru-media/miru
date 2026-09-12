@@ -89,7 +89,15 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
         },
       )
 
-      if (original.isAudio()) effect(() => (this.mediaElement.volume = clamp(original.volume || 0, 0, 1)))
+      effect(
+        () =>
+          (this.mediaElement.volume = clamp(
+            // TODO: improve linking UX
+            (original.isAudio() ? original : original.linkedAudio)?.volume ?? 0,
+            0,
+            1,
+          )),
+      )
 
       useInterval(
         () => {
@@ -130,9 +138,9 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
   }
 
   play(): void {
-    const { mediaElement } = this
+    const { mediaElement, original } = this
     mediaElement.play().catch(() => undefined)
-    mediaElement.muted = false
+    mediaElement.muted = !original.enabled
     this.mediaTime.value = mediaElement.currentTime
   }
 

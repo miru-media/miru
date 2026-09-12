@@ -4,14 +4,20 @@ import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
-import { AudioClip, VideoClip } from '#nodes'
+import { AudioClip, AudioTrack, VideoClip, VideoTrack } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
-import { DocDisposeEvent, PlaybackSeekEvent, SettingsUpdateEvent } from './events.ts'
+import {
+  DocDisposeEvent,
+  LinkCreateEvent,
+  LinkDeleteEvent,
+  LinkUpdateEvent,
+  PlaybackSeekEvent,
+  SettingsUpdateEvent,
+} from './events.ts'
 import { TextClip } from './nodes/clips/text-clip.ts'
 import { Timeline } from './nodes/timeline.ts'
-import { Track } from './nodes/track.ts'
 
 const SEEK_EVENT = new PlaybackSeekEvent()
 
@@ -43,6 +49,11 @@ export class Document implements pub.Document {
   declare parent?: undefined
 
   nodes = new NodeMap()
+  readonly #links = ref(new Map<string, Schema.NodeLink>())
+  get links(): Map<string, Schema.NodeLink> {
+    return this.#links.value
+  }
+
   declare assets: pub.VideoEditorAssetStore
   readonly #ownsAssetStore: boolean = false
 
@@ -120,8 +131,11 @@ export class Document implements pub.Document {
       case 'timeline':
         node = new Timeline(this)
         break
-      case 'track':
-        node = new Track(this, init)
+      case 'track:video':
+        node = new VideoTrack(this, init)
+        break
+      case 'track:audio':
+        node = new AudioTrack(this, init)
         break
       case 'clip:video':
         node = new VideoClip(this, init)
@@ -138,6 +152,44 @@ export class Document implements pub.Document {
     }
 
     return node as pub.NodesByType[T['type']]
+  }
+
+  #setNodeLinkProps(link: Schema.NodeLink, clear = false): void {
+    const newLink = clear ? undefined : link
+    link.nodes.forEach((n) => {
+      this.nodes.get<VideoTrack | AudioTrack | VideoClip /* | etc. */>(n.id)._link.value = newLink
+    })
+  }
+
+  createLink(init: Schema.NodeLink) {
+    const link = { id: init.id, nodes: init.nodes.map(({ id, type }) => ({ id, type })) }
+
+    ;(this.#links.value = new Map(this.links)).set(link.id, link)
+    this.#setNodeLinkProps(link)
+    this.emit(new LinkCreateEvent(link))
+    return link
+  }
+
+  updateLink(id: string, nodes: Schema.NodeLink['nodes']) {
+    const link = this.links.get(id)!
+    const from = link.nodes
+
+    if (from.length === nodes.length && from.every((n, i) => n.id === nodes[i].id)) return
+
+    this.#setNodeLinkProps(link, true)
+    this.#links.value = new Map(this.links)
+    link.nodes = nodes.map(({ id, type }) => ({ id, type }))
+    this.#setNodeLinkProps(link)
+    this.emit(new LinkUpdateEvent(link, from))
+  }
+
+  deleteLink(id: string) {
+    const init = this.links.get(id)
+    if (!init) return
+
+    this.#setNodeLinkProps(init, true)
+    ;(this.#links.value = new Map(this.links)).delete(id)
+    this.emit(new LinkDeleteEvent(init))
   }
 
   seekTo(time: number): void {
@@ -185,6 +237,8 @@ export class Document implements pub.Document {
     }
 
     createChildren(this.timeline, content.timeline.children)
+
+    content.links.forEach((init) => void this.createLink(init))
   }
 
   toJSON(): Schema.SerializedDocument {
@@ -206,6 +260,7 @@ export class Document implements pub.Document {
         .filter((asset) => !asset.isBuiltIn)
         .map((asset) => asset.toJSON()),
       timeline: serialize(this.timeline),
+      links: Array.from(this.links.values()),
     }
   }
 

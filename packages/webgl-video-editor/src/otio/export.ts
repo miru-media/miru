@@ -46,7 +46,7 @@ const timelineStack = (node: pub.Timeline): Otio.TimelineStack => ({
   children: node.children.map(track),
 })
 
-const track = (node: pub.Track): Otio.Track => {
+const track = (node: pub.AnyTrack): Otio.Track => {
   const { frameRate } = node.doc
 
   const children: (Otio.Clip | Otio.Gap)[] = []

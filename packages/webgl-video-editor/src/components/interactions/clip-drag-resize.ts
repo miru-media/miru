@@ -3,25 +3,46 @@ import type { ResizeEvent } from '@interactjs/actions/resize/plugin.js'
 import interact from '@interactjs/interact'
 import { effect, ref } from 'fine-jsx'
 
+import type * as pub from '#core'
 import type { ClipResize } from '#internal'
 import { Rational } from 'shared/utils/math.ts'
 
 import styles from '../../css/index.module.css'
+import type { EditNodeLink } from '../../document-views/edit/edit-node-link.ts'
 import type { EditView } from '../../document-views/edit/edit-nodes.ts'
 import type { VideoEditor } from '../../video-editor.ts'
 import { ensureDurationIsPlayable } from '../utils.ts'
 
 const GAPPED = true as boolean
 
+const enum ClipIndex {
+  Prev = 0,
+  Cur = 1,
+  Next = 2,
+}
+
 export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } => {
   const resize: ClipResize = {
     docDuration: ref(0),
     isResizing: ref(false),
     clips: [undefined, undefined as never, undefined],
+    linkedClips: [],
+  }
+
+  // apply a value in the context of the target clip and all linked clips
+  const setResizedValue = <Key extends 'duration' | 'sourceStart' | 'gap'>(
+    target: ClipIndex,
+    key: Key,
+    value: pub.AnyClip[Key],
+  ): void => {
+    resize.linkedClips.forEach((adjacentClips) => {
+      const clip = adjacentClips[target]
+      if (clip) clip[key] = value
+    })
   }
 
   const getSelectedClip = (): EditView.AnyClip | undefined => {
-    const { selection, doc } = editor
+    const { selection, doc } = editor._editor
     if (selection?.isNode && selection.isClip()) return doc._getNode(selection)
   }
 
@@ -35,9 +56,16 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
 
     const { prev, next } = clip
     resize.clips = [prev, clip, next]
+    resize.linkedClips = (clip.link as EditNodeLink<pub.AnyClip> | undefined)?.nodes.map((clip) => [
+      clip.prev,
+      clip,
+      clip.next,
+    ]) ?? [resize.clips]
 
-    prev?._startEditing(['duration', 'sourceStart'])
-    ;[clip, next].forEach((c) => c?._startEditing(['duration', 'sourceStart', 'gap']))
+    resize.linkedClips.forEach(([prev, cur, next]) => {
+      prev?._startEditing(['duration', 'sourceStart'])
+      ;[cur, next].forEach((c) => c?._startEditing(['duration', 'sourceStart', 'gap']))
+    })
 
     resize.isResizing.value = true
   }
@@ -52,16 +80,21 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
     const newDuration = Rational.fromDecimal(editor.pixelsToSeconds(rect.width), frameRate)
     const delta = newDuration.subtract(duration)
 
-    if (edges?.left === true) clip.sourceStart = clip.sourceStart.subtract(delta)
+    if (edges?.left === true) setResizedValue(ClipIndex.Cur, 'sourceStart', clip.sourceStart.subtract(delta))
 
-    clip.duration = newDuration
+    setResizedValue(ClipIndex.Cur, 'duration', newDuration)
 
     if (GAPPED) {
-      if (edges?.left === true) clip.gap = clip.gap.subtract(delta)
-      else if (next) next.gap = next.gap.subtract(delta)
+      if (edges?.left === true) setResizedValue(ClipIndex.Cur, 'gap', clip.gap.subtract(delta))
+      else if (next) setResizedValue(ClipIndex.Next, 'gap', next.gap.subtract(delta))
     } else {
       if (edges?.right === true) ensureDurationIsPlayable(clip)
-      if (prev) prev.duration = newStart.subtract(Rational.fromDecimal(prev.time.start, frameRate))
+      if (prev)
+        setResizedValue(
+          ClipIndex.Prev,
+          'duration',
+          newStart.subtract(Rational.fromDecimal(prev.time.start, frameRate)),
+        )
     }
   }
 
@@ -71,9 +104,9 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
 
     resize.isResizing.value = false
     resize.docDuration.value = 0
-    const { clips } = resize
+    const { clips, linkedClips } = resize
 
-    editor._transact(() => clips.forEach((clip) => clip?._applyEdits()))
+    editor._transact(() => linkedClips.forEach((clips) => clips.forEach((clip) => clip?._applyEdits())))
     ;(clips as unknown[]).length = 0
   }
 
@@ -81,7 +114,7 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
     const context = editor._timelineContainer.value
     if (!context) return
 
-    const interactable = interact('[data-clip-id]', {
+    const interactable = interact('[data-interactive-clip-id]', {
       context,
       getRect(element) {
         const clip = getSelectedClip()

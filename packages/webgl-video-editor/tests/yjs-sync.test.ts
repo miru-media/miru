@@ -8,7 +8,7 @@ import type { VideoClip } from '#nodes'
 import { Rational } from 'shared/utils/math.ts'
 import { initYjsRoot, YjsSync } from 'webgl-video-editor/yjs'
 
-import { makeTimeline, makeTrack, makeVideoClip } from './utils.ts'
+import { makeTimeline, makeVideoClip, makeVideoTrack } from './utils.ts'
 
 let ydoc: Y.Doc
 let sync: YjsSync
@@ -21,7 +21,7 @@ const clipInit = makeVideoClip({
   mediaRef: { assetId: 'unknown' },
   transition: undefined,
 })
-const trackInit = makeTrack('test-track', 'video', [clipInit])
+const trackInit = makeVideoTrack('test-track', [clipInit])
 
 beforeEach(() => {
   ydoc = new Y.Doc()
@@ -67,6 +67,7 @@ test('populates document from Yjs data', () => {
     frameRate: 60,
     assets: [],
     timeline: makeTimeline([trackInit]),
+    links: [],
   } satisfies Schema.SerializedDocument)
 })
 

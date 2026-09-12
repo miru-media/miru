@@ -16,9 +16,9 @@ export const Debug = (): JSX.Element => {
         {() =>
           editor.doc.timeline.children.map((track) =>
             track.children.map((clip) => {
-              if (!clip.isMediaClip()) return null
-
               const playbackClip = editor.playback._getNode(clip)
+              if (!playbackClip) return null
+
               const { mediaState } = playbackClip
 
               return (

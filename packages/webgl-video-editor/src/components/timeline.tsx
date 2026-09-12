@@ -54,7 +54,8 @@ export const Timeline = ({
     () => (editor.isMobileWorkspace ? undefined : scrollContainer.value),
     undefined,
     (event) =>
-      event.target === event.currentTarget || !(event.target as HTMLElement).closest('[data-clip-id'),
+      event.target === event.currentTarget ||
+      !(event.target as HTMLElement).closest('[data-interactive-clip-id'),
   )
 
   const scrollIsClose = (): boolean =>
@@ -130,7 +131,7 @@ export const Timeline = ({
 
     try {
       const asset = await editor.createMediaAsset(file)
-      editor.addClip(editor.getTrackForMedia(asset), asset)
+      editor.addMediaClip(asset)
     } catch {
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
@@ -199,20 +200,23 @@ export const Timeline = ({
                 </div>
               </>
             ) : (
-              doc.timeline.children.map((track) => (
-                <>
-                  <div
-                    data-before-track-id={track.id}
-                    class={() => [
-                      styles.clipDragTrackSpace,
-                      editor.drag.targetTrack?.id === track.id &&
-                        editor.drag.targetTrack.before &&
-                        styles.active,
-                    ]}
-                  />
-                  <Track data-track-id={track.id} track={track} />
-                </>
-              ))
+              doc.timeline.children.map((track) =>
+                // hide linked audio tracks of video
+                track.link && track.isAudio() ? null : (
+                  <>
+                    <div
+                      data-before-track-id={track.id}
+                      class={() => [
+                        styles.clipDragTrackSpace,
+                        editor.drag.targetTrack?.id === track.id &&
+                          editor.drag.targetTrack.before &&
+                          styles.active,
+                      ]}
+                    />
+                    <Track data-track-id={track.id} track={track} />
+                  </>
+                ),
+              )
             )
           }
         </div>

@@ -14,21 +14,21 @@ import type { RenderDocument } from './render-document.ts'
 type AnyVideoParentNode = Extract<pub.AnyParentNode, pub.AnyVideoNode>
 export type AnyRenderClip = RenderVideoClip | RenderTextClip
 
+const getPrevRenderNode = <T extends pub.AnyVideoNode>(renderNode: RenderNodeView<T>) => {
+  for (let other = renderNode.original.prev; other; other = other.prev)
+    if (other.isVideo()) return renderNode.docView._getNode(other)
+}
+
+const getNextRenderNode = <T extends pub.AnyVideoNode>(renderNode: RenderNodeView<T>) => {
+  for (let other = renderNode.original.next; other; other = other.next)
+    if (other.isVideo()) return renderNode.docView._getNode(other)
+}
+
 abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<RenderDocument, T> {
   abstract readonly _reactiveRenderProps: Ref | undefined
   abstract readonly pixiNode: Pixi.Container | Pixi.Text
 
-  get prevVideo(): pub.AnyVideoNode | undefined {
-    for (let other = this.original.prev; other; other = other.prev) if (other.isVideo()) return other
-  }
-  get nextVideo(): pub.AnyVideoNode | undefined {
-    for (let other = this.original.next; other; other = other.next) if (other.isVideo()) return other
-  }
-
-  readonly _visualIndex = computed(() => {
-    const prevRenderNode = this.docView._getNode(this.prevVideo)
-    return prevRenderNode ? prevRenderNode.visualIndex + 1 : 0
-  })
+  readonly _visualIndex = computed((): number => (getPrevRenderNode(this)?.visualIndex ?? -1) + 1)
 
   get visualIndex(): number {
     return this._visualIndex.value
@@ -86,7 +86,7 @@ export class RenderTrack extends RenderNodeView<pub.VideoTrack> {
     }
 
     const parentPixiNode = parent.pixiNode
-    const nextPixiNode = this.docView._getNode(this.nextVideo)?.pixiNode
+    const nextPixiNode = getNextRenderNode(this)?.pixiNode
     // tracks are rendered in reverse order - insert after the Pixi node of the next track
     const newIndex =
       nextPixiNode?.parent === parentPixiNode ? parentPixiNode.getChildIndex(nextPixiNode) + 1 : 0

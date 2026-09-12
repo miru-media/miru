@@ -12,7 +12,7 @@ Pixi.extensions.add(LutUploaderSystem)
 
 interface ViewTypeMap {
   timeline: RenderTimeline
-  track: RenderTrack
+  'track:video': RenderTrack
   'clip:video': RenderVideoClip
   'clip:text': RenderTextClip
 }
@@ -90,7 +90,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
         view = new RenderTimeline(this, original)
         this.stage = view.pixiNode
         break
-      case 'track':
+      case 'track:video':
         view = new RenderTrack(this, original)
         break
       case 'clip:video':

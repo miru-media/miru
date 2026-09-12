@@ -94,6 +94,7 @@ class OtioImporter {
       ...settings,
       assets: [],
       timeline: this.timelineStack(otio.tracks),
+      links: [],
     }
   }
 
@@ -119,8 +120,8 @@ class OtioImporter {
     }
   }
 
-  track(item: Otio.Track): Schema.SerializedTrack {
-    const trackType = item.kind === 'Audio' ? 'audio' : 'video'
+  track(item: Otio.Track): Schema.AnySerializedTrack {
+    const trackType = item.kind === 'Audio' ? 'track:audio' : 'track:video'
 
     const children: Schema.AnySerializedClip[] = []
     let nextChildGapDuration: Schema.Rational | undefined
@@ -136,7 +137,7 @@ class OtioImporter {
       if (otioType === 'Transition.1') return
 
       const childInit =
-        trackType === 'audio'
+        trackType === 'track:audio'
           ? this.audioClip(child)
           : child.metadata?.Miru?.type === 'clip:text'
             ? textClip(child)
@@ -150,9 +151,8 @@ class OtioImporter {
       children.push(childInit)
     })
     return {
-      ...baseNode(item, 'track'),
-      trackType,
-      children,
+      ...baseNode(item, trackType),
+      children: children as any[],
     }
   }
 
