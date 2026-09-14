@@ -29,6 +29,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
   targetFrameDurationUs: number
 
   mediaTime = ref(0)
+  sourceRange!: { start: number; end: number }
 
   currentVideoFrame?: VideoFrame
   currentAudioData?: AudioBufferData
@@ -49,7 +50,9 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     const { audio, video, audioBuffer } = exporter.sources.get(this.original.asset!.id)!
     const { playableTime, time: clipTime } = this.original
     const start = playableTime.source + Math.max(0, exporter.range.start - clipTime.start)
-    const end = playableTime.source + playableTime.duration + Math.max(0, exporter.range.end - clipTime.end)
+    const end = playableTime.source + playableTime.duration + Math.min(0, exporter.range.end - clipTime.end)
+
+    this.sourceRange = { start, end }
 
     if (start < 0 || end < start) return
 
@@ -144,7 +147,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
 
     while (this.currentAudioData) {
       // if the current data starts after the seek time, stop seeking
-      if (this.currentAudioData.timestamp > timeS * 1e6) return true
+      if (this.currentAudioData.timestamp > timeS * 1e6) return this.#hasAudioFrameAtTimeUs(sourceTimeUs)
 
       if (this.#hasAudioFrameAtTimeUs(sourceTimeUs)) return true
       // eslint-disable-next-line no-await-in-loop -- TODO: use async iterator
@@ -176,8 +179,16 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     } else {
       const sample = next.value
       const { timestamp, duration } = sample
-      const buffer = sample.toAudioBuffer()
-      this.currentAudioData = { timestamp: timestamp * 1e6, duration: duration * 1e6, buffer }
+
+      if (timestamp < this.sourceRange.end) {
+        const buffer = sample.toAudioBuffer()
+        this.currentAudioData = { timestamp: timestamp * 1e6, duration: duration * 1e6, buffer }
+      } else {
+        this.currentAudioData = undefined
+        sample.close()
+        return true
+      }
+
       sample.close()
     }
 
