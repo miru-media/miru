@@ -13,6 +13,7 @@ export class AudioClip extends BaseClip<Schema.AudioClip> implements pub.AudioCl
     { key: 'linkedVideo', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.AudioClip>[])
 
+  declare asset: pub.MediaAsset | undefined
   get linkedVideo(): pub.VideoClip | undefined {
     const linkItem =
       this.link?.nodes.length === 2 ? this.link.nodes.find((n) => n.type === 'clip:video') : undefined

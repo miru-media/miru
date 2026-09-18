@@ -16,7 +16,7 @@ import type { AssetBin } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
 import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
-import { RenderDocument } from './document-views/render/render-document.ts'
+import { RenderDocument } from './document-views/render/index.ts'
 import { Document } from './document.ts'
 import { EDITOR_SELECTION_ACTIONS_BY_ID } from './editor-actions.ts'
 import type { NodeDeleteEvent } from './events.ts'
@@ -203,7 +203,7 @@ export class VideoEditor implements pub.VideoEditor {
         type: `clip:${track.isVideo() ? 'video' : 'audio'}`,
         name: asset.name,
         color: asset.color,
-        mediaRef: { assetId: asset.id },
+        mediaRef: { id: asset.id, type: asset.type },
         sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
         duration: Rational.fromDecimal(duration, this.doc.frameRate),
       }
@@ -237,7 +237,7 @@ export class VideoEditor implements pub.VideoEditor {
 
     this._transact(() => {
       clip.duration = Rational.min(Rational.fromDecimal(asset.duration, clip.duration.rate), clip.duration)
-      clip.mediaRef = { assetId: asset.id }
+      clip.mediaRef = { id: asset.id, type: asset.type }
     })
   }
 

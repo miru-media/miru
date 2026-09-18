@@ -8,7 +8,7 @@ import type * as pub from '../../../types/core'
 import { ASSET_URL_REFRESH_TIMEOUT_MS } from '../../constants.ts'
 import { CanvasEvent, PlaybackPauseEvent, PlaybackPlayEvent, PlaybackUpdateEvent } from '../../events.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
-import type { RenderDocument } from '../render/render-document.ts'
+import type { RenderDocument } from '../render/index.ts'
 
 import { PlaybackClip } from './playback-clip.ts'
 import { PlaybackMediaClip } from './playback-media-clip.ts'
@@ -21,6 +21,7 @@ const PAUSE_EVENT = new PlaybackPauseEvent()
 interface ViewTypeMap {
   'clip:video': PlaybackMediaClip<pub.VideoClip>
   'clip:audio': PlaybackMediaClip<pub.AudioClip> | undefined
+  'clip:image': PlaybackClip<pub.ImageClip>
 }
 
 export class PlaybackDocument extends DocumentView<ViewTypeMap> {
@@ -128,12 +129,13 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
   protected _createView<T extends pub.AnyNode>(original: T): ViewType<ViewTypeMap, T> {
     let view
 
-    if (original.isMediaClip()) {
-      // TODO: improve linking UX
-      if (original.isAudio() && original.linkedVideo) view = undefined
-      else view = new PlaybackMediaClip(this, original)
-    } else if (original.isTextClip()) view = new PlaybackClip(this, original)
-    else view = undefined
+    if (original.isClip()) {
+      if (original.isMediaClip()) {
+        // TODO: improve linking UX
+        if (original.isAudio() && original.linkedVideo) view = undefined
+        else view = new PlaybackMediaClip(this, original)
+      } else view = new PlaybackClip(this, original)
+    } else view = undefined
 
     return view as ViewType<ViewTypeMap, T>
   }

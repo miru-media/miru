@@ -5,15 +5,14 @@ import type * as Schema from '#schema'
 
 import { BaseAsset } from './base-asset.ts'
 
-export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.MediaAsset {
+export class BaseFileAsset<T extends Schema.MediaAsset | Schema.ImageAsset>
+  extends BaseAsset<T>
+  implements pub.BaseFileAsset
+{
   name?: string
-  readonly duration: number
   readonly mimeType: string
-  readonly audio: Schema.MediaAsset['audio']
-  readonly video: Schema.MediaAsset['video']
   readonly color: Schema.MediaAsset['color']
   readonly metadata: Schema.MediaAsset['metadata']
-  readonly thumbnailUri?: string
 
   blob?: Blob
   readonly #blobUrl = ref('')
@@ -47,7 +46,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
   }
 
   constructor(
-    init: Schema.MediaAsset,
+    init: T,
     options: { source?: Blob | string; store: pub.VideoEditorAssetStore; isBuiltIn?: boolean },
   ) {
     const { store, source, isBuiltIn } = options
@@ -57,11 +56,7 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
 
     this.name = init.name
     this.mimeType = init.mimeType
-    this.duration = init.duration
-    this.audio = init.audio
-    this.video = init.video
     this.uri = init.uri
-    this.thumbnailUri = init.thumbnailUri
     this.color = init.color
     this.metadata = init.metadata
   }
@@ -99,26 +94,41 @@ export class MediaAsset extends BaseAsset<Schema.MediaAsset> implements pub.Medi
     }
   }
 
-  toJSON(): pub.Schema.MediaAsset {
-    return {
-      id: this.id,
-      type: this.type,
-      name: this.name,
-      mimeType: this.mimeType,
-      duration: this.duration,
-      size: this.size,
-      audio: this.audio,
-      video: this.video,
-      uri: this.uri,
-      thumbnailUri: this.thumbnailUri,
-      color: this.color,
-      metadata: this.metadata,
-    }
-  }
-
   dispose(): void {
     super.dispose()
     URL.revokeObjectURL(this.blobUrl)
     this.blob = undefined
+  }
+}
+
+export class MediaAsset extends BaseFileAsset<Schema.MediaAsset> implements pub.MediaAsset {
+  readonly duration: number
+  readonly audio: Schema.MediaAsset['audio']
+  readonly video: Schema.MediaAsset['video']
+
+  constructor(
+    init: Schema.MediaAsset,
+    options: { source?: Blob | string; store: pub.VideoEditorAssetStore; isBuiltIn?: boolean },
+  ) {
+    super(init, options)
+    this.duration = init.duration
+    this.audio = init.audio
+    this.video = init.video
+  }
+}
+
+export class ImageAsset extends BaseFileAsset<Schema.ImageAsset> implements pub.ImageAsset {
+  readonly width: Schema.ImageAsset['width']
+  readonly height: Schema.ImageAsset['height']
+  readonly rotation: Schema.ImageAsset['rotation']
+
+  constructor(
+    init: Schema.ImageAsset,
+    options: { source?: Blob | string; store: pub.VideoEditorAssetStore; isBuiltIn?: boolean },
+  ) {
+    super(init, options)
+    this.width = init.width
+    this.height = init.height
+    this.rotation = init.rotation
   }
 }

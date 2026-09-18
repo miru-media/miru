@@ -8,7 +8,7 @@ import { rangesIntersect, setVideoEncoderConfigCodec } from 'shared/video/utils'
 
 import { Document } from '../../document.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
-import { RenderDocument, type RenderDocumentOptions } from '../render/render-document.ts'
+import { RenderDocument, type RenderDocumentOptions } from '../render/index.ts'
 
 import { AVEncoder } from './av-encoder.ts'
 import { ExportMediaClip, ExportNonMediaVideoClip } from './export-clip.ts'
@@ -130,7 +130,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     const { source: sourceStart, duration } = clipTime
     const sourceEnd = sourceStart + duration
 
-    if (!asset.blob) throw new Error(`[webgl-video-editor]: missing asset "${original.mediaRef?.assetId}"`)
+    if (!asset.blob) throw new Error(`[webgl-video-editor]: missing asset "${original.mediaRef?.id}"`)
 
     let sourceEntry = this.sources.get(asset.id)
 

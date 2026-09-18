@@ -146,6 +146,7 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   isTrackChild: () => this is AnyTrackChild
   isClip: () => this is AnyClip
   isMediaClip: () => this is AnyMediaClip
+  isImageClip: () => this is ImageClip
   isTextClip: () => this is TextClip
   isVideo: () => this is AnyVideoNode
   isAudio: () => this is AnyAudioNode
@@ -201,36 +202,42 @@ export interface TrackChild extends BaseNode {
   setGap: (prevClipId: string | undefined, duration: Schema.Rational) => void
 }
 
-export interface BaseClip extends TrackChild, Schema.BaseClip {
-  type: `clip:${string}`
+export interface BaseClip<T extends string = string> extends TrackChild, Schema.BaseClip {
+  type: `clip:${T}`
   name: string
   sourceStart: Rational
+  readonly asset?: AnyAsset | undefined
   readonly isReady: boolean
-  readonly asset: MediaAsset | undefined
   readonly playableTime: ClipTime
   readonly presentationTime: ClipTime
   readonly expectedMediaTime: number
   readonly isInClipTime: boolean
+  readonly isInPresentationTime: boolean
+  readonly isInPlayableTime: boolean
   readonly mediaSize: { width: number; height: number }
   readonly link: Schema.NodeLink | undefined
 }
 
 export interface VideoClip
-  extends BaseClip, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
-  type: 'clip:video'
+  extends BaseClip<'video'>, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  readonly asset: MediaAsset | undefined
   linkedAudio?: AudioClip
   effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
 }
-export interface AudioClip extends BaseClip, Schema.AudioClip {
-  type: 'clip:audio'
+export interface AudioClip extends BaseClip<'audio'>, Schema.AudioClip {
+  readonly asset: MediaAsset | undefined
   volume: number
   linkedVideo?: VideoClip
   toJSON: () => Schema.AudioClip
 }
+export interface ImageClip
+  extends BaseClip<'image'>, Omit<Schema.ImageClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  readonly asset: ImageAsset | undefined
+  toJSON: () => Schema.ImageClip
+}
 export interface TextClip
-  extends BaseClip, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
-  type: 'clip:text'
+  extends BaseClip<'text'>, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
   fontWeight: number
   fontStyle: Schema.FontStyle
   toJSON: () => Schema.TextClip
@@ -242,6 +249,7 @@ export interface NodesByType {
   'track:audio': AudioTrack
   'clip:video': VideoClip
   'clip:audio': AudioClip
+  'clip:image': ImageClip
   'clip:text': TextClip
 }
 
@@ -249,44 +257,54 @@ export type AnyNode = NodesByType[keyof NodesByType]
 export type AnyTrack = NodesByType[Extract<keyof NodesByType, `track:${string}`>]
 export type AnyClip = NodesByType[Extract<keyof NodesByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
-export type AnyVideoClip = VideoClip | TextClip
+export type AnyVideoClip = VideoClip | TextClip | ImageClip
 export type AnyAudioClip = AudioClip
 export type AnyTrackChild = AnyClip
 export type AnyParentNode = Timeline | AnyTrack
-export type AnyVideoNode = Timeline | VideoTrack | VideoClip | TextClip
+export type AnyVideoNode = Timeline | VideoTrack | AnyVideoClip
 export type AnyAudioNode = Timeline | AudioTrack | AudioClip
 
 export type Linkable = AnyTrack | AnyClip
 
-interface BaseAsset extends Schema.BaseAsset {
+interface BaseAsset<T extends string = string> extends Schema.BaseAsset<T> {
   isBuiltIn?: boolean
+  toJSON: () => Schema.BaseFileAsset<T>
   dispose: () => void
   [Symbol.dispose]: () => void
 }
 
-export interface MediaAsset extends BaseAsset, Readonly<Schema.MediaAsset> {
+export interface BaseFileAsset<T extends string = string> extends BaseAsset<T>, Schema.BaseFileAsset<T> {
   readonly blob?: Blob
   readonly blobUrl?: string
   readonly isLoading: boolean
   uri?: string
   setBlob: (blob: Blob | undefined) => void
   setError: (error: unknown) => void
-  toJSON: () => Schema.MediaAsset
   /** @internal */
   _refreshObjectUrl: () => Promise<void>
 }
 
-export interface VideoEffectAsset extends BaseAsset, Readonly<Schema.VideoEffectAsset> {
+export interface MediaAsset extends BaseFileAsset<'media:av'>, Readonly<Schema.MediaAsset> {
+  toJSON: () => Schema.MediaAsset
+}
+
+export interface ImageAsset extends BaseFileAsset<'media:image'>, Readonly<Schema.ImageAsset> {
+  toJSON: () => Schema.ImageAsset
+}
+
+export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Readonly<Schema.VideoEffectAsset> {
+  name: string
   readonly raw: EffectDefinition
   toJSON: () => Schema.VideoEffectAsset
 }
 
-export interface FontAsset extends BaseAsset, Schema.FontAsset {
+export interface FontAsset extends BaseAsset<'font'>, Schema.FontAsset {
   toJSON: () => Schema.FontAsset
 }
 
 export interface AssetsByType {
   'asset:media:av': MediaAsset
+  'asset:media:image': ImageAsset
   'asset:effect:video': VideoEffectAsset
   'asset:font': FontAsset
 }
@@ -476,8 +494,8 @@ export interface VideoEditorAssetStore {
   values: () => Iterable<AnyAsset>
   has: (id: string) => boolean
 
-  create: <T extends Schema.AnyAssetSchema['type']>(
-    init: Extract<Schema.AnyAssetSchema, { type: T }>,
+  create: <T extends Schema.AnyAsset['type']>(
+    init: Extract<Schema.AnyAsset, { type: T }>,
     options?: { source?: Blob | string },
   ) => AssetsByType[T]
 
@@ -498,7 +516,7 @@ export interface VideoEditorAssetStore {
   getFile: (key: string, name?: string, options?: FilePropertyBag) => Promise<File>
 
   getOrCreateFile: (
-    asset: MediaAsset,
+    asset: BaseFileAsset,
     source: Blob | string | undefined,
     requestInit?: { signal?: AbortSignal | null },
   ) => Promise<File>
@@ -521,9 +539,9 @@ export interface VideoEditorAssetStore {
 }
 
 export interface AssetLoader {
-  canLoad: (asset: Schema.MediaAsset) => boolean
+  canLoad: (asset: Schema.BaseFileAsset) => boolean
   load: (
-    asset: Schema.MediaAsset,
+    asset: Schema.BaseFileAsset,
     options?: { signal?: AbortSignal | null },
   ) => Promise<{ stream: ReadableStream<Uint8Array>; size?: number }>
 }

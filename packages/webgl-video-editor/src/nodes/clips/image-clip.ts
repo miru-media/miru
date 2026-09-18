@@ -1,20 +1,16 @@
-import { NODE_FIELD_FLAGS } from '#constants'
 import type { Schema } from '#core'
 import type * as pub from '#core'
 import type { NonOverlappingUnion } from '#internal'
 
 import { BaseClip } from './base-clip.ts'
 
-export interface VideoClip extends NonOverlappingUnion<BaseClip<Schema.VideoClip>, pub.VideoClip> {}
+export interface ImageClip extends NonOverlappingUnion<BaseClip<Schema.ImageClip>, pub.ImageClip> {}
 
-export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoClip {
-  static FIELDS = super.FIELDS.concat([
-    ...BaseClip.TRANSFORM_FIELDS,
-    { key: 'linkedAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
-  ] satisfies pub.NodeFieldDef<pub.VideoClip>[])
+export class ImageClip extends BaseClip<Schema.ImageClip> implements pub.ImageClip {
+  static FIELDS = super.FIELDS.concat(BaseClip.TRANSFORM_FIELDS satisfies pub.NodeFieldDef<pub.ImageClip>[])
 
-  declare effects: pub.VideoClip['effects']
-  declare asset: pub.MediaAsset | undefined
+  declare asset: pub.ImageAsset | undefined
+  declare effects: pub.ImageClip['effects']
 
   get linkedAudio(): pub.AudioClip | undefined {
     const linkItem =
@@ -23,17 +19,17 @@ export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoCl
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isMediaClip(): this is VideoClip {
+  isImageClip(): this is ImageClip {
     return true
   }
-  isVideo(): this is VideoClip {
+  isVideo(): this is ImageClip {
     return true
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
-  toJSON(): Schema.VideoClip {
+  toJSON(): Schema.ImageClip {
     const { effects } = this
-    const obj: Schema.VideoClip = {
+    const obj: Schema.ImageClip = {
       ...super.toJSON(),
       ...this._transformToJSON(),
     }

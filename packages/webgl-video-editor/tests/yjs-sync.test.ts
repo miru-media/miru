@@ -18,7 +18,7 @@ let settings: Y.Map<any>
 const clipInit = makeVideoClip({
   id: 'test-clip',
   name: 'test clip',
-  mediaRef: { assetId: 'unknown' },
+  mediaRef: { id: 'unknown', type: 'asset:media:av' },
   transition: undefined,
 })
 const trackInit = makeVideoTrack('test-track', [clipInit])

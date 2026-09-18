@@ -6,7 +6,10 @@ import type { SettingsUpdateEvent } from '../../events.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
 
 import { LutUploaderSystem } from './pixi-lut-source.ts'
-import { RenderTextClip, RenderTimeline, RenderTrack, RenderVideoClip } from './render-nodes.ts'
+import { RenderImageClip } from './render-image-clip.ts'
+import { RenderTimeline, RenderTrack } from './render-nodes.ts'
+import { RenderTextClip } from './render-text-clip.ts'
+import { RenderVideoClip } from './render-video-clip.ts'
 
 Pixi.extensions.add(LutUploaderSystem)
 
@@ -14,6 +17,7 @@ interface ViewTypeMap {
   timeline: RenderTimeline
   'track:video': RenderTrack
   'clip:video': RenderVideoClip
+  'clip:image': RenderImageClip
   'clip:text': RenderTextClip
 }
 
@@ -95,6 +99,9 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
         break
       case 'clip:video':
         view = new RenderVideoClip(this, original)
+        break
+      case 'clip:image':
+        view = new RenderImageClip(this, original)
         break
       case 'clip:text':
         view = new RenderTextClip(this, original)

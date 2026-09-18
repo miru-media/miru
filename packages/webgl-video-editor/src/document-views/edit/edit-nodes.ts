@@ -31,8 +31,11 @@ export namespace EditView {
   export type AnyTrack = VideoTrack | AudioTrack
   export type VideoClip = EditClip<pub.VideoClip> & ProxyOf<pub.VideoClip>
   export type AudioClip = EditClip<pub.AudioClip> & ProxyOf<pub.AudioClip>
+  export type ImageClip = EditClip<pub.ImageClip> & ProxyOf<pub.ImageClip>
   export type TextClip = EditClip<pub.TextClip> & ProxyOf<pub.TextClip>
-  export type AnyClip = VideoClip | AudioClip | TextClip
+
+  export type AnyClip = VideoClip | AudioClip | ImageClip | TextClip
+  export type AnyVideoClip = VideoClip | ImageClip | TextClip
   export type AnyTrackChild = AnyClip
 }
 
@@ -172,12 +175,16 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case '_computeTimeRational':
       case '_computePresentationTime':
       case '_computePlayableTime':
+      case '_computeIsInPresentationTime':
+      case '_computeIsInPlayableTime':
         return Reflect.get(original, key, receiver)
 
       case '_timeRational':
       case '_time':
       case '_presentationTime':
       case '_playableTime':
+      case '_isInPresentationTime':
+      case '_isInPlayableTime':
         return (target as EditClip<any>)[key]
 
       case 'constructor':
@@ -255,6 +262,16 @@ export class EditClip<T extends AnyClip> extends EditTrackChild<T> {
     ),
   )
   _playableTime = computed((): ClipTime =>
+    Reflect.apply((this.original as unknown as BaseClip<T>)._computePlayableTime, viewProxies.get(this), []),
+  )
+  _isInPresentationTime = computed((): ClipTime =>
+    Reflect.apply(
+      (this.original as unknown as BaseClip<T>)._computePresentationTime,
+      viewProxies.get(this),
+      [],
+    ),
+  )
+  _isInPlayableTime = computed((): ClipTime =>
     Reflect.apply((this.original as unknown as BaseClip<T>)._computePlayableTime, viewProxies.get(this), []),
   )
   /* eslint-enable @typescript-eslint/unbound-method */

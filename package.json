@@ -49,7 +49,7 @@
     "@gltf-transform/extensions": "catalog:",
     "@gltf-transform/functions": "catalog:",
     "@iconify-json/devicon-plain": "^1.2.56",
-    "@iconify-json/material-symbols": "^1.2.63",
+    "@iconify-json/material-symbols": "^1.2.92",
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/tabler": "^1.2.22",
     "@jetbrains/postcss-require-hover": "^0.2.0",

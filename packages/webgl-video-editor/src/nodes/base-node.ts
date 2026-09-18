@@ -188,6 +188,9 @@ export abstract class BaseNode<
   isMediaClip(): this is pub.AnyMediaClip {
     return false
   }
+  isImageClip(): this is pub.ImageClip {
+    return false
+  }
   isTextClip(): this is pub.TextClip {
     return false
   }

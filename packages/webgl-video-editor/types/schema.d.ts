@@ -24,9 +24,7 @@ export type TextAlign = 'left' | 'center' | 'right' | 'justify'
 export interface NodeRef {
   nodeId: string
 }
-export interface AssetRef {
-  assetId: string
-}
+type AssetRef = Pick<AnyAsset, 'id' | 'type'>
 
 export type Linkable = AnyTrack | AnyClip
 export interface NodeLink {
@@ -70,10 +68,14 @@ export interface BaseAsset<T extends string> {
   thumbnailUri?: string
 }
 
-export interface MediaAsset extends BaseAsset<'media:av'> {
+export interface BaseFileAsset<T extends string = string> extends BaseAsset<T> {
   mimeType: string
-  duration: number
   size: number
+  uri?: string
+}
+
+export interface MediaAsset extends BaseFileAsset<'media:av'> {
+  duration: number
   audio?: {
     codec: string
     duration: Rational
@@ -90,10 +92,17 @@ export interface MediaAsset extends BaseAsset<'media:av'> {
     frameRate: number
     firstTimestamp: Rational
   }
-  uri?: string
 }
 
-export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Omit<EffectDefinition, 'id' | 'name'> {
+export interface ImageAsset extends BaseFileAsset<'media:image'> {
+  mimeType: string
+  width: number
+  height: number
+  rotation: number
+}
+
+export interface VideoEffectAsset extends BaseAsset<'effect:video'>, EffectDefinition {
+  id: string
   name: string
 }
 
@@ -106,11 +115,12 @@ export interface FontAsset extends BaseAsset<'font'> {
 
 export interface AssetSchemasByType {
   'asset:media:av': MediaAsset
+  'asset:media:image': ImageAsset
   'asset:effect:video': VideoEffectAsset
   'asset:font': FontAsset
 }
 
-export type AnyAssetSchema = AssetSchemasByType[keyof AssetSchemasByType]
+export type AnyAsset = AssetSchemasByType[keyof AssetSchemasByType]
 
 export interface VideoTrack extends Base {
   type: 'track:video'
@@ -125,7 +135,7 @@ export interface TrackChild extends Base {
 }
 
 export interface MediaAssetPlaceholderRef {
-  assetId?: undefined
+  id?: undefined
 }
 
 export interface BaseClip extends TrackChild {
@@ -142,6 +152,10 @@ export interface VideoClip extends BaseClip, Partial<TransformProps> {
 export interface AudioClip extends BaseClip {
   type: 'clip:audio'
   volume?: number
+}
+
+export interface ImageClip extends BaseClip, Partial<TransformProps> {
+  type: 'clip:image'
 }
 
 export interface TextClip extends BaseClip, Partial<TransformProps> {
@@ -162,7 +176,7 @@ export interface SerializedTimeline extends Timeline {
 }
 
 export interface SerializedVideoTrack extends VideoTrack {
-  children: (SerializedVideoClip | SerializedTextClip)[]
+  children: AnySerializedVideoClip[]
 }
 export interface SerializedAudioTrack extends AudioTrack {
   children: SerializedAudioClip[]
@@ -171,8 +185,12 @@ export type AnySerializedTrack = SerializedVideoTrack | SerializedAudioTrack
 
 export type SerializedVideoClip = WithGap<VideoClip>
 export type SerializedAudioClip = WithGap<AudioClip>
+export type SerializedImageClip = WithGap<ImageClip>
 export type SerializedTextClip = WithGap<TextClip>
-export type AnySerializedClip = SerializedVideoClip | SerializedAudioClip | SerializedTextClip
+export type AnySerializedClip = SerializedNodeSchemasByType[Extract<
+  keyof NodeSchemasByType,
+  `clip:${string}`
+>]
 
 type WithGap<T> = T & { gap?: Rational }
 
@@ -182,6 +200,7 @@ export interface NodeSchemasByType {
   'track:audio': AudioTrack
   'clip:video': VideoClip
   'clip:audio': AudioClip
+  'clip:image': ImageClip
   'clip:text': TextClip
 }
 
@@ -191,6 +210,7 @@ export interface SerializedNodeSchemasByType {
   'track:audio': SerializedAudioTrack
   'clip:video': SerializedVideoClip
   'clip:audio': SerializedAudioClip
+  'clip:image': SerializedImageClip
   'clip:text': SerializedTextClip
 }
 
@@ -198,12 +218,14 @@ export type AnyTrack = VideoTrack | AudioTrack
 export type AnyNode = NodeSchemasByType[keyof NodeSchemasByType]
 export type AnyClip = NodeSchemasByType[Extract<keyof NodeSchemasByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
-export type AnyVideoClip = VideoClip | TextClip
+export type AnyVideoClip = VideoClip | TextClip | ImageClip
 export type AnyAudioClip = AudioClip
+
 export type AnySerializedNode = SerializedNodeSchemasByType[keyof SerializedNodeSchemasByType]
+export type AnySerializedVideoClip = Extract<AnySerializedNode, AnyVideoClip>
 
 export interface SerializedDocument extends DocumentSettings {
-  assets: AnyAssetSchema[]
+  assets: AnyAsset[]
   timeline: SerializedTimeline
   links: NodeLink[]
 }

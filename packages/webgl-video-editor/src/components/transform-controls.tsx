@@ -21,7 +21,7 @@ const RESIZE_HANDLE_HEIGHT_DESKTOP_PX = 12
 export const TransformControls = () => {
   const editor = useEditor()
 
-  const selectedTransformableClip = computed<EditView.VideoClip | EditView.TextClip | undefined>(() => {
+  const selectedTransformableClip = computed<EditView.AnyVideoClip | undefined>(() => {
     const { selection } = editor
     if (selection?.isNode && selection.isVideo() && selection.isClip()) return selection
   })

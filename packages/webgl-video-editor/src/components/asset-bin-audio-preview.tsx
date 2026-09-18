@@ -34,7 +34,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
     let activeClip = false
     editor.doc.nodes.forEach((node) => {
       if (!node.isMediaClip()) return
-      if (node.mediaRef?.assetId === asset.id) activeClip = true
+      if (node.mediaRef?.id === asset.id) activeClip = true
     })
     return activeClip
   })

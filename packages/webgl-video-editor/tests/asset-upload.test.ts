@@ -38,7 +38,9 @@ test('creating a new media asset from user-selected file saves it to FS storage'
 
   doc.importFromJson(
     docWithTracks([
-      makeVideoTrack('track-0', [makeVideoClip({ id: 'clip-0', mediaRef: { assetId: 'asset-0' } })]),
+      makeVideoTrack('track-0', [
+        makeVideoClip({ id: 'clip-0', mediaRef: { id: 'asset-0', type: 'asset:media:av' } }),
+      ]),
     ]),
   )
 

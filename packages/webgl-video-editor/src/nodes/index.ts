@@ -1,6 +1,7 @@
 export type { BaseNode } from './base-node.ts'
 export { BaseClip } from './clips/base-clip.ts'
 export { VideoClip } from './clips/video-clip.ts'
+export { ImageClip } from './clips/image-clip.ts'
 export { AudioClip } from './clips/audio-clip.ts'
 export { Timeline } from './timeline.ts'
 export type { ParentNode } from './parent-node.ts'

@@ -23,6 +23,7 @@ const BASE_METHOD_KEYS = [
   'isTrack',
   'isClip',
   'isMediaClip',
+  'isImageClip',
   'isTextClip',
   'isVideo',
   'isAudio',
@@ -74,4 +75,5 @@ export interface VueVideoTrack extends VueParentNode<pub.VideoTrack>, pub.VideoT
 export interface VueAudioTrack extends VueParentNode<pub.AudioTrack>, pub.AudioTrack {}
 export interface VueVideoClip extends VueNodeView<pub.VideoClip>, pub.VideoClip {}
 export interface VueAudioClip extends VueNodeView<pub.AudioClip>, pub.AudioClip {}
+export interface VueImageClip extends VueNodeView<pub.ImageClip>, pub.ImageClip {}
 export interface VueTextClip extends VueNodeView<pub.TextClip>, pub.TextClip {}

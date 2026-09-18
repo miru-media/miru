@@ -23,7 +23,7 @@ class TestDocument extends DocumentView<Record<string, TestView>> {
 let doc: Document
 let testDoc: TestDocument
 
-const clipInit = makeAudioClip({ id: 'clip', mediaRef: { assetId: 'unknown' } })
+const clipInit = makeAudioClip({ id: 'clip', mediaRef: { id: 'unknown', type: 'asset:media:av' } })
 const trackInit = makeAudioTrack('test-track', [clipInit])
 
 beforeEach(() => {

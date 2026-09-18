@@ -6,7 +6,7 @@ export namespace Otio {
     OTIO_SCHEMA: 'Timeline.1'
     metadata?: {
       [index: string]: unknown
-      Miru: Schema.DocumentSettings & { assets: Schema.AnyAssetSchema[] }
+      Miru: Schema.DocumentSettings & { assets: Schema.AnyAsset[] }
     }
     name: ''
     global_start_time: null

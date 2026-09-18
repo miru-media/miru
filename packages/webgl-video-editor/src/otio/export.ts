@@ -97,14 +97,15 @@ const mediaClip = <T extends pub.AnyClip>(node: T): Otio.Clip => {
           Miru: node.mediaRef,
         },
         name: asset?.name ?? '',
-        available_range: asset
-          ? {
-              OTIO_SCHEMA: 'TimeRange.1',
-              duration: Rational.simplified(asset.duration, 1).toOTIO(),
-              start_time: Rational.ZERO.toOTIO(),
-            }
-          : null,
-        target_url: (asset?.uri ?? asset?.name ?? '') || null,
+        available_range:
+          asset?.type === 'asset:media:av'
+            ? {
+                OTIO_SCHEMA: 'TimeRange.1',
+                duration: Rational.simplified(asset.duration, 1).toOTIO(),
+                start_time: Rational.ZERO.toOTIO(),
+              }
+            : null,
+        target_url: ((asset && 'uri' in asset ? asset.uri : null) ?? asset?.name ?? '') || null,
       },
     },
     active_media_reference_key: 'DEFAULT_MEDIA',
@@ -125,7 +126,7 @@ const audioClip = (node: pub.AudioClip): Otio.Clip => {
   return otio
 }
 
-const videoClip = (node: pub.VideoClip): Otio.Clip => {
+const videoClip = (node: pub.VideoClip | pub.ImageClip): Otio.Clip => {
   const otio = mediaClip(node)
   addTransformEffect(otio, node)
   return otio

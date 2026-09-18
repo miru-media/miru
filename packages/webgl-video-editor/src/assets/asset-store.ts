@@ -10,7 +10,7 @@ import { FileSystemStorage } from '../storage/file-system-storage.ts'
 
 import { FontAsset } from './font-asset.ts'
 import { HttpAssetLoader } from './http-asset-loader.ts'
-import { MediaAsset } from './media-asset.ts'
+import { ImageAsset, MediaAsset } from './media-asset.ts'
 import { getMediaAssetInfo } from './utils.ts'
 import { VideoEffectAsset } from './video-effect-asset.ts'
 
@@ -47,19 +47,22 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     return this.#map.has(id)
   }
 
-  create<T extends Schema.AnyAssetSchema>(
+  create<T extends Schema.AnyAsset>(
     init: T,
     { source, isBuiltIn }: { source?: Blob | string; isBuiltIn?: boolean } = {},
   ): pub.AssetsByType[T['type']] {
     let asset
 
     switch (init.type) {
-      case 'asset:media:av':
-        asset = new MediaAsset(init, { store: this, source, isBuiltIn: isBuiltIn })
+      case 'asset:media:image':
+      case 'asset:media:av': {
+        const options = { store: this, source, isBuiltIn: isBuiltIn }
+        asset = init.type === 'asset:media:av' ? new MediaAsset(init, options) : new ImageAsset(init, options)
         this.getOrCreateFile(asset, source ?? ('uri' in init ? init.uri : undefined))
           .then(asset.setBlob.bind(asset))
           .catch(asset.setError.bind(asset))
         break
+      }
 
       case 'asset:font':
         asset = new FontAsset(init, this, isBuiltIn)
@@ -94,7 +97,7 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
   }
 
   async getOrCreateFile(
-    asset: pub.MediaAsset,
+    asset: pub.BaseFileAsset,
     source_: Blob | string | undefined,
     options?: { signal?: AbortSignal | null },
   ): Promise<File> {

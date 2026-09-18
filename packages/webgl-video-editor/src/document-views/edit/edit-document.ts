@@ -19,6 +19,7 @@ export interface ViewTypeMap {
   'track:audio': EditView.VideoTrack
   'clip:video': EditView.VideoClip
   'clip:audio': EditView.AudioClip
+  'clip:image': EditView.ImageClip
   'clip:text': EditView.TextClip
 }
 

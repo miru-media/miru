@@ -82,16 +82,26 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
 
     const { ytree, settings, links, ydoc } = initYjsRoot(ydocOrMap)
 
-    // update nodes with old 'clip' and 'track' types
     {
       const allIds: string[] = []
       ytree.getAllDescendants(YTREE_ROOT_KEY, allIds)
       allIds.forEach((id) => {
         const ynode = ytree.getNodeValueFromKey(id) as Y.Map<any>
         if ((ynode as any)?.get == null) return
+
+        // update nodes with old 'clip' and 'track' types
         const type: string = ynode.get('type')
         if (type === 'clip') ynode.set('type', `clip:${ynode.get('clipType')}`)
         if (type === 'track') ynode.set('type', `track:${ynode.get('trackType')}`)
+
+        if ((ynode.get('type') as string | undefined)?.startsWith('clip:')) {
+          const mediaRef = ynode.get('mediaRef') as
+            (Partial<Schema.AssetRef> & { assetId: string }) | undefined
+
+          if (mediaRef?.assetId && !mediaRef.id) {
+            ynode.set('mediaRef', { ...mediaRef, id: mediaRef.assetId })
+          }
+        }
       })
     }
 

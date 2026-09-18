@@ -129,6 +129,10 @@ export class LocalSync extends EventTarget implements core.VideoEditorDocumentSy
 
       children.forEach((node) => {
         if ((node.type as string) === 'clip') node.type = `clip:${trackType}`
+
+        // update assaet ref id key
+        const mediaRef = node.mediaRef as (Schema.AssetRef & { assetId?: string }) | undefined
+        if (mediaRef?.assetId && !mediaRef.id) mediaRef.id = mediaRef.assetId
       })
     })
 
@@ -332,7 +336,7 @@ export class LocalSync extends EventTarget implements core.VideoEditorDocumentSy
     ])
   }
 
-  #getAssetMap(): Record<string, Schema.AnyAssetSchema> {
+  #getAssetMap(): Record<string, Schema.AnyAsset> {
     return JSON.parse(localStorage.getItem(this.#ASSETS_KEY) ?? '[]')
   }
 

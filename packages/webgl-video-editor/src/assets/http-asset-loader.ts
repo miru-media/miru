@@ -2,14 +2,14 @@
 import type { AssetLoader, Schema } from '#core'
 
 export class HttpAssetLoader implements AssetLoader {
-  canLoad(asset: Schema.MediaAsset): boolean {
+  canLoad(asset: Schema.BaseFileAsset): boolean {
     if (!asset.uri) return false
     const { protocol } = new URL(asset.uri, document.baseURI)
 
     return /^https?:/u.test(protocol)
   }
   async load(
-    asset: Schema.MediaAsset,
+    asset: Schema.BaseFileAsset,
     options?: RequestInit,
   ): Promise<{ stream: ReadableStream<Uint8Array>; size?: number }> {
     const res = await fetch(asset.uri!, options)

@@ -4,11 +4,11 @@ import { FileSystemAssetStore } from '#assets'
 import type { Schema } from '#core'
 
 export class YjsAssetStore extends FileSystemAssetStore {
-  ymap: Y.Map<Schema.AnyAssetSchema>
+  ymap: Y.Map<Schema.AnyAsset>
 
   readonly #boundOnYmapUpdate = this.#onYmapUpdate.bind(this)
 
-  constructor(ymap: Y.Map<Schema.AnyAssetSchema>) {
+  constructor(ymap: Y.Map<Schema.AnyAsset>) {
     super()
     this.ymap = ymap
 

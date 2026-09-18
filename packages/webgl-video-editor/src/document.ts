@@ -4,7 +4,7 @@ import { FileSystemAssetStore } from '#assets'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION } from '#constants'
 import type * as pub from '#core'
 import type { Schema } from '#core'
-import { AudioClip, AudioTrack, VideoClip, VideoTrack } from '#nodes'
+import { AudioClip, AudioTrack, ImageClip, VideoClip, VideoTrack } from '#nodes'
 import type { Size } from 'shared/types.ts'
 import { clamp, Rational } from 'shared/utils/math.ts'
 
@@ -142,6 +142,9 @@ export class Document implements pub.Document {
         break
       case 'clip:audio':
         node = new AudioClip(this, init)
+        break
+      case 'clip:image':
+        node = new ImageClip(this, init)
         break
       case 'clip:text':
         node = new TextClip(this, init)

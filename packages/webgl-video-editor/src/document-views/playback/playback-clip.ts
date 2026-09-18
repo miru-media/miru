@@ -1,40 +1,23 @@
 import { computed } from 'fine-jsx'
 
 import type * as pub from '#core'
-import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import { CanvasEvent } from '../../events.ts'
 import { NodeView } from '../node-view.ts'
-import type { RenderTextClip, RenderVideoClip } from '../render/render-nodes.ts'
+import type { AnyRenderClip } from '../render/index.ts'
 
 import type { PlaybackDocument } from './playback-document.ts'
 
 export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocument, T> {
   readonly renderClip = this.docView.renderView._getNode(this.original)
 
-  isInPresentationTime = computed(() => {
-    if (this.isDisposed) return false
-
-    const { presentationTime, doc } = this.original
-    const docTime = doc.currentTime
-
-    return (
-      rangeContainsTime(presentationTime, docTime) ||
-      // display final frame of clip at the end of the timeline
-      (docTime > presentationTime.start && presentationTime.end === doc.duration)
-    )
-  })
-  isInPlayableTime = computed(
-    () => !this.isDisposed && rangeContainsTime(this.original.playableTime, this.original.doc.currentTime),
-  )
-
-  shouldPlay = computed(() => this.isInPlayableTime.value && !this.docView.isPaused)
+  shouldPlay = computed(() => this.original.isInPlayableTime && !this.docView.isPaused)
 
   get isReady(): boolean {
-    return this.original.isReady && this.renderClip?.isReady.value !== false
+    return this.original.isReady && this.renderClip?.isReady !== false
   }
   get shouldRender(): boolean {
-    return this.isInPresentationTime.value
+    return this.isReady && this.original.isInPresentationTime
   }
 
   readonly _disposeAbort = new AbortController()
@@ -56,7 +39,7 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
     }
   }
 
-  #onPlaybackUpdate(renderClip: RenderVideoClip | RenderTextClip): void {
+  #onPlaybackUpdate(renderClip: AnyRenderClip): void {
     if (!this.original.enabled) return
 
     const { pixiNode } = renderClip

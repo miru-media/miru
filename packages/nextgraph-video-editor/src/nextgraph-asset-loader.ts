@@ -11,11 +11,11 @@ export class NextGraphAssetLoader implements AssetLoader {
     this.nuri = options.nuri
   }
 
-  canLoad(asset: Schema.MediaAsset): boolean {
+  canLoad(asset: Schema.BaseFileAsset): boolean {
     return asset.uri?.startsWith('did:ng:') === true
   }
 
-  async load(asset: Schema.MediaAsset): Promise<{ stream: ReadableStream<Uint8Array>; size?: number }> {
+  async load(asset: Schema.BaseFileAsset): Promise<{ stream: ReadableStream<Uint8Array>; size?: number }> {
     const uri = asset.uri!
 
     const { ng, session_id: sessionId } = this.session

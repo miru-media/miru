@@ -1,17 +1,19 @@
 import type * as pub from '../../types/core'
 import type * as Schema from '../../types/schema'
 
-export abstract class BaseAsset<T extends Schema.AnyAssetSchema = any> {
+export abstract class BaseAsset<T extends Schema.AnyAsset = any> {
   store: pub.VideoEditorAssetStore
   readonly id: string
   readonly type: T['type']
   readonly raw: T
   readonly isBuiltIn: boolean
+  readonly thumbnailUri?: string
 
   constructor(init: T, store: pub.VideoEditorAssetStore, isBuiltIn?: boolean) {
     this.store = store
     this.id = init.id
     this.type = init.type
+    this.thumbnailUri = init.thumbnailUri
     this.raw = init
     this.isBuiltIn = !!isBuiltIn
   }

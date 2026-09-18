@@ -33,7 +33,7 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
     return super.isReady && (this.mediaState.isReady.value || this.isPlaceholder)
   }
   get shouldRender(): boolean {
-    return super.shouldRender && this.everHadEnoughData
+    return super.shouldRender || (this.original.isInPresentationTime && this.everHadEnoughData)
   }
 
   get everHadEnoughData(): boolean {
@@ -153,7 +153,7 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
   }
 
   #onPlay(): void {
-    if (this.isInPlayableTime.value) {
+    if (this.original.isInPlayableTime) {
       this.seek()
       this.play()
     } else this.pause()
@@ -167,14 +167,12 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
   }
 
   #onPlaybackUpdate(): void {
-    if (!this.original.enabled) return
+    const { original, renderClip, docView } = this
+    if (!original.enabled) return
 
-    const { renderClip, docView } = this
-
-    if (this.isInPlayableTime.value) this.mediaTime.value = this.mediaElement.currentTime
+    if (this.original.isInPlayableTime) this.mediaTime.value = this.mediaElement.currentTime
 
     if (renderClip) {
-      const { original } = renderClip
       const { asset } = original
       const { sprite } = renderClip
 

@@ -19,25 +19,36 @@ export const Debug = (): JSX.Element => {
               const playbackClip = editor.playback._getNode(clip)
               if (!playbackClip) return null
 
-              const { mediaState } = playbackClip
-
               return (
                 <div style="font-family:monospace">
-                  <div>
-                    {() =>
-                      [playbackClip.mediaTime.value.toFixed(2), mediaState.latestEvent.value?.type].join(' ')
-                    }
-                  </div>
-                  <div>
-                    {() => (
-                      <>
-                        {Object.keys(ReadyState).find(
-                          (key) => ReadyState[key as keyof typeof ReadyState] === mediaState.readyState.value,
-                        )}{' '}
-                        | {playbackClip.mediaState.error.value?.code}
-                      </>
-                    )}
-                  </div>
+                  {() => {
+                    if (!('mediaState' in playbackClip)) return
+
+                    const { mediaState } = playbackClip
+                    return (
+                      <div>
+                        <div>
+                          {() =>
+                            [
+                              playbackClip.mediaTime.value.toFixed(2),
+                              mediaState.latestEvent.value?.type,
+                            ].join(' ')
+                          }
+                        </div>
+                        <div>
+                          {() => (
+                            <>
+                              {Object.keys(ReadyState).find(
+                                (key) =>
+                                  ReadyState[key as keyof typeof ReadyState] === mediaState.readyState.value,
+                              )}{' '}
+                              | {playbackClip.mediaState.error.value?.code}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }}
 
                   <div>
                     <label>

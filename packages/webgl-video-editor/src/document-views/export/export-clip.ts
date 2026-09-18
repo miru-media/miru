@@ -36,7 +36,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
   audioBuffer?: AudioBuffer
 
   get isReady(): boolean {
-    return this.original.isReady && this.videoIsReady && this.renderClip?.isReady.value !== false
+    return this.original.isReady && this.videoIsReady && this.renderClip?.isReady !== false
   }
 
   constructor(exportView: ExportDocument, original: pub.AnyMediaClip) {

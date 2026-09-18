@@ -52,18 +52,28 @@ export const AssetBinFilters = () => {
 
   const isLoading = ref(true)
 
-  const videoElement = computed(() => {
+  const imageSource = computed(() => {
     if (!clip.value) return undefined
+
+    if (clip.value.isImageClip()) {
+      return editor.playback.renderView._getNode(clip.value).img.value
+    }
+
     const playbackClip = editor.playback._getNode(clip.value)
-    const video = playbackClip?.mediaElement
-    return video instanceof HTMLVideoElement ? video : undefined
+    const mediaElement = playbackClip?.mediaElement
+    return mediaElement instanceof HTMLVideoElement ? mediaElement : undefined
   })
 
   const refreshThumbnails = throttle(THUMBNAIL_REFRESH_MS, () => {
-    if (!clip.value) return
-    const video = videoElement.value
-    if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
-    renderer.loadImage(sourceTexture, video)
+    const image = imageSource.value
+    if (
+      !clip.value ||
+      !image ||
+      (image instanceof HTMLVideoElement && image.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)
+    )
+      return
+
+    renderer.loadImage(sourceTexture, image)
     isLoading.value = false
   })
 
@@ -71,16 +81,19 @@ export const AssetBinFilters = () => {
     isLoading.value = true
     const offPlaybackUpdate = editor.doc.on('playback:update', refreshThumbnails)
 
-    const video = videoElement.value
-    if (video) {
+    const image = imageSource.value
+    if (image) {
       refreshThumbnails()
-      video.addEventListener('loadeddata', refreshThumbnails)
-      video.addEventListener('seeked', refreshThumbnails)
 
-      onCleanup(() => {
-        video.removeEventListener('loadeddata', refreshThumbnails)
-        video.removeEventListener('seeked', refreshThumbnails)
-      })
+      if (image instanceof HTMLVideoElement) {
+        image.addEventListener('loadeddata', refreshThumbnails)
+        image.addEventListener('seeked', refreshThumbnails)
+
+        onCleanup(() => {
+          image.removeEventListener('loadeddata', refreshThumbnails)
+          image.removeEventListener('seeked', refreshThumbnails)
+        })
+      }
     }
 
     onCleanup(() => {

@@ -73,8 +73,8 @@ export class ClipResizeContext {
     let maxLinkedEndTime = Infinity
 
     this.linkedClips.forEach(([prev, clip]) => {
-      const { time } = clip
-      const mediaDuration = clip.asset?.duration
+      const { time, asset } = clip
+      const mediaDuration = asset?.type === 'asset:media:av' ? asset.duration : undefined
       const minStartTime = Math.max(
         mediaDuration == null ? 0 : time.end - mediaDuration,
         GAPPED ? (prev?.time.end ?? 0) : Math.max(0, prev ? prev.time.start + 1 / clip.doc.frameRate : 0),

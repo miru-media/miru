@@ -9,6 +9,7 @@ import { _vuePlainReadonly, _vueWritable } from './utils.ts'
 import {
   type VueAudioClip,
   type VueAudioTrack,
+  type VueImageClip,
   VueNodeView,
   VueParentNode,
   type VueTextClip,
@@ -23,6 +24,7 @@ export interface VueTypeMap {
   'track:audio': VueAudioTrack
   'clip:video': VueVideoClip
   'clip:audio': VueAudioClip
+  'clip:image': VueImageClip
   'clip:text': VueTextClip
 }
 

@@ -15,6 +15,13 @@ import { nodesAreLinked, useTrackChildEdges } from './utils.ts'
 
 const GAPPED = true as boolean
 
+const CLIP_ICONS = {
+  'clip:video': undefined,
+  'clip:audio': IconMsMusicNoteRounded,
+  'clip:image': IconMsPhotoOutlineRounded,
+  'clip:text': IconMsTextFieldsRounded,
+} satisfies Record<AnyClip['type'], ((props: { class: unknown }) => JSX.Element) | undefined>
+
 export const Clip = ({
   node: clip,
   editor,
@@ -38,7 +45,7 @@ export const Clip = ({
   const selectClip = () => editor.select(clip, false)
   const selectGap = (): void => editor.select({ node: clip, isNode: false }, false)
 
-  const isVideoMedia = () => clip.isVideo() && clip.isMediaClip()
+  const isVideoMedia = () => (clip.isVideo() && clip.isMediaClip()) || clip.isImageClip()
   const getIcon = () =>
     clip.isAudio() ? IconMsMusicNoteRounded : clip.isTextClip() ? IconMsTextFieldsRounded : undefined
 
@@ -94,13 +101,15 @@ export const Clip = ({
             )
           }
           {() => {
-            const Icon = getIcon()
+            const Icon = CLIP_ICONS[clip.type]
             return Icon && <Icon class={[styles.clipIcon, styles.first]} />
           }}
           {() =>
             !clip.asset?.thumbnailUri && (
               <span class={[styles.clipName, !getIcon() && styles.first]}>
-                {() => clip.name || (clip.isTextClip() ? clip.content : (clip.asset?.name ?? ''))}
+                {() =>
+                  clip.name || (clip.isTextClip() ? clip.content : ((clip.name || clip.asset?.name) ?? ''))
+                }
               </span>
             )
           }

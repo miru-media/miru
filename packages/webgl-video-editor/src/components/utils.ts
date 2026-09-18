@@ -21,7 +21,7 @@ export const provideImportMediaFiles = (importMediaFiles?: (bin: ImportMediaBin)
 
 export const ensureDurationIsPlayable = (clip: AnyClip): void => {
   const { asset } = clip
-  if (!asset) return
+  if (asset?.type !== 'asset:media:av') return
 
   const docFrameRate = clip.doc.frameRate
   const sourceDuration = Rational.fromDecimal(asset.duration, docFrameRate)

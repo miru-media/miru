@@ -30,13 +30,13 @@ export const documentJSONFromOTIO = async (
 }
 
 interface WithMediaRef {
-  mediaRef?: { assetId?: string | undefined }
+  mediaRef?: Schema.AssetRef | Schema.MediaAssetPlaceholderRef
 }
 
 class OtioImporter {
   otio?: Otio.TimelineDocument
-  bundledAssets = new Map<string, { asset: Schema.AnyAssetSchema; blob: Blob }>()
-  unresolvedReferences = new Map<string, { asset: Schema.AnyAssetSchema; referers: WithMediaRef[] }>()
+  bundledAssets = new Map<string, { asset: Schema.AnyAsset; blob: Blob }>()
+  unresolvedReferences = new Map<string, { asset: Schema.AnyAsset; referers: WithMediaRef[] }>()
   result?: Schema.SerializedDocument
   errors: unknown[] = []
 
@@ -103,7 +103,7 @@ class OtioImporter {
       Array.from(this.unresolvedReferences).map(async ([url, { asset, referers }]) => {
         const info = await getMediaAssetInfo(asset.id, url, options)
         this.result!.assets.push(info)
-        referers.forEach((clip) => void (clip.mediaRef = { assetId: info.id }))
+        referers.forEach((clip) => void (clip.mediaRef = { id: info.id, type: info.type }))
       }),
     )
 
@@ -136,12 +136,16 @@ class OtioImporter {
       // TODO
       if (otioType === 'Transition.1') return
 
+      const metadataType = child.metadata?.Miru?.type
+
       const childInit =
         trackType === 'track:audio'
           ? this.audioClip(child)
-          : child.metadata?.Miru?.type === 'clip:text'
+          : metadataType === 'clip:text'
             ? textClip(child)
-            : this.videoClip(child)
+            : metadataType === 'clip:image'
+              ? this.imageClip(child)
+              : this.videoClip(child)
 
       if (nextChildGapDuration) {
         childInit.gap = nextChildGapDuration
@@ -166,7 +170,9 @@ class OtioImporter {
     const clip = {
       ...trackChild(item, type),
       sourceStart: plainRational(item.source_range.start_time),
-      mediaRef: url ? { assetId: url } : undefined,
+      mediaRef: url
+        ? ({ id: url, type: type === 'clip:image' ? 'asset:media:image' : 'asset:media:av' } as const)
+        : undefined,
     }
 
     if (this.bundledAssets.has(url)) return clip
@@ -212,6 +218,12 @@ class OtioImporter {
 
   videoClip(item: Otio.Clip): Schema.SerializedVideoClip {
     const json: Schema.VideoClip = this.clip(item, 'clip:video')
+    applyTransformEffect(json, item)
+    return json
+  }
+
+  imageClip(item: Otio.Clip): Schema.SerializedImageClip {
+    const json: Schema.ImageClip = this.clip(item, 'clip:image')
     applyTransformEffect(json, item)
     return json
   }

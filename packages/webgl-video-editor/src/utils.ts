@@ -4,7 +4,7 @@ import * as Pixi from 'pixi.js'
 import type { Size } from 'shared/types.ts'
 import { clamp, remap } from 'shared/utils/math.ts'
 
-import type { AnyRenderClip } from './document-views/render/render-nodes.ts'
+import type { AnyRenderClip } from './document-views/render/index.ts'
 
 export const getClipTransformMatrix = (
   renderClip: AnyRenderClip,

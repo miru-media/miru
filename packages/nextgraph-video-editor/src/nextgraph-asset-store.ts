@@ -1,9 +1,20 @@
 import { effect } from '@ng-org/orm'
 import type { Session } from '@ng-org/web'
-import { type AssetsByType, FileSystemAssetStore, type MediaAsset, type Schema } from 'webgl-video-editor'
+import {
+  type AssetsByType,
+  type BaseFileAsset,
+  FileSystemAssetStore,
+  type MediaAsset,
+  type Schema,
+} from 'webgl-video-editor'
 
 import { NextGraphAssetLoader } from './nextgraph-asset-loader.ts'
-import type { MiruMediaAsset, MiruVideoDocument, MiruVideoEffectAsset } from './shapes/orm/video.typings.ts'
+import type {
+  MiruImageAsset,
+  MiruMediaAsset,
+  MiruVideoDocument,
+  MiruVideoEffectAsset,
+} from './shapes/orm/video.typings.ts'
 import { withEmptyGraphIds } from './utils.ts'
 
 export class NextGraphAssetStore extends FileSystemAssetStore {
@@ -32,7 +43,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
         }
         // create new asset instances
         else {
-          let init: Schema.AnyAssetSchema
+          let init: Schema.AnyAsset
 
           if (asset.type === 'asset:effect:video') init = { ...asset, id, ops: JSON.parse(asset.ops) }
           else init = { ...asset, id }
@@ -54,7 +65,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     this.loaders.push(new NextGraphAssetLoader({ ...options, nuri: this.docNuri }))
   }
 
-  create<T extends Schema.AnyAssetSchema>(
+  create<T extends Schema.AnyAsset>(
     init: T,
     options?: { source?: Blob | File | string },
   ): AssetsByType[T['type']] {
@@ -63,7 +74,8 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     if (asset.isBuiltIn) return asset
 
     switch (asset.type) {
-      case 'asset:media:av': {
+      case 'asset:media:av':
+      case 'asset:media:image': {
         const source = options?.source
 
         if (source != null && typeof source !== 'string')
@@ -89,14 +101,14 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     return asset
   }
 
-  assetToOrmShape(asset: Schema.AnyAssetSchema): MiruMediaAsset | MiruVideoEffectAsset {
+  assetToOrmShape(asset: Schema.AnyAsset): MiruMediaAsset | MiruImageAsset | MiruVideoEffectAsset {
     return NextGraphAssetStore.assetToOrmShape(asset, this.docNuri)
   }
 
   static assetToOrmShape(
-    asset: Schema.AnyAssetSchema,
+    asset: Schema.AnyAsset,
     docNuri: string,
-  ): MiruMediaAsset | MiruVideoEffectAsset {
+  ): MiruMediaAsset | MiruImageAsset | MiruVideoEffectAsset {
     const { id, type, name = '' } = asset
     switch (type) {
       case 'asset:effect:video': {
@@ -131,6 +143,23 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
           thumbnailUri: asset.thumbnailUri,
         } satisfies MiruMediaAsset
       }
+      case 'asset:media:image': {
+        return {
+          '@graph': docNuri,
+          '@id': '',
+          '@type': new Set(['did:ng:z:MiruImageAsset']),
+          id,
+          type,
+          name,
+          mimeType: asset.mimeType,
+          width: asset.width,
+          height: asset.height,
+          rotation: asset.rotation,
+          size: asset.size,
+          uri: asset.uri ?? '',
+          thumbnailUri: asset.thumbnailUri,
+        } satisfies MiruImageAsset
+      }
       case 'asset:font': {
         // TODO
         throw new Error('Not implemented yet: "asset:font" case')
@@ -138,7 +167,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     }
   }
 
-  private async uploadFile(asset: MediaAsset, file: File): Promise<void> {
+  private async uploadFile(asset: BaseFileAsset, file: File): Promise<void> {
     const { ng, session_id: sessionId } = this.session
 
     const uploadId: string = await ng.upload_start(sessionId, this.docNuri, asset.mimeType)
@@ -157,7 +186,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     if (ormAsset) ormAsset.uri = uploadRes.nuri
   }
 
-  private findOrmAsset<T extends MiruMediaAsset | MiruVideoEffectAsset>(asset: MediaAsset): T | undefined {
+  private findOrmAsset<T extends MiruMediaAsset | MiruImageAsset>(asset: BaseFileAsset): T | undefined {
     for (const obj of this.graphObject.assets ?? []) if (obj.id === asset.id) return obj as T
   }
 

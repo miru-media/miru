@@ -22,7 +22,7 @@ ex:MiruVideoDocumentShape {
   ex:name xsd:string ;
   ex:description xsd:string ? ;
   ex:createdAt xsd:date ;
-  ex:assets @ex:MiruMediaAssetShape OR @ex:MiruVideoEffectAssetShape * ;
+  ex:assets @ex:MiruMediaAssetShape OR @ex:MiruImageAssetShape OR @ex:MiruVideoEffectAssetShape * ;
 }
 
 ex:MiruMediaAssetShape EXTRA a {
@@ -56,6 +56,22 @@ ex:MiruMediaAssetShape EXTRA a {
   ex:thumbnailUri xsd:string OR IRI? ;
 }
 
+ex:MiruImageAssetShape EXTRA a {
+  a [ex:MiruImageAsset] ;
+
+  ex:id xsd:string ;
+  ex:type [ "asset:media:image" ] ;
+  ex:name xsd:string ;
+
+  ex:mimeType xsd:string ;
+  ex:size xsd:integer ;
+  ex:width xsd:integer ;
+  ex:height xsd:integer ;
+  ex:rotation xsd:integer ;
+
+  ex:uri xsd:string OR IRI;
+  ex:thumbnailUri xsd:string OR IRI? ;
+}
 
 ex:MiruVideoEffectAssetShape EXTRA a {
   a [ex:MiruVideoEffectAsset] ;

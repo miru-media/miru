@@ -20,7 +20,12 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
 {
   static FIELDS = super.FIELDS.concat([
     { key: 'sourceStart', flags: 0, transform: Rational.from },
-    { key: 'mediaRef', flags: 0, equal: (a, b) => a?.assetId === b?.assetId },
+    {
+      key: 'mediaRef',
+      flags: 0,
+      equal: (a: Schema.AssetRef | undefined, b: Schema.AssetRef | undefined) =>
+        a?.id === b?.id && a?.type === b?.type,
+    },
     { key: 'transition', flags: 0 },
 
     { key: 'isReady', flags: NODE_FIELD_FLAGS.Readonly },
@@ -50,13 +55,17 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
 
   declare private _presentationTime: Ref<ClipTime>
   declare private _playableTime: Ref<ClipTime>
+  declare private _isInPresentationTime: Ref<boolean>
+  declare private _isInPlayableTime: Ref<boolean>
+
   readonly #expectedMediaTime = computed((): number => {
     const { start, source, duration } = this.playableTime
     return clamp(this.doc.currentTime - start + source, source, source + duration)
   })
   readonly #isInClipTime = computed(() => rangeContainsTime(this.presentationTime, this.doc.currentTime))
 
-  get asset(): pub.MediaAsset | undefined {
+  declare asset?: pub.MediaAsset | pub.ImageAsset | undefined
+  get ['asset' as never](): pub.AnyAsset | undefined {
     return this._asset.value
   }
 
@@ -76,6 +85,12 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
   get isInClipTime(): boolean {
     return this.#isInClipTime.value
   }
+  get isInPresentationTime(): boolean {
+    return this._isInPresentationTime.value
+  }
+  get isInPlayableTime(): boolean {
+    return this._isInPlayableTime.value
+  }
 
   declare _link: Ref<Schema.NodeLink | undefined>
   get link(): Schema.NodeLink | undefined {
@@ -86,10 +101,12 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     super._init()
 
     this._asset = computed((): pub.MediaAsset | undefined =>
-      this.mediaRef?.assetId ? this.doc.assets.getAsset(this.mediaRef.assetId) : undefined,
+      this.mediaRef?.id ? this.doc.assets.getAsset(this.mediaRef.id) : undefined,
     )
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())
+    this._isInPresentationTime = computed(() => this._computeIsInPresentationTime())
+    this._isInPlayableTime = computed(() => this._computeIsInPlayableTime())
     this._link = ref()
   }
 
@@ -130,6 +147,23 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
       duration: duration + preplayDuration,
       end,
     }
+  }
+
+  _computeIsInPresentationTime(): boolean {
+    if (this.isDisposed) return false
+
+    const { presentationTime, doc } = this
+    const docTime = doc.currentTime
+
+    return (
+      rangeContainsTime(presentationTime, docTime) ||
+      // display final frame of clip at the end of the timeline
+      (docTime > presentationTime.start && presentationTime.end === doc.duration)
+    )
+  }
+
+  _computeIsInPlayableTime() {
+    return !this.isDisposed && rangeContainsTime(this.playableTime, this.doc.currentTime)
   }
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
