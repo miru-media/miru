@@ -220,3 +220,17 @@ export const useFullscreen = (
     toggle: () => (isFullscreen.value ? exit() : request()),
   }
 }
+
+export const useChangeCounter = () => {
+  const counterRef = ref(Number.MIN_SAFE_INTEGER)
+
+  return {
+    track: () => {
+      void counterRef.value
+    },
+    inc: () => {
+      const value = counterRef.value + 1
+      counterRef.value = value >= Number.MAX_SAFE_INTEGER ? Number.MIN_SAFE_INTEGER : value
+    },
+  }
+}

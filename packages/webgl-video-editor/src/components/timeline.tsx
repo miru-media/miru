@@ -200,23 +200,38 @@ export const Timeline = ({
                 </div>
               </>
             ) : (
-              doc.timeline.children.map((track) =>
-                // hide linked audio tracks of video
-                track.link && track.isAudio() ? null : (
-                  <>
-                    <div
-                      data-before-track-id={track.id}
-                      class={() => [
-                        styles.clipDragTrackSpace,
-                        editor.drag.targetTrack?.id === track.id &&
-                          editor.drag.targetTrack.before &&
-                          styles.active,
-                      ]}
-                    />
-                    <Track data-track-id={track.id} track={track} />
-                  </>
-                ),
-              )
+              doc.timeline.children
+                .map((track) =>
+                  // hide linked audio tracks of video
+                  track.link && track.isAudio() ? null : (
+                    <>
+                      <div
+                        data-before-track-id={track.id}
+                        class={() => [
+                          styles.clipDragTrackSpace,
+                          editor.drag.targetTrack?.id === track.id &&
+                            editor.drag.targetTrack.before &&
+                            styles.active,
+                        ]}
+                      />
+                      <Track data-track-id={track.id} track={track} />
+                    </>
+                  ),
+                )
+                // TODO: there's a bug in fine-jsx that causes this element to disappear if it's outside the array
+                .concat([
+                  <div
+                    data-before-track-id=""
+                    data-end=""
+                    class={() => [
+                      styles.clipDragTrackSpace,
+                      editor.drag.isActive() &&
+                        editor.drag.targetTrack.id === undefined &&
+                        editor.drag.targetTrack.before &&
+                        styles.active,
+                    ]}
+                  />,
+                ])
             )
           }
         </div>

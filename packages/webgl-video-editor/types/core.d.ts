@@ -153,8 +153,8 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   delete: (deep?: boolean) => void
   dispose: (deep?: boolean) => void
   /** @internal */
-  _fields: <T extends pub.BaseNode>(this: T) => NodeFieldDef<T>[]
-  _reactiveKeys: <T extends pub.BaseNode>(this: T) => Set<keyof T>
+  _fields: <T extends BaseNode>(this: T) => NodeFieldDef<T>[]
+  _reactiveKeys: <T extends BaseNode>(this: T) => Set<keyof T>
 
   [Symbol.dispose]: () => void
 }
@@ -304,7 +304,7 @@ export interface GapSelection {
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- false positive
 export class VideoEditor {
-  constructor(options?: { sync?: pub.VideoEditorStore; assets?: pub.VideoEditorAssetStore })
+  constructor(options?: { sync?: VideoEditorDocumentSync; assets?: VideoEditorAssetStore })
 }
 
 export interface VideoEditor {
@@ -534,6 +534,7 @@ export interface Rational {
 
   add: (other: Schema.Rational) => Rational
   subtract: (other: Schema.Rational) => Rational
+  negate: () => Rational
   toRate: (rate: number) => Rational
   compare: (other: Schema.Rational) => number
   isLessThan: (other: Schema.Rational) => boolean

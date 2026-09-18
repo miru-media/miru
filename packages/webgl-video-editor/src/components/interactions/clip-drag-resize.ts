@@ -1,45 +1,22 @@
 import type { DragEvent } from '@interactjs/actions/drag/plugin.js'
 import type { ResizeEvent } from '@interactjs/actions/resize/plugin.js'
 import interact from '@interactjs/interact'
-import { effect, ref } from 'fine-jsx'
+import { effect } from 'fine-jsx'
 
-import type * as pub from '#core'
-import type { ClipResize } from '#internal'
 import { Rational } from 'shared/utils/math.ts'
 
 import styles from '../../css/index.module.css'
-import type { EditNodeLink } from '../../document-views/edit/edit-node-link.ts'
 import type { EditView } from '../../document-views/edit/edit-nodes.ts'
 import type { VideoEditor } from '../../video-editor.ts'
-import { ensureDurationIsPlayable } from '../utils.ts'
 
-const GAPPED = true as boolean
-
-const enum ClipIndex {
+const enum ClipPos {
   Prev = 0,
   Cur = 1,
   Next = 2,
 }
 
-export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } => {
-  const resize: ClipResize = {
-    docDuration: ref(0),
-    isResizing: ref(false),
-    clips: [undefined, undefined as never, undefined],
-    linkedClips: [],
-  }
-
-  // apply a value in the context of the target clip and all linked clips
-  const setResizedValue = <Key extends 'duration' | 'sourceStart' | 'gap'>(
-    target: ClipIndex,
-    key: Key,
-    value: pub.AnyClip[Key],
-  ): void => {
-    resize.linkedClips.forEach((adjacentClips) => {
-      const clip = adjacentClips[target]
-      if (clip) clip[key] = value
-    })
-  }
+export const useClipDragResize = (editor: VideoEditor): void => {
+  const resize = editor._editor.doc.clipResize
 
   const getSelectedClip = (): EditView.AnyClip | undefined => {
     const { selection, doc } = editor._editor
@@ -47,67 +24,28 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
   }
 
   const onResizeStart = (): void => {
-    const { doc } = editor
     const clip = getSelectedClip()
     if (!clip) return
 
     editor.playback.pause()
-    resize.docDuration.value = doc.duration
-
-    const { prev, next } = clip
-    resize.clips = [prev, clip, next]
-    resize.linkedClips = (clip.link as EditNodeLink<pub.AnyClip> | undefined)?.nodes.map((clip) => [
-      clip.prev,
-      clip,
-      clip.next,
-    ]) ?? [resize.clips]
+    resize.start(clip)
 
     resize.linkedClips.forEach(([prev, cur, next]) => {
       prev?._startEditing(['duration', 'sourceStart'])
       ;[cur, next].forEach((c) => c?._startEditing(['duration', 'sourceStart', 'gap']))
     })
-
-    resize.isResizing.value = true
   }
 
   const onResizeMove = ({ rect, edges }: ResizeEvent): void => {
-    const clip = getSelectedClip()
-    if (!clip) return
-
-    const { frameRate } = editor.doc
-    const { prev, next, duration } = clip
-    const newStart = Rational.fromDecimal(editor.pixelsToSeconds(rect.left), frameRate)
-    const newDuration = Rational.fromDecimal(editor.pixelsToSeconds(rect.width), frameRate)
-    const delta = newDuration.subtract(duration)
-
-    if (edges?.left === true) setResizedValue(ClipIndex.Cur, 'sourceStart', clip.sourceStart.subtract(delta))
-
-    setResizedValue(ClipIndex.Cur, 'duration', newDuration)
-
-    if (GAPPED) {
-      if (edges?.left === true) setResizedValue(ClipIndex.Cur, 'gap', clip.gap.subtract(delta))
-      else if (next) setResizedValue(ClipIndex.Next, 'gap', next.gap.subtract(delta))
-    } else {
-      if (edges?.right === true) ensureDurationIsPlayable(clip)
-      if (prev)
-        setResizedValue(
-          ClipIndex.Prev,
-          'duration',
-          newStart.subtract(Rational.fromDecimal(prev.time.start, frameRate)),
-        )
-    }
+    resize.move(
+      editor.pixelsToSeconds(rect.left),
+      editor.pixelsToSeconds(rect.width),
+      edges as { left: boolean; right: boolean },
+    )
   }
 
   const onResizeEnd = (): void => {
-    const isResizing = resize.isResizing.value
-    if (!isResizing) return
-
-    resize.isResizing.value = false
-    resize.docDuration.value = 0
-    const { clips, linkedClips } = resize
-
-    editor._transact(() => linkedClips.forEach((clips) => clips.forEach((clip) => clip?._applyEdits())))
-    ;(clips as unknown[]).length = 0
+    editor._editor._transact(() => resize.end())
   }
 
   effect((onCleanup) => {
@@ -117,7 +55,7 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
     const interactable = interact('[data-interactive-clip-id]', {
       context,
       getRect(element) {
-        const clip = getSelectedClip()
+        const clip = resize.isActive() ? resize.clips[ClipPos.Cur] : getSelectedClip()
         if (!clip) return { left: 0, right: 0, top: 0, bottom: 0 }
 
         const { time } = clip
@@ -132,39 +70,21 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
         modifiers: [
           interact.modifiers.restrictEdges({
             outer: () => {
-              const clip = getSelectedClip()
-              if (!clip) return { left: 0, right: 0, top: 0, bottom: 0 }
-
-              const { time, prev } = clip
-              const mediaDuration = clip.asset?.duration
-              const minStartTime = Math.max(
-                mediaDuration == null ? 0 : time.end - mediaDuration,
-                GAPPED
-                  ? (prev?.time.end ?? 0)
-                  : Math.max(0, prev ? prev.time.start + 1 / clip.doc.frameRate : 0),
-              )
-              const maxEndTime = Math.min(
-                mediaDuration == null ? Infinity : time.start + mediaDuration,
-                GAPPED ? (clip.next?.time.start ?? Infinity) : Infinity,
-              )
+              const { start, end } = resize.getOuterLimit()
 
               return {
-                left: editor.secondsToPixels(minStartTime),
-                right: editor.secondsToPixels(maxEndTime),
+                left: editor.secondsToPixels(start),
+                right: editor.secondsToPixels(end),
                 top: -Infinity,
                 bottom: Infinity,
               }
             },
             inner: () => {
-              const clip = getSelectedClip()
-              if (!clip) return { left: 0, right: 0, top: 0, bottom: 0 }
-
-              const { time } = clip
-              const minDuration = 1 / clip.doc.frameRate
+              const { start, end } = resize.getInnerLimit()
 
               return {
-                left: editor.secondsToPixels(time.end - minDuration),
-                right: editor.secondsToPixels(time.start + minDuration),
+                left: editor.secondsToPixels(start),
+                right: editor.secondsToPixels(end),
                 top: Infinity,
                 bottom: -Infinity,
               }
@@ -192,8 +112,9 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
           start(event: DragEvent): void {
             const clip = getSelectedClip()
 
-            if (clip) editor.drag.start(clip)
-            else event.interaction.end()
+            if (clip) {
+              editor.drag.start(clip) || event.interaction.end()
+            } else event.interaction.end()
           },
           move({ rect, pageY, y0 }: DragEvent): void {
             editor.drag.newStart = Rational.fromDecimal(
@@ -215,6 +136,4 @@ export const useClipDragResize = (editor: VideoEditor): { resize: ClipResize } =
       onResizeEnd()
     })
   })
-
-  return { resize }
 }

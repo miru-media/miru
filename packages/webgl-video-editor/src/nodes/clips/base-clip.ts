@@ -86,9 +86,7 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     super._init()
 
     this._asset = computed((): pub.MediaAsset | undefined =>
-      !this.isDisposed && this.mediaRef?.assetId
-        ? this.doc.assets.getAsset(this.mediaRef.assetId)
-        : undefined,
+      this.mediaRef?.assetId ? this.doc.assets.getAsset(this.mediaRef.assetId) : undefined,
     )
     this._presentationTime = computed(() => this._computePresentationTime())
     this._playableTime = computed(() => this._computePlayableTime())

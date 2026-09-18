@@ -3,7 +3,6 @@ import { uid } from 'uid'
 import { Renderer as EffectRenderer } from 'webgl-effects'
 
 import type * as pub from '#core'
-import type { ClipResize } from '#internal'
 import type * as Schema from '#schema'
 import type { Size } from 'shared/types'
 import { IS_FIREFOX } from 'shared/userAgent.ts'
@@ -53,7 +52,9 @@ export class VideoEditor implements pub.VideoEditor {
   get drag() {
     return this.doc.clipDrag
   }
-  resize: ClipResize
+  get resize() {
+    return this.doc.clipResize
+  }
 
   effectRenderer: EffectRenderer
   playback: PlaybackDocument
@@ -142,7 +143,8 @@ export class VideoEditor implements pub.VideoEditor {
     this.#ownsDoc = !sync
     this.sync = sync
     this.doc = doc
-    ;({ resize: this.resize } = useClipDragResize(this))
+
+    useClipDragResize(this)
     useTrackDropzone(this)
 
     const renderView = new RenderDocument({

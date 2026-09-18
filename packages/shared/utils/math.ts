@@ -61,6 +61,11 @@ export class Rational {
     return Rational.simplified(this.value * other.rate - other.value * this.rate, this.rate * other.rate)
   }
 
+  negate(): Rational {
+    const { value, rate } = this
+    return new Rational(0 - value, rate)
+  }
+
   toRate(rate: number): Rational {
     return new Rational(Math.round((this.value / this.rate) * rate), rate)
   }

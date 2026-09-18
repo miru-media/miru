@@ -88,3 +88,41 @@ export const makeAvAsset = (id: string, duration: number, uri?: string): Schema.
   },
   uri,
 })
+
+export const tracksFromString = (str: string, { rate = 1 } = {}) => {
+  const lines = str.trim().split('\n')
+
+  const tracks = lines
+    .filter((line) => !line.startsWith('#'))
+    .map((s, i) => {
+      const { type, content } = /(?<type>v|a)\s*\[(?<content>[^]*)\]/u.exec(s)!.groups!
+      const track = (type === 'v' ? makeVideoTrack : makeAudioTrack)(`track-${i}`, [])
+
+      let curClip: Schema.AnyClip | undefined
+      let prevGap = 0
+
+      for (const char of content) {
+        if (char === ' ') {
+          curClip = undefined
+          prevGap += 1
+          continue
+        }
+
+        if (curClip?.id !== char) {
+          curClip = (type === 'v' ? makeVideoClip : makeAudioClip)({
+            id: char,
+            duration: { value: 0, rate },
+            gap: { value: prevGap, rate },
+          })
+          prevGap = 0
+          track.children.push(curClip as any)
+        }
+
+        curClip.duration.value += 1
+      }
+
+      return track
+    })
+
+  return tracks
+}

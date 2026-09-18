@@ -15,7 +15,8 @@
     "#otio": "./src/otio/index.ts",
     "#core": "./types/core.d.ts",
     "#schema": "./types/schema.d.ts",
-    "#internal": "./types/internal.d.ts"
+    "#internal": "./types/internal.d.ts",
+    "#tests/*": "./tests/*"
   },
   "exports": {
     ".": "./src/index.ts",

@@ -58,12 +58,12 @@ export const ClipProperties = () => {
               {/* TODO: improve linking UX */}
               {() => {
                 const linkedAudio =
-                  selection.isVideo() && selection.isMediaClip() && selection.asset?.audio
-                    ? selection.linkedAudio
-                    : undefined
+                  selection.isVideo() && selection.isMediaClip() ? selection.linkedAudio : undefined
 
                 return (
-                  linkedAudio && <AudioClipProperties {...{ clip: editor.doc.nodes.get(linkedAudio.id) }} />
+                  linkedAudio?.mediaRef && (
+                    <AudioClipProperties {...{ clip: editor.doc.nodes.get(linkedAudio.id) }} />
+                  )
                 )
               }}
             </div>

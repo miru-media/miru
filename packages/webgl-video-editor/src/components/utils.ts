@@ -52,6 +52,7 @@ export const moveAndFillGaps = (
   node: pub.AnyTrackChild,
   position: pub.ChildNodePosition,
   newStart: Rational,
+  padEnd?: Rational,
 ) => {
   const nodeAtPosition = getNodeAtTargetPosition<pub.AnyTrackChild>(node.doc, position)
   const nodeBeforePosition = nodeAtPosition
@@ -60,15 +61,12 @@ export const moveAndFillGaps = (
   const newNextNode = node === nodeAtPosition ? node.next : nodeAtPosition
   const newPrevClipEnd = nodeBeforePosition?.timeRational.end ?? Rational.ZERO
 
-  let startGap = Rational.max(newStart.subtract(newPrevClipEnd), Rational.ZERO)
+  const startGap = Rational.max(newStart.subtract(newPrevClipEnd), Rational.ZERO)
   let endGap =
     newNextNode?.timeRational.start
       .subtract(Rational.max(newStart, newPrevClipEnd))
       .subtract(node.duration) ?? Rational.ZERO
-  if (endGap.value < 0) {
-    startGap = Rational.max(startGap.add(endGap), Rational.ZERO)
-    endGap = Rational.ZERO
-  }
+  endGap = Rational.max(padEnd ? endGap.add(padEnd) : endGap, Rational.ZERO)
 
   // fill gap at old position
   node.next?.setGap(

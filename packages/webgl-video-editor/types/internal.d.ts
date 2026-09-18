@@ -1,8 +1,4 @@
-import type { Ref } from 'fine-jsx'
-
 import type { Schema } from '#core'
-
-import type { EditView } from '../src/document-views/edit/edit-nodes.ts'
 
 export interface SchemaTypes {
   track: Schema.AnyTrack
@@ -29,20 +25,3 @@ export type NonReadonly<T> = { -readonly [P in keyof T]: T[P] }
 export type KeyofUnion<T> = T extends T ? keyof T : never
 export type NonOverlappingUnion<T, U> = T & Pick<U, Exclude<keyof U, keyof T>>
 export type Valueof<T> = T[KeyofUnion[T]]
-
-export interface ClipDrag {
-  isDragging: Ref<boolean>
-  x: Ref<number>
-  targetTrack: Ref<{ id: string; before: boolean } | undefined>
-  targetIndex: Ref<number>
-  clip: Ref<EditView.AnyClip | undefined>
-  clipWasAloneInTrack: Ref<boolean>
-}
-
-type ClipResizeClips = [prev?: EditView.AnyClip, self: EditView.AnyClip, next?: EditView.AnyClip]
-export interface ClipResize {
-  docDuration: Ref<number>
-  isResizing: Ref<boolean>
-  clips: ClipResizeClips
-  linkedClips: ClipResizeClips[]
-}

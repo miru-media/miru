@@ -69,28 +69,36 @@ export const EDITOR_SELECTION_ACTIONS: pub.VideoEditorAction[] = [
       const { selection, doc } = editor._editor
       if (!selection) return
 
-      if (!selection.isNode) {
-        ;(selection.node.link?.nodes ?? [selection.node]).forEach((node) => {
-          doc.nodes.get<pub.AnyClip>(node.id).gap = Rational.ZERO
+      if (selection.isNode) {
+        const { link } = selection
+
+        const nodes = link?.nodes.slice() ?? [selection]
+
+        nodes.forEach((node) => {
+          const { next, parent } = node
+          const newGapDuration =
+            GAPPED && node.isClip() && next
+              ? node.gap.add(node.duration).add(node.next?.gap ?? Rational.ZERO)
+              : Rational.ZERO
+
+          node.delete()
+          if (next) next.gap = newGapDuration
+          if (!parent?.head) parent?.delete()
         })
-        return
+      } else {
+        const linkedNodes = (selection.node.link?.nodes ?? [selection.node]).map((node) =>
+          doc.nodes.get<pub.AnyClip>(node.id),
+        )
+        const minGap = linkedNodes.reduce(
+          (acc, node) => (node.gap.value === 0 ? acc : Rational.min(acc, node.gap)),
+          selection.node.gap,
+        )
+        linkedNodes.forEach((node) => {
+          node.gap = Rational.max(node.gap.subtract(minGap), Rational.ZERO)
+        })
       }
 
-      const { link } = selection
-
-      const nodes = link?.nodes.slice() ?? [selection]
-
-      nodes.forEach((node) => {
-        const { next, parent } = node
-        const newGapDuration =
-          GAPPED && node.isClip() && next
-            ? node.gap.add(node.duration).add(node.next?.gap ?? Rational.ZERO)
-            : Rational.ZERO
-
-        node.delete()
-        if (next) next.gap = newGapDuration
-        if (!parent?.head) parent?.delete()
-      })
+      editor.select(undefined)
     },
   },
   ...(import.meta.env.DEV

@@ -9,6 +9,7 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import { defineWrapperProps } from '../utils.ts'
 
 import { ClipDragContext } from './clip-drag-context.ts'
+import { ClipResizeContext } from './clip-resize-context.ts'
 import { EditNodeLink } from './edit-node-link.ts'
 import { EditClip, EditView } from './edit-nodes.ts'
 
@@ -68,6 +69,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   emit = this.doc.emit.bind(this.doc)
 
   readonly clipDrag = new ClipDragContext()
+  readonly clipResize = new ClipResizeContext()
 
   constructor(doc: pub.Document) {
     super(doc)

@@ -28,6 +28,7 @@ export namespace EditView {
   export type Timeline = ProxyOf<pub.Timeline>
   export type VideoTrack = ProxyOf<pub.VideoTrack>
   export type AudioTrack = ProxyOf<pub.AudioTrack>
+  export type AnyTrack = VideoTrack | AudioTrack
   export type VideoClip = EditClip<pub.VideoClip> & ProxyOf<pub.VideoClip>
   export type AudioClip = EditClip<pub.AudioClip> & ProxyOf<pub.AudioClip>
   export type TextClip = EditClip<pub.TextClip> & ProxyOf<pub.TextClip>
@@ -47,14 +48,15 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
   readonly _boundMethods: Record<string | symbol, (...args: unknown[]) => unknown>
 
   readonly _editedProps = ref<Partial<T>>()
-  readonly _editedPosition = ref<pub.ChildNodePosition>()
 
   _isEnding = false
 
   declare parent?: ViewType<ViewTypeMap, T['parent']>
   declare prev?: ViewType<ViewTypeMap, T['prev']>
   declare next?: ViewType<ViewTypeMap, T['next']>
-  declare children?: T extends { children: any[] } ? ViewType<ViewTypeMap, T['children'][number]>[] : never
+  declare head?: T extends pub.ParentNode<infer TChild> ? ViewType<ViewTypeMap, TChild> : never
+  declare tail?: T extends pub.ParentNode<infer TChild> ? ViewType<ViewTypeMap, TChild> : never
+  declare children?: T extends pub.ParentNode<infer TChild> ? ViewType<ViewTypeMap, TChild>[] : never
 
   get link(): T extends EditNodeLink.Linkable ? EditNodeLink<T> | undefined : never {
     const { link } = this.original as EditNodeLink.Linkable
@@ -161,7 +163,7 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
 
       // node array properties
       case 'children':
-        return (original as pub.AnyTrack)[key].map((node) => target.docView._getNode(node))
+        return (original as pub.AnyParentNode)[key].map((node) => target.docView._getNode(node))
 
       // clip time properties and methods
       case 'time':
