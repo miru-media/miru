@@ -102,17 +102,24 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
 
     this.videoIsReady = false
 
-    if (!this.currentVideoFrame) if (await this.readNextVideoFrame()) return
+    if (!this.currentVideoFrame) {
+      if (await this.readNextVideoFrame()) {
+        this.videoIsReady = true
+        return
+      }
+     }
 
     while (this.currentVideoFrame) {
       if (this.#hasCurrentVideoFrame(sourceTimeUs)) {
         this.videoIsReady = true
-        break
+        return
       }
 
       // eslint-disable-next-line no-await-in-loop -- TODO: use async iterator
       if (await this.readNextVideoFrame()) break
     }
+
+    this.videoIsReady = true
   }
 
   /** @returns `true` if the sample iterator is done */
