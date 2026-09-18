@@ -371,9 +371,12 @@
 
 .panelBody {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.625rem;
-  align-items: start;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
   overflow-y: auto;
 }
 
