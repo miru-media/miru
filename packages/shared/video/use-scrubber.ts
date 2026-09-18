@@ -1,7 +1,7 @@
 import { ref, toValue } from 'fine-jsx'
 import type { MaybeRefOrGetter } from 'fine-jsx'
 
-import { useEventListener } from 'shared/utils/index.ts'
+import { isElement, useEventListener } from 'shared/utils/index.ts'
 
 export const useScrubber = (
   context: {
@@ -24,7 +24,11 @@ export const useScrubber = (
       event.button !== 0 ||
       event.ctrlKey ||
       event.shiftKey ||
-      event.altKey
+      event.altKey ||
+      (isElement(event.target) &&
+        event.target.closest(
+          'button,label:has(select,input),select,input,textarea,[contenteditable=true],dialog',
+        ))
     )
       return
 

@@ -46,6 +46,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       }),
       effects: toVue(() => editor.effects),
       exportProgress: toVue(() => editor.exportProgress),
+      viewportContainerSize: toVue(() => editor.viewportContainerSize),
       viewportSize: toVue(() => editor.viewportSize),
       isMobileWorkspace: toVue(() => editor.isMobileWorkspace),
       canvasZoom: toVue(() => editor.canvasZoom),

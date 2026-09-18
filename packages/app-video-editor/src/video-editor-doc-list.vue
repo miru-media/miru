@@ -124,7 +124,7 @@ const onInputOtio = async (event: InputEvent) => {
   margin: 0;
   display: grid;
   list-style: none;
-  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
   align-items: stretch;
   gap: 0.75rem;
 }

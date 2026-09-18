@@ -57,7 +57,7 @@ watch(editor, (editor, _prev, onCleanup) => {
 </script>
 
 <template>
-  <VideoEditorDocError v-if="error" backUrl="/video-editor" />
+  <VideoEditorDocError v-if="error" backUrl="/video-editor/" />
   <VideoEditorDoc v-else-if="editor" class="fullscreen-app" :editor>
     <template #header-start>
       <router-link to="/" class="nav-brand mt-[-6px] px-2 flex-shrink-0" :title="$t('close_project')">

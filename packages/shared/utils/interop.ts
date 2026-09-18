@@ -1,4 +1,13 @@
-import { computed, effect, isRef, type MaybeRefOrGetter, onScopeDispose, ref, toValue } from 'fine-jsx'
+import {
+  computed,
+  effect,
+  getCurrentScope,
+  isRef,
+  type MaybeRefOrGetter,
+  onScopeDispose,
+  ref,
+  toValue,
+} from 'fine-jsx'
 import type * as Vue from 'vue'
 
 export const toVue = <T>(
@@ -11,6 +20,7 @@ export const toVue = <T>(
   },
 ): Vue.Ref<T> =>
   customRef<T>((track, trigger) => {
+    const scope = getCurrentScope()
     let stopEffect: (() => void) | undefined
     let isDisposed = false
 
@@ -22,11 +32,17 @@ export const toVue = <T>(
     return {
       get() {
         track()
-        if (!stopEffect && !isDisposed)
-          stopEffect = effect(() => {
-            toValue(fineJsxSource)
-            trigger()
-          })
+        if (!stopEffect && !isDisposed) {
+          const createEffect = () => {
+            stopEffect = effect(() => {
+              toValue(fineJsxSource)
+              trigger()
+            })
+          }
+
+          if (scope) scope.run(createEffect)
+          else createEffect()
+        }
 
         return toValue(fineJsxSource)
       },

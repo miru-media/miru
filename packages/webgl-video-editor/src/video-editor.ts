@@ -35,6 +35,7 @@ export class VideoEditor implements pub.VideoEditor {
   readonly _timelineContainer = ref<HTMLElement>()
   readonly _timelineSize = useElementSize(this._timelineContainer)
   readonly _viewportContainer = ref<HTMLElement>()
+  readonly _viewportContainerSize = useElementSize(this._viewportContainer)
   readonly _fullscreen = useFullscreen(this._viewportContainer)
   readonly _viewportSize: Ref<Size>
   readonly _viewport = ref<HTMLElement>()
@@ -115,6 +116,9 @@ export class VideoEditor implements pub.VideoEditor {
     return this.doc.timeline.children
   }
 
+  get viewportContainerSize(): Size {
+    return this._viewportContainerSize.value
+  }
   get viewportSize(): Size {
     return this._viewportSize.value
   }
