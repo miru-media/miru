@@ -1,3 +1,27 @@
+# [0.3.0](https://gitea.com/miru/miru/compare/webgl-video-editor@0.2.2...webgl-video-editor@0.3.0) (2026-09-19)
+
+
+### Bug Fixes
+
+* **webgl-video-editor:** address host styling overrides ([#75](https://gitea.com/miru/miru/issues/75)) ([1fa9944](https://gitea.com/miru/miru/commits/1fa994484f2f8552c199620c22723f0bad2ce657))
+* **webgl-video-editor:** dispose render node views properly ([89607f9](https://gitea.com/miru/miru/commits/89607f9a724d9e27361893715a9ee08a062b18b5))
+* **webgl-video-editor:** dispose vue node views properly ([b34b0f4](https://gitea.com/miru/miru/commits/b34b0f4d0f6203acf27f0cd2fca244d1c7b4fe48))
+* **webgl-video-editor:** fix export of audio clips ([4306345](https://gitea.com/miru/miru/commits/430634547ba1e94d05ffb7d0b7e1f2415a0edcfc))
+* **webgl-video-editor:** fix layout and interactivity issues ([df1fe02](https://gitea.com/miru/miru/commits/df1fe0231d1907c4289a048056241891061d9dd2))
+* **webgl-video-editor:** improve asset bin scrolling ([7e54ea0](https://gitea.com/miru/miru/commits/7e54ea0902c8dee0f9843010664d44d6919d73be))
+* **webgl-video-editor:** improve canvas clip gestures ([255f28f](https://gitea.com/miru/miru/commits/255f28fe44ab24047d9c681554f311c44acdf7f1))
+* **webgl-video-editor:** improve layout, button labels, rotation ([e9cad79](https://gitea.com/miru/miru/commits/e9cad79a6a6c87306205b82fe13b03653dd9e84f))
+
+
+### Features
+
+* allow hosts to customize asset bin import ([#68](https://gitea.com/miru/miru/issues/68)) ([704b566](https://gitea.com/miru/miru/commits/704b5665fc9d36f891067c8d802780f72038c47e))
+* update video editor project list design ([50ec048](https://gitea.com/miru/miru/commits/50ec048c30dfec4e5fcef19cefb68060e3ceb45d))
+* **webgl-video-editor:** augment editor actions for simple links ([09e05f9](https://gitea.com/miru/miru/commits/09e05f95250e2242becfd156263b736172b993af))
+* **webgl-video-editor:** create video clips with linked audio clips ([87a836b](https://gitea.com/miru/miru/commits/87a836b28205cb8baa6eff558381530f9505103d))
+* **webgl-video-editor:** implement foundation for linked clips ([94fc53a](https://gitea.com/miru/miru/commits/94fc53a1de4183311f170aae0cdff6d854c33002))
+* **webgl-video-editor:** implement image clips ([d063eb1](https://gitea.com/miru/miru/commits/d063eb12246cf46f357363a29b688af5f5f7abc6))
+* **webgl-video-editor:** improve linked clip drag and resize ([b902e29](https://gitea.com/miru/miru/commits/b902e2957407e66b119a515a25f8799784acaeb0))
 ## [0.2.2](https://gitea.com/miru/miru/compare/webgl-video-editor@0.2.1...webgl-video-editor@0.2.2) (2026-07-24)
 
 

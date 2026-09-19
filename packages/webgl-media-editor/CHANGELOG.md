@@ -1,3 +1,4 @@
+## [0.3.3](https://gitea.com/miru/miru/compare/webgl-media-editor@0.3.2...webgl-media-editor@0.3.3) (2026-09-19)
 ## [0.3.2](https://gitea.com/miru/miru/compare/webgl-media-editor@0.3.1...webgl-media-editor@0.3.2) (2026-07-24)
 
 

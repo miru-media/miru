@@ -1,3 +1,4 @@
+## [0.3.3](https://gitea.com/miru/miru/compare/webgl-effects@0.3.2...webgl-effects@0.3.3) (2026-09-19)
 ## [0.3.2](https://gitea.com/miru/miru/compare/webgl-effects@0.3.1...webgl-effects@0.3.2) (2026-07-24)
 ## [0.3.1](https://gitea.com/miru/miru/compare/webgl-effects@0.3.0...webgl-effects@0.3.1) (2026-07-23)
 # [0.3.0](https://gitea.com/miru/miru/compare/webgl-effects@0.2.0...webgl-effects@0.3.0) (2026-07-21)
