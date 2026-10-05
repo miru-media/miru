@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call -- missing YTree types in fix branch */
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import * as Y from 'yjs'
 import type { YTree } from 'yjs-orderedtree'

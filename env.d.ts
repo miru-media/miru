@@ -87,11 +87,9 @@ declare module 'markdown-it-task-lists' {
 }
 
 declare module 'yjs-orderedtree' {
-  const m =
-    await import('./node_modules/.pnpm/yjs-orderedtree@1.0.1-beta.3_yjs@13.6.31/node_modules/yjs-orderedtree/dist/types/index.ts')
-
-  export class YTree extends m.YTree {}
-  export const { checkForYTree } = m
+  export const YTree: new (...args) => any
+  export type YTree = any
+  export const { checkForYTree } = (..._args: unknown[]) => boolean
 }
 declare module 'y-webxdc' {
   const val: any

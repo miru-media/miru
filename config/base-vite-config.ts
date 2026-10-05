@@ -21,6 +21,14 @@ const isProd = process.env.NODE_ENV === 'production'
 export const extendViteConfig = (config: UserConfig): UserConfig => {
   const baseConfig = defineConfig({
     logLevel: 'info',
+    resolve: {
+      alias: {
+        'yjs-orderedtree': resolve(
+          ROOT,
+          'node_modules/.pnpm/yjs-orderedtree@https+++codeload.github.com+miru-media+yjs-orderedtree+tar.gz+9e56a0313_70e35e724873e59896f11b75b6e8655c/node_modules/yjs-orderedtree/src/index.js',
+        ),
+      },
+    },
     plugins: [
       cssModuleHmr(),
       autoImport(autoImportOptions),

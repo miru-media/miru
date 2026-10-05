@@ -30,6 +30,7 @@ catalog:
   idb-keyval: ^6.2.2
   libavjs-webcodecs-polyfill: ^0.5.5
   mediabunny: ^1.40.0
+  position-strings: '^2.0.1'
   stats.js: ^0.17.0
   three: ^0.177.0
   throttle-debounce: ^5.0.2
@@ -40,7 +41,7 @@ catalog:
   vue-i18n-lite: ^1.0.2
   yjs: ^13.6.29
   y-indexeddb: ^9.0.12
-  yjs-orderedtree: 1.0.1-beta.3
+  yjs-orderedtree: https://github.com/miru-media/yjs-orderedtree.git#feat-custom-insert-before
   y-webrtc: ^10.3.0
   y-websocket: ^3.0.0
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call -- missing YTree types in fix branch */
+import { PositionSource } from 'position-strings'
 import * as Y from 'yjs'
 import { YTree } from 'yjs-orderedtree'
 
@@ -29,7 +31,10 @@ const createYarrayOfYmaps = (values: Record<string, unknown>[]): Y.Array<Y.Map<u
 export const initYjsRoot = (
   root: Y.Doc | Y.Map<any>,
 ): { ytree: YTree; settings: Y.Map<any>; links: Y.Array<Schema.NodeLink>; ydoc: Y.Doc } => {
-  const ytree = new YTree(getOrCreateYmap(root, YTREE_YMAP_KEY))
+  const positionSource = new PositionSource()
+  const ytree = new YTree(getOrCreateYmap(root, YTREE_YMAP_KEY), {
+    insertBetween: positionSource.createBetween.bind(positionSource),
+  })
   const settignsYmap = getOrCreateYmap(root, 'settings')
   const linksArray =
     'getArray' in root

@@ -62,11 +62,11 @@
     "@interactjs/core": "^1.10.27",
     "@interactjs/interact": "^1.10.27",
     "@interactjs/modifiers": "^1.10.27",
+    "@libav.js/variant-opus": "catalog:",
     "comlink": "catalog:",
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "idb-keyval": "catalog:",
-    "@libav.js/variant-opus": "catalog:",
     "libavjs-webcodecs-polyfill": "catalog:",
     "mediabunny": "catalog:",
     "pixi.js": "^8.19.0",
@@ -79,11 +79,15 @@
     "webgl-media-editor": "workspace:^"
   },
   "peerDependencies": {
+    "position-strings": "catalog:",
     "vue": "3",
     "yjs": "catalog:",
     "yjs-orderedtree": "catalog:"
   },
   "peerDependenciesMeta": {
+    "position-strings": {
+      "optional": true
+    },
     "yjs": {
       "optional": true
     },

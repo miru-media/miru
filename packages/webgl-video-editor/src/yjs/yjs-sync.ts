@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call -- missing YTree types in fix branch */
 import { ref } from 'fine-jsx'
 import type { Size } from 'webgl-effects'
 import * as Y from 'yjs'
@@ -103,6 +104,31 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
           }
         }
       })
+    }
+
+    // update ytree order to position-strings
+    {
+      const ytreeMap = ytree._ymap as Y.Map<Y.Map<Y.Map<{ counter: number; order: string }>>>
+      if (
+        !Array.from(ytreeMap.values()).some((entry) => {
+          const firstParent = entry.get('_parentHistory')!.values().next()
+          return firstParent.done ? false : /^(?:\w+\.\w+,|$)+/u.test(firstParent.value.order)
+        })
+      ) {
+        let lastPosition = ''
+        const newOrders: Record<string, string> = Object.fromEntries(
+          Array.from(ytreeMap.values())
+            .flatMap((entry) => [...entry.get('_parentHistory')!.values()].map((p) => p.order))
+            .sort()
+            .map((order) => [order, (lastPosition = ytree._insertBetween(lastPosition, undefined))]),
+        )
+
+        for (const entry of ytreeMap.values()) {
+          const parentHistory = entry.get('_parentHistory')!
+          for (const [id, { counter, order }] of parentHistory)
+            parentHistory.set(id, { counter, order: newOrders[order] })
+        }
+      }
     }
 
     ydoc.on('destroy', this.dispose.bind(this))

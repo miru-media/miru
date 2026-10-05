@@ -60,6 +60,9 @@ catalogs:
     mediabunny:
       specifier: ^1.40.0
       version: 1.50.9
+    position-strings:
+      specifier: ^2.0.1
+      version: 2.0.1
     stats.js:
       specifier: ^0.17.0
       version: 0.17.0
@@ -94,7 +97,7 @@ catalogs:
       specifier: ^13.6.29
       version: 13.6.31
     yjs-orderedtree:
-      specifier: 1.0.1-beta.3
+      specifier: https://github.com/miru-media/yjs-orderedtree.git#feat-custom-insert-before
       version: 1.0.1-beta.3
 
 pnpmfileChecksum: sha256-Y7IpIdQvOO2GI65WfPCRNwNi12YRbJTEK9SRedIlX0c=
@@ -704,6 +707,9 @@ importers:
       pixi.js:
         specifier: ^8.19.0
         version: 8.19.0
+      position-strings:
+        specifier: 'catalog:'
+        version: 2.0.1
       stats.js:
         specifier: 'catalog:'
         version: 0.17.0
@@ -733,7 +739,7 @@ importers:
         version: 13.6.31
       yjs-orderedtree:
         specifier: 'catalog:'
-        version: 1.0.1-beta.3(yjs@13.6.31)
+        version: https://codeload.github.com/miru-media/yjs-orderedtree/tar.gz/9e56a0313e5cf41eedde8ead052771872bb78cfd(yjs@13.6.31)
 
   packages/webxdc-video-editor:
     dependencies:
@@ -3694,6 +3700,9 @@ packages:
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
+
+  '@types/seedrandom@2.4.34':
+    resolution: {integrity: sha512-ytDiArvrn/3Xk6/vtylys5tlY6eo7Ane0hvcx++TKo6RxQXuVfW0AF/oeWqAj9dN29SyhtawuXstgmPlwNcv/A==}
 
   '@types/semver@7.7.1':
     resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
@@ -7362,6 +7371,9 @@ packages:
   pnpm-workspace-yaml@1.6.1:
     resolution: {integrity: sha512-yTeZntGWi8m9WNuhoVsP0DpFc4sC1U0+rr/qR6Zi9n2g3sxXY+JfccjXjjruNz96tM8I09yaJUA86doRnNLkbg==}
 
+  position-strings@2.0.1:
+    resolution: {integrity: sha512-kPVJHLd4q1HnWROKmrbEpKZ0s1FrKt5G6W96wc1PYBGJ2Gw/ZcxhMoRbDw6g02fUiaPTM5/L/fAaUOzE7I/GUg==}
+
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -9705,8 +9717,9 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
-  yjs-orderedtree@1.0.1-beta.3:
-    resolution: {integrity: sha512-VHIstDLaVvrsc0u96tgQnsD2/usNEXCZI9AUX2eh747+xmWGNvs7Ud6lf2bQ67TO0lDzojoCvMIFtujMaxgW/A==}
+  yjs-orderedtree@https://codeload.github.com/miru-media/yjs-orderedtree/tar.gz/9e56a0313e5cf41eedde8ead052771872bb78cfd:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/miru-media/yjs-orderedtree/tar.gz/9e56a0313e5cf41eedde8ead052771872bb78cfd}
+    version: 1.0.1-beta.3
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     peerDependencies:
       yjs: ^13.6.23
@@ -12443,6 +12456,8 @@ snapshots:
   '@types/quantize@1.0.2': {}
 
   '@types/resolve@1.20.2': {}
+
+  '@types/seedrandom@2.4.34': {}
 
   '@types/semver@7.7.1': {}
 
@@ -16811,6 +16826,10 @@ snapshots:
     dependencies:
       yaml: 2.9.0
 
+  position-strings@2.0.1:
+    dependencies:
+      '@types/seedrandom': 2.4.34
+
   possible-typed-array-names@1.1.0: {}
 
   postcss-attribute-case-insensitive@8.0.0(postcss@8.5.20):
@@ -19405,7 +19424,7 @@ snapshots:
 
   yaml@2.9.0: {}
 
-  yjs-orderedtree@1.0.1-beta.3(yjs@13.6.31):
+  yjs-orderedtree@https://codeload.github.com/miru-media/yjs-orderedtree/tar.gz/9e56a0313e5cf41eedde8ead052771872bb78cfd(yjs@13.6.31):
     dependencies:
       heap-js: 2.7.1
       lib0: 0.2.117
