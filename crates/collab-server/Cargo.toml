@@ -1,0 +1,17 @@
+[package]
+name = "miru-collab-server"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+pretty-hex = "0.4.2"
+rcgen = "0.14.10"
+rustls = { version = "0.23.45", default-features = false, features = ["std", "ring"] }
+stun-types = "2.0.2"
+thiserror = "2.0.21"
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "net", "signal", "sync", "macros"] }
+tokio-graceful = "0.2.2"
+turn-types = "0.7.2"
+warp = { version = "0.3", features = ["tls"] }
+xflags = "0.3.2"
+yrs-warp = "0.9.0"

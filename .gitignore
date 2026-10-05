@@ -35,3 +35,5 @@ website/public/api
 
 *.tsbuildinfo
 .pnpm-store
+
+/target

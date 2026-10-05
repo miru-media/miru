@@ -42,6 +42,7 @@ export const useSyncedVideoEditor = (
 
       onCleanup(() => {
         isStale = true
+        webrtc.value?.disconnect()
         webrtc.value?.destroy()
         void idb.destroy()
         ydoc.destroy()
@@ -56,7 +57,18 @@ export const useSyncedVideoEditor = (
           sync.value = markRaw(new YjsSync(ydoc, new YjsAssetStore(ydoc.getMap('assets'))))
           editor.value = new VideoEditor({ sync: sync.value })
 
-          webrtc.value = markRaw(new WebrtcProvider(id, ydoc))
+          const stunUrl = (import.meta.env.VITE_COLLAB_STUN as string | undefined) ?? ''
+
+          webrtc.value = markRaw(
+            new WebrtcProvider(id, ydoc, {
+              signaling: [import.meta.env.VITE_COLLAB_SIGNALING].filter(Boolean),
+              peerOpts: {
+                config: {
+                  iceServers: stunUrl ? [{ urls: stunUrl }] : undefined,
+                },
+              },
+            }),
+          )
         })
         .catch((error_: unknown) => {
           error.value = error_

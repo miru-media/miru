@@ -1,0 +1,6 @@
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[patch.crates-io]
+yrs-warp = { git = "https://github.com/miru-media/yrs-warp.git", branch = "fix-signaling-ping" }
