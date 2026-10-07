@@ -161,7 +161,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
 
   async #prepareSource(entry_: AvAssetEntry): Promise<void> {
     const entry = entry_
-    await entry.asset._refreshObjectUrl()
+    if (!entry.asset.blob) await entry.asset._refreshObjectUrl()
 
     const { input, isAudioOnly } = entry
     const video = isAudioOnly ? null : (entry.video = await input.getPrimaryVideoTrack())
