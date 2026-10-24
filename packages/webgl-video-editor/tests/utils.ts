@@ -58,6 +58,19 @@ export const makeAudioClip = (
   ...init,
 })
 
+export const makeTextClip = (
+  init: Partial<Omit<Schema.SerializedTextClip, 'id' | 'type'>> & {
+    id: string
+  },
+): Schema.SerializedTextClip => ({
+  ...makeBaseClip(init.id, 'clip:text'),
+  content: 'text content',
+  fontFamily: 'monospace',
+  fontSize: 16,
+  inlineSize: 512,
+  ...init,
+})
+
 export const makeLink = (id: string, nodes: Schema.NodeLink['nodes']) => ({
   id,
   nodes: nodes.map(({ id, type }) => ({ id, type })),

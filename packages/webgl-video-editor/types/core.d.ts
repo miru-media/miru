@@ -37,10 +37,14 @@ export interface NodeFieldFlags {
   Asset: number
   Gap: number
   Constant: number
+  Animatable: number
+  Color: number
+  TransformProp: number
+  TextStyleProp: number
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional
-export interface NodeFieldDef<T extends {}, K extends keyof T = keyof T> {
+export interface NodeFieldDef<T extends {}, K extends Extract<keyof T, string> = Extract<keyof T, string>> {
   key: K
   flags: number
   defaultValue?: T[K]
@@ -58,6 +62,7 @@ export interface VideoEditorEvents {
   'node:move': events.NodeMoveEvent
   'node:update': events.NodeUpdateEvent
   'node:gap-update': events.NodeGapUpdateEvent
+  'node:list-change': events.NodeListChangeEvent
   'node:delete': events.NodeDeleteEvent
 
   'asset:create': events.AssetCreateEvent
@@ -82,6 +87,7 @@ export type AssetEventType = Extract<keyof VideoEditorEvents, `asset:${string}`>
 
 export interface Document extends Schema.DocumentSettings {
   readonly currentTime: number
+  readonly _currentFrameTime: Ref<Rational>
   readonly duration: number
   readonly timeline: Timeline
   readonly assets: VideoEditorAssetStore
@@ -133,17 +139,25 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   readonly doc: Document
   readonly parent?: AnyParentNode
   readonly index: number
-  prev?: AnyNode
-  next?: AnyNode
+  prev: AnyNode | undefined
+  next: AnyNode | undefined
   enabled: boolean
   effects: NonNullable<Schema.Base['effects']>
+  readonly animations: Partial<Record<string, Animation>>
+  readonly animationMap: Map<string, Animation>
+
+  isNode: true
   isDisposed: boolean
+
+  getLocalTimeOffset: () => Rational
+  _toggleKeyframesAt: (keys: string[], time: Rational) => void
+  _insertKeyframeAtTime: (key: string, value: unknown, time: Rational, index?: number) => void
+
   move: (position: ChildNodePosition | undefined) => void
   remove: () => void
-  isNode: true
   isTimeline: () => this is Timeline
   isTrack: () => this is AnyTrack
-  isTrackChild: () => this is AnyTrackChild
+  isTrackChild: () => this is AnyClip
   isClip: () => this is AnyClip
   isMediaClip: () => this is AnyMediaClip
   isImageClip: () => this is ImageClip
@@ -153,11 +167,12 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   toJSON: () => any
   delete: (deep?: boolean) => void
   dispose: (deep?: boolean) => void
+  [Symbol.dispose]: () => void
+
   /** @internal */
   _fields: <T extends BaseNode>(this: T) => NodeFieldDef<T>[]
-  _reactiveKeys: <T extends BaseNode>(this: T) => Set<keyof T>
-
-  [Symbol.dispose]: () => void
+  /** @internal */
+  _fieldsByKey: <T extends BaseNode>(this: T) => Partial<Record<string | number | symbol, NodeFieldDef<T>>>
 }
 
 export interface ParentNode<TChild extends AnyNode> extends BaseNode {
@@ -169,6 +184,8 @@ export interface ParentNode<TChild extends AnyNode> extends BaseNode {
   _unlinkChild: (node: TChild) => void
   /** @internal */
   _positionChildAt: (node: TChild, index: number) => void
+  search: (comparator: (a: TChild) => number, value?: undefined, from?: number, to?: number) => number
+  search: <U>(comparator: (a: TChild, b: U) => number, value: U, from?: number, to?: number) => number
 }
 
 export interface Timeline extends ParentNode<AnyTrack>, Schema.Timeline {
@@ -180,8 +197,8 @@ export interface BaseTrack<TChild extends TrackChild> extends ParentNode<TChild>
   readonly parent?: Timeline
   readonly duration: Rational
   readonly link: Schema.NodeLink | undefined
-  prev?: AnyTrack
-  next?: AnyTrack
+  prev: AnyTrack | undefined
+  next: AnyTrack | undefined
 }
 export interface VideoTrack extends BaseTrack<AnyVideoClip>, Schema.VideoTrack {
   toJSON: () => Schema.VideoTrack
@@ -196,8 +213,8 @@ export interface TrackChild extends BaseNode {
   readonly timeRational: ClipTimeRational
   readonly time: ClipTime
   readonly parent?: AnyTrack
-  prev?: AnyTrackChild | undefined
-  next?: AnyTrackChild | undefined
+  prev: AnyClip | undefined
+  next: AnyClip | undefined
   getGap: (prevClipId: string | undefined) => Rational
   setGap: (prevClipId: string | undefined, duration: Schema.Rational) => void
 }
@@ -219,7 +236,7 @@ export interface BaseClip<T extends string = string> extends TrackChild, Schema.
 }
 
 export interface VideoClip
-  extends BaseClip<'video'>, Omit<Schema.VideoClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends BaseClip<'video'>, Omit<Schema.VideoClip, keyof Schema.VisualProps>, Schema.VisualProps {
   readonly asset: MediaAsset | undefined
   linkedAudio?: AudioClip
   effects: NonNullable<Schema.VideoClip['effects']>
@@ -232,12 +249,12 @@ export interface AudioClip extends BaseClip<'audio'>, Schema.AudioClip {
   toJSON: () => Schema.AudioClip
 }
 export interface ImageClip
-  extends BaseClip<'image'>, Omit<Schema.ImageClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends BaseClip<'image'>, Omit<Schema.ImageClip, keyof Schema.VisualProps>, Schema.VisualProps {
   readonly asset: ImageAsset | undefined
   toJSON: () => Schema.ImageClip
 }
 export interface TextClip
-  extends BaseClip<'text'>, Omit<Schema.TextClip, keyof Schema.TransformProps>, Schema.TransformProps {
+  extends BaseClip<'text'>, Omit<Schema.TextClip, keyof Schema.VisualProps>, Schema.VisualProps {
   fontWeight: number
   fontStyle: Schema.FontStyle
   toJSON: () => Schema.TextClip
@@ -259,7 +276,6 @@ export type AnyClip = NodesByType[Extract<keyof NodesByType, `clip:${string}`>]
 export type AnyMediaClip = VideoClip | AudioClip
 export type AnyVideoClip = VideoClip | TextClip | ImageClip
 export type AnyAudioClip = AudioClip
-export type AnyTrackChild = AnyClip
 export type AnyParentNode = Timeline | AnyTrack
 export type AnyVideoNode = Timeline | VideoTrack | AnyVideoClip
 export type AnyAudioNode = Timeline | AudioTrack | AudioClip
@@ -314,10 +330,10 @@ export type AnyAsset = AssetsByType[keyof AssetsByType]
 export type { AssetOrigin } from './schema.d.ts'
 
 export interface GapSelection {
-  node: AnyTrackChild
+  node: AnyClip
   isNode: false
-  next?: AnyTrackChild
-  prev?: AnyTrackChild
+  next?: AnyClip | undefined
+  prev?: AnyClip | undefined
 }
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- false positive
@@ -393,7 +409,7 @@ export interface VideoEditor {
   }
 
   /** Select the given track item */
-  select: (node: AnyTrackChild | GapSelection | undefined) => void
+  select: (node: AnyClip | GapSelection | undefined) => void
 
   /**
    * Seek to the given time of the video.
@@ -552,9 +568,8 @@ export interface Rational {
 
   add: (other: Schema.Rational) => Rational
   subtract: (other: Schema.Rational) => Rational
-  negate: () => Rational
+  scale: (scaler: number) => Rational
   toRate: (rate: number) => Rational
-  compare: (other: Schema.Rational) => number
   isLessThan: (other: Schema.Rational) => boolean
   isGreaterThan: (other: Schema.Rational) => boolean
   isEqualTo: (other: Schema.Rational) => boolean
@@ -564,4 +579,49 @@ export interface Rational {
   valueOf: () => number
   toJSON: () => { value: number; rate: number }
   toOTIO: () => { OTIO_SCHEMA: 'RationalTime.1'; rate: number; value: number }
+}
+
+export interface Animation<T = unknown> {
+  readonly keyframes: Keyframe<T>[]
+  readonly flags: number
+  createView: (getTime: () => Rational) => {
+    getValue: () => T | undefined
+    dispose: () => void
+    [Symbol.dispose]: () => void
+  }
+  canInterpolate: () => boolean
+  indexOfKeyframeAt: (time: Schema.Rational) => number
+  getKeyframeAt: (time: Schema.Rational) => Keyframe<T> | undefined
+  getKeyframeFor: (time: Schema.Rational) => Keyframe<T> | undefined
+  unlink: (keyframe: any) => void
+  createAtTime: (value: T, time: Rational, index?: number) => void
+  updateOrCreateAtTime: (value: T, time: Rational, index?: number) => void
+  insert: (index: number, keyframe: Keyframe<T>) => void
+  update: <K extends keyof Keyframe<T>>(index: number, key: K, value: Keyframe<T>[K]) => void
+  delete: (index: number) => void
+  splitAt: (time: Rational) =>
+    | {
+        sliceTo: Keyframe<T> | undefined
+        sliceToIndex: number
+        isOnKeyframe: boolean
+        splitValue: T
+      }
+    | undefined
+  toJSON: () => Schema.Animation<T> | undefined
+  dispose: () => void
+  [Symbol.dispose]: () => void
+}
+
+export interface Keyframe<T> {
+  value: T
+  dt: Rational | Schema.Rational
+  easing: Schema.EasingOption | undefined
+
+  prev: Keyframe<T> | undefined
+  next: Keyframe<T> | undefined
+
+  readonly index: number
+  readonly time: Rational
+
+  toJSON: () => Schema.Keyframe<T>
 }

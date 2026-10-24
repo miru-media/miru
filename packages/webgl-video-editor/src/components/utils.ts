@@ -39,7 +39,7 @@ export const getClipAtTime = (track: pub.AnyTrack, time: number): pub.AnyClip | 
   }
 }
 
-export const useTrackChildEdges = (editor: VideoEditor, node: pub.AnyTrackChild) =>
+export const useTrackChildEdges = (editor: VideoEditor, node: pub.AnyClip) =>
   computed(() => {
     const { start, duration } = node.time
     const left = editor.secondsToPixels(start)
@@ -49,12 +49,12 @@ export const useTrackChildEdges = (editor: VideoEditor, node: pub.AnyTrackChild)
   })
 
 export const moveAndFillGaps = (
-  node: pub.AnyTrackChild,
+  node: pub.AnyClip,
   position: pub.ChildNodePosition,
   newStart: Rational,
   padEnd?: Rational,
 ) => {
-  const nodeAtPosition = getNodeAtTargetPosition<pub.AnyTrackChild>(node.doc, position)
+  const nodeAtPosition = getNodeAtTargetPosition<pub.AnyClip>(node.doc, position)
   const nodeBeforePosition = nodeAtPosition
     ? nodeAtPosition.prev
     : node.doc.nodes.get<pub.AnyTrack>(position.parentId).children[position.index - 1]
@@ -83,12 +83,12 @@ export const moveAndFillGaps = (
 }
 
 export const nodeFitsBetween = (
-  node: pub.AnyTrackChild,
-  a: pub.AnyTrackChild | undefined,
-  b: pub.AnyTrackChild | undefined,
+  node: pub.AnyClip,
+  a: pub.AnyClip | undefined,
+  b: pub.AnyClip | undefined,
 ): boolean => !b || b.time.start - (a?.time.end ?? 0) >= node.duration.valueOf()
 
-export const slideNodeBy = (node: pub.AnyTrackChild, delta: Rational) => {
+export const slideNodeBy = (node: pub.AnyClip, delta: Rational) => {
   const newGap = Rational.clamp(
     node.gap.add(delta),
     Rational.ZERO,

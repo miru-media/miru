@@ -17,6 +17,9 @@ export interface TransformProps {
   scaleX: number
   scaleY: number
 }
+export interface VisualProps extends TransformProps {
+  opacity: number
+}
 
 export type FontStyle = 'normal' | 'italic' | 'oblique'
 export type TextAlign = 'left' | 'center' | 'right' | 'justify'
@@ -32,12 +35,60 @@ export interface NodeLink {
   nodes: Pick<Linkable, 'id' | 'type'>[]
 }
 
+type CubicBezierPoints = readonly [x1: number, y1: number, x2: number, y2: number]
+
+export type EasingType =
+  | 'linear'
+  | 'easeInQuad'
+  | 'easeOutQuad'
+  | 'easeInOutQuad'
+  | 'easeInCubic'
+  | 'easeOutCubic'
+  | 'easeInOutCubic'
+  | 'easeInQuart'
+  | 'easeOutQuart'
+  | 'easeInOutQuart'
+  | 'easeInQuint'
+  | 'easeOutQuint'
+  | 'easeInOutQuint'
+  | 'easeInSine'
+  | 'easeOutSine'
+  | 'easeInOutSine'
+  | 'easeInExpo'
+  | 'easeOutExpo'
+  | 'easeInOutExpo'
+  | 'easeInCirc'
+  | 'easeOutCirc'
+  | 'easeInOutCirc'
+  | 'easeInBack'
+  | 'easeOutBack'
+  | 'easeInOutBack'
+  | 'easeInElastic'
+  | 'easeOutElastic'
+  | 'easeInOutElastic'
+  | 'easeInBounce'
+  | 'easeOutBounce'
+  | 'easeInOutBounce'
+
+export type EasingOption = CubicBezierPoints | EasingType
+
+export interface Animation<T = unknown> {
+  keyframes: Keyframe<T>[]
+}
+
+export interface Keyframe<T = unknown> {
+  value: T
+  dt: Rational
+  easing?: EasingOption | undefined
+}
+
 interface Base {
   id: string
   type: string
   name?: string
   enabled?: boolean
   effects?: { id: string; assetId: string; intensity: number }[]
+  animations?: Partial<Record<string, { keyframes: Keyframe[] }>>
   markers?: never[]
   color?: string
   metadata?: Record<string, unknown>
@@ -132,6 +183,7 @@ export interface AudioTrack extends Base {
 
 export interface TrackChild extends Base {
   duration: Rational
+  gap?: Rational
 }
 
 export interface MediaAssetPlaceholderRef {
@@ -145,8 +197,9 @@ export interface BaseClip extends TrackChild {
   transition?: { assetId: string; duration: Rational }
 }
 
-export interface VideoClip extends BaseClip, Partial<TransformProps> {
+export interface VideoClip extends BaseClip, Partial<VisualProps> {
   type: 'clip:video'
+  opacity?: number
 }
 
 export interface AudioClip extends BaseClip {
@@ -154,11 +207,12 @@ export interface AudioClip extends BaseClip {
   volume?: number
 }
 
-export interface ImageClip extends BaseClip, Partial<TransformProps> {
+export interface ImageClip extends BaseClip, Partial<VisualProps> {
   type: 'clip:image'
+  opacity?: number
 }
 
-export interface TextClip extends BaseClip, Partial<TransformProps> {
+export interface TextClip extends BaseClip, Partial<VisualProps> {
   type: 'clip:text'
   content: string
   fontFamily: string
@@ -169,6 +223,7 @@ export interface TextClip extends BaseClip, Partial<TransformProps> {
   inlineSize: number
   fill?: string
   stroke?: string
+  opacity?: number
 }
 
 export interface SerializedTimeline extends Timeline {
@@ -183,16 +238,14 @@ export interface SerializedAudioTrack extends AudioTrack {
 }
 export type AnySerializedTrack = SerializedVideoTrack | SerializedAudioTrack
 
-export type SerializedVideoClip = WithGap<VideoClip>
-export type SerializedAudioClip = WithGap<AudioClip>
-export type SerializedImageClip = WithGap<ImageClip>
-export type SerializedTextClip = WithGap<TextClip>
+export type SerializedVideoClip = VideoClip
+export type SerializedAudioClip = AudioClip
+export type SerializedImageClip = ImageClip
+export type SerializedTextClip = TextClip
 export type AnySerializedClip = SerializedNodeSchemasByType[Extract<
   keyof NodeSchemasByType,
   `clip:${string}`
 >]
-
-type WithGap<T> = T & { gap?: Rational }
 
 export interface NodeSchemasByType {
   timeline: Timeline

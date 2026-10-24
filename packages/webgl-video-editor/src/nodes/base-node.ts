@@ -1,15 +1,25 @@
-import { computed, ref } from 'fine-jsx'
+import { computed, ref, type Ref } from 'fine-jsx'
 
+import { Animation, type AnimationView, Keyframe } from '#animation'
 import { NODE_FIELD_FLAGS } from '#constants'
 import type { Schema } from '#core'
 import type * as pub from '#core'
+import {
+  NodeCreateEvent,
+  NodeDeleteEvent,
+  NodeListChangeEvent,
+  NodeMoveEvent,
+  NodeUpdateEvent,
+} from '#events'
 import type { NonReadonly } from '#internal'
-
-import { NodeCreateEvent, NodeDeleteEvent, NodeMoveEvent, NodeUpdateEvent } from '../events.ts'
+import { Rational } from 'shared/utils/index.ts'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in class def
 export interface BaseNode<T extends Schema.Base = any, TParent extends pub.AnyParentNode = pub.AnyParentNode>
   extends pub.BaseNode {}
+
+const visualPropFlags =
+  NODE_FIELD_FLAGS.TransformProp | NODE_FIELD_FLAGS.ReactiveProp | NODE_FIELD_FLAGS.Animatable
 
 export abstract class BaseNode<
   T extends Schema.Base = any,
@@ -18,12 +28,12 @@ export abstract class BaseNode<
   implements pub.BaseNode
 {
   static FIELDS: pub.NodeFieldDef<any>[] = [
-    { key: 'name', flags: 0, defaultValue: '' },
-    { key: 'enabled', flags: 0, defaultValue: true },
-    { key: 'effects', flags: 0, defaultValue: [] },
-    { key: 'markers', flags: 0, defaultValue: [] },
-    { key: 'color', flags: 0 },
-    { key: 'metadata', flags: 0, defaultValue: {} },
+    { key: 'name', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: '' },
+    { key: 'enabled', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: true },
+    { key: 'effects', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: [] },
+    { key: 'markers', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: [] },
+    { key: 'color', flags: NODE_FIELD_FLAGS.ReactiveProp },
+    { key: 'metadata', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: {} },
 
     { key: 'isNode', flags: NODE_FIELD_FLAGS.Constant },
     { key: 'doc', flags: NODE_FIELD_FLAGS.Readonly },
@@ -35,16 +45,23 @@ export abstract class BaseNode<
     { key: 'next', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.BaseNode & { type: string }>[]
 
-  static _reactiveKeys: Set<string> | undefined
-  static get REACTIVE_KEYS(): Set<string> {
-    let keys = this._reactiveKeys
-    if (!keys) {
-      keys = this._reactiveKeys = new Set()
-      this.FIELDS.forEach((f) => {
-        if (!(f.flags & NODE_FIELD_FLAGS.Constant)) keys?.add(f.key as string)
-      })
-    }
-    return keys
+  static VISUAL_FIELDS = [
+    { key: 'translateX', flags: visualPropFlags, defaultValue: 0 },
+    { key: 'translateY', flags: visualPropFlags, defaultValue: 0 },
+    { key: 'rotate', flags: visualPropFlags, defaultValue: 0 },
+    { key: 'scaleX', flags: visualPropFlags, defaultValue: 1 },
+    { key: 'scaleY', flags: visualPropFlags, defaultValue: 1 },
+    { key: 'opacity', flags: visualPropFlags, defaultValue: 1 },
+  ] satisfies pub.NodeFieldDef<Schema.VisualProps>[]
+
+  static _fieldsByKey: Record<string, pub.NodeFieldDef<any>> | undefined
+  static get FIELDS_BY_KEY() {
+    const { _fieldsByKey: _fieldsById } = this
+    if (_fieldsById) return _fieldsById
+
+    const fieldsById: typeof this._fieldsByKey = (this._fieldsByKey = {})
+    this.FIELDS.forEach((field) => void (fieldsById[field.key] = field))
+    return fieldsById
   }
 
   declare readonly doc: pub.Document
@@ -58,6 +75,10 @@ export abstract class BaseNode<
     this.effects.map(({ assetId }) => this.doc.assets.getAsset(assetId)),
   )
 
+  readonly animations: Partial<Record<string, pub.Animation>> = {}
+  readonly animationMap = new Map<string, Animation>()
+  readonly _animationViews = new Map<string, AnimationView>()
+
   declare parent?: TParent | undefined
   get ['parent' as never](): TParent | undefined {
     return this.#parent.value
@@ -68,6 +89,7 @@ export abstract class BaseNode<
 
   readonly #prev = ref<unknown>()
   readonly #next = ref<unknown>()
+  readonly #refs: Record<string, Ref> = {}
 
   declare prev: TParent['children'][number] | undefined
   declare next: TParent['children'][number] | undefined
@@ -90,9 +112,7 @@ export abstract class BaseNode<
 
   readonly #index = computed((): number => {
     const { prev } = this
-    if (prev) return prev.index + 1
-    if (this.parent?.head === (this as unknown as pub.AnyNode)) return 0
-    return -1
+    return prev ? prev.index + 1 : 0
   })
 
   get index(): number {
@@ -106,8 +126,22 @@ export abstract class BaseNode<
     this.type = init.type
 
     this._fields().forEach((field) => {
-      if (field.flags !== 0 /* NODE_FIELD_FLAGS.ReactiveProp */) return
+      if (!(field.flags & NODE_FIELD_FLAGS.ReactiveProp)) return
       const { key } = field
+
+      if (field.flags & NODE_FIELD_FLAGS.Animatable) {
+        const animation = (this.animations[key] = new Animation(field.flags, (action) =>
+          this.doc.emit(new NodeListChangeEvent(this as any, ['animations', key, 'keyframes'], action)),
+        ))
+        init.animations?.[key]?.keyframes.forEach((init) => animation.push(new Keyframe(init)))
+        this.animationMap.set(key, animation)
+
+        const view = animation.createView(() =>
+          Rational.fromDecimal(this.doc.currentTime, this.doc.frameRate).subtract(this.getLocalTimeOffset()),
+        )
+        this._animationViews.set(key, view)
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- tsc and eslint give different types
       this._defineReactive(key as any, (init as any)[key], field as any)
     })
@@ -127,12 +161,38 @@ export abstract class BaseNode<
       },
       { signal: this._abort.signal },
     )
+
     this._init(init)
 
     doc.emit(new NodeCreateEvent(this as unknown as pub.AnyNode))
   }
 
   protected abstract _init(init: T): void
+
+  _toggleKeyframesAt(keys: string[], time: Rational): void {
+    const animations = keys
+      .map((key) => [key, this.animations[key]] as const)
+      .filter((entry): entry is [(typeof entry)[0], NonNullable<(typeof entry)[1]>] => !!entry[1])
+    const hasKeyframeAtTime = animations.some(([, a]) => a.indexOfKeyframeAt(time) >= 0)
+
+    if (hasKeyframeAtTime) {
+      animations.forEach(([_key, animation]) => {
+        const index = animation.indexOfKeyframeAt(time)
+        animation.delete(index)
+      })
+    } else {
+      animations.forEach(([key, animation]) => {
+        const value = (this as any)[key]
+        if (animation.keyframes.length) animation.updateOrCreateAtTime(value, time)
+        else this._insertKeyframeAtTime(key, value, time)
+      })
+    }
+  }
+
+  _insertKeyframeAtTime(key: string, value: unknown, time: Rational, _index?: number): void {
+    const animation = this.animations[key]!
+    animation.createAtTime(value, time, _index)
+  }
 
   move(position: pub.ChildNodePosition | undefined) {
     const parentId = position?.parentId
@@ -166,6 +226,17 @@ export abstract class BaseNode<
       name: this.name,
       enabled: this.enabled,
       effects: this.effects,
+      animations: this._fields().reduce<Schema.Base['animations']>((acc, { key, flags }) => {
+        if (!(flags & NODE_FIELD_FLAGS.Animatable)) return acc
+
+        const json = this.animations[key]?.toJSON()
+        if (json) {
+          const result: any = acc ?? {}
+          result[key] = json
+          return result
+        }
+        return acc
+      }, undefined),
       color: this.color,
       metadata: this.metadata,
     }
@@ -173,13 +244,16 @@ export abstract class BaseNode<
 
   readonly isNode = true
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
+  getLocalTimeOffset(): Rational {
+    return Rational.ZERO
+  }
   isTimeline(): this is pub.Timeline {
     return false
   }
   isTrack(): this is pub.AnyTrack {
     return false
   }
-  isTrackChild(): this is pub.AnyTrackChild {
+  isTrackChild(): this is pub.AnyClip {
     return false
   }
   isClip(): this is pub.AnyClip {
@@ -210,8 +284,8 @@ export abstract class BaseNode<
   _fields<T extends pub.BaseNode>(this: T): pub.NodeFieldDef<T>[] {
     return (this.constructor as typeof BaseNode).FIELDS as any
   }
-  _reactiveKeys<T extends pub.BaseNode>(this: T): Set<keyof T> {
-    return (this.constructor as typeof BaseNode).REACTIVE_KEYS as any
+  _fieldsByKey<T extends pub.BaseNode>(this: T): Partial<Record<string, pub.NodeFieldDef<T>>> {
+    return (this.constructor as typeof BaseNode).FIELDS_BY_KEY as any
   }
 
   _defineReactive<Key extends keyof T>(
@@ -221,22 +295,44 @@ export abstract class BaseNode<
       equal?: (a: T[Key], b: T[Key]) => boolean
       transform?: (value: T[Key]) => T[Key]
       defaultValue?: T[Key]
-    } = {},
+      flags: number
+    },
   ): void {
-    const ref_ = ref(options.transform ? options.transform(initialValue) : initialValue)
+    const ref_ = (this.#refs[key] = ref(options.transform ? options.transform(initialValue) : initialValue))
     type This = typeof this
     const equal = options.equal ?? Object.is
 
+    const getValueOrDefault = (): T[Key] | undefined => {
+      const { value } = ref_
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
+      return value === undefined ? options.defaultValue : value
+    }
+
+    let get
+
+    if (options.flags & NODE_FIELD_FLAGS.Animatable) {
+      const view = this._animationViews.get(key)!
+      get = () => view.getValue() ?? getValueOrDefault()
+    } else {
+      get = getValueOrDefault
+    }
+
     Object.defineProperty(this, key, {
-      get() {
-        const { value } = ref_
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- distinguishing null value
-        return value === undefined ? options.defaultValue : value
-      },
+      get,
       set(this: This, value_: T[Key]) {
-        const prev = ref_.value
         const { transform } = options
         const value = transform ? transform(value_) : value_
+
+        const animation = this.animations[key]
+        if (animation?.keyframes[0]) {
+          animation.updateOrCreateAtTime(
+            value,
+            this.doc._currentFrameTime.value.subtract(this.getLocalTimeOffset()),
+          )
+          return
+        }
+
+        const prev = ref_.value
         if (equal(prev, value)) return
 
         ref_.value = value
@@ -262,6 +358,8 @@ export abstract class BaseNode<
     this.isDisposed = true
 
     this._abort.abort()
+    this.animationMap.forEach((animation) => animation.dispose())
+    this._animationViews.forEach((view) => view.dispose())
 
     this.parent?._unlinkChild(this as any)
     ;(this as Partial<NonReadonly<typeof this>>).doc = undefined

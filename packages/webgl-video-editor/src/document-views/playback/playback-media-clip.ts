@@ -45,8 +45,8 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
     const { renderClip } = this
 
     if (renderClip) {
-      renderClip.sprite.eventMode = 'static'
-      renderClip.sprite.on('pointerdown', (event) => {
+      renderClip.pixiNode.eventMode = 'static'
+      renderClip.pixiNode.on('pointerdown', (event) => {
         playbackView.doc.emit(new CanvasEvent('pointerdown', renderClip.original))
         event.stopPropagation()
       })
@@ -57,7 +57,7 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
           ([everHadEnoughData, isPlaceholder], _prev) => {
             if (!everHadEnoughData || isPlaceholder) return
 
-            const { texture } = renderClip.sprite
+            const { texture } = renderClip.pixiNode
 
             texture.source.resource = this.mediaElement as HTMLVideoElement
             texture.source.update()
@@ -174,7 +174,7 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
 
     if (renderClip) {
       const { asset } = original
-      const { sprite } = renderClip
+      const { pixiNode: sprite } = renderClip
 
       if (this.shouldRender && asset) {
         if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {

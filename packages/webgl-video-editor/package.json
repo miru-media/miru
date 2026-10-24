@@ -8,8 +8,11 @@
     "dist"
   ],
   "imports": {
+    "#animation": "./src/animation/index.ts",
     "#atoms": "./src/components/atoms/index.ts",
     "#constants": "./src/constants.ts",
+    "#events": "./src/events.ts",
+    "#index.module.css": "./src/css/index.module.css",
     "#assets": "./src/assets/index.ts",
     "#nodes": "./src/nodes/index.ts",
     "#otio": "./src/otio/index.ts",
@@ -57,13 +60,16 @@
     "directory": "packages/webgl-video-editor"
   },
   "dependencies": {
-    "@interactjs/actions": "^1.10.27",
-    "@interactjs/auto-start": "^1.10.27",
-    "@interactjs/core": "^1.10.27",
-    "@interactjs/interact": "^1.10.27",
-    "@interactjs/modifiers": "^1.10.27",
+    "@interactjs/actions": "^1.10.28",
+    "@interactjs/auto-start": "^1.10.28",
+    "@interactjs/core": "^1.10.28",
+    "@interactjs/interact": "^1.10.28",
+    "@interactjs/modifiers": "^1.10.28",
     "@libav.js/variant-opus": "catalog:",
+    "@motionone/easing": "^10.18.0",
+    "colorjs.io": "^0.7.1",
     "comlink": "catalog:",
+    "easings.net": "^1.0.3",
     "fine-jsx": "catalog:",
     "gl-matrix": "catalog:",
     "idb-keyval": "catalog:",

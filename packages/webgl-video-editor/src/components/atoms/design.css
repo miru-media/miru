@@ -473,6 +473,15 @@
   }
 }
 
+.propertiesKeyframe {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: white;
+  background: none;
+  border: none;
+  rotate: 45deg;
+}
+
 .desktopControls {
   composes: triColumn;
   padding: 0 0.75rem;

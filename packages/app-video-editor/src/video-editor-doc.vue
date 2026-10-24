@@ -85,6 +85,8 @@ if (!import.meta.env.SSR) {
     }
   })
 }
+
+const _state = state
 </script>
 
 <template>
@@ -95,7 +97,7 @@ if (!import.meta.env.SSR) {
       :assets
       :messages="{ en, de }"
       :editor="editorProp"
-      :onClickHelp="() => (state.showInfo = true)"
+      :onClickHelp="() => (_state.showInfo = true)"
       class="video-editor"
     >
       <template #header>

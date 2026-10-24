@@ -274,13 +274,13 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
         const { original } = exportClip
         if (!original.isVideo()) return
 
-        if (!original.isInClipTime) {
-          exportClip.updateVisibility()
-          return
-        }
+        exportClip.updateVisibility()
+
+        if (!original.isInPresentationTime) return
 
         if (exportClip.isExportMediaClip()) await exportClip.seekVideo()
-        else exportClip.updateVisibility()
+
+        exportClip.renderClip?.onRendererUpdate()
 
         signal?.throwIfAborted()
         if (!exportClip.isReady) await exportClip.whenReady(this._abort.signal)

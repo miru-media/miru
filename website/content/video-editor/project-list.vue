@@ -64,6 +64,8 @@ const onDelete = async (id: string) => {
 }
 
 const getDocUrl = (id: string) => `/project/?id=${id}`
+
+const _thumbnailStorage = thumbnailStorage
 </script>
 
 <template>
@@ -72,7 +74,7 @@ const getDocUrl = (id: string) => `/project/?id=${id}`
       projects.map((p) => ({
         ...p,
         url: '/video-editor' + getDocUrl(p.id),
-        thumbnail: thumbnailStorage.get(p.id),
+        thumbnail: _thumbnailStorage.get(p.id),
       }))
     "
     @open="openDoc"

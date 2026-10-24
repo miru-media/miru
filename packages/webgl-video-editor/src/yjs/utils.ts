@@ -3,6 +3,7 @@ import { PositionSource } from 'position-strings'
 import * as Y from 'yjs'
 import { YTree } from 'yjs-orderedtree'
 
+import { Keyframe } from '#animation'
 import { DEFAULT_FRAMERATE, DEFAULT_RESOLUTION, TIMELINE_ID } from '#constants'
 import type * as pub from '#core'
 import type * as Schema from '#schema'
@@ -10,6 +11,7 @@ import type * as Schema from '#schema'
 import { createInitialDocument } from '../sync/utils.ts'
 
 import { YTREE_ROOT_KEY, YTREE_YMAP_KEY } from './constants.ts'
+import type { YjsSync } from './yjs-sync.ts'
 
 export const getOrCreateYmap = (root: Y.Doc | Y.Map<Y.Map<any>>, key: string) => {
   if ('getMap' in root) return root.getMap<any>(key)
@@ -91,9 +93,11 @@ export const getValidLinksFromYarray = (
   return valid
 }
 
-const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void => {
+export const createYnodeFromJson = (init: Schema.AnyNode | Schema.AnySerializedNode): Y.Map<unknown> => {
+  const ynode = new Y.Map()
+
   Object.entries(init)
-    .filter(([key]) => key !== 'children')
+    .filter(([key]) => key !== 'children' && Object.hasOwn(init, key))
     .forEach(([key, value]) => {
       let yjsValue
       switch (key) {
@@ -107,11 +111,16 @@ const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void 
           break
         // metadata is stored as a YMap of values
         case 'metadata':
-          yjsValue = new Y.Map(Object.entries((value as typeof init.metadata) ?? {}))
+          yjsValue = new Y.Map(
+            Object.entries((value as typeof init.metadata) ?? {}).filter(([key]) =>
+              Object.hasOwn(value, key),
+            ),
+          )
           break
-        // clip.gap prop is skipped and handled elsewhere
         case 'gap':
+        case 'animations':
           break
+
         default:
           yjsValue =
             typeof value === 'object' && value != null && 'toJSON' in value
@@ -121,15 +130,27 @@ const updateYnodeFromJson = (ynode: Y.Map<unknown>, init: Schema.AnyNode): void 
 
       ynode.set(key, yjsValue)
     })
-}
-
-export const createYnodeFromJson = (init: Schema.AnyNode | Schema.AnySerializedNode): Y.Map<unknown> => {
-  const ymap = new Y.Map()
-  updateYnodeFromJson(ymap, init)
 
   // gaps are stored as a map of other clip IDs to Rational duration
-  if (init.type.startsWith('clip:')) ymap.set('gap', new Y.Map())
-  return ymap
+  if (init.type.startsWith('clip:')) ynode.set('gap', new Y.Map())
+
+  const ynodeAnimations = ynode.set('animations', new Y.Map<unknown>())
+
+  if (init.animations) {
+    const { animations } = init
+
+    Object.entries(animations).forEach(([key, init]) => {
+      const animationYmap = ynodeAnimations.set(key, new Y.Map<unknown>())
+      if (!Object.hasOwn(animations, key) || !init) return
+      const keyframes = animationYmap.set('keyframes', new Y.Array())
+
+      init.keyframes.forEach((init) =>
+        keyframes.push([new Y.Map(Object.entries(init).filter(([key]) => Object.hasOwn(init, key)))]),
+      )
+    })
+  }
+
+  return ynode
 }
 
 export const initYmapFromJson = ({
@@ -189,4 +210,61 @@ export const createInitialUpdate = (root: Y.Doc | Y.Map<unknown>): string => {
 
   const doc = 'doc' in root ? root.doc! : root
   return Buffer.from(Y.encodeStateAsUpdateV2(doc)).toString('base64')
+}
+
+const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
+  if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
+  return a === b
+}
+
+export const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): void => {
+  for (const key in updates) {
+    if (Object.hasOwn(updates, key)) {
+      const newValue = updates[key]
+      if (!jsonValuesAreEqual(newValue, ymap.get(key)))
+        ymap.set(
+          key,
+          typeof newValue === 'object' && newValue != null && 'toJSON' in newValue
+            ? (newValue.toJSON as () => any)()
+            : newValue,
+        )
+    }
+  }
+}
+
+export const findIndexByIdProp = (yarray: Y.Array<any>, id: string): number => {
+  const { length } = yarray
+  for (let i = 0; i < length; i++) if (yarray.get(i).id === id) return i
+  return -1
+}
+
+export const onYnodeKeyframeListChange = (node: pub.AnyNode, key: string, event: Y.YEvent<any>): void => {
+  let pos = 0
+  const animation = node.animations[key]!
+
+  event.changes.delta.forEach(({ retain, insert, delete: del }) => {
+    if (typeof retain === 'number') pos += retain
+    else if (Array.isArray(insert)) {
+      insert.forEach((item) => animation.insert(pos, new Keyframe((item as Y.Map<any>).toJSON() as any)))
+    } else if (typeof del === 'number') {
+      for (let i = 0; i < del; i++) animation.delete(pos)
+    }
+  })
+}
+
+export const serializeYdoc = (sync: YjsSync) => {
+  const ytree = new YTree(getOrCreateYmap(sync.ydoc, YTREE_YMAP_KEY))
+
+  const serialize = <T extends Schema.AnySerializedNode = Schema.AnySerializedNode>(nodeId: string): T => {
+    const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
+    const childIds: string[] = ytree.sortChildrenByOrder(ytree.getNodeChildrenFromKey(nodeId), nodeId)
+
+    return { ...ynode.toJSON(), children: childIds.map(serialize) } as any
+  }
+
+  return {
+    ...(sync.settingsYmap.toJSON() as Schema.DocumentSettings),
+    timeline: serialize(sync.doc.timeline.id),
+    links: sync.linksYarray.toArray(),
+  }
 }

@@ -9,7 +9,7 @@ export interface VideoClip extends NonOverlappingUnion<BaseClip<Schema.VideoClip
 
 export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoClip {
   static FIELDS = super.FIELDS.concat([
-    ...BaseClip.TRANSFORM_FIELDS,
+    ...BaseClip.VISUAL_FIELDS,
     { key: 'linkedAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.VideoClip>[])
 
@@ -32,14 +32,10 @@ export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoCl
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.VideoClip {
-    const { effects } = this
     const obj: Schema.VideoClip = {
       ...super.toJSON(),
-      ...this._transformToJSON(),
+      ...this._visualToJSON(),
     }
-
-    if (effects.length)
-      obj.effects = effects.map(({ id, assetId, intensity }) => ({ id, assetId, intensity }))
 
     return obj
   }

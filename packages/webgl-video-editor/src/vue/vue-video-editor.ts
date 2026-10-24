@@ -64,7 +64,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       seekTo: editor.seekTo.bind(editor),
       addMediaClip: (asset: pub.MediaAsset) => editor.addMediaClip(asset),
       select: (item: pub.AnyClip | pub.GapSelection | undefined) =>
-        editor.select(item?.isNode ? editor.doc.nodes.get<pub.AnyTrackChild>(item.id) : item),
+        editor.select(item?.isNode ? editor.doc.nodes.get<pub.AnyClip>(item.id) : item),
       async createMediaAsset(source: string | Blob) {
         return await editor.createMediaAsset(source)
       },

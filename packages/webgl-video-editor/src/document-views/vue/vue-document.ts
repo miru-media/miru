@@ -35,6 +35,7 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
   declare resolution: pub.Document['resolution']
   declare frameRate: pub.Document['frameRate']
   declare readonly currentTime: pub.Document['currentTime']
+  declare readonly _currentFrameTime: pub.Document['_currentFrameTime']
   declare readonly duration: pub.Document['duration']
   declare readonly timeline: pub.Document['timeline']
   declare readonly assets: pub.Document['assets']
@@ -56,6 +57,7 @@ export class VueDocument extends DocumentView<VueTypeMap> implements pub.Documen
     ;(
       [
         'currentTime',
+        '_currentFrameTime',
         'duration',
         'timeline',
         'assets',

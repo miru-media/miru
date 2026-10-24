@@ -9,6 +9,8 @@ import type { VideoClip } from '#nodes'
 import { Rational } from 'shared/utils/math.ts'
 import { initYjsRoot, YjsSync } from 'webgl-video-editor/yjs'
 
+import { EditDocument } from '../src/document-views/edit/edit-document.ts'
+
 import { makeTimeline, makeVideoClip, makeVideoTrack } from './utils.ts'
 
 let ydoc: Y.Doc
@@ -83,6 +85,34 @@ test('syncs doc changes to Yjs doc', () => {
 
   clip.delete()
   expect(() => ytree.getNodeParentFromKey(clip.id)).toThrow()
+})
+
+test('syncs node keyframe changes', () => {
+  const ydoc2 = new Y.Doc()
+  Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(sync.ydoc))
+  const yjsRoot2 = initYjsRoot(ydoc2)
+  const sync2 = new YjsSync(yjsRoot2.ydoc)
+
+  sync.doc.resolution = { width: 50, height: 100 }
+  const editDoc = new EditDocument(sync.doc)
+  const editClip = editDoc.nodes.get<VideoClip>(clipInit.id)
+
+  editClip._toggleKeyframesAt(['rotate', 'translateX'], Rational.ZERO)
+
+  Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(sync.ydoc))
+
+  const sync2Ynode = yjsRoot2.ytree.getNodeValueFromKey(editClip.id) as Y.Map<any>
+
+  expect(sync2Ynode.get('animations').toJSON()).toEqual({
+    rotate: {
+      keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' }],
+    },
+    translateX: {
+      keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' }],
+    },
+  } satisfies Schema.Base['animations'])
+
+  Y.applyUpdate(sync2.ydoc, Y.encodeStateAsUpdate(sync.ydoc))
 })
 
 test('disposes sync on YDoc destroy', () => {

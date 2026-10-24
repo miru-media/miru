@@ -7,19 +7,15 @@ import { getClipTransformMatrix } from '../../utils.ts'
 
 import { MiruFilter } from './pixi-miru-filter.ts'
 import type { RenderDocument } from './render-document.ts'
-import { RenderNodeView } from './render-nodes.ts'
+import { RenderClip, spatialOnRenderUpdate } from './render-nodes.ts'
 
-export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
+export class RenderVideoClip extends RenderClip<pub.VideoClip, Pixi.Sprite> {
   readonly _reactiveRenderProps = computed(() => ({
     pixiFilters: this.pixiFilters,
     matrix: this.matrix.value,
+    opacity: this.original.opacity,
   }))
 
-  readonly pixiNode = new Pixi.Sprite({
-    visible: false,
-    texture: new Pixi.Texture(new Pixi.ImageSource({})),
-  })
-  readonly sprite = this.pixiNode
   readonly pixiFilters = ref<MiruFilter[]>([])
 
   readonly #isReady = computed(() => !this.pixiFilters.value.some((f) => f.isLoading))
@@ -27,27 +23,29 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
     return super.isReady && this.#isReady.value
   }
 
-  readonly matrix = computed(() => getClipTransformMatrix(this, false))
-
   constructor(renderView: RenderDocument, original: pub.VideoClip) {
-    super(renderView, original)
+    const sprite = new Pixi.Sprite({
+      visible: false,
+      texture: new Pixi.Texture(new Pixi.ImageSource({})),
+    })
+    super(renderView, original, sprite)
 
-    const { source } = this.sprite.texture
-    source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
+    const { source } = sprite.texture
+    sprite.texture.source.on('destroy', () => (source.resource as Partial<VideoFrame> | undefined)?.close?.())
 
     this._update('mediaRef', undefined)
-    this._initSpatialVisual()
+    this.updateVisual()
+  }
+
+  onRendererUpdate(): void {
+    super.onRendererUpdate()
+    spatialOnRenderUpdate(this)
   }
 
   updateTransform(): void {
     this.pixiNode.setFromMatrix(getClipTransformMatrix(this, this.docView.applyVideoRotation))
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isMediaView(): this is RenderVideoClip {
-    return true
-  }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
   /** @internal */
   _update<Key extends keyof pub.VideoClip>(key: Key, oldValue: pub.VideoClip[Key]): void {
     super._update(key, oldValue)
@@ -89,7 +87,7 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
           })
 
           // must be assigned after the array is filled
-          this.sprite.filters = pixiFilters
+          this.pixiNode.filters = pixiFilters
         }
         break
       default:
@@ -97,7 +95,7 @@ export class RenderVideoClip extends RenderNodeView<pub.VideoClip> {
   }
 
   dispose(): void {
-    const { texture } = this.sprite
+    const { texture } = this.pixiNode
     super.dispose()
     texture.destroy(true)
 

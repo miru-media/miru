@@ -95,3 +95,47 @@ export const promiseWithResolvers = <T = void>() => {
 
   return { promise, resolve, reject }
 }
+
+/*
+ * Binary search in JavaScript. Returns the index of of the element in a sorted array or (-n-1) where n is the
+ * insertion point for the new element
+ *
+ * Adapted from https://stackoverflow.com/a/29018745
+ */
+export const binarySearch: {
+  <T, U = T>(
+    array: ArrayLike<T>,
+    comparator: (a: T, b: U) => number,
+    element: U,
+    from?: number,
+    to?: number,
+  ): number
+  <T>(
+    array: ArrayLike<T>,
+    comparator: (a: T) => number,
+    element?: undefined,
+    from?: number,
+    to?: number,
+  ): number
+} = <T, U = T>(
+  array: ArrayLike<T>,
+  comparator: (a: T, b: U | undefined) => number,
+  element?: U,
+  from = 0,
+  to = array.length - 1,
+  // eslint-disable-next-line @typescript-eslint/max-params -- internal
+): number => {
+  let m = from
+  let n = to
+
+  while (m <= n) {
+    const k = (n + m) >> 1
+    const cmp = comparator(array[k], element)
+
+    if (cmp < 0) m = k + 1
+    else if (cmp > 0) n = k - 1
+    else return k
+  }
+
+  return -m - 1
+}
