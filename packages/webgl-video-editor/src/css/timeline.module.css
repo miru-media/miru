@@ -99,7 +99,6 @@
 .track {
   position: relative;
   display: flex;
-  height: var(--clip-height);
 
   &.primary {
     --clip-height: var(--clip-height-primary);

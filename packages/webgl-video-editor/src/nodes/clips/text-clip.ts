@@ -1,3 +1,4 @@
+import { NODE_FIELD_FLAGS } from '#constants'
 import type { Schema } from '#core'
 import type * as pub from '#core'
 import type { NonOverlappingUnion } from '#internal'
@@ -6,17 +7,19 @@ import { BaseClip } from './base-clip.ts'
 
 export interface TextClip extends NonOverlappingUnion<BaseClip<Schema.TextClip>, pub.TextClip> {}
 
+const textStylePropFlags = NODE_FIELD_FLAGS.TextStyleProp | NODE_FIELD_FLAGS.ReactiveProp
+
 export class TextClip extends BaseClip<Schema.TextClip> implements pub.TextClip {
-  static FIELDS = super.FIELDS.concat(BaseClip.TRANSFORM_FIELDS, [
-    { key: 'content', flags: 0 },
-    { key: 'fontFamily', flags: 0 },
-    { key: 'fontSize', flags: 0 },
-    { key: 'fontWeight', flags: 0, defaultValue: 400 },
-    { key: 'fontStyle', flags: 0, defaultValue: 'normal' },
-    { key: 'align', flags: 0, defaultValue: 'left' },
-    { key: 'inlineSize', flags: 0 },
-    { key: 'fill', flags: 0 },
-    { key: 'stroke', flags: 0 },
+  static FIELDS = super.FIELDS.concat(BaseClip.VISUAL_FIELDS, [
+    { key: 'content', flags: NODE_FIELD_FLAGS.ReactiveProp },
+    { key: 'fontFamily', flags: textStylePropFlags },
+    { key: 'fontSize', flags: textStylePropFlags },
+    { key: 'fontWeight', flags: textStylePropFlags, defaultValue: 400 },
+    { key: 'fontStyle', flags: textStylePropFlags, defaultValue: 'normal' },
+    { key: 'align', flags: textStylePropFlags, defaultValue: 'left' },
+    { key: 'inlineSize', flags: textStylePropFlags },
+    { key: 'fill', flags: textStylePropFlags | NODE_FIELD_FLAGS.Animatable | NODE_FIELD_FLAGS.Color },
+    { key: 'stroke', flags: textStylePropFlags | NODE_FIELD_FLAGS.Animatable | NODE_FIELD_FLAGS.Color },
   ] satisfies pub.NodeFieldDef<pub.TextClip>[])
 
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
@@ -36,7 +39,7 @@ export class TextClip extends BaseClip<Schema.TextClip> implements pub.TextClip 
   toJSON(): Schema.TextClip {
     const obj: Schema.TextClip = {
       ...super.toJSON(),
-      ...this._transformToJSON(),
+      ...this._visualToJSON(),
       content: this.content,
       fontFamily: this.fontFamily,
       fontSize: this.fontSize,

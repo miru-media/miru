@@ -1,9 +1,11 @@
 import { computed, createEffectScope, type Ref, ref, watch } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
+import { NODE_FIELD_FLAGS } from '#constants'
+import type * as pub from '#core'
 import type { Size } from 'shared/types.ts'
 
-import type * as pub from '../../../types/core'
+import { getClipTransformMatrix } from '../../utils.ts'
 import { NodeView } from '../node-view.ts'
 import { usePlaceholderImage } from '../utils.ts'
 
@@ -15,11 +17,9 @@ import type { RenderVideoClip } from './render-video-clip.ts'
 type AnyVideoParentNode = Extract<pub.AnyParentNode, pub.AnyVideoNode>
 export type AnyRenderClip = RenderVideoClip | RenderImageClip | RenderTextClip
 
-interface SpatialVisualNode {
-  readonly original: Extract<pub.AnyVideoNode, pub.Schema.TransformProps>
-  readonly matrix: Ref<Pixi.Matrix>
-  getSize: () => Size | undefined
-  updateTransform: () => void
+export namespace RenderNodeView {
+  export type AnyParentNode = AnyVideoParentNode
+  export type AnyClip = AnyRenderClip
 }
 
 const getPrevRenderNode = <T extends pub.AnyVideoNode>(renderNode: RenderNodeView<T>) => {
@@ -32,12 +32,26 @@ const getNextRenderNode = <T extends pub.AnyVideoNode>(renderNode: RenderNodeVie
     if (other.isVideo()) return renderNode.docView._getNode(other)
 }
 
+export const spatialOnRenderUpdate = (renderNode: AnyRenderClip): void => {
+  const { original } = renderNode
+  const { animationMap } = original
+
+  for (const animation of animationMap.values()) {
+    if (animation.flags & NODE_FIELD_FLAGS.TransformProp && animation.canInterpolate()) {
+      renderNode.updateTransform()
+      break
+    }
+  }
+
+  if (animationMap.get('opacity')) renderNode.updateOpacity()
+}
+
 export abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<RenderDocument, T> {
   readonly _scope = createEffectScope()
   readonly _placeholderIsLoading = ref(false)
 
-  abstract readonly _reactiveRenderProps: Ref | undefined
-  abstract readonly pixiNode: Pixi.Container | Pixi.Text
+  abstract readonly _reactiveRenderProps: Ref<any> | undefined
+  abstract readonly pixiNode: Pixi.Container
 
   readonly _visualIndex = computed((): number => (getPrevRenderNode(this)?.visualIndex ?? -1) + 1)
 
@@ -49,32 +63,9 @@ export abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeVie
     return !this._placeholderIsLoading.value
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isMediaView(): this is RenderVideoClip {
-    return false
-  }
-  isTextView(): this is RenderTextClip {
-    return false
-  }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
-
-  getSize(this: RenderNodeView<pub.AnyVideoNode> & SpatialVisualNode): Size | undefined {
-    const { asset } = this.original
-    if (!asset) return this.docView.doc.resolution
-
-    switch (asset.type) {
-      case 'asset:media:image':
-        return asset
-      case 'asset:media:av': {
-        if (!asset.video) return
-
-        const { width, height, rotation } = asset.video
-        return rotation === 90 || rotation === 270 ? { width: height, height: width } : { width, height }
-      }
-      case 'asset:font':
-      case 'asset:effect:video':
-        return undefined
-    }
+  onRendererUpdate(): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track changes to node properties
+    this._reactiveRenderProps?.value
   }
 
   _update<Key extends keyof T>(key: Key, _oldValue: T[Key]): void {
@@ -85,53 +76,18 @@ export abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeVie
     }
   }
 
-  _updateSpatialVisualField<Key extends keyof T>(this: SpatialVisualNode, key: Key): boolean {
-    switch (key) {
-      case 'translateX':
-      case 'translateY':
-      case 'rotate':
-      case 'scaleX':
-      case 'scaleY':
-        this.updateTransform()
-        return true
-      default:
-        return false
+  _updateSpatialVisualField<Key extends keyof T>(this: AnyRenderClip, key: Key): boolean {
+    const field = this.original._fieldsByKey()[key]
+    if (!field) return false
+
+    if (field.flags & NODE_FIELD_FLAGS.TransformProp) {
+      this.updateTransform()
+      return true
     }
+    if (key === 'opacity') this.updateOpacity()
+    return false
   }
 
-  _initSpatialVisual(this: this & SpatialVisualNode): void {
-    this._update('effects', [])
-    this.updateTransform()
-
-    this._scope.run(() => {
-      const { original } = this
-
-      watch([() => original.asset], ([asset], _prev, onCleanup) => {
-        if (!(this.pixiNode instanceof Pixi.Sprite)) return
-
-        const { texture } = this.pixiNode
-        if (asset) return
-
-        const scope = createEffectScope()
-        onCleanup(scope.stop.bind(scope))
-        this._placeholderIsLoading.value = true
-
-        texture.source.resource = scope.run(() =>
-          usePlaceholderImage({
-            text: () => original.name,
-            color: () => original.color,
-            size: () => original.doc.resolution,
-            onLoad: () => {
-              if (this.isDisposed) return
-              texture.source.update()
-              this._placeholderIsLoading.value = false
-            },
-          }),
-        )
-        texture.update()
-      })
-    })
-  }
   /** @internal */
   _move(parent: RenderNodeView<AnyVideoParentNode> | undefined): void {
     const { pixiNode } = this
@@ -177,5 +133,84 @@ export class RenderTrack extends RenderNodeView<pub.VideoTrack> {
       nextPixiNode?.parent === parentPixiNode ? parentPixiNode.getChildIndex(nextPixiNode) + 1 : 0
 
     parentPixiNode.addChildAt(pixiNode, newIndex)
+  }
+}
+
+export abstract class RenderClip<
+  T extends pub.AnyVideoClip,
+  P extends Pixi.Container = Pixi.Container,
+> extends RenderNodeView<T> {
+  readonly matrix = computed((): Pixi.Matrix => getClipTransformMatrix(this, false))
+  readonly pixiNode: P
+
+  constructor(renderView: RenderDocument, original: T, pixiNode: P) {
+    super(renderView, original)
+    this.pixiNode = pixiNode
+
+    this._scope.run(() => {
+      const { original } = this
+
+      watch([() => original.asset], ([asset], _prev, onCleanup) => {
+        if (!(this.pixiNode instanceof Pixi.Sprite)) return
+
+        const { texture } = this.pixiNode
+        if (asset) return
+
+        const scope = createEffectScope()
+        onCleanup(scope.stop.bind(scope))
+        this._placeholderIsLoading.value = true
+
+        texture.source.resource = scope.run(() =>
+          usePlaceholderImage({
+            text: () => original.name,
+            color: () => original.color,
+            size: () => original.doc.resolution,
+            onLoad: () => {
+              if (this.isDisposed) return
+              texture.source.update()
+              this._placeholderIsLoading.value = false
+            },
+          }),
+        )
+        texture.update()
+      })
+    })
+  }
+
+  updateVisual(): void {
+    this.updateTransform()
+    this.updateOpacity()
+  }
+
+  updateTransform(): void {
+    this.pixiNode.setFromMatrix(this.matrix.value)
+  }
+
+  updateOpacity(): void {
+    this.pixiNode.alpha = this.original.opacity
+  }
+
+  getSize(): Size | undefined {
+    const { asset } = this.original
+    if (!asset) return this.docView.doc.resolution
+
+    switch (asset.type) {
+      case 'asset:media:image':
+        return asset
+      case 'asset:media:av': {
+        if (!asset.video) return
+
+        const { width, height, rotation } = asset.video
+        return rotation === 90 || rotation === 270 ? { width: height, height: width } : { width, height }
+      }
+      case 'asset:font':
+      case 'asset:effect:video':
+        return undefined
+    }
+  }
+
+  _update<Key extends keyof T>(key: Key, _oldValue: T[Key]): void {
+    super._update(key, _oldValue)
+    if (key === 'opacity') this.pixiNode.alpha = this.original.opacity
   }
 }

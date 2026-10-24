@@ -94,7 +94,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
 
     if (!this.video) return
 
-    this.renderClip!.sprite.visible = this.original.isInClipTime
+    this.renderClip!.pixiNode.visible = this.original.isInClipTime
 
     const sourceTimeUs = this.original.expectedMediaTime * 1e6
 
@@ -124,7 +124,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
       this.currentVideoFrame = undefined
     } else {
       const sample = next.value
-      const { sprite } = this.renderClip!
+      const { pixiNode: sprite } = this.renderClip!
       const textureSource = sprite.texture.source
       textureSource.resource = this.currentVideoFrame = sample.toVideoFrame()
       textureSource.update()

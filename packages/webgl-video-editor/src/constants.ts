@@ -40,16 +40,22 @@ export const TIMELINE_ID = 'timeline'
 export const PIXI_LUT_UPLOADER_ID = 'webgl-video-editor:lut'
 export const PIXI_HALD_LUT_UPLOADER_ID = 'webgl-video-editor:hald-lut'
 
-const Readonly = 1 << 0
+/* eslint-disable @typescript-eslint/no-magic-numbers -- enum */
+const Readonly = 1 << 1
 export const NODE_FIELD_FLAGS: NodeFieldFlags = {
-  ReactiveProp: 0,
+  ReactiveProp: 1 << 0,
   Readonly,
-  Node: 1 << 1,
-  NodeArray: 1 << 2,
-  Asset: 1 << 3,
-  Gap: 1 << 4,
-  Constant: (1 << 5) | Readonly,
+  Node: 1 << 2,
+  NodeArray: 1 << 3,
+  Asset: 1 << 4,
+  Gap: 1 << 5,
+  Constant: (1 << 6) | Readonly,
+  Animatable: 1 << 7,
+  Color: 1 << 8,
+  TransformProp: 1 << 9,
+  TextStyleProp: 1 << 10,
 }
+/* eslint-enable @typescript-eslint/no-magic-numbers */
 
 export const CLIP_COLORS = [
   '#e83757', // red-dark

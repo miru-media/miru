@@ -40,10 +40,10 @@ export class VueNodeView<T extends pub.AnyNode> extends NodeView<VueDocument, T>
 
     this.#scope.run(() => {
       this.original._fields().forEach(({ key, flags }) => {
-        if (flags & NODE_FIELD_FLAGS.Node) _vueNodeProp(this, original, key)
+        if (flags & NODE_FIELD_FLAGS.ReactiveProp) _vueWritable(this, original, key)
+        else if (flags & NODE_FIELD_FLAGS.Node) _vueNodeProp(this, original, key)
         else if (flags & NODE_FIELD_FLAGS.NodeArray) _vueNodeArrayProp(this, original, key)
         else if (flags & NODE_FIELD_FLAGS.Readonly) _vuePlainReadonly(this, original, key)
-        else _vueWritable(this, original, key)
       })
     })
 

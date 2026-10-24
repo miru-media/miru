@@ -36,6 +36,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   declare resolution: pub.Document['resolution']
   declare frameRate: pub.Document['frameRate']
   declare readonly currentTime: pub.Document['currentTime']
+  declare readonly _currentFrameTime: pub.Document['_currentFrameTime']
   declare readonly duration: pub.Document['duration']
   declare readonly timeline: pub.Document['timeline']
   declare readonly assets: pub.Document['assets']
@@ -89,6 +90,7 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
         'node:move',
         'node:update',
         'node:gap-update',
+        'node:list-change',
         'canvas:pointerdown',
         'canvas:pointermove',
         'canvas:pointerup',
@@ -229,12 +231,17 @@ export class EditDocument extends DocumentView<ViewTypeMap> implements pub.Docum
   _emit(event: pub.VideoEditorEvents[keyof pub.VideoEditorEvents]): void {
     this.#eventTarget.dispatchEvent(event)
   }
+
+  dispose(): void {
+    super.dispose()
+  }
 }
 
 defineWrapperProps(EditDocument, 'doc', [
   'resolution',
   'frameRate',
   'currentTime',
+  '_currentFrameTime',
   'duration',
   'timeline',
   'assets',

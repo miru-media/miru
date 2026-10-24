@@ -25,3 +25,4 @@ export type NonReadonly<T> = { -readonly [P in keyof T]: T[P] }
 export type KeyofUnion<T> = T extends T ? keyof T : never
 export type NonOverlappingUnion<T, U> = T & Pick<U, Exclude<keyof U, keyof T>>
 export type Valueof<T> = T[KeyofUnion[T]]
+export type StringKeyof<T> = Extract<keyof T, string>

@@ -186,7 +186,9 @@ export const seekAndWait = async (
   const onAbort = (): void => p.reject(new Error('Aborted'))
 
   const stateChangeEvents = ['load', 'canplay', 'seeked']
-  const onReadyStateChange = (): void => void (video.readyState >= 2 && p.resolve(undefined))
+  const onReadyStateChange = (): void => {
+    video.readyState >= 2 && p.resolve(undefined)
+  }
 
   stateChangeEvents.forEach((type) => video.addEventListener(type, onReadyStateChange, { once: true }))
   video.addEventListener('error', onError, { once: true })

@@ -49,12 +49,34 @@ export class NodeGapUpdateEvent extends Event {
   clone(node?: pub.AnyClip, key?: string, from?: pub.Rational): this
 }
 
-export class NodeDeleteEvent extends Event {
-  readonly type: 'node:delete'
-  readonly node: pub.AnyNode
+export namespace NodeListChangeEvent {
+  export interface Insert {
+    type: 'insert'
+    index: number
+  }
+  export interface Update {
+    type: 'update'
+    index: number
+    key: string
+    from: unknown
+  }
+  export interface Delete {
+    type: 'delete'
+    index: number
+    item: unknown
+  }
 
-  constructor(node: pub.AnyNode)
-  clone(node?: pub.AnyNode): this
+  export type Action = Insert | Update | Delete
+}
+
+export class NodeListChangeEvent extends Event {
+  readonly type: 'node:list-change'
+  readonly node: pub.AnyNode
+  readonly path: string[]
+  readonly action: NodeListChangeEvent.Action
+
+  constructor(node: pub.AnyNode, path: string[], action: NodeListChangeEvent.Action)
+  clone(node?: pub.AnyNode, path?: string[], action?: NodeListChangeEvent.Action): this
 }
 
 export class NodeMoveEvent extends Event {
@@ -64,6 +86,14 @@ export class NodeMoveEvent extends Event {
 
   constructor(node: pub.AnyNode, from: ChildNodePosition | undefined)
   clone(node?: pub.AnyNode, from?: ChildNodePosition): this
+}
+
+export class NodeDeleteEvent extends Event {
+  readonly type: 'node:delete'
+  readonly node: pub.AnyNode
+
+  constructor(node: pub.AnyNode)
+  clone(node?: pub.AnyNode): this
 }
 
 export class AssetCreateEvent extends Event {
@@ -124,7 +154,9 @@ export class PlaybackSeekEvent extends Event {
   readonly type: 'playback:seek'
 }
 
-export declare class CanvasEvent<T extends string> extends Event {
+export declare class CanvasEvent<
+  T extends 'click' | 'pointerdown' | 'pointermove' | 'pointerup',
+> extends Event {
   readonly type: `canvas:${T}`
   readonly canvasEventType: T
   readonly node?: pub.AnyVideoClip

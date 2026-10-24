@@ -141,7 +141,7 @@
     "vite": "catalog:",
     "vite-bundle-analyzer": "^0.23.0",
     "vite-plugin-remote-assets": "^2.1.0",
-    "vue-tsc": "^3.2.2",
+    "vue-tsc": "^3.3.13",
     "yaml": "^2.9.0"
   },
   "lint-staged": {

@@ -44,11 +44,10 @@ export class PlaybackClip<T extends pub.AnyClip> extends NodeView<PlaybackDocume
 
     const { pixiNode } = renderClip
 
-    // track changes to node properties
-    void renderClip._reactiveRenderProps.value
-
-    if (this.shouldRender) pixiNode.visible ||= true
-    else pixiNode.visible &&= false
+    if (this.shouldRender) {
+      renderClip.onRendererUpdate()
+      pixiNode.visible ||= true
+    } else pixiNode.visible &&= false
   }
 
   dispose(): void {

@@ -7,7 +7,7 @@ import { useI18n } from 'shared/utils'
 import type { MediaAsset } from '../assets/media-asset.ts'
 import styles from '../css/index.module.css'
 
-import { AssetBinVideoPreview } from './asset-bin-video-preview'
+import { AssetBinVideoPreview } from './asset-bin-video-preview.jsx'
 import { useEditor, useImportMediaFiles } from './utils.ts'
 
 export const AssetBinVideo = () => {

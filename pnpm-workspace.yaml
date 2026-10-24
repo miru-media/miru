@@ -37,9 +37,9 @@ catalog:
   twgl.js: ^6.2.0
   uid: ^2.0.2
   vite: 7.3.1
-  vue: ^3.5.26
+  vue: ^3.5.44
   vue-i18n-lite: ^1.0.2
-  yjs: ^13.6.29
+  yjs: ^13.6.33
   y-indexeddb: ^9.0.12
   yjs-orderedtree: https://github.com/miru-media/yjs-orderedtree.git#feat-custom-insert-before
   y-webrtc: ^10.3.0
@@ -58,5 +58,5 @@ onlyBuiltDependencies:
 patchedDependencies:
   glsl-tokenizer: patches/glsl-tokenizer.patch
   libavjs-webcodecs-polyfill: patches/libavjs-webcodecs-polyfill.patch
-  '@interactjs/core': patches/@interactjs__core.patch
   '@11ty/eleventy': patches/@11ty__eleventy.patch
+  eslint-plugin-import: patches/eslint-plugin-import.patch

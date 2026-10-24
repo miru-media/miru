@@ -69,7 +69,7 @@ const track = (node: pub.AnyTrack): Otio.Track => {
     children,
   }
 }
-const trackChild = <T extends pub.AnyTrackChild, TO extends 'Clip.1' | 'Gap.1'>(
+const trackChild = <T extends pub.AnyClip, TO extends 'Clip.1' | 'Gap.1'>(
   node: T,
   schemaName: TO,
 ): Otio.TrackChild<TO> => {

@@ -84,6 +84,23 @@ export class NodeGapUpdateEvent extends Event implements pub.NodeGapUpdateEvent 
   }
 }
 
+export class NodeListChangeEvent extends Event implements pub.NodeListChangeEvent {
+  declare readonly type: 'node:list-change'
+  readonly node: pub.AnyNode
+  readonly path: string[]
+  readonly action: pub.NodeListChangeEvent.Action
+
+  constructor(node: pub.AnyNode, path: string[], action: pub.NodeListChangeEvent.Action) {
+    super('node:list-change')
+    this.node = node
+    this.path = path
+    this.action = action
+  }
+  clone(node = this.node, path = this.path, action = this.action): this {
+    return new (getConstructor(this))(node, path, action)
+  }
+}
+
 export class NodeMoveEvent extends Event implements pub.NodeMoveEvent {
   declare readonly type: 'node:move'
   readonly node: pub.AnyNode
@@ -208,7 +225,10 @@ export class PlaybackSeekEvent extends Event implements pub.PlaybackSeekEvent {
   }
 }
 
-export class CanvasEvent<T extends string> extends Event implements pub.CanvasEvent<T> {
+export class CanvasEvent<T extends 'click' | 'pointerdown' | 'pointermove' | 'pointerup'>
+  extends Event
+  implements pub.CanvasEvent<T>
+{
   declare readonly type: `canvas:${T}`
   readonly canvasEventType: T
   readonly node?: pub.AnyVideoClip

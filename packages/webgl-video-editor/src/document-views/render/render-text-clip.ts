@@ -1,18 +1,16 @@
 import { computed, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
+import { NODE_FIELD_FLAGS } from '#constants'
 import type * as pub from '#core'
 import type { Size } from 'shared/types'
 
-import { getClipTransformMatrix } from '../../utils.ts'
-
 import type { MiruFilter } from './pixi-miru-filter.ts'
 import type { RenderDocument } from './render-document.ts'
-import { RenderNodeView } from './render-nodes.ts'
+import { RenderClip, spatialOnRenderUpdate } from './render-nodes.ts'
 
-export class RenderTextClip extends RenderNodeView<pub.TextClip> {
+export class RenderTextClip extends RenderClip<pub.TextClip, Pixi.Text> {
   readonly pixiFilters = ref<MiruFilter[]>([])
-  readonly matrix = computed(() => getClipTransformMatrix(this, false))
   readonly style = computed(() => {
     const { original } = this
     return {
@@ -27,10 +25,6 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       wordWrap: true,
     }
   })
-  readonly pixiNode = new Pixi.Text({
-    text: this.original.content,
-    style: this.style.value,
-  })
 
   readonly _reactiveRenderProps = computed(() => ({
     pixiFilters: this.pixiFilters,
@@ -39,12 +33,16 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
   }))
 
   constructor(renderView: RenderDocument, original: pub.TextClip) {
-    super(renderView, original)
-    this._initSpatialVisual()
+    const text = new Pixi.Text()
+    super(renderView, original, text)
+
+    text.text = this.original.content
+    text.style = this.style.value
   }
 
   getSize(): Size {
-    void this.style.value
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track reactive
+    this.style.value
 
     return {
       width: this.original.inlineSize,
@@ -52,15 +50,22 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
     }
   }
 
-  updateTransform() {
-    this.pixiNode.setFromMatrix(this.matrix.value)
+  onRendererUpdate(): void {
+    let updatedTransform = false
+    const { original } = this
+
+    for (const animation of original.animationMap.values()) {
+      if (animation.flags & NODE_FIELD_FLAGS.TextStyleProp && animation.canInterpolate()) {
+        Object.assign(this.pixiNode.style, this.style.value)
+        this.updateTransform()
+        updatedTransform = true
+      }
+    }
+
+    super.onRendererUpdate()
+    if (!updatedTransform) spatialOnRenderUpdate(this)
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  isTextView(): this is RenderTextClip {
-    return true
-  }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
   _update<Key extends keyof pub.TextClip>(key: Key): void {
     if (this._updateSpatialVisualField(key)) return
 
@@ -68,34 +73,29 @@ export class RenderTextClip extends RenderNodeView<pub.TextClip> {
       case 'content':
         this.pixiNode.text = this.original.content
         break
-      case 'fontFamily':
-      case 'fontSize':
-      case 'fontWeight':
-      case 'fontStyle':
-      case 'align':
-      case 'inlineSize':
-      case 'fill':
-      case 'stroke': {
-        const key_:
-          | 'fontFamily'
-          | 'fontSize'
-          | 'fontWeight'
-          | 'fontStyle'
-          | 'align'
-          | 'inlineSize'
-          | 'fill'
-          | 'stroke' = key
-        const value = this.original[key_] as any
-        const { style } = this.pixiNode
+      default: {
+        const field = this.original._fieldsByKey()[key as string]
+        if (field && field.flags & NODE_FIELD_FLAGS.TextStyleProp) {
+          const key_ = key as
+            | 'fontFamily'
+            | 'fontSize'
+            | 'fontWeight'
+            | 'fontStyle'
+            | 'align'
+            | 'inlineSize'
+            | 'fill'
+            | 'stroke'
+          const value = this.original[key_] as any
+          const { style } = this.pixiNode
 
-        if (key_ === 'inlineSize') style.wordWrapWidth = value
-        else if (key_ === 'align') style.align = value
-        else style[key_] = value
+          if (key_ === 'inlineSize') style.wordWrapWidth = value
+          else if (key_ === 'align') style.align = value
+          else style[key_] = value
 
-        this.pixiNode.setFromMatrix(this.matrix.value)
+          this.pixiNode.setFromMatrix(this.matrix.value)
+        }
         break
       }
-      default:
     }
   }
 }

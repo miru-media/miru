@@ -58,6 +58,7 @@ export class Document implements pub.Document {
   readonly #ownsAssetStore: boolean = false
 
   readonly _currentTime = ref(0)
+  readonly _currentFrameTime = computed(() => Rational.fromDecimal(this.currentTime, this.frameRate))
   readonly #duration = computed(() =>
     this.timeline.children.reduce((end, track) => Math.max(track.duration.valueOf(), end), 0),
   )

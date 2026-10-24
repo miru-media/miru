@@ -1,11 +1,12 @@
 import { computed, ref } from 'fine-jsx'
 
+import { NODE_FIELD_FLAGS } from '#constants'
 import type * as pub from '#core'
 import type { AnyClip, AnyNode, AnyParentNode, ClipTime, ClipTimeRational } from '#core'
+import { NodeUpdateEvent } from '#events'
 import type { KeyofUnion } from '#internal'
 import type { BaseClip } from '#nodes'
 
-import { NodeUpdateEvent } from '../../events.ts'
 import { TrackChild } from '../../nodes/track-child.ts'
 import type { ViewType } from '../document-view.ts'
 import { NodeView } from '../node-view.ts'
@@ -55,8 +56,8 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
   _isEnding = false
 
   declare parent?: ViewType<ViewTypeMap, T['parent']>
-  declare prev?: ViewType<ViewTypeMap, T['prev']>
-  declare next?: ViewType<ViewTypeMap, T['next']>
+  declare prev: ViewType<ViewTypeMap, T['prev']>
+  declare next: ViewType<ViewTypeMap, T['next']>
   declare head?: T extends pub.ParentNode<infer TChild> ? ViewType<ViewTypeMap, TChild> : never
   declare tail?: T extends pub.ParentNode<infer TChild> ? ViewType<ViewTypeMap, TChild> : never
   declare children?: T extends pub.ParentNode<infer TChild> ? ViewType<ViewTypeMap, TChild>[] : never
@@ -66,12 +67,8 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     return (link && this.docView.links.get(link.id)) as never
   }
 
-  _move = super._move.bind(this)
-  _update = super._update.bind(this)
-
-  _startEditing = this.#beginEdit.bind(this)
-  _applyEdits = this.#end.bind(this, true)
-  _dropEdits = this.#end.bind(this, false)
+  _applyEdits = this._end.bind(this, true)
+  _dropEdits = this._end.bind(this, false)
 
   constructor(editDoc: EditDocument, original: T) {
     super(editDoc, original)
@@ -86,7 +83,7 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     this._boundMethods = methods
   }
 
-  #beginEdit(keys: (keyof T)[]): void {
+  _startEditing(keys: (keyof T)[]): void {
     if (this._editedProps.value) throw new Error('Already editing node.')
 
     const { original } = this
@@ -95,7 +92,7 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     this._editedProps.value = obj
   }
 
-  #end(shouldApply: boolean): void {
+  _end(shouldApply: boolean): void {
     if (this.isDisposed) return
 
     this._isEnding = true
@@ -120,7 +117,7 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     this._isEnding = false
   }
 
-  static proxy = <T extends AnyNode>(view: EditView<T> | EditClip<any>): EditView.ProxyOf<T> => {
+  static proxy = <T extends AnyNode>(view: EditView<T> | EditClip<pub.AnyClip>): EditView.ProxyOf<T> => {
     const proxy = new Proxy<EditView<any>>(view, nodeHandler) as EditView.ProxyOf<T>
     viewProxies.set(view, proxy as any)
     return proxy
@@ -155,6 +152,7 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case '_dropEdits':
       case '_editedProps':
       case '_isEnding':
+        // eslint-disable-next-line @typescript-eslint/unbound-method -- expected to only be called on edit node
         return target[key]
 
       // links
@@ -208,7 +206,8 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
     }
 
     // avoid tracking editing status for non editable fields
-    if (original._reactiveKeys().has(key as any)) {
+    const fieldDef = original._fieldsByKey()[key as any]
+    if (fieldDef && !(fieldDef.flags & NODE_FIELD_FLAGS.Constant)) {
       const editedProps = target._editedProps.value
       if (editedProps && key in editedProps) return editedProps[key as keyof typeof original]
     }
@@ -223,6 +222,9 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       const oldValue = editedProps[key]
       target._editedProps.value = { ...editedProps, [key]: value }
       target.docView._emit(new NodeUpdateEvent(receiver, key as any, oldValue))
+      return true
+    } else if (original.animationMap.has(key as string)) {
+      ;(original as any)[key] = value
       return true
     }
 
@@ -241,7 +243,7 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
   },
 }
 
-abstract class EditTrackChild<T extends pub.AnyTrackChild> extends EditView<T> {
+abstract class EditTrackChild<T extends pub.AnyClip> extends EditView<T> {
   /* eslint-disable @typescript-eslint/unbound-method -- Reflect.apply */
   _timeRational = computed((): ClipTimeRational =>
     Reflect.apply(

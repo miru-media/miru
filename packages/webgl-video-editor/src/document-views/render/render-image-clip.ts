@@ -8,19 +8,15 @@ import { getClipTransformMatrix } from '../../utils.ts'
 
 import type { MiruFilter } from './pixi-miru-filter.ts'
 import type { RenderDocument } from './render-document.ts'
-import { RenderNodeView } from './render-nodes.ts'
+import { RenderClip, spatialOnRenderUpdate } from './render-nodes.ts'
 
-export class RenderImageClip extends RenderNodeView<pub.ImageClip> {
+export class RenderImageClip extends RenderClip<pub.ImageClip, Pixi.Sprite> {
   readonly _reactiveRenderProps = computed(() => ({
     pixiFilters: this.pixiFilters,
     matrix: this.matrix.value,
+    opacity: this.original.opacity,
   }))
 
-  readonly pixiNode = new Pixi.Sprite({
-    visible: false,
-    texture: new Pixi.Texture(new Pixi.ImageSource({})),
-  })
-  readonly sprite = this.pixiNode
   readonly pixiFilters = ref<MiruFilter[]>([])
 
   readonly #isReady = computed(
@@ -33,17 +29,19 @@ export class RenderImageClip extends RenderNodeView<pub.ImageClip> {
     return super.isReady && this.#isReady.value
   }
 
-  readonly matrix = computed((): Pixi.Matrix => getClipTransformMatrix(this, false))
   img = ref<ImageBitmap>()
 
   constructor(renderView: RenderDocument, original: pub.ImageClip) {
-    super(renderView, original)
+    const sprite = new Pixi.Sprite({
+      visible: false,
+      texture: new Pixi.Texture(new Pixi.ImageSource({})),
+    })
+    super(renderView, original, sprite)
 
-    const { source } = this.sprite.texture
+    const { source } = this.pixiNode.texture
     source.on('destroy', () => (source.resource as Partial<ImageBitmap> | undefined)?.close?.())
 
     this._update('mediaRef', undefined)
-    this._initSpatialVisual()
 
     watch(
       [() => original.asset?.blob, () => original.asset?.isLoading === true],
@@ -52,7 +50,7 @@ export class RenderImageClip extends RenderNodeView<pub.ImageClip> {
 
         let isStale = false as boolean
         onCleanup(() => (isStale = true))
-        const { texture } = this.sprite
+        const { texture } = this.pixiNode
 
         if (source) {
           const { promise, close } = loadAsyncImageSource(source, undefined, false)
@@ -70,6 +68,11 @@ export class RenderImageClip extends RenderNodeView<pub.ImageClip> {
         }
       },
     )
+  }
+
+  onRendererUpdate(): void {
+    super.onRendererUpdate()
+    spatialOnRenderUpdate(this)
   }
 
   updateTransform(): void {

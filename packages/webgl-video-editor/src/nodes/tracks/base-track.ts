@@ -8,12 +8,12 @@ import { Rational } from 'shared/utils/math.ts'
 
 import { ParentNode } from '../parent-node.ts'
 
-export interface BaseTrack<
-  T extends Schema.AnyTrack,
-  TChild extends pub.AnyTrackChild,
-> extends NonOverlappingUnion<ParentNode<T, pub.Timeline, TChild>, pub.AnyTrack> {}
+export interface BaseTrack<T extends Schema.AnyTrack, TChild extends pub.AnyClip> extends NonOverlappingUnion<
+  ParentNode<T, pub.Timeline, TChild>,
+  pub.AnyTrack
+> {}
 
-export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.AnyTrackChild>
+export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.AnyClip>
   extends ParentNode<T, pub.Timeline, TChild>
   implements pub.BaseTrack<TChild>
 {

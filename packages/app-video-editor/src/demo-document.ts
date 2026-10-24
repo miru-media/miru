@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- -- */
 import turtle from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/turtle-PaulsAdventures-pixabay.mp4'
 import turtleThumbnail from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/turtle-PaulsAdventures-pixabay.mp4.webp'
 import underwaterAudio from 'https://github.com/miru-media/static-assets/raw/main/dist/demo/underwater-ambience-freesound_community-pixabay.mp3'
@@ -11,10 +12,38 @@ import wavesRocksThumbnail from 'https://github.com/miru-media/static-assets/raw
 import { uid } from 'uid'
 import type { Schema } from 'webgl-video-editor'
 
+import { Rational } from 'shared/utils/index.ts'
 import { createInitialDocument } from 'webgl-video-editor/sync'
 
 const scale1080p = { scaleX: 1.7778, scaleY: 1.7778 }
 const scale720p = { scaleX: 2.6667, scaleY: 2.6667 }
+
+const scaleWaves = { scaleX: 1.9, scaleY: 1.9 }
+const EASE_OUT = [0.17, 0.84, 0.44, 1] as const
+
+const audioFadeDuration = new Rational(2, 20)
+const fadeIn = (clip: Schema.AudioClip) => {
+  ;((clip.animations ??= {}).volume ??= { keyframes: [] }).keyframes.push(
+    { value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' },
+    { value: 1, dt: audioFadeDuration.toJSON(), easing: 'linear' },
+  )
+  return clip
+}
+
+const fadeOut = (clip: Schema.AudioClip) => {
+  ;((clip.animations ??= {}).volume ??= { keyframes: [] }).keyframes.push(
+    {
+      value: 1,
+      dt: Rational.from(clip.duration)
+        .subtract(audioFadeDuration)
+        .subtract(clip.animations.volume.keyframes.reduce((acc, k) => acc.add(k.dt), Rational.ZERO))
+        .toJSON(),
+      easing: 'linear',
+    },
+    { value: 0, dt: audioFadeDuration.toJSON(), easing: 'linear' },
+  )
+  return clip
+}
 
 const assets = {
   waves: {
@@ -147,8 +176,17 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       sourceStart: { value: 90000, rate: 30000 },
       duration: { value: 90000, rate: 30000 },
       mediaRef: { id: assets.waves.id, type: 'asset:media:av' },
-      ...scale1080p,
+      ...scaleWaves,
       effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
+      animations: {
+        translateX: { keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' }] },
+        translateY: {
+          keyframes: [
+            { value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' },
+            { value: 50, dt: { value: 3, rate: 1 }, easing: 'linear' },
+          ],
+        },
+      },
     },
     {
       id: uid(),
@@ -187,8 +225,17 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       sourceStart: { value: 30000, rate: 30000 },
       duration: { value: 60000, rate: 30000 },
       mediaRef: { id: assets.waves.id, type: 'asset:media:av' },
-      ...scale1080p,
+      ...scaleWaves,
       effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
+      animations: {
+        translateX: { keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' }] },
+        translateY: {
+          keyframes: [
+            { value: -50, dt: { value: 0, rate: 1 }, easing: 'linear' },
+            { value: 0, dt: { value: 2, rate: 1 }, easing: 'linear' },
+          ],
+        },
+      },
     },
   ],
 }
@@ -216,16 +263,26 @@ demoDoc.timeline.children.push(
       {
         id: uid(),
         type: 'clip:text',
-        duration: { rate: 1, value: 2 },
+        duration: { value: 2, rate: 1 },
         sourceStart: { value: 0, rate: 1 },
-        translateX: -40,
         translateY: 600,
         content: 'Hello world!',
         fontFamily: 'Arial',
         fontSize: 250,
         inlineSize: 800,
         fill: 'white',
-        gap: { rate: 1, value: 2 },
+        gap: { value: 2, rate: 1 },
+        animations: {
+          translateX: {
+            keyframes: [
+              { value: -40, dt: { value: 0, rate: 1 }, easing: EASE_OUT },
+              { value: 120, dt: { value: 2, rate: 1 }, easing: EASE_OUT },
+            ],
+          },
+          translateY: {
+            keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: EASE_OUT }],
+          },
+        },
       },
     ],
   },
@@ -235,30 +292,40 @@ demoDoc.timeline.children.push(
     id: uid(),
     type: 'track:audio',
     children: [
-      {
+      fadeOut({
         id: uid(),
         type: 'clip:audio',
         name: assets.wavesAudio.name,
         sourceStart: { value: 23275, rate: 1225 },
-        duration: { value: 12250, rate: 1225 },
+        duration: audioFadeDuration.scale(0.5).add({ value: 12250, rate: 1225 }).toJSON(),
         mediaRef: { id: assets.wavesAudio.id, type: 'asset:media:av' },
-      },
-      {
-        id: uid(),
-        type: 'clip:audio',
-        name: assets.underwaterAudio.name,
-        sourceStart: { value: 0, rate: 125 },
-        duration: { value: 625, rate: 125 },
-        mediaRef: { id: assets.underwaterAudio.id, type: 'asset:media:av' },
-      },
-      {
+      }),
+      fadeIn({
         id: uid(),
         type: 'clip:audio',
         name: assets.wavesAudio.name,
         sourceStart: { value: 19600, rate: 1225 },
-        duration: { value: 2450, rate: 1225 },
+        duration: audioFadeDuration.scale(0.5).add({ value: 2450, rate: 1225 }).toJSON(),
+        gap: Rational.from({ value: 625, rate: 125 }).subtract(audioFadeDuration).toJSON(),
         mediaRef: { id: assets.wavesAudio.id, type: 'asset:media:av' },
-      },
+      }),
+    ],
+  },
+  {
+    id: uid(),
+    type: 'track:audio',
+    children: [
+      fadeOut(
+        fadeIn({
+          id: uid(),
+          type: 'clip:audio',
+          name: assets.underwaterAudio.name,
+          sourceStart: { value: 0, rate: 125 },
+          duration: audioFadeDuration.add({ value: 625, rate: 125 }).toJSON(),
+          gap: Rational.from({ value: 12250, rate: 1225 }).subtract(audioFadeDuration.scale(0.5)).toJSON(),
+          mediaRef: { id: assets.underwaterAudio.id, type: 'asset:media:av' },
+        }),
+      ),
     ],
   },
 )

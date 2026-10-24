@@ -169,6 +169,7 @@
 
 .clipGap {
   composes: clipBoxBase;
+  border: none;
 
   &:hover,
   &.isSelected {
@@ -181,5 +182,123 @@
 
   &.isSelected {
     border: dashed 0.125rem var(--clip-selected-color-accent);
+  }
+}
+
+.clipKeyframe {
+  position: absolute;
+  top: -0.5em;
+  left: -0.5em;
+  flex-shrink: 0;
+  color: #1d6be4;
+  rotate: 45deg;
+}
+
+.clipBelow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 0;
+  margin-top: 0.625rem;
+}
+
+.clipAnimation {
+  position: relative;
+  left: var(--clip-box-left);
+  width: calc(var(--clip-box-right) - var(--clip-box-left));
+  overflow: hidden;
+  font-size: 0.625rem;
+  background: #2c3033;
+  border-radius: 0.375rem;
+}
+
+.clipAnimationToggle {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 2.5rem 0.375rem 0.5rem;
+  overflow: hidden;
+  font-size: inherit;
+  line-height: initial;
+  outline-color: currentcolor;
+  outline-offset: -0.25rem;
+  background: none;
+  border: none;
+  border-bottom-right-radius: 999px;
+
+  &:hover,
+  .clipAnimation.open & {
+    color: black;
+    background: var(--yellow);
+  }
+
+  .clipAnimation.open &:hover {
+    background: white;
+  }
+}
+
+.clipAnimationExpandIcon {
+  flex-shrink: 0;
+  margin-right: 0.375rem;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  .clipAnimation.open & {
+    rotate: 90deg;
+  }
+}
+
+.clipAnimationCurves {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 3rem);
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  gap: 0.5rem;
+  justify-items: center;
+  padding: 0.5rem;
+  margin: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.clipAnimationCurve {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  background: none;
+  border: none;
+
+  svg {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: calc(0.375rem - 0.0625rem);
+    overflow: visible;
+    background: #51585c;
+    border: solid 0.0625rem transparent;
+    border-radius: 0.1875rem;
+    fill: none;
+    stroke: white;
+    stroke-width: 0.025;
+    scale: 1 -1;
+  }
+
+  &:hover {
+    svg {
+      border-color: white;
+    }
+  }
+
+  &[aria-selected='true'] {
+    svg {
+      border-color: #1d6be4;
+    }
   }
 }

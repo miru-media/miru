@@ -174,7 +174,7 @@ export class ClipDragContext {
       }
 
       maxOverlapWithPrevClip = Rational.max(
-        Rational.max((prev?.timeRational.end ?? Rational.ZERO).subtract(newStart), newStart.negate()),
+        Rational.max((prev?.timeRational.end ?? Rational.ZERO).subtract(newStart), newStart.scale(-1)),
         maxOverlapWithPrevClip,
       )
       if (next) {
@@ -200,7 +200,7 @@ export class ClipDragContext {
   get linkedClips(): pub.AnyClip[] {
     return this._linkedClips.value
   }
-  get parent(): pub.AnyTrackChild['parent'] {
+  get parent(): pub.AnyClip['parent'] {
     return this._clip.value?.original.parent
   }
   get newStart(): Rational {

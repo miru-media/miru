@@ -166,7 +166,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     }
 
     // Always read the computed value, which checks playback status and skips rendering while playing.
-    void this._updateAndRenderReactive.value
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- ^
+    this._updateAndRenderReactive.value
 
     if (shouldAdvance) {
       if (this.currentTime >= this.doc.duration) this.pause()
@@ -178,7 +179,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     if (skipWhilePlaying && !this.isPaused && this.isReady) return
 
     this.doc.emit(UPDATE_EVENT)
-    void this.#needsRender.value
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track changes to node properties
+    this.#needsRender.value
     this.renderView.render()
     this.#needsRender.value = false
 
