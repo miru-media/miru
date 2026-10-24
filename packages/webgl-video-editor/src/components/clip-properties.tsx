@@ -1,17 +1,19 @@
+import { computed } from 'fine-jsx'
 import { uid } from 'uid'
 
-import type { AnyClip, AnyVideoClip, AudioClip } from '#core'
+import styles from '#index.module.css'
+import type { StringKeyof } from '#internal'
 import type { InputEvent } from 'shared/types.ts'
-import { clamp, useI18n } from 'shared/utils'
+import { clamp, useI18n } from 'shared/utils/index.ts'
 
-import styles from '../css/index.module.css'
+import type { EditView } from '../document-views/edit/edit-nodes.ts'
 
 import { useEditor } from './utils.ts'
 
 const PERCENT = 100
 const HALF_TURN_DEG = 180
 
-interface SubComponentProps<T extends AnyClip> {
+interface SubComponentProps<T extends EditView.AnyClip> {
   clip: T
 }
 
@@ -40,6 +42,31 @@ const getNumberInputProps = (
   }
 }
 
+const KeyframeButton = <T extends EditView.AnyClip>({ clip, keys }: { clip: T; keys: StringKeyof<T>[] }) => {
+  const getClipTime = () => clip.docView._currentFrameTime.value.subtract(clip.timeRational.start)
+  const animations = keys
+    .map((key) => [key, clip.animations[key]] as const)
+    .filter((entry): entry is [(typeof entry)[0], NonNullable<(typeof entry)[1]>] => !!entry[1])
+
+  const hasKeyframesAtCurrentTime = computed(() => {
+    const time = getClipTime()
+    return animations.some(([, a]) => a.indexOfKeyframeAt(time) >= 0)
+  })
+
+  const onClick = () => {
+    clip._toggleKeyframesAt(
+      animations.map(([key]) => key as any),
+      getClipTime(),
+    )
+  }
+
+  return (
+    <button class={styles.propertiesKeyframe} onClick={onClick}>
+      {() => (hasKeyframesAtCurrentTime.value ? <IconMsSquareRounded /> : <IconMsSquareOutlineRounded />)}
+    </button>
+  )
+}
+
 export const ClipProperties = () => {
   const editor = useEditor()
 
@@ -62,7 +89,9 @@ export const ClipProperties = () => {
 
                 return (
                   linkedAudio?.mediaRef && (
-                    <AudioClipProperties {...{ clip: editor.doc.nodes.get(linkedAudio.id) }} />
+                    <AudioClipProperties
+                      {...{ clip: editor.doc.nodes.get<EditView.AudioClip>(linkedAudio.id) }}
+                    />
                   )
                 )
               }}
@@ -74,14 +103,15 @@ export const ClipProperties = () => {
   )
 }
 
-const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
+const VideoClipProperties = ({ clip }: SubComponentProps<EditView.AnyVideoClip>) => {
   const { t } = useI18n()
   const id = uid()
   const scaleId = `scale-${id}`
-  const positionId = `x-${id}`
+  const positionId = `position-${id}`
   const xId = `x-${id}`
   const yId = `y-${id}`
-  const rotateId = `y-${id}`
+  const rotateId = `rotate-${id}`
+  const opacityId = `opacity-${id}`
 
   const scaleInputProps = getNumberInputProps(
     () => clip.scaleX,
@@ -118,12 +148,21 @@ const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
     HALF_TURN_DEG,
   )
 
+  const opacityInputProps = getNumberInputProps(
+    () => clip.opacity,
+    (value) => (clip.opacity = value),
+    opacityId,
+    0,
+    1,
+    PERCENT,
+  )
+
   return (
     <>
-      <h2 class={styles.panelHeading}>{t('transform')}</h2>
+      <h2 class={styles.panelHeading}>{t('prop_transform')}</h2>
 
       <h3 id={scaleId} class={styles.panelSubheading}>
-        {t('scale')}
+        {t('prop_scale')}
       </h3>
 
       <div class={styles.inputRow}>
@@ -133,11 +172,13 @@ const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
           <input type="number" {...scaleInputProps} />
           <span class={styles.inputSuffix}>%</span>
         </label>
+
+        <KeyframeButton clip={clip} keys={['scaleX', 'scaleY']} />
       </div>
 
-      <h2 id={positionId} class={styles.panelSubheading}>
-        {t('position')}
-      </h2>
+      <h3 id={positionId} class={styles.panelSubheading}>
+        {t('prop_translate')}
+      </h3>
 
       <div class={styles.inputRow}>
         <label class={styles.numberInput}>
@@ -153,11 +194,13 @@ const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
           </span>
           <input type="number" {...yInputProps} />
         </label>
+
+        <KeyframeButton clip={clip} keys={['translateX', 'translateY']} />
       </div>
 
-      <h2 id={rotateId} class={styles.panelSubheading}>
-        {t('rotation')}
-      </h2>
+      <h3 id={rotateId} class={styles.panelSubheading}>
+        {t('prop_rotate')}
+      </h3>
 
       <div class={styles.inputRow}>
         <input type="range" {...rotateInputProps} />
@@ -166,12 +209,30 @@ const VideoClipProperties = ({ clip }: SubComponentProps<AnyVideoClip>) => {
           <input type="number" {...rotateInputProps} />
           <span class={styles.inputUnit}>°</span>
         </label>
+
+        <KeyframeButton clip={clip} keys={['rotate']} />
+      </div>
+
+      <h2 class={styles.panelHeading}>{t('prop_appearance')}</h2>
+      <h3 id={rotateId} class={styles.panelSubheading}>
+        {t('prop_opacity')}
+      </h3>
+
+      <div class={styles.inputRow}>
+        <input type="range" {...opacityInputProps} />
+
+        <label class={[styles.numberInput, styles.asText]}>
+          <input type="number" {...opacityInputProps} />
+          <span class={styles.inputUnit}>%</span>
+        </label>
+
+        <KeyframeButton clip={clip} keys={['opacity']} />
       </div>
     </>
   )
 }
 
-const AudioClipProperties = ({ clip }: SubComponentProps<AudioClip>) => {
+const AudioClipProperties = ({ clip }: SubComponentProps<EditView.AudioClip>) => {
   const { t } = useI18n()
   const headingId = uid()
 
@@ -189,7 +250,7 @@ const AudioClipProperties = ({ clip }: SubComponentProps<AudioClip>) => {
       <h2 class={styles.panelHeading}>{t('audio_properties')}</h2>
 
       <h3 id={headingId} class={styles.panelSubheading}>
-        {t('volume')}
+        {t('prop_volume')}
       </h3>
 
       <div class={styles.inputRow}>
@@ -199,6 +260,8 @@ const AudioClipProperties = ({ clip }: SubComponentProps<AudioClip>) => {
           <input type="number" {...volumeInputProps} />
           <span class={styles.inputUnit}>%</span>
         </label>
+
+        <KeyframeButton clip={clip} keys={['volume']} />
       </div>
     </>
   )

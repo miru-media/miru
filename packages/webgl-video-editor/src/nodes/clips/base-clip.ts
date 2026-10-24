@@ -19,14 +19,14 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
   implements pub.BaseClip
 {
   static FIELDS = super.FIELDS.concat([
-    { key: 'sourceStart', flags: 0, transform: Rational.from },
+    { key: 'sourceStart', flags: NODE_FIELD_FLAGS.ReactiveProp, transform: Rational.from },
     {
       key: 'mediaRef',
-      flags: 0,
+      flags: NODE_FIELD_FLAGS.ReactiveProp,
       equal: (a: Schema.AssetRef | undefined, b: Schema.AssetRef | undefined) =>
         a?.id === b?.id && a?.type === b?.type,
     },
-    { key: 'transition', flags: 0 },
+    { key: 'transition', flags: NODE_FIELD_FLAGS.ReactiveProp },
 
     { key: 'isReady', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'asset', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Asset },
@@ -38,14 +38,6 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     { key: 'gap', flags: NODE_FIELD_FLAGS.Gap },
     { key: 'link', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.BaseClip>[])
-
-  static TRANSFORM_FIELDS = [
-    { key: 'translateX', flags: 0, defaultValue: 0 },
-    { key: 'translateY', flags: 0, defaultValue: 0 },
-    { key: 'rotate', flags: 0, defaultValue: 0 },
-    { key: 'scaleX', flags: 0, defaultValue: 1 },
-    { key: 'scaleY', flags: 0, defaultValue: 1 },
-  ] satisfies pub.NodeFieldDef<Schema.TransformProps>[]
 
   declare readonly children: undefined
 
@@ -166,11 +158,15 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     return !this.isDisposed && rangeContainsTime(this.playableTime, this.doc.currentTime)
   }
 
+  _insertKeyframeAtTime(key: string, value: unknown, time: Rational, index?: number): void {
+    super._insertKeyframeAtTime(key, value, time.clamp(Rational.ZERO, this.duration), index)
+  }
+
   /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isClip(): this is pub.AnyClip {
     return true
   }
-  isTrackChild(): this is pub.AnyTrackChild {
+  isTrackChild(): this is pub.AnyClip {
     return true
   }
   /* eslint-enable @typescript-eslint/class-methods-use-this */
@@ -185,19 +181,24 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     }
   }
 
-  _transformToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.TransformProps>>>(
-    this: BaseClip<T> & Schema.TransformProps,
-  ): Partial<Schema.TransformProps> {
-    const { translateX, translateY, rotate, scaleX, scaleY } = this
-    const transform: Partial<Schema.TransformProps> = {}
+  _visualToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.VisualProps>>>(
+    this: BaseClip<T> & Schema.VisualProps,
+  ): Partial<Schema.VisualProps & Pick<Schema.Base, 'effects'>> {
+    const { translateX, translateY, rotate, scaleX, scaleY, opacity, effects } = this
+    const obj: Partial<Schema.VisualProps & Pick<Schema.Base, 'effects'>> = {}
 
-    if (translateX !== 0) transform.translateX = translateX
-    if (translateY !== 0) transform.translateY = translateY
-    if (rotate !== 0) transform.rotate = rotate
-    if (scaleX !== 1) transform.scaleX = scaleX
-    if (scaleY !== 1) transform.scaleY = scaleY
+    if (translateX !== 0) obj.translateX = translateX
+    if (translateY !== 0) obj.translateY = translateY
+    if (rotate !== 0) obj.rotate = rotate
+    if (scaleX !== 1) obj.scaleX = scaleX
+    if (scaleY !== 1) obj.scaleY = scaleY
 
-    return transform
+    if (opacity !== 1) obj.opacity = opacity
+
+    if (effects.length)
+      obj.effects = effects.map(({ id, assetId, intensity }) => ({ id, assetId, intensity }))
+
+    return obj
   }
 
   delete(): void {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-invalid-void-type -- false positive */
 export const lerp = (from: number, to: number, weight: number) => from + (to - from) * weight
 
 export const remap = (
@@ -61,40 +62,33 @@ export class Rational {
     return Rational.simplified(this.value * other.rate - other.value * this.rate, this.rate * other.rate)
   }
 
-  negate(): Rational {
+  scale(scalar: number): Rational {
     const { value, rate } = this
-    return new Rational(0 - value, rate)
+    return new Rational(value * scalar, rate)
   }
 
   toRate(rate: number): Rational {
     return new Rational(Math.round((this.value / this.rate) * rate), rate)
   }
 
-  compare(other: RationalLike): number {
-    const a = this.value * other.rate
-    const b = other.value * this.rate
-
-    return a - b
-  }
-
   isLessThan(other: RationalLike): boolean {
-    return this.compare(other) < 0
+    return Rational.compare(this, other) < 0
   }
 
   isGreaterThan(other: RationalLike): boolean {
-    return this.compare(other) > 0
+    return Rational.compare(this, other) > 0
   }
 
   isEqualTo(other: RationalLike): boolean {
-    return this.compare(other) === 0
+    return Rational.compare(this, other) === 0
   }
 
   isLte(other: RationalLike): boolean {
-    return this.compare(other) <= 0
+    return Rational.compare(this, other) <= 0
   }
 
   isGte(other: RationalLike): boolean {
-    return this.compare(other) >= 0
+    return Rational.compare(this, other) >= 0
   }
 
   clamp(min: RationalLike, max: RationalLike): Rational {
@@ -113,23 +107,38 @@ export class Rational {
     return { OTIO_SCHEMA: 'RationalTime.1', rate: this.rate, value: this.value }
   }
 
-  static simplified = (value: number, rate: number): Rational => {
+  static simplified(this: void, value: number, rate: number): Rational {
     const gcd = greatestCommonDivisor(value, rate)
     return new Rational(value / gcd, rate / gcd)
   }
 
-  static from = (rational: RationalLike): Rational =>
-    rational instanceof Rational ? rational : new Rational(rational.value, rational.rate)
+  static from(this: void, rational: RationalLike): Rational {
+    return rational instanceof Rational ? rational : new Rational(rational.value, rational.rate)
+  }
 
-  static fromDecimal = (decimal: number, rate: number): Rational =>
-    new Rational(Math.round(decimal * rate), rate)
+  static fromDecimal(this: void, decimal: number, rate: number): Rational {
+    return new Rational(Math.round(decimal * rate), rate)
+  }
 
-  static min = (a: Rational, b: Rational): Rational => (a.isLte(b) ? a : b)
+  static compare(this: void, a: RationalLike, b: RationalLike): number {
+    return a.value * b.rate - b.value * a.rate
+  }
 
-  static max = (a: Rational, b: Rational): Rational => (a.isGte(b) ? a : b)
+  static equals(this: void, a?: RationalLike, b?: RationalLike): boolean {
+    return !a || !b ? a === b : Rational.compare(a, b) === 0
+  }
 
-  static clamp = (value: Rational, min: RationalLike, max: RationalLike): Rational =>
-    Rational.from(value.isLessThan(min) ? min : value.isGreaterThan(max) ? max : value)
+  static min(this: void, a: Rational, b: Rational): Rational {
+    return a.isLte(b) ? a : b
+  }
+
+  static max(this: void, a: Rational, b: Rational): Rational {
+    return a.isGte(b) ? a : b
+  }
+
+  static clamp(this: void, value: Rational, min: RationalLike, max: RationalLike): Rational {
+    return Rational.from(value.isLessThan(min) ? min : value.isGreaterThan(max) ? max : value)
+  }
 
   static ZERO = new Rational(0, 1)
   static INFINITY = new Rational(Infinity, 1)

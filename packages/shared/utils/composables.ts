@@ -226,7 +226,8 @@ export const useChangeCounter = () => {
 
   return {
     track: () => {
-      void counterRef.value
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track reactive value
+      counterRef.value
     },
     inc: () => {
       const value = counterRef.value + 1

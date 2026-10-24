@@ -1,4 +1,10 @@
-export { RenderTimeline, RenderTrack, type RenderNodeView, type AnyRenderClip } from './render-nodes.ts'
+export {
+  RenderClip,
+  RenderTimeline,
+  RenderTrack,
+  type RenderNodeView,
+  type AnyRenderClip,
+} from './render-nodes.ts'
 export { RenderDocument, type RenderDocumentOptions } from './render-document.ts'
 export { RenderVideoClip } from './render-video-clip.ts'
 export { RenderImageClip } from './render-image-clip.ts'

@@ -35,6 +35,8 @@ declare global {
   const IconMsPlayArrowRounded: typeof import('~icons/material-symbols/play-arrow-rounded.jsx')['default']
   const IconMsRedoRounded: typeof import('~icons/material-symbols/redo-rounded.jsx')['default']
   const IconMsSplitSceneOutlineRounded: typeof import('~icons/material-symbols/split-scene-outline-rounded.jsx')['default']
+  const IconMsSquareOutlineRounded: typeof import('~icons/material-symbols/square-outline-rounded.jsx')['default']
+  const IconMsSquareRounded: typeof import('~icons/material-symbols/square-rounded.jsx')['default']
   const IconMsTextFieldsRounded: typeof import('~icons/material-symbols/text-fields-rounded.jsx')['default']
   const IconMsUndoRounded: typeof import('~icons/material-symbols/undo-rounded.jsx')['default']
   const IconMsUploadRounded: typeof import('~icons/material-symbols/upload-rounded.jsx')['default']

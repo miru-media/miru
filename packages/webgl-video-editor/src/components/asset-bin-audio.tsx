@@ -6,7 +6,7 @@ import { useI18n } from 'shared/utils'
 import type { MediaAsset } from '../assets/media-asset.ts'
 import styles from '../css/index.module.css'
 
-import { AssetBinAudioPreview } from './asset-bin-audio-preview'
+import { AssetBinAudioPreview } from './asset-bin-audio-preview.jsx'
 import { useEditor, useImportMediaFiles } from './utils.ts'
 
 export const AssetBinAudio = () => {

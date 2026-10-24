@@ -1,13 +1,14 @@
 import { type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
+import type * as pub from '#core'
 import type { Size } from 'shared/types.ts'
 import { clamp, remap } from 'shared/utils/math.ts'
 
-import type { AnyRenderClip } from './document-views/render/index.ts'
+import type { RenderClip } from './document-views/render/index.ts'
 
 export const getClipTransformMatrix = (
-  renderClip: AnyRenderClip,
+  renderClip: RenderClip<pub.AnyVideoClip>,
   withVideoRotation: boolean,
 ): Pixi.Matrix => {
   const size = renderClip.getSize()

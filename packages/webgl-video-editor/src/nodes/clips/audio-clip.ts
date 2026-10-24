@@ -9,7 +9,7 @@ export interface AudioClip extends NonOverlappingUnion<BaseClip<Schema.AudioClip
 
 export class AudioClip extends BaseClip<Schema.AudioClip> implements pub.AudioClip {
   static FIELDS = super.FIELDS.concat([
-    { key: 'volume', flags: 0, defaultValue: 1 },
+    { key: 'volume', flags: NODE_FIELD_FLAGS.ReactiveProp | NODE_FIELD_FLAGS.Animatable, defaultValue: 1 },
     { key: 'linkedVideo', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.AudioClip>[])
 

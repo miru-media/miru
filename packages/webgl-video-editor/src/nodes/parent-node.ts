@@ -1,11 +1,10 @@
-import { computed, ref } from 'fine-jsx'
-
 import { NODE_FIELD_FLAGS } from '#constants'
 import type { AnyNode, AnyParentNode, Schema } from '#core'
 import type * as pub from '#core'
 import type { NonReadonly } from '#internal'
 
 import { BaseNode } from './base-node.ts'
+import { DLL } from './utils.ts'
 
 export abstract class ParentNode<
   T extends Schema.AnyNode,
@@ -22,24 +21,18 @@ export abstract class ParentNode<
     { key: 'count', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.ParentNode<pub.AnyNode>>[])
 
-  readonly #head = ref<TChild>()
-  readonly #tail = ref<TChild>()
+  readonly #dll = new DLL<TChild>()
 
   get head(): TChild | undefined {
-    return this.#head.value
+    return this.#dll.head
   }
   get tail(): TChild | undefined {
-    return this.#tail.value
+    return this.#dll.tail
   }
 
-  readonly #children = computed(() => {
-    const array: TChild[] = []
-    for (let current = this.head; current; current = current.next as TChild) array.push(current)
-    return array
-  })
   declare children: TChild[]
   get ['children' as never](): TChild[] {
-    return this.#children.value
+    return this.#dll.array.value
   }
 
   get count(): number {
@@ -47,67 +40,19 @@ export abstract class ParentNode<
     return tail ? tail.index + 1 : 0
   }
 
-  #setChildparent(child: TChild): void {
-    ;(child as NonReadonly<TChild>).parent = this as unknown as TParent
-  }
-
   _positionChildAt(node: TChild, index: number): void {
     if (node.index === index && node.parent === (this as unknown as AnyParentNode)) return
 
-    let before = this.head
-    for (; !!before && before.index < index; before = before.next as TChild);
-
-    if (before === node.next) before = before?.next as TChild | undefined
-
-    this.#insertBefore(node, before)
-  }
-
-  #pushChild(node: TChild): void {
-    this._unlinkChild(node)
-    this.#setChildparent(node)
-
-    const tail = this.#tail.value
-
-    if (tail) {
-      tail.next = node
-      node.prev = tail
-    } else this.#head.value = node
-
-    this.#tail.value = node
-    node.next = undefined
+    this.#dll.positionAt(node, index)
+    ;(node as NonReadonly<TChild>).parent = this as unknown as TParent
   }
 
   _unlinkChild(node: TChild): void {
-    const { head, tail } = this
-    const { prev, next } = node
-
-    if (node === head) this.#head.value = next as TChild
-    if (node === tail) this.#tail.value = prev as TChild
-    if (prev) prev.next = next
-    if (next) next.prev = prev
-
-    node.prev = node.next = undefined
+    this.#dll.unlink(node)
   }
 
-  #insertBefore(node: TChild, before: TChild | undefined): void {
-    if (node === before) return
-
-    this._unlinkChild(node)
-    this.#setChildparent(node)
-    node.next = before
-
-    if (!before) {
-      this.#pushChild(node)
-      return
-    }
-
-    node.prev = before.prev
-
-    const { head } = this
-    const { prev } = before
-    if (before === head) this.#head.value = node
-    if (prev) prev.next = node
-    before.prev = node
+  search<U>(comparator: (a: TChild, b: U) => number, value: U, from?: number, to?: number): number {
+    return this.#dll.search(comparator, value, from, to)
   }
 
   dispose(deep = false): void {
@@ -115,5 +60,6 @@ export abstract class ParentNode<
 
     if (deep) while (this.tail) this.tail.dispose()
     else while (this.tail) this.tail.remove()
+    this.#dll.dispose()
   }
 }

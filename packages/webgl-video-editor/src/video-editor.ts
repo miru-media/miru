@@ -31,7 +31,7 @@ export class VideoEditor implements pub.VideoEditor {
   readonly _editor = this
   readonly sync?: pub.VideoEditorDocumentSync
 
-  readonly #selection = ref<pub.AnyTrackChild | pub.GapSelection>()
+  readonly #selection = ref<pub.AnyClip | pub.GapSelection>()
   readonly #linkedSelection = computed(() => {
     const { selection } = this
     return selection?.isNode && selection.isClip() ? (selection.link?.nodes ?? []) : []
@@ -257,17 +257,49 @@ export class VideoEditor implements pub.VideoEditor {
 
     if (delta.value < 1) return
 
+    const clipJson = clip.toJSON()
+    const startAnimations: Schema.AnyClip['animations'] = {}
+    const endAnimations: Schema.AnyClip['animations'] = {}
+
+    clip.animationMap.forEach((animation, key) => {
+      const keyframeInits = clipJson.animations?.[key]?.keyframes ?? []
+      const split = animation.splitAt(delta)
+      if (!split) return
+
+      const start = keyframeInits.slice(0, split.sliceToIndex)
+      const end = keyframeInits.slice(split.sliceToIndex)
+      startAnimations[key] = { keyframes: start }
+      endAnimations[key] = { keyframes: end }
+
+      const splitToInit = {
+        ...keyframeInits[split.sliceTo ? split.sliceToIndex : split.sliceToIndex - 1],
+        value: split.splitValue,
+      }
+
+      start.push({
+        ...splitToInit,
+        dt: delta.subtract(split.sliceTo?.prev?.time ?? Rational.ZERO),
+      })
+      if (end.at(0)) end[0].dt = split.sliceTo!.time.subtract(delta)
+
+      if (!split.isOnKeyframe) {
+        end.unshift({ ...splitToInit, dt: Rational.ZERO })
+      }
+    })
+
     const startClip = this.doc.createNode({
-      ...clip.toJSON(),
+      ...clipJson,
       id: this.generateId(),
       transition: undefined,
       duration: delta,
+      keyframes: startAnimations,
     })
     const endClip = this.doc.createNode({
-      ...clip.toJSON(),
+      ...clipJson,
       id: this.generateId(),
       sourceStart: clipTime.source.add(delta),
       duration: clipTime.duration.subtract(delta),
+      keyframes: endAnimations,
     })
 
     startClip.move({ parentId: parent.id, index: clip.index })
@@ -330,10 +362,10 @@ export class VideoEditor implements pub.VideoEditor {
     this.doc.seekTo(time)
   }
 
-  select(item: pub.AnyTrackChild | pub.GapSelection | undefined, seek = item?.isNode ?? true): void {
+  select(item: pub.AnyClip | pub.GapSelection | undefined, seek = item?.isNode ?? true): void {
     this.#select(item, seek)
   }
-  #select(item: pub.AnyTrackChild | pub.GapSelection | undefined, seek: boolean): void {
+  #select(item: pub.AnyClip | pub.GapSelection | undefined, seek: boolean): void {
     const { doc } = this
 
     if (!item) {

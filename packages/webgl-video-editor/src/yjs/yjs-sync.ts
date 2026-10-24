@@ -4,7 +4,9 @@ import type { Size } from 'webgl-effects'
 import * as Y from 'yjs'
 import type { YTree } from 'yjs-orderedtree'
 
+import { TIMELINE_ID } from '#constants'
 import type * as pub from '#core'
+import { LinkCreateEvent, NodeCreateEvent, type NodeListChangeEvent } from '#events'
 import type { DocumentSettings } from '#schema'
 import type {
   NodeDeleteEvent,
@@ -15,38 +17,11 @@ import type {
   SettingsUpdateEvent,
 } from 'webgl-video-editor'
 
-import { TIMELINE_ID } from '../constants.ts'
 import { Document } from '../document.ts'
-import { LinkCreateEvent, NodeCreateEvent } from '../events.ts'
 
 import { YTREE_ROOT_KEY } from './constants.ts'
 import { createYnodeFromJson, getValidLinksFromYarray, initYjsRoot, initYmapFromJson } from './utils.ts'
-
-const jsonValuesAreEqual = (a: unknown, b: unknown): boolean => {
-  if (typeof a === 'object') return JSON.stringify(a) === JSON.stringify(b)
-  return a === b
-}
-
-const updateYmap = (ymap: Y.Map<unknown>, updates: Record<string, unknown>): void => {
-  for (const key in updates) {
-    if (Object.hasOwn(updates, key)) {
-      const newValue = updates[key]
-      if (!jsonValuesAreEqual(newValue, ymap.get(key)))
-        ymap.set(
-          key,
-          typeof newValue === 'object' && newValue != null && 'toJSON' in newValue
-            ? (newValue.toJSON as () => any)()
-            : newValue,
-        )
-    }
-  }
-}
-
-const findIndexByIdProp = (yarray: Y.Array<any>, id: string): number => {
-  const { length } = yarray
-  for (let i = 0; i < length; i++) if (yarray.get(i).id === id) return i
-  return -1
-}
+import { findIndexByIdProp, onYnodeKeyframeListChange, updateYmap } from './utils.ts'
 
 export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync {
   doc!: pub.Document
@@ -71,6 +46,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
   readonly #abort = new AbortController()
 
   #isSyncingYdocToVideoDoc = false
+  #isInDocListener = 0
   get #shouldSkipDocEvent(): boolean {
     return this.#yundo.undoing || this.#yundo.redoing || this.#isSyncingYdocToVideoDoc
   }
@@ -163,24 +139,28 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     ): ((...args: T) => void) => {
       const listener = listener_.bind(this)
       return (...args) => {
-        if (!this.#shouldSkipDocEvent) this.transact(() => listener(...args))
+        this.#isInDocListener += 1
+        try {
+          if (!this.#shouldSkipDocEvent) this.transact(() => listener(...args))
+        } finally {
+          this.#isInDocListener -= 1
+        }
       }
     }
 
     const listenerOptions: AddEventListenerOptions = { signal: this.#abort.signal }
     doc.on('doc:dispose', this.dispose.bind(this), listenerOptions)
 
-    /* eslint-disable @typescript-eslint/unbound-method -- false positive */
     doc.on('settings:update', bindDocListener(this.#onSettingsUpdate), listenerOptions)
     doc.on('node:create', bindDocListener(this.#onNodeCreate), listenerOptions)
     doc.on('node:move', bindDocListener(this.#onMove), listenerOptions)
     doc.on('node:update', bindDocListener(this.#onUpdate), listenerOptions)
     doc.on('node:gap-update', bindDocListener(this.#onGapUpdate), listenerOptions)
+    doc.on('node:list-change', bindDocListener(this.#onListChange), listenerOptions)
     doc.on('node:delete', bindDocListener(this.#onDelete), listenerOptions)
     const linkEventListener = bindDocListener(this.#onLinkEvent)
     doc.on('link:create', linkEventListener, listenerOptions)
     doc.on('link:delete', linkEventListener, listenerOptions)
-    /* eslint-enable @typescript-eslint/unbound-method */
 
     this.#onYtreeChange()
     this.#onLinksYarrayChange()
@@ -214,7 +194,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     return this.#ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
   }
 
-  #withSyncingTrue(fn: () => void) {
+  #withSyncingTrue(fn: () => void): void {
     this.#isSyncingYdocToVideoDoc = true
     try {
       this.ydoc.transact(fn)
@@ -223,36 +203,60 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     }
   }
 
-  readonly #onYnodeChange = (event: Y.YMapEvent<unknown>): void => {
-    this.#withSyncingTrue(() => {
-      const ynode = event.target
-      const id = ynode.get('id') as string
-      const node = this.doc.nodes.get(id) as pub.AnyNode | undefined
+  readonly #onYnodeChange = (events: Y.YEvent<any>[]): void => {
+    if (this.#isInDocListener) return
 
-      if (!node) return
+    this.#withSyncingTrue(() =>
+      events.forEach((event) => {
+        const ynode = event.currentTarget as Y.Map<any>
+        const id = ynode.get('id') as string
+        const node = this.doc.nodes.get(id) as pub.AnyNode | undefined
 
-      const { changes } = event
+        if (!node) return
 
-      // apply property changes to node
-      changes.keys.forEach((change, key) => {
-        const newValue = change.action === 'delete' ? undefined : ynode.get(key)
-        ;(node as Record<string, any>)[key] = newValue
-      })
-    })
+        const { changes, path } = event
 
-    this.dispatchEvent(new Event('change'))
-  }
+        switch (path.length ? path[0] : undefined) {
+          case undefined:
+            // apply property changes to node
+            changes.keys.forEach((change, key) => {
+              if (ynode.get(key) instanceof Y.AbstractType) return
 
-  readonly #onYnodeGapChange = (event: Y.YMapEvent<Schema.Rational>): void => {
-    this.#withSyncingTrue(() => {
-      const gapMap = event.target
-      const ynode = gapMap.parent as Y.Map<unknown>
+              const newValue = change.action === 'delete' ? undefined : ynode.get(key)
+              ;(node as Record<string, any>)[key] = newValue
+            })
+            break
+          case 'gap': {
+            const gapMap = event.target
+            const ynode = gapMap.parent as Y.Map<unknown>
 
-      const node = this.#getOrCreateFromYnode(ynode)
-      event.changes.keys.forEach((_change, key) => {
-        ;(node as pub.AnyClip).setGap(key, gapMap.get(key) ?? { rate: 1, value: 0 })
-      })
-    })
+            const node = this.#getOrCreateFromYnode(ynode)
+            changes.keys.forEach((_change, key) => {
+              ;(node as pub.AnyClip).setGap(key, gapMap.get(key) ?? { rate: 1, value: 0 })
+            })
+            break
+          }
+          case 'animations': {
+            const fieldKey = path[1]
+            if (path[2] !== 'keyframes' || typeof fieldKey !== 'string') break
+
+            const pathLength = path.length
+            if (pathLength === 3) onYnodeKeyframeListChange(node, fieldKey, event)
+            else if (pathLength === 4 && typeof path[3] === 'number') {
+              const index = path[3]
+              event.changes.keys.forEach((change, key) => {
+                if (change.action === 'update')
+                  node.animations[fieldKey]?.update(
+                    index,
+                    key as any,
+                    (event.target as Y.Map<unknown>).get(key),
+                  )
+              })
+            }
+          }
+        }
+      }),
+    )
 
     this.dispatchEvent(new Event('change'))
   }
@@ -260,11 +264,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
   #ensureObserved(ynode: Y.Map<unknown>): void {
     if (this.#observed.has(ynode)) return
 
-    ynode.observe(this.#onYnodeChange)
-    // can't use ynode.observeDeep() and event.currentTarget because of yjs bugs including https://github.com/yjs/yjs/issues/768
-    const gapMap = ynode.get('gap') as Y.Map<Schema.Rational> | undefined
-    gapMap?.observe(this.#onYnodeGapChange)
-
+    ynode.observeDeep(this.#onYnodeChange)
     this.#observed.add(ynode)
   }
 
@@ -458,6 +458,44 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     updateYmap(gapMap, { [key]: node.getGap(key).toJSON() })
   }
 
+  #onListChange({ node, path, action }: NodeListChangeEvent): void {
+    const ynode = this.#getYtreeNode(node.id)
+    let intermediate: Record<string, any> = node
+    let yIntermediate: Y.Map<any> = ynode
+
+    for (let i = 0; i < path.length; i++) {
+      const key = path[i]
+      intermediate = intermediate[key]
+      if (!yIntermediate.has(key)) yIntermediate.set(key, i === path.length - 1 ? new Y.Array() : new Y.Map())
+      yIntermediate = yIntermediate.get(key)
+    }
+    const array = intermediate as unknown as { toJSON: () => any; [key: string]: unknown }[]
+    const yarray = yIntermediate as unknown as Y.Array<Y.Map<unknown>>
+    const { type, index } = action
+
+    switch (type) {
+      case 'insert': {
+        const itemYmap = new Y.Map<unknown>()
+        updateYmap(itemYmap, array[index].toJSON())
+        yarray.insert(index, [itemYmap])
+        break
+      }
+      case 'update': {
+        const item = array[index]
+        const itemYmap = yarray.get(index)
+        const { key } = action
+        const value = item[key]
+
+        updateYmap(itemYmap, { [key]: value })
+        break
+      }
+      case 'delete': {
+        yarray.delete(index, 1)
+        break
+      }
+    }
+  }
+
   #onDelete({ node }: NodeDeleteEvent): void {
     this.#ytree.deleteNodeAndDescendants(node.id)
   }
@@ -496,24 +534,6 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     return this.#ytree.generateNodeKey()
   }
 
-  /** @internal */
-  serializeYdoc(): Omit<Schema.SerializedDocument, 'assets'> {
-    const ytree = this.#ytree
-
-    const serialize = <T extends Schema.AnySerializedNode = Schema.AnySerializedNode>(nodeId: string): T => {
-      const ynode = ytree.getNodeValueFromKey(nodeId) as Y.Map<unknown>
-      const childIds: string[] = ytree.sortChildrenByOrder(ytree.getNodeChildrenFromKey(nodeId), nodeId)
-
-      return { ...ynode.toJSON(), children: childIds.map(serialize) } as any
-    }
-
-    return {
-      ...(this.settingsYmap.toJSON() as Schema.DocumentSettings),
-      timeline: serialize(this.doc.timeline.id),
-      links: this.linksYarray.toArray(),
-    }
-  }
-
   dispose(): void {
     if (this.isDisposed) return
     this.isDisposed = true
@@ -522,10 +542,7 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     this.doc.dispose()
     this.#yundo.destroy()
 
-    this.#observed.forEach((ynode) => {
-      ynode.unobserve(this.#onYnodeChange)
-      ;(ynode.get('gap') as Y.Map<Schema.Rational> | undefined)?.unobserve(this.#onYnodeGapChange)
-    })
+    this.#observed.forEach((ynode) => ynode.unobserveDeep(this.#onYnodeChange))
 
     this.#observed.clear()
   }

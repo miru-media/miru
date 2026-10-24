@@ -25,7 +25,7 @@ export const extendViteConfig = (config: UserConfig): UserConfig => {
       alias: {
         'yjs-orderedtree': resolve(
           ROOT,
-          'node_modules/.pnpm/yjs-orderedtree@https+++codeload.github.com+miru-media+yjs-orderedtree+tar.gz+9e56a0313_70e35e724873e59896f11b75b6e8655c/node_modules/yjs-orderedtree/src/index.js',
+          'node_modules/.pnpm/yjs-orderedtree@https+++codeload.github.com+miru-media+yjs-orderedtree+tar.gz+9e56a0313_0bf2f495ab9259d74833ee7351e0fbfd/node_modules/yjs-orderedtree/src/index.js',
         ),
       },
     },

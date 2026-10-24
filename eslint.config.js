@@ -19,6 +19,7 @@ export default defineConfig(
   {
     files: [TS_JS_FILES],
     extends: [eslint.configs.recommended],
+    languageOptions: {},
   },
   {
     files: [TS_JS_FILES],

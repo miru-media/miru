@@ -11,7 +11,7 @@ import { BaseNode } from './base-node.ts'
 
 export abstract class TrackChild<T extends Schema.TrackChild> extends BaseNode<T, pub.AnyTrack> {
   static FIELDS = super.FIELDS.concat([
-    { key: 'duration', flags: 0, transform: Rational.from },
+    { key: 'duration', flags: NODE_FIELD_FLAGS.ReactiveProp, transform: Rational.from },
 
     { key: 'timeRational', flags: NODE_FIELD_FLAGS.Readonly },
     { key: 'time', flags: NODE_FIELD_FLAGS.Readonly },
@@ -74,6 +74,10 @@ export abstract class TrackChild<T extends Schema.TrackChild> extends BaseNode<T
     this._gaps = { '': ref(Rational.ZERO) }
     this._timeRational = computed(() => this._computeTimeRational())
     this._time = computed(() => TrackChild.clipTimeRationalToDecimal(this.timeRational))
+  }
+
+  getLocalTimeOffset(): Rational {
+    return this.timeRational.start
   }
 
   abstract _computeTimeRational(): pub.ClipTimeRational

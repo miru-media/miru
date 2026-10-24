@@ -7,7 +7,7 @@ import { BaseClip } from './base-clip.ts'
 export interface ImageClip extends NonOverlappingUnion<BaseClip<Schema.ImageClip>, pub.ImageClip> {}
 
 export class ImageClip extends BaseClip<Schema.ImageClip> implements pub.ImageClip {
-  static FIELDS = super.FIELDS.concat(BaseClip.TRANSFORM_FIELDS satisfies pub.NodeFieldDef<pub.ImageClip>[])
+  static FIELDS = super.FIELDS.concat(BaseClip.VISUAL_FIELDS satisfies pub.NodeFieldDef<pub.ImageClip>[])
 
   declare asset: pub.ImageAsset | undefined
   declare effects: pub.ImageClip['effects']
@@ -28,14 +28,10 @@ export class ImageClip extends BaseClip<Schema.ImageClip> implements pub.ImageCl
   /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.ImageClip {
-    const { effects } = this
     const obj: Schema.ImageClip = {
       ...super.toJSON(),
-      ...this._transformToJSON(),
+      ...this._visualToJSON(),
     }
-
-    if (effects.length)
-      obj.effects = effects.map(({ id, assetId, intensity }) => ({ id, assetId, intensity }))
 
     return obj
   }
