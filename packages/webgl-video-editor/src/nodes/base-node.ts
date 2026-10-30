@@ -14,6 +14,8 @@ import {
 import type { NonReadonly } from '#internal'
 import { Rational } from 'shared/utils/index.ts'
 
+import { EffectList, EffectListItem } from '../effects/effect-list.ts'
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in class def
 export interface BaseNode<T extends Schema.Base = any, TParent extends pub.AnyParentNode = pub.AnyParentNode>
   extends pub.BaseNode {}
@@ -30,7 +32,6 @@ export abstract class BaseNode<
   static FIELDS: pub.NodeFieldDef<any>[] = [
     { key: 'name', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: '' },
     { key: 'enabled', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: true },
-    { key: 'effects', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: [] },
     { key: 'markers', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: [] },
     { key: 'color', flags: NODE_FIELD_FLAGS.ReactiveProp },
     { key: 'metadata', flags: NODE_FIELD_FLAGS.ReactiveProp, defaultValue: {} },
@@ -71,13 +72,13 @@ export abstract class BaseNode<
 
   readonly #parent = ref<TParent>()
 
-  readonly _effectAssets = computed((): pub.VideoEffectAsset[] =>
-    this.effects.map(({ assetId }) => this.doc.assets.getAsset(assetId)),
-  )
-
   readonly animations: Partial<Record<string, pub.Animation>> = {}
   readonly animationMap = new Map<string, Animation>()
   readonly _animationViews = new Map<string, AnimationView>()
+
+  readonly effects = EffectList.create((action) =>
+    this.doc.emit(new NodeListChangeEvent(this as any, ['effects'], action)),
+  )
 
   declare parent?: TParent | undefined
   get ['parent' as never](): TParent | undefined {
@@ -125,6 +126,8 @@ export abstract class BaseNode<
     this.id = init.id
     this.type = init.type
 
+    init.effects?.forEach((effect) => this.effects.pushInitial(new EffectListItem(effect)))
+
     this._fields().forEach((field) => {
       if (!(field.flags & NODE_FIELD_FLAGS.ReactiveProp)) return
       const { key } = field
@@ -133,7 +136,7 @@ export abstract class BaseNode<
         const animation = (this.animations[key] = new Animation(field.flags, (action) =>
           this.doc.emit(new NodeListChangeEvent(this as any, ['animations', key, 'keyframes'], action)),
         ))
-        init.animations?.[key]?.keyframes.forEach((init) => animation.push(new Keyframe(init)))
+        init.animations?.[key]?.keyframes.forEach((init) => animation.pushInitial(new Keyframe(init)))
         this.animationMap.set(key, animation)
 
         const view = animation.createView(() =>
@@ -151,13 +154,10 @@ export abstract class BaseNode<
       ({ asset }) => {
         if (asset.type !== 'asset:effect:video') return
 
-        const index = this.effects.findIndex((e) => e.assetId === asset.id)
-        if (index === -1) return
-
-        const effectAssets = [...this._effectAssets.value]
-        effectAssets[index] = asset
-        this._effectAssets.value.length = 0
-        this._effectAssets.value = effectAssets
+        this.effects.array.value.forEach((effect) => {
+          if (effect.assetId !== asset.id) return
+          effect.asset = asset
+        })
       },
       { signal: this._abort.signal },
     )
@@ -178,7 +178,7 @@ export abstract class BaseNode<
     if (hasKeyframeAtTime) {
       animations.forEach(([_key, animation]) => {
         const index = animation.indexOfKeyframeAt(time)
-        animation.delete(index)
+        if (index >= 0) animation.delete(index)
       })
     } else {
       animations.forEach(([key, animation]) => {
@@ -225,7 +225,7 @@ export abstract class BaseNode<
       type: this.type,
       name: this.name,
       enabled: this.enabled,
-      effects: this.effects,
+      effects: this.effects.toJSON(),
       animations: this._fields().reduce<Schema.Base['animations']>((acc, { key, flags }) => {
         if (!(flags & NODE_FIELD_FLAGS.Animatable)) return acc
 

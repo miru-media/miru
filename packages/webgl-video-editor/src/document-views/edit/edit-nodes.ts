@@ -2,7 +2,7 @@ import { computed, ref } from 'fine-jsx'
 
 import { NODE_FIELD_FLAGS } from '#constants'
 import type * as pub from '#core'
-import type { AnyClip, AnyNode, AnyParentNode, ClipTime, ClipTimeRational } from '#core'
+import type { ClipTime, ClipTimeRational } from '#core'
 import { NodeUpdateEvent } from '#events'
 import type { KeyofUnion } from '#internal'
 import type { BaseClip } from '#nodes'
@@ -22,10 +22,10 @@ declare module 'webgl-video-editor' {
 
 const IS_EDIT_VIEW = '_is_edit_view'
 
-const viewProxies = new WeakMap<EditView<any>, EditView.ProxyOf<AnyNode>>()
+const viewProxies = new WeakMap<EditView<any>, EditView.ProxyOf<pub.AnyNode>>()
 
 export namespace EditView {
-  export type ProxyOf<T extends AnyNode> = EditView<T> & T
+  export type ProxyOf<T extends pub.AnyNode> = EditView<T> & T
   export type Timeline = ProxyOf<pub.Timeline>
   export type VideoTrack = ProxyOf<pub.VideoTrack>
   export type AudioTrack = ProxyOf<pub.AudioTrack>
@@ -40,8 +40,8 @@ export namespace EditView {
   export type AnyTrackChild = AnyClip
 }
 
-export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
-  static BOUND_METHODS = new Set<KeyofUnion<AnyNode | NodeView<EditDocument, any>>>([
+export class EditView<T extends pub.AnyNode> extends NodeView<EditDocument, T> {
+  static BOUND_METHODS = new Set<KeyofUnion<pub.AnyNode | NodeView<EditDocument, any>>>([
     'delete',
     'dispose',
     'move',
@@ -117,14 +117,14 @@ export class EditView<T extends AnyNode> extends NodeView<EditDocument, T> {
     this._isEnding = false
   }
 
-  static proxy = <T extends AnyNode>(view: EditView<T> | EditClip<pub.AnyClip>): EditView.ProxyOf<T> => {
+  static proxy = <T extends pub.AnyNode>(view: EditView<T> | EditClip<pub.AnyClip>): EditView.ProxyOf<T> => {
     const proxy = new Proxy<EditView<any>>(view, nodeHandler) as EditView.ProxyOf<T>
     viewProxies.set(view, proxy as any)
     return proxy
   }
 }
 
-const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
+const nodeHandler: ProxyHandler<EditView<pub.AnyNode>> = {
   get(target, key, receiver) {
     const { original } = target
 
@@ -142,7 +142,7 @@ const nodeHandler: ProxyHandler<EditView<AnyNode>> = {
       case 'parent':
       case 'head':
       case 'tail':
-        return target.docView._getNode((original as AnyParentNode)[key])
+        return target.docView._getNode((original as pub.AnyParentNode)[key])
 
       // view properties and methods
       case '_move':
@@ -255,7 +255,7 @@ abstract class EditTrackChild<T extends pub.AnyClip> extends EditView<T> {
   _time = computed((): ClipTime => TrackChild.clipTimeRationalToDecimal(this._timeRational.value))
 }
 
-export class EditClip<T extends AnyClip> extends EditTrackChild<T> {
+export class EditClip<T extends pub.AnyClip> extends EditTrackChild<T> {
   _presentationTime = computed((): ClipTime =>
     Reflect.apply(
       (this.original as unknown as BaseClip<T>)._computePresentationTime,

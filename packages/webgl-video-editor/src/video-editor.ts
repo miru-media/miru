@@ -154,7 +154,7 @@ export class VideoEditor implements pub.VideoEditor {
     })
     this.playback = new PlaybackDocument({ renderView })
 
-    this.effectRenderer = new EffectRenderer()
+    this.effectRenderer = new EffectRenderer({ gl: getWebgl2Context(document.createElement('canvas')) })
 
     this.doc.on('node:delete', (event: NodeDeleteEvent) => {
       const { selection } = this
@@ -188,24 +188,24 @@ export class VideoEditor implements pub.VideoEditor {
     this.doc.importFromJson(content)
   }
 
-  async createMediaAsset(source: string | Blob): Promise<pub.MediaAsset> {
+  async createMediaAsset(source: string | Blob): Promise<pub.MediaAsset | pub.ImageAsset> {
     return await this.doc.assets.createMediaAsset(source)
   }
 
-  addMediaClip(asset: pub.MediaAsset): pub.AnyClip {
+  addMediaClip(asset: pub.MediaAsset | pub.ImageAsset): pub.AnyClip {
     return this._transact(() => {
-      const { duration } = asset
-
+      const { type } = asset
+      const newClipDurationS = type === 'asset:media:av' ? asset.duration : 2
       const track = this.getOrCreateTrackForMedia(asset)
 
       const init: Schema.AnyClip = {
         id: this.generateId(),
-        type: `clip:${track.isVideo() ? 'video' : 'audio'}`,
+        type: type === 'asset:media:image' ? 'clip:image' : `clip:${track.isVideo() ? 'video' : 'audio'}`,
         name: asset.name,
         color: asset.color,
         mediaRef: { id: asset.id, type: asset.type },
         sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
-        duration: Rational.fromDecimal(duration, this.doc.frameRate),
+        duration: Rational.fromDecimal(newClipDurationS, this.doc.frameRate),
       }
 
       const clip = this.doc.createNode(init)
@@ -213,7 +213,7 @@ export class VideoEditor implements pub.VideoEditor {
 
       // Create a linked audio clip for video clips
       // TODO: improve linking UX
-      if (track.isVideo() && track.link) {
+      if ('audio' in asset && track.isVideo() && track.link) {
         const linkedAudioTrack = track.link.nodes.find((n) => n.type === 'track:audio')
         if (linkedAudioTrack) {
           const audioClip = this.doc.createNode({
@@ -314,7 +314,9 @@ export class VideoEditor implements pub.VideoEditor {
     return [startClip, endClip]
   }
 
-  getTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }): pub.AnyTrack | undefined {
+  getTrackForMedia(asset: {
+    video?: boolean | (pub.MediaAsset | pub.ImageAsset)['video']
+  }): pub.AnyTrack | undefined {
     const hasVideo = (asset.video ?? false) !== false
 
     // add to the last track of the correct type
@@ -326,7 +328,9 @@ export class VideoEditor implements pub.VideoEditor {
         hasVideo === !!t.link,
     )
   }
-  getOrCreateTrackForMedia(asset: { video?: boolean | pub.MediaAsset['video'] }): pub.AnyTrack {
+  getOrCreateTrackForMedia(asset: {
+    video?: (pub.MediaAsset | pub.ImageAsset)['video'] | boolean
+  }): pub.AnyTrack {
     const found = this.getTrackForMedia(asset)
     if (found) return found
 

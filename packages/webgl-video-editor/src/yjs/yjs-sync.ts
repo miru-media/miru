@@ -21,7 +21,7 @@ import { Document } from '../document.ts'
 
 import { YTREE_ROOT_KEY } from './constants.ts'
 import { createYnodeFromJson, getValidLinksFromYarray, initYjsRoot, initYmapFromJson } from './utils.ts'
-import { findIndexByIdProp, onYnodeKeyframeListChange, updateYmap } from './utils.ts'
+import { findIndexByIdProp, onYnodePropListChange, updateYmap } from './utils.ts'
 
 export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync {
   doc!: pub.Document
@@ -79,6 +79,9 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
             ynode.set('mediaRef', { ...mediaRef, id: mediaRef.assetId })
           }
         }
+
+        // add missing effects array
+        if (!ynode.has('effects')) ynode.set('effects', new Y.Array())
       })
     }
 
@@ -215,8 +218,10 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
         if (!node) return
 
         const { changes, path } = event
+        const pathLength = path.length
+        const nodePropKey = pathLength ? (path[0] as keyof Schema.AnyClip) : undefined
 
-        switch (path.length ? path[0] : undefined) {
+        switch (nodePropKey) {
           case undefined:
             // apply property changes to node
             changes.keys.forEach((change, key) => {
@@ -236,24 +241,37 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
             })
             break
           }
+          case 'effects': {
+            if (pathLength === 2) {
+              onYnodePropListChange(node.effects, event)
+            } else if (pathLength === 3 && typeof path[2] === 'number') {
+              const index = path[2]
+
+              event.changes.keys.forEach((change, key) => {
+                if (change.action === 'update')
+                  node[nodePropKey].update(index, key as any, (event.target as Y.Map<unknown>).get(key))
+              })
+            }
+            break
+          }
           case 'animations': {
             const fieldKey = path[1]
             if (path[2] !== 'keyframes' || typeof fieldKey !== 'string') break
 
-            const pathLength = path.length
-            if (pathLength === 3) onYnodeKeyframeListChange(node, fieldKey, event)
+            const animation = node.animations[fieldKey]
+            if (!animation) break
+
+            if (pathLength === 3) onYnodePropListChange(animation, event)
             else if (pathLength === 4 && typeof path[3] === 'number') {
               const index = path[3]
               event.changes.keys.forEach((change, key) => {
                 if (change.action === 'update')
-                  node.animations[fieldKey]?.update(
-                    index,
-                    key as any,
-                    (event.target as Y.Map<unknown>).get(key),
-                  )
+                  animation.update(index, key as any, (event.target as Y.Map<unknown>).get(key))
               })
             }
+            break
           }
+          default:
         }
       }),
     )
@@ -407,26 +425,6 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
     const ynode = this.#getYtreeNode(node.id)
 
     switch (key) {
-      // effects are stored in YArrays although we only ever have one atm
-      case 'effects': {
-        const yeffects = ynode.get('effects') as Y.Array<Y.Map<unknown>>
-        const firstEffect = node.effects.at(0)
-
-        if (firstEffect) {
-          let ymap = yeffects.get(0) as Y.Map<unknown> | undefined
-
-          if (!ymap) {
-            ymap = new Y.Map<unknown>()
-            yeffects.insert(0, [ymap])
-          }
-
-          updateYmap(ymap, firstEffect)
-        } else if (yeffects.length > 0) {
-          yeffects.delete(0, Math.min(yeffects.length, 1))
-        }
-
-        break
-      }
       // TODO:
       case 'markers':
         return
@@ -469,7 +467,9 @@ export class YjsSync extends EventTarget implements pub.VideoEditorDocumentSync 
       if (!yIntermediate.has(key)) yIntermediate.set(key, i === path.length - 1 ? new Y.Array() : new Y.Map())
       yIntermediate = yIntermediate.get(key)
     }
-    const array = intermediate as unknown as { toJSON: () => any; [key: string]: unknown }[]
+    const arrayOrList = intermediate as unknown as
+      { toJSON: () => any; [key: string]: unknown }[] | pub.NodePropList<any>
+    const array = Array.isArray(arrayOrList) ? arrayOrList : arrayOrList.array.value
     const yarray = yIntermediate as unknown as Y.Array<Y.Map<unknown>>
     const { type, index } = action
 

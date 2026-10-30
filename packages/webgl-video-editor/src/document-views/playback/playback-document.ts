@@ -31,12 +31,12 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   readonly #scope = createEffectScope()
   readonly #noRender = ref(0)
-  readonly #needsRender = ref(true)
   readonly #delayedActiveClipIsStalled = ref(false)
 
   readonly #isEnded = computed(() => this.currentTime >= this.doc.duration)
   readonly #isPaused = ref(true)
   readonly #isStalled = computed(() => !this.#isPaused.value && !this.isReady)
+  #rafRenderHandle = 0
 
   readonly assetFiles = new Map<string, { blob: Blob; url: string }>()
 
@@ -80,24 +80,26 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     })
 
     const listenerOptions = { signal: this._abort.signal }
-    const markAsNeedsRender = this.#markAsNeedsRender.bind(this)
     ;(['node:move', 'node:update', 'node:delete', 'settings:update', 'playback:seek'] as const).forEach(
       (type) => {
-        doc.on(type, markAsNeedsRender, listenerOptions)
+        doc.on(type, this.renderOnAnimationFrame, listenerOptions)
       },
     )
-    effect(() => this.isReady && this.isPaused && this.#markAsNeedsRender())
+    effect(() => this.isReady && this.isPaused && this.renderOnAnimationFrame())
 
     this.ticker.add(this.tick.bind(this))
 
     void this.renderView.whenRendererIsReady.then(() => {
       this.#scope.run(() => {
         const documentVisibility = useDocumentVisibility()
-        watch([() => this.#noRender.value <= 0 && documentVisibility.value], ([shouldRender]) => {
-          const { ticker } = this
-          if (shouldRender) ticker.start()
-          else ticker.stop()
-        })
+        watch(
+          [() => this.#noRender.value <= 0 && documentVisibility.value && !this.isPaused],
+          ([shouldRender]) => {
+            const { ticker } = this
+            if (shouldRender) ticker.start()
+            else ticker.stop()
+          },
+        )
       })
     })
 
@@ -162,12 +164,10 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     if (shouldAdvance) {
       this.stats.begin()
       this.doc._setCurrentTime(Math.min(this.currentTime + deltaMS / 1e3, duration))
-      this._updateAndRender(false)
     }
 
-    // Always read the computed value, which checks playback status and skips rendering while playing.
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- ^
-    this._updateAndRenderReactive.value
+    this.doc.emit(UPDATE_EVENT)
+    this.renderView.render()
 
     if (shouldAdvance) {
       if (this.currentTime >= this.doc.duration) this.pause()
@@ -175,22 +175,12 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     }
   }
 
-  _updateAndRender(skipWhilePlaying: boolean): unknown {
-    if (skipWhilePlaying && !this.isPaused && this.isReady) return
-
-    this.doc.emit(UPDATE_EVENT)
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track changes to node properties
-    this.#needsRender.value
-    this.renderView.render()
-    this.#needsRender.value = false
-
-    return undefined
-  }
-
-  _updateAndRenderReactive = computed(this._updateAndRender.bind(this, true))
-
-  #markAsNeedsRender() {
-    this.#needsRender.value = true
+  readonly renderOnAnimationFrame = (): void => {
+    this.renderView.needsRender.value = true
+    this.#rafRenderHandle ||= requestAnimationFrame(() => {
+      this.tick()
+      this.#rafRenderHandle = 0
+    })
   }
 
   play(): void {
@@ -200,6 +190,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
       this.doc.emit(PLAY_EVENT)
       this.#isPaused.value = false
     }
+
+    cancelAnimationFrame(this.#rafRenderHandle)
   }
 
   pause(): void {
@@ -220,5 +212,7 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     super.dispose()
     this.#scope.stop()
     this.ticker.destroy()
+
+    cancelAnimationFrame(this.#rafRenderHandle)
   }
 }

@@ -13,7 +13,6 @@ export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoCl
     { key: 'linkedAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.VideoClip>[])
 
-  declare effects: pub.VideoClip['effects']
   declare asset: pub.MediaAsset | undefined
 
   get linkedAudio(): pub.AudioClip | undefined {

@@ -118,17 +118,13 @@ export class MediaAsset extends BaseFileAsset<Schema.MediaAsset> implements pub.
 }
 
 export class ImageAsset extends BaseFileAsset<Schema.ImageAsset> implements pub.ImageAsset {
-  readonly width: Schema.ImageAsset['width']
-  readonly height: Schema.ImageAsset['height']
-  readonly rotation: Schema.ImageAsset['rotation']
+  readonly video: Schema.ImageAsset['video']
 
   constructor(
     init: Schema.ImageAsset,
     options: { source?: Blob | string; store: pub.VideoEditorAssetStore; isBuiltIn?: boolean },
   ) {
     super(init, options)
-    this.width = init.width
-    this.height = init.height
-    this.rotation = init.rotation
+    this.video = init.video
   }
 }

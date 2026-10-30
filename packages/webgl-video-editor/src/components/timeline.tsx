@@ -7,7 +7,7 @@ import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { useScrubber } from 'shared/video/use-scrubber.ts'
 
-import { ACCEPT_VIDEO_FILE_TYPES } from '../constants.ts'
+import { ACCEPT_VISUAL_FILE_TYPE } from '../constants.ts'
 import styles from '../css/index.module.css'
 
 import { Playhead } from './playhead.jsx'
@@ -191,7 +191,7 @@ export const Timeline = ({
                     <input
                       type="file"
                       class={styles.srOnly}
-                      accept={ACCEPT_VIDEO_FILE_TYPES}
+                      accept={ACCEPT_VISUAL_FILE_TYPE}
                       onInput={(event: InputEvent) => onInputClipFile(event)}
                     />
                     <span class={styles.textBody}>{t('click_add_clip')}</span>

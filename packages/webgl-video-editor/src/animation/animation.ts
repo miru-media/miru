@@ -8,7 +8,7 @@ import type * as pub from '#core'
 import type { Schema } from '#core'
 import { clamp, lerp, Rational, remap } from 'shared/utils/index.ts'
 
-import { defineComputedProp, DLL } from '../nodes/utils.ts'
+import { defineComputedProp, NodePropList } from '../nodes/utils.ts'
 
 import { Keyframe } from './keyframe.ts'
 
@@ -84,12 +84,12 @@ class AnimationView<T = unknown> {
 
 export type { AnimationView }
 
-export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Animation<T> {
+export class Animation<T = unknown> implements pub.Animation<T> {
+  readonly #dll: NodePropList<Keyframe<T>>
   readonly flags: number
-  #emit: (action: pub.NodeListChangeEvent.Action) => void
 
   get keyframes(): Keyframe<T>[] {
-    return this.array.value
+    return this.#dll.array.value
   }
 
   createView(time: () => Rational): AnimationView<T> {
@@ -97,8 +97,7 @@ export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Anim
   }
 
   constructor(flags: number, emitAction: (action: pub.NodeListChangeEvent.Action) => void) {
-    super()
-    this.#emit = emitAction
+    this.#dll = new NodePropList(emitAction)
     this.flags = flags
   }
 
@@ -107,11 +106,11 @@ export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Anim
   }
 
   canInterpolate(): boolean {
-    return !!this.head?.next
+    return !!this.#dll.head?.next
   }
 
   indexOfKeyframeAt(time: Schema.Rational): number {
-    return this.search(compareTimeToKeyframe, time)
+    return this.#dll.search(compareTimeToKeyframe, time)
   }
 
   getKeyframeAt(time: Schema.Rational): Keyframe<T> | undefined {
@@ -120,9 +119,9 @@ export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Anim
   }
 
   getKeyframeFor(time: Schema.Rational): Keyframe<T> | undefined {
-    if (!this.head) return
+    if (!this.#dll.head) return
 
-    const keyframes = this.array.value
+    const { keyframes } = this
     const index = this.indexOfKeyframeAt(time)
 
     return keyframes[clamp(index >= 0 ? index : -index - 2, 0, keyframes.length - 1)]
@@ -143,37 +142,36 @@ export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Anim
 
     keyframe.dt = time.subtract(prev?.time ?? Rational.ZERO)
 
-    this.insert(newIndex, keyframe)
+    this.#dll.insert(newIndex, keyframe)
 
-    if (next && keyframe.dt.value) this.update(next.index, 'dt', Rational.from(next.dt).subtract(keyframe.dt))
+    if (next && keyframe.dt.value)
+      this.#dll.update(next.index, 'dt', Rational.from(next.dt).subtract(keyframe.dt))
   }
 
   updateOrCreateAtTime(value: T, time: Rational, _index?: number): void {
     const index = this.indexOfKeyframeAt(time)
 
-    if (index >= 0) this.update(index, 'value', value)
+    if (index >= 0) this.#dll.update(index, 'value', value)
     else this.createAtTime(value, time, index)
   }
 
   insert(index: number, keyframe: pub.Keyframe<T>): void {
-    this.positionAt(keyframe, index)
-    this.#emit({ type: 'insert', index })
+    this.#dll.insert(index, keyframe)
   }
 
-  update<K extends keyof Keyframe<T>>(index: number, key: K, value: Keyframe<T>[K]): void {
-    const keyframe = this.keyframes[index]
-    const from = keyframe[key]
-    keyframe[key] = value
-    this.#emit({ type: 'update', index, key, from })
+  update<K extends keyof pub.Keyframe<T>>(index: number, key: K, value: pub.Keyframe<T>[K]): void {
+    this.#dll.update(index, key, value)
   }
 
   delete(index: number): void {
-    if (index < 0) return
     const keyframe = this.keyframes[index]
     const { dt, next } = keyframe
-    this.unlink(keyframe)
-    this.#emit({ type: 'delete', index, item: keyframe })
+    this.#dll.delete(index)
     if (next) this.update(next.index, 'dt', Rational.from(next.dt).add(dt))
+  }
+
+  pushInitial(keyframe: pub.Keyframe<T>): void {
+    this.#dll._push(keyframe)
   }
 
   splitAt(time: pub.Rational):
@@ -184,7 +182,7 @@ export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Anim
         splitValue: T
       }
     | undefined {
-    if (!this.head) return
+    if (!this.#dll.head) return
 
     const index = this.indexOfKeyframeAt(time)
     const sliceToIndex = index >= 0 ? index : -index - 1 + 0
@@ -206,12 +204,15 @@ export class Animation<T = unknown> extends DLL<Keyframe<T>> implements pub.Anim
   }
 
   toJSON(): pub.Schema.Animation<T> | undefined {
-    if (!this.head) return
-    return { keyframes: this.array.value.map((keyframe) => keyframe.toJSON()) }
+    const keyframes = this.#dll.toJSON()
+    return keyframes && { keyframes }
   }
 
   dispose(): void {
-    super.dispose()
-    this.#emit = undefined as never
+    this.#dll.dispose()
+  }
+
+  [Symbol.dispose](): void {
+    this.dispose()
   }
 }

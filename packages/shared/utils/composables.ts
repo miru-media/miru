@@ -223,15 +223,20 @@ export const useFullscreen = (
 
 export const useChangeCounter = () => {
   const counterRef = ref(Number.MIN_SAFE_INTEGER)
+  const dirty = ref(false)
 
   return {
-    track: () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track reactive value
-      counterRef.value
-    },
+    track: (): unknown => counterRef.value,
     inc: () => {
       const value = counterRef.value + 1
       counterRef.value = value >= Number.MAX_SAFE_INTEGER ? Number.MIN_SAFE_INTEGER : value
+      dirty.value = true
+    },
+    isDirty(): boolean {
+      return dirty.value
+    },
+    markClean(): void {
+      dirty.value = false
     },
   }
 }

@@ -36,6 +36,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   declare whenRendererIsReady: Promise<void>
   readonly #isReady = ref(false)
 
+  readonly needsRender = ref(false)
   readonly #ownsRenderer: boolean
   readonly applyVideoRotation: boolean
 
@@ -120,6 +121,7 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
 
   render() {
     this.renderer.render({ container: this.stage })
+    this.needsRender.value = false
   }
 
   /** @internal */
