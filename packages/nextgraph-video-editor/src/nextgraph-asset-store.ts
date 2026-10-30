@@ -4,6 +4,7 @@ import {
   type AssetsByType,
   type BaseFileAsset,
   FileSystemAssetStore,
+  type ImageAsset,
   type MediaAsset,
   type Schema,
 } from 'webgl-video-editor'
@@ -92,7 +93,7 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
     return asset
   }
 
-  async createMediaAsset(source: Blob | string): Promise<MediaAsset> {
+  async createMediaAsset(source: Blob | string): Promise<MediaAsset | ImageAsset> {
     const init = await this.getMediaAssetInfo(this.generateId(), source)
     const asset = this.create(init, { source })
 
@@ -152,10 +153,8 @@ export class NextGraphAssetStore extends FileSystemAssetStore {
           type,
           name,
           mimeType: asset.mimeType,
-          width: asset.width,
-          height: asset.height,
-          rotation: asset.rotation,
           size: asset.size,
+          video: withEmptyGraphIds(asset.video),
           uri: asset.uri ?? '',
           thumbnailUri: asset.thumbnailUri,
         } satisfies MiruImageAsset

@@ -9,7 +9,6 @@ import {
   getWebgl2Context,
   isOffscreenCanvas,
   loadLut,
-  setObjectSize,
 } from 'shared/utils/images'
 
 import { LUT_TEX_OPTIONS, SOURCE_TEX_OPTIONS } from './constants.ts'
@@ -262,12 +261,10 @@ export class Renderer implements Renderer_ {
     const { u_resolution } = this.#uniforms
     const resolution = { width: u_resolution[0], height: u_resolution[1] }
 
-    const viewport = [
-      options.x ?? 0,
-      options.y ?? 0,
-      options.width ?? resolution.width,
-      options.height ?? resolution.height,
-    ] as const
+    const _viewport = options.viewport
+    const viewport = _viewport
+      ? ([_viewport.x, _viewport.y, _viewport.width, _viewport.height] as const)
+      : ([0, 0, options.width ?? resolution.width, options.height ?? resolution.height] as const)
 
     const setViewport = () => {
       gl.viewport(...viewport)
@@ -276,10 +273,10 @@ export class Renderer implements Renderer_ {
 
     // if drawing directly to the canvas, update its size
     if (!outFramebuffer) {
-      const [width, height] = this.#uniforms.u_resolution
+      const { width = viewport[2], height = viewport[3] } = options
       const { canvas } = gl
-      canvas.width = width
-      canvas.height = height
+      if (canvas.width !== width) canvas.width = width
+      if (canvas.height !== height) canvas.height = height
     }
 
     gl.enable(GL.BLEND)
@@ -377,30 +374,31 @@ export class Renderer implements Renderer_ {
   }
 
   async drawAndTransfer(
-    options: RendererDrawOptions & { context: Context2D | ImageBitmapRenderingContext },
+    options: Omit<RendererDrawOptions, 'framebuffer'> & {
+      framebuffer?: undefined
+      context: Context2D | ImageBitmapRenderingContext
+    },
   ): Promise<void> {
     this.draw(options)
 
     const gl = this.#gl
     const { context } = options
-    const { canvas } = context
-    const { u_resolution } = this.#uniforms
-
-    const size = {
-      width: options.width ?? u_resolution[0],
-      height: options.height ?? u_resolution[1],
-    }
-    setObjectSize(canvas, size)
-
-    const image = options.framebuffer ? await this.getImageData(options.framebuffer, size) : gl.canvas
 
     if (context instanceof ImageBitmapRenderingContext) {
-      const bitmapOrPromise = isOffscreenCanvas(gl.canvas)
-        ? gl.canvas.transferToImageBitmap()
-        : createImageBitmap(gl.canvas)
-      context.transferFromImageBitmap('then' in bitmapOrPromise ? await bitmapOrPromise : bitmapOrPromise)
+      const promise = this.transferBitmap(context)
+      if (promise) await promise
     } else {
-      drawImage(context, image, 0, 0)
+      drawImage(context, gl.canvas, 0, 0)
+    }
+  }
+
+  transferBitmap(context: ImageBitmapRenderingContext): Promise<void> | undefined {
+    const gl = this.#gl
+    if (isOffscreenCanvas(gl.canvas)) context.transferFromImageBitmap(gl.canvas.transferToImageBitmap())
+    else {
+      return createImageBitmap(gl.canvas).then((bitmap) => {
+        context.transferFromImageBitmap(bitmap)
+      })
     }
   }
 

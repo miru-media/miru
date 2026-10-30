@@ -44,7 +44,7 @@ export const getPanelList = (editor: VideoEditor) =>
       isForSelection: true,
       isPermitted: computed(() => {
         const { selection } = editor
-        return selection?.isNode && selection.isVideo() && selection.isMediaClip()
+        return selection?.isNode && selection.isVideo()
       }),
     },
   ] as const

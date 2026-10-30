@@ -1,12 +1,13 @@
 import { computed, effect, h, onScopeDispose, ref } from 'fine-jsx'
-import { throttle } from 'throttle-debounce'
 import { useEffectThumbnails } from 'webgl-media-editor'
 
 import { Effect } from 'reactive-effects/effect'
+import sampleImage from 'shared/assets/320px-bianchi.jpg'
 import type { Size } from 'shared/types'
 import { fit, useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'
+import { EffectListItem } from '../effects/effect-list.ts'
 
 import { useEditor } from './utils.ts'
 
@@ -16,7 +17,6 @@ export const AssetBinFilters = () => {
 
   const EMPTY_SIZE: Size = { width: 1, height: 1 }
   const MAX_THUMBNAIL_SIZE: Size = { width: 200, height: 200 }
-  const THUMBNAIL_REFRESH_MS = 250
 
   const clip = computed(() => {
     const { selection } = editor
@@ -36,73 +36,25 @@ export const AssetBinFilters = () => {
 
     onCleanup(() => next.forEach((e) => e.dispose()))
   })
-
-  const currentEffect = computed(() => clip.value?.effects.at(0))
-
-  const onChange = (effectId: string | undefined, intensity: number) => {
-    if (!clip.value) return
-
-    if (effectId) {
-      const prev = clip.value.effects.at(0)
-      clip.value.effects = [{ id: prev?.id ?? editor.generateId(), assetId: effectId, intensity }]
-    } else {
-      clip.value.effects = []
-    }
+  const isLoading = ref(true)
+  const img = new Image()
+  img.onload = () => {
+    isLoading.value = false
+    renderer.loadImage(sourceTexture, img)
+    thumbnails.update()
   }
 
-  const isLoading = ref(true)
-
-  const imageSource = computed(() => {
-    if (!clip.value) return undefined
-
-    if (clip.value.isImageClip()) {
-      return editor.playback.renderView._getNode(clip.value).img.value
-    }
-
-    const playbackClip = editor.playback._getNode(clip.value)
-    const mediaElement = playbackClip?.mediaElement
-    return mediaElement instanceof HTMLVideoElement ? mediaElement : undefined
-  })
-
-  const refreshThumbnails = throttle(THUMBNAIL_REFRESH_MS, () => {
-    const image = imageSource.value
-    if (
-      !clip.value ||
-      !image ||
-      (image instanceof HTMLVideoElement && image.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)
-    )
-      return
-
-    renderer.loadImage(sourceTexture, image)
-    isLoading.value = false
-  })
-
   effect((onCleanup) => {
+    const _clip = clip.value
     isLoading.value = true
-    const offPlaybackUpdate = editor.doc.on('playback:update', refreshThumbnails)
+    if (!_clip) return
 
-    const image = imageSource.value
-    if (image) {
-      refreshThumbnails()
+    img.setAttribute('src', (_clip.isTextClip() ? undefined : _clip.asset?.thumbnailUri) ?? sampleImage)
 
-      if (image instanceof HTMLVideoElement) {
-        image.addEventListener('loadeddata', refreshThumbnails)
-        image.addEventListener('seeked', refreshThumbnails)
-
-        onCleanup(() => {
-          image.removeEventListener('loadeddata', refreshThumbnails)
-          image.removeEventListener('seeked', refreshThumbnails)
-        })
-      }
-    }
-
-    onCleanup(() => {
-      offPlaybackUpdate()
-      refreshThumbnails.cancel()
-    })
+    onCleanup(() => img.removeAttribute('src'))
   })
 
-  const canvases = useEffectThumbnails({
+  const thumbnails = useEffectThumbnails({
     renderer,
     sourceTexture,
     sourceSize,
@@ -111,13 +63,36 @@ export const AssetBinFilters = () => {
     loading: isLoading,
   })
 
+  const currentEffect = computed(() => clip.value?.effects[0])
+
+  const onChange = (assetId: string | undefined, intensity: number) => {
+    const clipEffects = clip.value?.effects
+    if (!clipEffects) return
+
+    let prev = currentEffect.value
+
+    if (prev && assetId !== prev.assetId) {
+      clipEffects.delete(prev.index)
+      prev = undefined
+    }
+
+    if (assetId) {
+      if (prev) {
+        clipEffects.update(prev.index, 'assetId', assetId)
+        clipEffects.update(prev.index, 'intensity', intensity)
+      } else clipEffects.insert(0, new EffectListItem({ assetId, intensity }))
+    } else if (prev) {
+      clipEffects.delete(prev.index)
+    }
+  }
+
   return (
     <div class={[styles.panelBody, styles.assetBinFiltersContainer]}>
       <div class={styles.assetBinAssetsContainer}>
         <button
           type="button"
           class={[styles.assetBinAsset, styles.assetBinSanitize]}
-          aria-selected={() => !clip.value?.effects[0]}
+          aria-selected={() => !currentEffect.value}
           onClick={() => onChange(undefined, 1)}
         >
           <div class={styles.assetBinThumbnail}>
@@ -131,10 +106,12 @@ export const AssetBinFilters = () => {
             <button
               type="button"
               class={[styles.assetBinAsset, styles.assetBinSanitize]}
-              aria-selected={() => clip.value?.effects[0]?.assetId === effect.id}
+              aria-selected={() => currentEffect.value?.assetId === effect.id}
               onClick={() => onChange(effect.id, 1)}
             >
-              {h(canvases.value[index + 1] ?? 'div', { class: styles.assetBinThumbnail })}
+              {h((isLoading.value ? undefined : thumbnails.canvases.value[index + 1]) ?? 'div', {
+                class: styles.assetBinThumbnail,
+              })}
               <span class={styles.assetBinName}>{effect.name}</span>
             </button>
           ))

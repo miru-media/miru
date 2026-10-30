@@ -23,6 +23,7 @@ import { type EffectThumbnailsOptions, useEffectThumbnails } from './use-effect-
 
 export interface WebglEffectsMenuExpose {
   scrollToEffect: (filterId: string | undefined, scrollBehaviour?: ScrollBehavior) => void
+  update: (signal?: AbortSignal) => void
 }
 
 export interface WebglEffectsMenuProps extends EffectThumbnailsOptions {
@@ -78,6 +79,7 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
   const { props, attrs } = getMenuPropsAndAttrs(props_)
   const { renderer, showIntensity, onChange } = props
 
+  const { canvases, update } = useEffectThumbnails(props)
   const currentEffect = computed(() => toValue(props.effect) ?? '')
 
   const container = ref<HTMLElement>()
@@ -90,8 +92,9 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
 
   if (props.ref) {
     const ref_ = props.ref
-    if (typeof ref_ === 'function') ref_({ scrollToEffect })
-    else ref_.value = { scrollToEffect }
+    const expose = { scrollToEffect, update }
+    if (typeof ref_ === 'function') ref_(expose)
+    else ref_.value = expose
 
     onScopeDispose(() => {
       if (typeof ref_ === 'function') ref_(undefined)
@@ -163,7 +166,6 @@ export const WebglEffectsMenu = (props_: WebglEffectsMenuProps & Record<string, 
     scrolledEffectId.value = filterId
   }
 
-  const canvases = useEffectThumbnails(props)
   const stopPropagaion = (event: Event): void => event.stopPropagation()
 
   return (

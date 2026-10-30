@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'fine-jsx'
+import { ref, watch } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
 import type * as pub from '#core'
@@ -6,37 +6,19 @@ import { loadAsyncImageSource } from 'shared/utils'
 
 import { getClipTransformMatrix } from '../../utils.ts'
 
-import type { MiruFilter } from './pixi-miru-filter.ts'
 import type { RenderDocument } from './render-document.ts'
-import { RenderClip, spatialOnRenderUpdate } from './render-nodes.ts'
+import { RenderClip } from './render-nodes.ts'
 
-export class RenderImageClip extends RenderClip<pub.ImageClip, Pixi.Sprite> {
-  readonly _reactiveRenderProps = computed(() => ({
-    pixiFilters: this.pixiFilters,
-    matrix: this.matrix.value,
-    opacity: this.original.opacity,
-  }))
-
-  readonly pixiFilters = ref<MiruFilter[]>([])
-
-  readonly #isReady = computed(
-    () =>
-      !this.pixiFilters.value.some((f) => f.isLoading) &&
-      !this._placeholderIsLoading.value &&
-      !!this.img.value,
-  )
+export class RenderImageClip extends RenderClip<pub.ImageClip> {
+  pixiNode!: Pixi.Sprite
   get isReady(): boolean {
-    return super.isReady && this.#isReady.value
+    return super.isReady && !!this.img.value
   }
 
   img = ref<ImageBitmap>()
 
   constructor(renderView: RenderDocument, original: pub.ImageClip) {
-    const sprite = new Pixi.Sprite({
-      visible: false,
-      texture: new Pixi.Texture(new Pixi.ImageSource({})),
-    })
-    super(renderView, original, sprite)
+    super(renderView, original)
 
     const { source } = this.pixiNode.texture
     source.on('destroy', () => (source.resource as Partial<ImageBitmap> | undefined)?.close?.())
@@ -70,9 +52,11 @@ export class RenderImageClip extends RenderClip<pub.ImageClip, Pixi.Sprite> {
     )
   }
 
-  onRendererUpdate(): void {
-    super.onRendererUpdate()
-    spatialOnRenderUpdate(this)
+  _init(): void {
+    this.pixiNode = new Pixi.Sprite({
+      visible: false,
+      texture: new Pixi.Texture(new Pixi.ImageSource({})),
+    })
   }
 
   updateTransform(): void {

@@ -10,7 +10,6 @@ export class ImageClip extends BaseClip<Schema.ImageClip> implements pub.ImageCl
   static FIELDS = super.FIELDS.concat(BaseClip.VISUAL_FIELDS satisfies pub.NodeFieldDef<pub.ImageClip>[])
 
   declare asset: pub.ImageAsset | undefined
-  declare effects: pub.ImageClip['effects']
 
   get linkedAudio(): pub.AudioClip | undefined {
     const linkItem =

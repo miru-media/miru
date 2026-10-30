@@ -42,8 +42,8 @@ a [           b]`)
   translateX = clipA.animations.translateX as Animation<number>
   rotate = clipA.animations.rotate as Animation<number>
 
-  rotate.push(new Keyframe({ value: 0, dt: new Rational(0, 1), easing: LINEAR }))
-  rotate.push(new Keyframe({ value: 90, dt: new Rational(2, 1), easing: LINEAR }))
+  rotate.insert(0, new Keyframe({ value: 0, dt: new Rational(0, 1), easing: LINEAR }))
+  rotate.insert(1, new Keyframe({ value: 90, dt: new Rational(2, 1), easing: LINEAR }))
 
   doc.on('node:list-change', onNodeListChange)
   onNodeListChange.mockClear()
@@ -139,7 +139,7 @@ describe('animation', () => {
   })
 
   test(`node gets value from animation with a single keyframe`, () => {
-    translateX.push(new Keyframe({ value: 10, dt: new Rational(0, 1), easing: LINEAR }))
+    translateX.insert(0, new Keyframe({ value: 10, dt: new Rational(0, 1), easing: LINEAR }))
 
     expect(clipA.translateX).toBe(10)
     doc.seekTo(clipA.time.end)
@@ -147,8 +147,8 @@ describe('animation', () => {
   })
 
   test(`node interpolates between keyframes`, () => {
-    translateX.push(new Keyframe({ value: 10, dt: new Rational(1, 1), easing: LINEAR }))
-    translateX.push(new Keyframe({ value: 30, dt: new Rational(1, 1), easing: LINEAR }))
+    translateX.insert(0, new Keyframe({ value: 10, dt: new Rational(1, 1), easing: LINEAR }))
+    translateX.insert(1, new Keyframe({ value: 30, dt: new Rational(1, 1), easing: LINEAR }))
 
     expect(clipA.translateX).toBe(10)
     doc.seekTo(clipA.time.start + 1)

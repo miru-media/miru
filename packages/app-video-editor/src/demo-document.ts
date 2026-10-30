@@ -177,7 +177,7 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       duration: { value: 90000, rate: 30000 },
       mediaRef: { id: assets.waves.id, type: 'asset:media:av' },
       ...scaleWaves,
-      effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
+      effects: [{ assetId: 'filter:Crispy Cyan', intensity: 1 }],
       animations: {
         translateX: { keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' }] },
         translateY: {
@@ -196,7 +196,7 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       duration: { value: 120000, rate: 30000 },
       mediaRef: { id: assets.wavesRocks.id, type: 'asset:media:av' },
       ...scale1080p,
-      effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 0.5 }],
+      effects: [{ assetId: 'filter:Crispy Cyan', intensity: 0.5 }],
     },
     {
       id: uid(),
@@ -206,7 +206,7 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       duration: { value: 38400, rate: 12800 },
       mediaRef: { id: assets.waveBreaking.id, type: 'asset:media:av' },
       ...scale720p,
-      effects: [{ id: uid(), assetId: 'filter:Chromatic', intensity: 0.75 }],
+      effects: [{ assetId: 'filter:Chromatic', intensity: 0.75 }],
     },
     {
       id: uid(),
@@ -216,7 +216,7 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       duration: { value: 76800, rate: 15360 },
       mediaRef: { id: assets.turtle.id, type: 'asset:media:av' },
       ...scale720p,
-      effects: [{ id: uid(), assetId: 'filter:Vintage', intensity: 0.3 }],
+      effects: [{ assetId: 'filter:Vintage', intensity: 0.3 }],
     },
     {
       id: uid(),
@@ -226,7 +226,7 @@ const mainVideoTrack: Schema.SerializedVideoTrack = {
       duration: { value: 60000, rate: 30000 },
       mediaRef: { id: assets.waves.id, type: 'asset:media:av' },
       ...scaleWaves,
-      effects: [{ id: uid(), assetId: 'filter:Crispy Cyan', intensity: 1 }],
+      effects: [{ assetId: 'filter:Crispy Cyan', intensity: 1 }],
       animations: {
         translateX: { keyframes: [{ value: 0, dt: { value: 0, rate: 1 }, easing: 'linear' }] },
         translateY: {

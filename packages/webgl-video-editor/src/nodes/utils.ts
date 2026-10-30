@@ -1,85 +1,95 @@
 import { computed, ref } from 'fine-jsx'
 
+import type * as pub from '#core'
+import type { StringKeyof } from '#internal'
 import { binarySearch } from 'shared/utils'
 
-export class DLL<T extends { readonly index: number; next: any; prev: any }> {
-  readonly #head = ref<T>()
-  readonly #tail = ref<T>()
+export class DLLNode {
+  declare prev: this | undefined
+  declare next: this | undefined
+  declare readonly index: number
 
-  get head(): T | undefined {
-    return this.#head.value
+  constructor() {
+    defineReactiveProp(this, 'prev')
+    defineReactiveProp(this, 'next')
+    defineComputedProp(this, 'index', () => (this.prev ? this.prev.index + 1 : 0))
   }
-  get tail(): T | undefined {
-    return this.#tail.value
-  }
+}
+
+export class DLL<T extends DLLNode> {
+  declare head: T | undefined
+  declare tail: T | undefined
 
   readonly array = computed(() => {
     const array: T[] = []
-    for (let current = this.#head.value; current; current = current.next) array.push(current)
+    for (let current = this.head; current; current = current.next) array.push(current)
     return array
   })
 
+  constructor() {
+    defineReactiveProp(this, 'head')
+    defineReactiveProp(this, 'tail')
+  }
+
   positionAt(node: T, index: number): void {
-    let before = this.#head.value
+    let before = this.head
     for (; !!before && before.index < index; before = before.next);
 
     if (before === node.next) before = before?.next
 
-    this.#insertBefore(node, before)
+    this._insertBefore(node, before)
   }
 
-  push(node: T): void {
+  _push(node: T): void {
     this.unlink(node)
 
-    const tail = this.#tail.value
+    const { tail } = this
 
     if (tail) {
       tail.next = node
       node.prev = tail
-    } else this.#head.value = node
+    } else this.head = node
 
-    this.#tail.value = node
+    this.tail = node
     node.next = undefined
   }
 
   unlink(node: T): void {
     const { prev, next } = node as { next: T | undefined; prev: T | undefined }
 
-    if (node === this.head) this.#head.value = next
-    if (node === this.tail) this.#tail.value = prev
+    if (node === this.head) this.head = next
+    if (node === this.tail) this.tail = prev
     if (prev) prev.next = next
     if (next) next.prev = prev
 
     node.prev = node.next = undefined
   }
 
-  #insertBefore(node: T, before: T | undefined): void {
+  private _insertBefore(node: T, before: T | undefined): void {
     if (node === before) return
 
     this.unlink(node)
     node.next = before
 
     if (!before) {
-      this.push(node)
+      this._push(node)
       return
     }
 
     node.prev = before.prev
 
-    const head = this.#head
     const { prev } = before as { next: T | undefined; prev: T | undefined }
-    if (before === head.value) head.value = node
+    if (before === this.head) this.head = node
     if (prev) prev.next = node
     before.prev = node
   }
 
   search<U>(comparator: (a: T, b: U) => number, value: U, from?: number, to?: number): number {
-    return this.#head.value ? binarySearch(this.array.value, comparator, value, from, to) : -1
+    return this.head ? binarySearch(this.array.value, comparator, value, from, to) : -1
   }
 
   dispose(): void {
-    const tail = this.#tail
-    while (tail.value) this.unlink(tail.value)
+    while (this.tail) this.unlink(this.tail)
   }
 
   [Symbol.dispose](): void {
@@ -104,4 +114,45 @@ export const defineComputedProp = <T, K extends keyof T>(
 ): void => {
   const _ref = computed(getter, equals)
   Object.defineProperty(obj, key, { get: () => _ref.value, enumerable: true })
+}
+
+export class NodePropList<T extends DLLNode> extends DLL<T> {
+  private _emit: (action: pub.NodeListChangeEvent.Action) => void
+
+  constructor(emitAction: (action: pub.NodeListChangeEvent.Action) => void) {
+    super()
+    this._emit = emitAction
+  }
+
+  insert(index: number, item: T): void {
+    this.positionAt(item, index)
+    this._emit({ type: 'insert', index })
+  }
+
+  update<K extends StringKeyof<T>>(index: number, key: K, value: T[K]): void {
+    const item = this.array.value[index]
+    const from = item[key]
+    item[key] = value
+    this._emit({ type: 'update', index, key, from })
+  }
+
+  delete(index: number): void {
+    const item = this.array.value[index]
+    this.unlink(item)
+    this._emit({ type: 'delete', index, item })
+  }
+
+  pushInitial(item: T): void {
+    this._push(item)
+  }
+
+  toJSON<J>(this: { head?: T; array: { value: { toJSON: () => J }[] } }): J[] | undefined {
+    if (!this.head) return
+    return this.array.value.map((item) => item.toJSON())
+  }
+
+  dispose(): void {
+    super.dispose()
+    this._emit = undefined as never
+  }
 }

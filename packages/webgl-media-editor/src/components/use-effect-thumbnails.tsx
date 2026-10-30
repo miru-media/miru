@@ -1,4 +1,4 @@
-import { effect, type MaybeRefOrGetter, onScopeDispose, ref, type Ref, toValue } from 'fine-jsx'
+import { effect, type MaybeRefOrGetter, ref, type Ref, toValue } from 'fine-jsx'
 import type { CropState, Renderer, RendererEffectOp } from 'webgl-effects'
 
 import { Effect } from 'reactive-effects/effect'
@@ -17,35 +17,77 @@ export interface EffectThumbnailsOptions {
   loading?: MaybeRefOrGetter<boolean>
 }
 
-export const useEffectThumbnails = (options: EffectThumbnailsOptions): Ref<HTMLCanvasElement[]> => {
+export const useEffectThumbnails = (
+  options: EffectThumbnailsOptions,
+): { canvases: Ref<HTMLCanvasElement[]>; update: (signal?: AbortSignal) => void } => {
   const { renderer } = options
   const ORIGINAL_EFFECT = new Effect({ name: 'Original', ops: [] }, renderer)
 
   // renderer canvas will contain one row of all thumbnails
-  const fb = renderer.createFramebufferAndTexture(toValue(options.thumbnailSize))
   // image data will be sliced onto multiple canvas
   const canvases = ref<HTMLCanvasElement[]>([])
 
-  effect(async (onCleanup) => {
-    const effects = [ORIGINAL_EFFECT, ...toValue(options.effects).values()]
-    const { length } = effects
-    const prevCanvases = canvases.value
-    const newCanvases = (canvases.value = prevCanvases.slice(0, length))
+  const createCanvases = () => {
+    const length = toValue(options.effects).size + 1
+    const prev = canvases.value
+    if (prev.length === length) return prev
+
+    const newCanvases = (canvases.value = prev.slice(0, length))
+    const { width, height } = toValue(options.thumbnailSize)
 
     for (let i = newCanvases.length; i < length; i++) {
-      const canvas = (newCanvases[i] = document.createElement('canvas'))
+      const canvas = (newCanvases[i] ??= document.createElement('canvas'))
+      canvas.width = width
+      canvas.height = height
+
       canvas.role = 'presentation'
     }
 
+    return newCanvases
+  }
+
+  const update = (signal?: AbortSignal): void => {
+    const effects = [ORIGINAL_EFFECT, ...toValue(options.effects).values()]
+    const { length } = effects
+    const { width, height } = toValue(options.thumbnailSize)
+    const viewport = { x: 0, y: 0, width, height }
+
+    const canvases = createCanvases()
+
     if (toValue(options.loading) === true || effects.some((e) => e.isLoading)) return
 
-    let isStale = false as boolean
-    onCleanup(() => void (isStale = true))
+    const drawOptions = { viewport, width: width * effects.length }
+    const prependOps = toValue(options.prependOps) ?? []
 
-    const { width, height } = toValue(options.thumbnailSize)
-    const textureSize = { width: width * effects.length, height }
+    renderer.clear()
 
-    renderer.resizeTexture(fb.texture, textureSize)
+    for (let i = 0; i < length; i++) {
+      renderer.setEffect({ ops: prependOps.concat(effects[i].ops) })
+      renderer.setIntensity(1)
+      renderer.setIntensity(DEFAULT_INTENSITY)
+
+      viewport.x = i * width
+      renderer.draw(drawOptions)
+    }
+
+    renderer.waitSync()
+    if (signal?.aborted) return
+
+    const rendererCanvas = renderer.canvas
+
+    for (let i = 0; i < length; i++) {
+      const canvas = canvases[i]
+      const context = canvas.getContext('2d')
+      if (!context) continue
+
+      context.drawImage(rendererCanvas, i * width, 0, width, height, 0, 0, width, height)
+    }
+  }
+
+  effect((onCleanup) => {
+    const abort = new AbortController()
+    onCleanup(abort.abort.bind(abort))
+
     renderer.setSourceTexture(
       toValue(options.sourceTexture),
       toValue(options.thumbnailSize),
@@ -53,52 +95,8 @@ export const useEffectThumbnails = (options: EffectThumbnailsOptions): Ref<HTMLC
       toValue(options.crop),
     )
 
-    const drawOptions = {
-      framebuffer: fb.framebuffer,
-      x: 0,
-      y: 0,
-      width,
-      height,
-      clear: true,
-    }
-    const prependOps = toValue(options.prependOps) ?? []
-
-    for (let i = 0; i < length; i++) {
-      renderer.setEffect({ ops: prependOps.concat(effects[i].ops) })
-      renderer.setIntensity(1)
-      renderer.setIntensity(DEFAULT_INTENSITY)
-
-      drawOptions.x = i * width
-      renderer.draw(drawOptions)
-    }
-
-    await renderer.waitAsync()
-    if (isStale) return
-
-    const imageData = await renderer.getImageData(fb.framebuffer, textureSize)
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- may have changed after await
-    if (isStale) return
-
-    for (let i = 0; i < length; i++) {
-      const canvas = newCanvases[i]
-      const context = canvas.getContext('2d')
-      if (!context) continue
-
-      canvas.width = width
-      canvas.height = height
-
-      const x = toValue(i) * width
-      context.putImageData(imageData, -x, 0, x, 0, width, height)
-    }
-
-    // eslint-disable-next-line require-atomic-updates -- checked for isStale
-    canvases.value = newCanvases
+    update(abort.signal)
   })
 
-  onScopeDispose(() => {
-    renderer.deleteFramebuffer(fb.framebuffer)
-    renderer.deleteTexture(fb.texture)
-  })
-
-  return canvases
+  return { canvases, update }
 }

@@ -82,12 +82,18 @@ export interface Keyframe<T = unknown> {
   easing?: EasingOption | undefined
 }
 
+export interface EffectListItem {
+  // WIP: make this { asset: { id }}
+  assetId: string
+  intensity: number
+}
+
 interface Base {
   id: string
   type: string
   name?: string
   enabled?: boolean
-  effects?: { id: string; assetId: string; intensity: number }[]
+  effects?: EffectListItem[]
   animations?: Partial<Record<string, { keyframes: Keyframe[] }>>
   markers?: never[]
   color?: string
@@ -146,10 +152,11 @@ export interface MediaAsset extends BaseFileAsset<'media:av'> {
 }
 
 export interface ImageAsset extends BaseFileAsset<'media:image'> {
-  mimeType: string
-  width: number
-  height: number
-  rotation: number
+  video: {
+    width: number
+    height: number
+    rotation: number
+  }
 }
 
 export interface VideoEffectAsset extends BaseAsset<'effect:video'>, EffectDefinition {
