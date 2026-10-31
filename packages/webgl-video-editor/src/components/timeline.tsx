@@ -3,12 +3,11 @@ import type { GestureEvent } from '@interactjs/actions/gesture/plugin'
 import interact from '@interactjs/interact'
 import { computed, effect, type MaybeChild, type MaybeRefOrGetter, ref, toValue } from 'fine-jsx'
 
+import { ACCEPT_AUDIO_FILE_TYPES, ACCEPT_VISUAL_FILE_TYPE } from '#constants'
+import styles from '#index.module.css'
 import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { useScrubber } from 'shared/video/use-scrubber.ts'
-
-import { ACCEPT_VISUAL_FILE_TYPE } from '../constants.ts'
-import styles from '../css/index.module.css'
 
 import { Playhead } from './playhead.jsx'
 import { Ruler } from './ruler.jsx'
@@ -126,16 +125,16 @@ export const Timeline = ({
   }
 
   const onInputClipFile = async (event: InputEvent) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const results = await Promise.allSettled(
+      [...(event.target.files ?? [])].map(async (file) => {
+        const asset = await editor.createMediaAsset(file)
+        editor.addMediaClip(asset)
+      }),
+    )
 
-    try {
-      const asset = await editor.createMediaAsset(file)
-      editor.addMediaClip(asset)
-    } catch {
+    if (results.some((result) => result.status === 'rejected'))
       // eslint-disable-next-line no-alert -- TODO
       alert(t('error_cannot_play_type'))
-    }
   }
 
   const onPointerdownScroller = (event: Event): void => {
@@ -191,7 +190,8 @@ export const Timeline = ({
                     <input
                       type="file"
                       class={styles.srOnly}
-                      accept={ACCEPT_VISUAL_FILE_TYPE}
+                      accept={ACCEPT_VISUAL_FILE_TYPE + ACCEPT_AUDIO_FILE_TYPES}
+                      multiple
                       onInput={(event: InputEvent) => onInputClipFile(event)}
                     />
                     <span class={styles.textBody}>{t('click_add_clip')}</span>

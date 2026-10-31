@@ -128,100 +128,100 @@ export const AssetBinFonts = () => {
 
       {() => {
         const clip = activeTextClip.value
-        const getFillColor = () => clip?.fill ?? DEFAULT_FILL_COLOR
+        if (!clip) return
+
+        const getFillColor = () => clip.fill ?? DEFAULT_FILL_COLOR
 
         return (
-          clip && (
-            <>
-              <div style="width:100%">
-                <h3 class={styles.textBodyBold}>{t('fonts')}</h3>
-                <textarea
-                  value={() => clip.content}
-                  onInput={onTextContentChange}
-                  aria-label={t('asset_bin_fonts_content')}
-                  placeholder={t('asset_bin_fonts_content')}
-                  rows={1}
-                  class={styles.panelInput}
+          <>
+            <div style="width:100%">
+              <h3 class={styles.textBodyBold}>{t('fonts')}</h3>
+              <textarea
+                value={() => clip.content}
+                onInput={onTextContentChange}
+                aria-label={t('asset_bin_fonts_content')}
+                placeholder={t('asset_bin_fonts_content')}
+                rows={1}
+                class={styles.panelInput}
+              />
+            </div>
+
+            <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_text_settings')}</h3>
+            <select
+              value={() => clip.fontFamily}
+              onInput={onFontFamilyChange}
+              aria-label={t('asset_bin_fonts_select_family')}
+              class={styles.dropdownTrigger}
+              style="width:100%"
+            >
+              {FONT_FAMILIES.map((family) => (
+                <option value={family}>{family}</option>
+              ))}
+            </select>
+
+            <div class={styles.inputRow}>
+              <label class={[styles.numberInput, styles.asText]}>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={() => String(clip.fontSize)}
+                  onInput={onFontSizeChange}
+                  aria-label={t('asset_bin_fonts_size')}
                 />
-              </div>
-
-              <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_text_settings')}</h3>
-              <select
-                value={() => clip.fontFamily}
-                onInput={onFontFamilyChange}
-                aria-label={t('asset_bin_fonts_select_family')}
-                class={styles.dropdownTrigger}
-                style="width:100%"
-              >
-                {FONT_FAMILIES.map((family) => (
-                  <option value={family}>{family}</option>
-                ))}
-              </select>
-
-              <div class={styles.inputRow}>
-                <label class={[styles.numberInput, styles.asText]}>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={() => String(clip.fontSize)}
-                    onInput={onFontSizeChange}
-                    aria-label={t('asset_bin_fonts_size')}
-                  />
-                  <span class={styles.inputSuffix}>px</span>
-                </label>
-                <div class={styles.controlGroup} role="group">
-                  <button
-                    type="button"
-                    onClick={onFontWeightToggle}
-                    class={[clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive]}
-                    aria-label={t('asset_bin_fonts_bold')}
-                    aria-pressed={clip.fontWeight === FONT_WEIGHT_BOLD}
-                  >
-                    <IconMsFormatBoldRounded />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onFontstyleToggle}
-                    class={[clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
-                    aria-label={t('asset_bin_fonts_italic')}
-                    aria-pressed={clip.fontStyle === 'italic'}
-                  >
-                    <IconMsFormatItalicRounded />
-                  </button>
-                </div>
-              </div>
-
+                <span class={styles.inputSuffix}>px</span>
+              </label>
               <div class={styles.controlGroup} role="group">
-                {ALIGNMENTS.map(({ value, Icon, labelKey }) => (
-                  <button
-                    type="button"
-                    onClick={() => onTextAlignChange(value)}
-                    class={() => clip.align === value && styles.assetBinFontsStyleButtonActive}
-                    aria-label={t(labelKey)}
-                    aria-pressed={() => clip.align === value}
-                  >
-                    <Icon />
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={onFontWeightToggle}
+                  class={[clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive]}
+                  aria-label={t('asset_bin_fonts_bold')}
+                  aria-pressed={clip.fontWeight === FONT_WEIGHT_BOLD}
+                >
+                  <IconMsFormatBoldRounded />
+                </button>
+                <button
+                  type="button"
+                  onClick={onFontstyleToggle}
+                  class={[clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
+                  aria-label={t('asset_bin_fonts_italic')}
+                  aria-pressed={clip.fontStyle === 'italic'}
+                >
+                  <IconMsFormatItalicRounded />
+                </button>
               </div>
-              <div>
-                <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_color_settings')}</h3>
-                <label class={styles.input}>
-                  <input
-                    type="color"
-                    colorspace="limited-srgb"
-                    value={getFillColor}
-                    onInput={onFillColorChange}
-                    aria-label={t('asset_bin_fonts_color_settings')}
-                    class={styles.srOnly}
-                  />
-                  <span style={() => `color:${getFillColor()}`}>&#11044;</span>
-                  {getFillColor}
-                </label>
-              </div>
-            </>
-          )
+            </div>
+
+            <div class={styles.controlGroup} role="group">
+              {ALIGNMENTS.map(({ value, Icon, labelKey }) => (
+                <button
+                  type="button"
+                  onClick={() => onTextAlignChange(value)}
+                  class={() => clip.align === value && styles.assetBinFontsStyleButtonActive}
+                  aria-label={t(labelKey)}
+                  aria-pressed={() => clip.align === value}
+                >
+                  <Icon />
+                </button>
+              ))}
+            </div>
+            <div>
+              <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_color_settings')}</h3>
+              <label class={styles.input}>
+                <input
+                  type="color"
+                  colorspace="limited-srgb"
+                  value={getFillColor}
+                  onInput={onFillColorChange}
+                  aria-label={t('asset_bin_fonts_color_settings')}
+                  class={styles.srOnly}
+                />
+                <span style={() => `color:${getFillColor()}`}>&#11044;</span>
+                <>{getFillColor}</>
+              </label>
+            </div>
+          </>
         )
       }}
     </div>

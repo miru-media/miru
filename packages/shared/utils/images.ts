@@ -13,7 +13,7 @@ import type {
   Tlwh,
   Xywh,
 } from '../types.ts'
-import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../userAgent.ts'
+import { FULLY_SUPPORTS_OFFSCREEN_CANVAS, IS_FIREFOX, SUPPORTS_2D_OFFSCREEN_CANVAS } from '../user-agent.ts'
 import { ReadyState } from '../video/constants.ts'
 import { getImageSize } from '../video/utils.ts'
 

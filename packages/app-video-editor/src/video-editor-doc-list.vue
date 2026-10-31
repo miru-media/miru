@@ -42,6 +42,8 @@ const onInputOtio = async (event: InputEvent) => {
     (doc.metadata?.name as string | undefined) || file?.name.replace(/\.(otioz?)$/u, '') || t('untitled')
   emit('create', title, doc)
 }
+
+const showCreateExample = import.meta.env.DEV || new URL(location.href).searchParams.has('DEV')
 </script>
 
 <template>
@@ -56,8 +58,8 @@ const onInputOtio = async (event: InputEvent) => {
       <h1 class="text-2xl">{{ $t('my_projects') }}</h1>
 
       <p class="create-buttons">
-        <button @click="() => emit('create')" class="button tertiary create-button">
-          {{ $t('create_empty_project') }}
+        <button @click="() => emit('create')" class="button primary create-button">
+          {{ $t('create_project') }}
           <div class="i-material-symbols:add-circle-outline-rounded text-2xl" />
         </button>
         <label class="button tertiary create-button">
@@ -65,7 +67,11 @@ const onInputOtio = async (event: InputEvent) => {
           <div class="i-material-symbols:upload-rounded text-2xl" />
           <input type="file" accept=".otio,.otioz,.json" class="sr-only" @input="onInputOtio" />
         </label>
-        <button @click="() => emit('create', 'Example', demoDoc)" class="button primary create-button">
+        <button
+          v-if="showCreateExample"
+          @click="() => emit('create', 'Example', demoDoc)"
+          class="button primary create-button"
+        >
           {{ $t('create_example_project') }}
           <div class="i-material-symbols:rocket-launch-outline-rounded text-2xl" />
         </button>

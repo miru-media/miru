@@ -12,6 +12,7 @@ import { useEditor } from './utils.ts'
 
 const PERCENT = 100
 const HALF_TURN_DEG = 180
+const MIN_SCALE = 1e-2
 
 interface SubComponentProps<T extends EditView.AnyClip> {
   clip: T
@@ -26,8 +27,8 @@ const getNumberInputProps = (
   displayScale = 1,
   // eslint-disable-next-line @typescript-eslint/max-params -- internal
 ) => {
-  const getDomValue = () => Math.round(getter() * displayScale)
-  const onInput = (event: InputEvent) => {
+  const getDomValue = (): number => Math.round(getter() * displayScale)
+  const onInput = (event: InputEvent): void => {
     const value = event.target.valueAsNumber
     if (!Number.isNaN(value) && Number.isFinite(value)) setter(clamp(value / displayScale || 0, min, max))
   }
@@ -36,8 +37,11 @@ const getNumberInputProps = (
     min: min * displayScale,
     max: max * displayScale,
     step: 1,
-    value: getDomValue,
+    defaultValue: getDomValue,
     onInput,
+    onBlur(event: InputEvent) {
+      event.target.value = String(getDomValue())
+    },
     'aria-labelledby': labelledBy,
   }
 }
@@ -119,7 +123,7 @@ const VideoClipProperties = ({ clip }: SubComponentProps<EditView.AnyVideoClip>)
       clip.scaleX = clip.scaleY = value
     },
     scaleId,
-    1 / 10,
+    MIN_SCALE,
     10,
     PERCENT,
   )

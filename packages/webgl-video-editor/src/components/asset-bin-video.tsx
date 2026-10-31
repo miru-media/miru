@@ -48,23 +48,21 @@ export const AssetBinVideo = () => {
   })
 
   const addFiles = async (files: File[]) => {
-    for (const file of files) {
-      try {
-        // eslint-disable-next-line no-await-in-loop -- TODO
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
         await editor.createMediaAsset(file)
-      } catch {
-        // eslint-disable-next-line no-alert -- TODO
-        alert(t('error_cannot_play_type'))
-      }
-    }
+      }),
+    )
+
+    if (results.some((result) => result.status === 'rejected'))
+      // eslint-disable-next-line no-alert -- TODO
+      alert(t('error_cannot_play_type'))
   }
 
   const onInputVideoFile = async (event: InputEvent) => {
-    const input = event.target
-    const file = input.files?.[0]
-    if (!file) return
-    await addFiles([file])
-    input.value = ''
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ''
+    await addFiles(files)
   }
 
   const onClickUpload = async () => {
@@ -95,6 +93,7 @@ export const AssetBinVideo = () => {
       <input
         ref={fileInput}
         type="file"
+        multiple
         accept={ACCEPT_VISUAL_FILE_TYPE}
         class={styles.srOnly}
         tabIndex={-1}

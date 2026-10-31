@@ -36,7 +36,7 @@ export const Ruler = ({
       <svg class={styles.rulerMarkings} style={() => `--ruler-markings-offset: ${offset.value}px`}>
         <defs>
           <pattern id="Pattern" x="0" y="0" width={size} height="100%" patternUnits="userSpaceOnUse">
-            <line x1="0.125rem" x2="0.125rem" y1="0" y2="100%" stroke="currentColor" />
+            <line x1="2" x2="2" y1="0" y2="100%" stroke="currentColor" />
           </pattern>
         </defs>
 
