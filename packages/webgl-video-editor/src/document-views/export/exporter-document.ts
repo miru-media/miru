@@ -1,16 +1,16 @@
+import { registerAacEncoder } from '@mediabunny/aac-encoder'
 import { createEffectScope } from 'fine-jsx'
 import * as Mb from 'mediabunny'
 
 import type { MediaAsset } from '#core'
 import type * as pub from '#core'
-import { Rational, setObjectSize } from 'shared/utils'
-import { rangesIntersect, setVideoEncoderConfigCodec } from 'shared/video/utils'
+import { Rational, setObjectSize } from 'shared/utils/index.ts'
+import { rangesIntersect } from 'shared/video/utils.ts'
 
 import { Document } from '../../document.ts'
 import { DocumentView, type ViewType } from '../document-view.ts'
 import { RenderDocument, type RenderDocumentOptions } from '../render/index.ts'
 
-import { AVEncoder } from './av-encoder.ts'
 import { ExportClip, ExportMediaClip } from './export-clip.ts'
 
 interface AvAssetEntry {
@@ -41,14 +41,15 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
   mute: boolean
   clips: (ExportMediaClip | ExportClip)[] = []
   sources = new Map<string, AvAssetEntry>()
-  avEncoder!: AVEncoder
+  output!: Mb.Output
+  canvasSource!: Mb.CanvasSource
+  audioBufferSource!: Mb.AudioBufferSource
   hasAudio = false
   hasVideo = false
 
   audioEncoderConfig = {
     numberOfChannels: 2,
     sampleRate: 44100,
-    codec: 'opus',
   } as const
   videoEncoderConfig!: VideoEncoderConfig
 
@@ -190,15 +191,6 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     onProgress?: (value: number) => void
     signal?: AbortSignal
   }): Promise<Blob> {
-    const { resolution, frameRate } = this.doc
-
-    const videoEncoderConfig = (this.videoEncoderConfig = {
-      codec: '',
-      ...resolution,
-      framerate: frameRate,
-    })
-    const { audioEncoderConfig } = this
-
     await Promise.all(Array.from(this.sources.values()).map((entry) => this.#prepareSource(entry)))
 
     signal?.throwIfAborted()
@@ -208,62 +200,85 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
       this.hasVideo ||= clip.original.isVideo()
     })
 
-    if (this.hasVideo) await setVideoEncoderConfigCodec(videoEncoderConfig)
+    let codec: Mb.VideoCodec | undefined
 
-    const durationUs = this.duration * 1e6
+    for (const c of ['vp9', 'vp8', 'avc'] as const) {
+      // eslint-disable-next-line no-await-in-loop -- sequential checks
+      if (await Mb.canEncodeVideo(c)) codec = c
+    }
 
-    const avEncoder = (this.avEncoder = await new AVEncoder({
-      video: this.hasVideo ? videoEncoderConfig : undefined,
-      audio: this.hasAudio ? audioEncoderConfig : undefined,
-      onOutput: (type, timestamp) => {
-        if (!signal?.aborted && (type === 'video' || !this.hasVideo)) onProgress?.(timestamp / durationUs)
-      },
-    }).init())
+    if (!codec) throw new Error('No supported video codec to encode.')
+
+    const output = (this.output = new Mb.Output({
+      format: codec === 'avc' ? new Mb.Mp4OutputFormat() : new Mb.WebMOutputFormat(),
+      target: new Mb.BufferTarget(),
+    }))
+
+    if (this.hasVideo) {
+      this.canvasSource = new Mb.CanvasSource(this.renderView.canvas, {
+        codec,
+        quality: new Mb.Quality('high'),
+      })
+      output.addVideoTrack(this.canvasSource, { frameRate: this.doc.frameRate })
+    }
+
+    if (this.hasAudio) {
+      let codec: Mb.AudioCodec
+
+      if (await Mb.canEncodeAudio('opus')) codec = 'opus'
+      else {
+        codec = 'aac'
+        if (!(await Mb.canEncodeAudio('aac'))) registerAacEncoder()
+      }
+
+      this.audioBufferSource = new Mb.AudioBufferSource({
+        ...this.audioEncoderConfig,
+        codec,
+        quality: new Mb.Quality('high'),
+      })
+      output.addAudioTrack(this.audioBufferSource)
+    }
 
     onProgress?.(0)
 
-    await Promise.all([this.#renderVideo({ signal }), this.#renderAudio({ signal })])
+    await output.start()
+    await Promise.all([this.#renderVideo({ signal, onProgress }), this.#renderAudio({ signal })])
 
-    await avEncoder.flush()
-
-    const buffer = await avEncoder.finalize()
-    return new Blob([buffer], { type: 'video/mp4' })
+    await output.finalize()
+    return new Blob([output.target.buffer!], { type: 'video/mp4' })
   }
 
-  async #renderVideo({ signal }: { signal?: AbortSignal }): Promise<void> {
+  async #renderVideo({
+    signal,
+    onProgress,
+  }: {
+    signal?: AbortSignal
+    onProgress?: (progress: number) => void
+  }): Promise<void> {
+    if (!this.hasVideo) return
+
     const { renderView, doc } = this
     const { duration: docDuration, resolution, frameRate } = doc
-    const writer = this.avEncoder.video?.getWriter()
-    if (!writer) return
 
     const { start, end } = this.range
     const totalFrames = docDuration * frameRate
     const startFrame = Math.floor(start * frameRate)
     const endFrame = Math.floor(end * frameRate)
-    const frameDurationUs = 1e6 / frameRate
+    const frameCount = endFrame - startFrame
+    const frameDurationS = 1 / frameRate
 
     setObjectSize(this.renderView.canvas, resolution)
 
     await renderView.whenRendererIsReady
 
     /* eslint-disable no-await-in-loop -- sequential */
-    for (let i = startFrame; i < endFrame; i++) {
+    for (let i = 0; i < frameCount; i++) {
       await this.#seekAndWaitForVideoClips(docDuration * (i / totalFrames), signal)
-
       this.renderView.render()
-
-      const frame = new VideoFrame(this.renderView.canvas, {
-        timestamp: (this.doc.currentTime - start) * 1e6,
-        duration: frameDurationUs,
-      })
-
-      await writer.write(frame)
-
-      frame.close()
+      await this.canvasSource.add(this.doc.currentTime - start, frameDurationS)
+      onProgress?.(i / frameCount)
     }
     /* eslint-enable no-await-in-loop */
-
-    await writer.close()
   }
 
   async #seekAndWaitForVideoClips(time: number, signal?: AbortSignal): Promise<void> {
@@ -299,9 +314,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
   }
 
   async #renderAudio({ signal }: { signal?: AbortSignal }): Promise<void> {
-    const { avEncoder } = this
-    const writer = avEncoder.audio?.getWriter()
-    if (!writer) return
+    if (!this.hasVideo) return
 
     const { numberOfChannels, sampleRate } = this.audioEncoderConfig
     const ctx = new OfflineAudioContext({
@@ -344,30 +357,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
 
     const rendered = await ctx.startRendering()
     signal?.throwIfAborted()
-
-    const f32Planar = new Float32Array(rendered.length * rendered.numberOfChannels)
-    for (let i = 0; i < rendered.numberOfChannels; i++)
-      rendered.copyFromChannel(
-        new Float32Array(
-          f32Planar.buffer,
-          i * rendered.length * Float32Array.BYTES_PER_ELEMENT,
-          rendered.length,
-        ),
-        i,
-      )
-
-    await writer.write(
-      new avEncoder.AudioData({
-        format: 'f32-planar',
-        timestamp: 0,
-        sampleRate,
-        numberOfChannels,
-        numberOfFrames: rendered.length,
-        data: f32Planar,
-        transfer: [f32Planar.buffer],
-      }),
-    )
-    await writer.close()
+    await this.audioBufferSource.add(rendered)
   }
 
   dispose(): void {

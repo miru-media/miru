@@ -66,6 +66,7 @@
     "@interactjs/interact": "^1.10.28",
     "@interactjs/modifiers": "^1.10.28",
     "@libav.js/variant-opus": "catalog:",
+    "@mediabunny/aac-encoder": "catalog:",
     "@motionone/easing": "^10.18.0",
     "colorjs.io": "^0.7.1",
     "comlink": "catalog:",

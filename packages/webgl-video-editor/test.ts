@@ -4,8 +4,6 @@ import { Renderer } from 'webgl-effects'
 
 import { getWebgl2Context, setObjectSize, timeout } from 'shared/utils'
 
-import { AVEncoder } from './src/document-views/export/av-encoder.ts'
-
 const test = async () => {
   document.body.appendChild(document.createElement('br'))
 
@@ -30,22 +28,38 @@ const test = async () => {
   const framerate = 1
   const rotatedSize = { width: size.height, height: size.width }
   const config = { codec: `avc1.4200${(40).toString(16)}`, ...size, framerate, rotation: 270 as const }
-  const av = new AVEncoder({ video: config })
-  await av.init()
+  let blob
 
-  const bitmap = await createImageBitmap(testImage)
-  const writer = av.video!.getWriter()
-  for (let i = 0; i < 10; i++) {
-    const frame = new VideoFrame(bitmap, { duration: 1e6, timestamp: (i * 1e6) / framerate })
-    // eslint-disable-next-line no-await-in-loop -- sequential
-    await writer.write(frame)
-    frame.close()
+  {
+    const output = new Mb.Output({
+      format: new Mb.Mp4OutputFormat(),
+      target: new Mb.BufferTarget(),
+    })
+
+    const source = new Mb.EncodedVideoPacketSource('avc')
+    await output.start()
+
+    let error: unknown
+    const encoder = new VideoEncoder({
+      output: (chunk, metadata) => void source.add(Mb.EncodedPacket.fromEncodedChunk(chunk), metadata),
+      error: (e) => {
+        error = e
+      },
+    })
+    encoder.configure(config)
+
+    const bitmap = await createImageBitmap(testImage)
+    for (let i = 0; i < 10; i++) {
+      const frame = new VideoFrame(bitmap, { duration: 1e6, timestamp: (i * 1e6) / framerate })
+      encoder.encode(frame)
+      frame.close()
+    }
+
+    await output.finalize()
+    if (error != null) throw error
+    blob = new Blob([output.target.buffer!])
   }
 
-  await av.flush()
-  const buffer = await av.finalize()
-
-  const blob = new Blob([buffer])
   const input = new Mb.Input({ formats: [new Mb.Mp4InputFormat()], source: new Mb.BlobSource(blob) })
 
   const videoEl = document.body.appendChild(document.createElement('video'))
