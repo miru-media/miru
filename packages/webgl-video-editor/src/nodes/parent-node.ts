@@ -8,8 +8,8 @@ import { DLL } from './utils.ts'
 
 export abstract class ParentNode<
   T extends Schema.AnyNode,
-  TParent extends AnyParentNode = AnyParentNode,
-  TChild extends AnyNode = AnyNode,
+  TParent extends AnyParentNode,
+  TChild extends AnyNode,
 >
   extends BaseNode<T, TParent>
   implements pub.ParentNode<TChild>
@@ -21,18 +21,18 @@ export abstract class ParentNode<
     { key: 'count', flags: NODE_FIELD_FLAGS.Readonly },
   ] satisfies pub.NodeFieldDef<pub.ParentNode<pub.AnyNode>>[])
 
-  readonly #dll = new DLL<TChild>()
+  private readonly _dll = new DLL() as DLL<TChild>
 
   get head(): TChild | undefined {
-    return this.#dll.head
+    return this._dll.head
   }
   get tail(): TChild | undefined {
-    return this.#dll.tail
+    return this._dll.tail
   }
 
   declare children: TChild[]
   get ['children' as never](): TChild[] {
-    return this.#dll.array.value
+    return this._dll.array.value
   }
 
   get count(): number {
@@ -43,16 +43,16 @@ export abstract class ParentNode<
   _positionChildAt(node: TChild, index: number): void {
     if (node.index === index && node.parent === (this as unknown as AnyParentNode)) return
 
-    this.#dll.positionAt(node, index)
+    this._dll.positionAt(node, index)
     ;(node as NonReadonly<TChild>).parent = this as unknown as TParent
   }
 
   _unlinkChild(node: TChild): void {
-    this.#dll.unlink(node)
+    this._dll.unlink(node)
   }
 
   search<U>(comparator: (a: TChild, b: U) => number, value: U, from?: number, to?: number): number {
-    return this.#dll.search(comparator, value, from, to)
+    return this._dll.search(comparator, value, from, to)
   }
 
   dispose(deep = false): void {
@@ -60,6 +60,6 @@ export abstract class ParentNode<
 
     if (deep) while (this.tail) this.tail.dispose()
     else while (this.tail) this.tail.remove()
-    this.#dll.dispose()
+    this._dll.dispose()
   }
 }

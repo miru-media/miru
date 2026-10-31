@@ -13,7 +13,6 @@ export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoCl
     { key: 'linkedAudio', flags: NODE_FIELD_FLAGS.Readonly | NODE_FIELD_FLAGS.Node },
   ] satisfies pub.NodeFieldDef<pub.VideoClip>[])
 
-  declare effects: pub.VideoClip['effects']
   declare asset: pub.MediaAsset | undefined
 
   get linkedAudio(): pub.AudioClip | undefined {
@@ -22,14 +21,12 @@ export class VideoClip extends BaseClip<Schema.VideoClip> implements pub.VideoCl
     return linkItem && this.doc.nodes.get(linkItem.id)
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isMediaClip(): this is VideoClip {
     return true
   }
   isVideo(): this is VideoClip {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.VideoClip {
     const obj: Schema.VideoClip = {

@@ -1,3 +1,6 @@
 export { FileSystemAssetStore } from './asset-store.ts'
 export { HttpAssetLoader } from './http-asset-loader.ts'
+export * from './media-asset.ts'
+export * from './font-asset.ts'
+export * from './video-effect-asset.ts'
 export { getMediaAssetInfo } from './utils.ts'

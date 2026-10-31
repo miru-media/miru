@@ -1,12 +1,14 @@
 import type { Ref } from 'fine-jsx'
-import type { EffectDefinition, Renderer } from 'webgl-effects'
+import type { Renderer } from 'webgl-effects'
 
 import type { AssetBin } from '../src/constants.ts'
 import type { VideoEditor as VideoEditorInternal } from '../src/video-editor.ts'
 
+import type { Animation } from './animation'
 import type * as events from './events.d.ts'
 import type * as Schema from './schema.d.ts'
 
+export type * from './animation.d.ts'
 export type * from './events.d.ts'
 export type { Schema }
 
@@ -142,7 +144,7 @@ export interface BaseNode extends Omit<Schema.Base, 'type' | 'effects'> {
   prev: AnyNode | undefined
   next: AnyNode | undefined
   enabled: boolean
-  effects: NonNullable<Schema.Base['effects']>
+  effects: EffectList
   readonly animations: Partial<Record<string, Animation>>
   readonly animationMap: Map<string, Animation>
 
@@ -239,7 +241,6 @@ export interface VideoClip
   extends BaseClip<'video'>, Omit<Schema.VideoClip, keyof Schema.VisualProps>, Schema.VisualProps {
   readonly asset: MediaAsset | undefined
   linkedAudio?: AudioClip
-  effects: NonNullable<Schema.VideoClip['effects']>
   toJSON: () => Schema.VideoClip
 }
 export interface AudioClip extends BaseClip<'audio'>, Schema.AudioClip {
@@ -283,7 +284,8 @@ export type AnyAudioNode = Timeline | AudioTrack | AudioClip
 export type Linkable = AnyTrack | AnyClip
 
 interface BaseAsset<T extends string = string> extends Schema.BaseAsset<T> {
-  isBuiltIn?: boolean
+  store: VideoEditorAssetStore
+  isBuiltIn: boolean
   toJSON: () => Schema.BaseFileAsset<T>
   dispose: () => void
   [Symbol.dispose]: () => void
@@ -308,9 +310,11 @@ export interface ImageAsset extends BaseFileAsset<'media:image'>, Readonly<Schem
   toJSON: () => Schema.ImageAsset
 }
 
-export interface VideoEffectAsset extends BaseAsset<'effect:video'>, Readonly<Schema.VideoEffectAsset> {
+export interface VideoEffectAsset
+  extends BaseAsset<'effect:video'>, Readonly<Required<Schema.VideoEffectAsset>> {
   name: string
-  readonly raw: EffectDefinition
+  readonly raw: Schema.VideoEffectAsset
+  readonly shaders: string[]
   toJSON: () => Schema.VideoEffectAsset
 }
 
@@ -440,7 +444,7 @@ export interface VideoEditor {
    *
    * @param source A Blob or URI string of the clip media.
    */
-  createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
+  createMediaAsset: (source: Blob | string) => Promise<MediaAsset | ImageAsset>
 
   /**
    * Split a clip by replacing it with two new clips which end and start at the given time.
@@ -540,7 +544,7 @@ export interface VideoEditorAssetStore {
   /** Delete an asset form the store */
   delete: (key: string) => Promise<void>
 
-  createMediaAsset: (source: Blob | string) => Promise<MediaAsset>
+  createMediaAsset: (source: Blob | string) => Promise<MediaAsset | ImageAsset>
 
   loaders: AssetLoader[]
 
@@ -581,47 +585,27 @@ export interface Rational {
   toOTIO: () => { OTIO_SCHEMA: 'RationalTime.1'; rate: number; value: number }
 }
 
-export interface Animation<T = unknown> {
-  readonly keyframes: Keyframe<T>[]
-  readonly flags: number
-  createView: (getTime: () => Rational) => {
-    getValue: () => T | undefined
-    dispose: () => void
-    [Symbol.dispose]: () => void
-  }
-  canInterpolate: () => boolean
-  indexOfKeyframeAt: (time: Schema.Rational) => number
-  getKeyframeAt: (time: Schema.Rational) => Keyframe<T> | undefined
-  getKeyframeFor: (time: Schema.Rational) => Keyframe<T> | undefined
-  unlink: (keyframe: any) => void
-  createAtTime: (value: T, time: Rational, index?: number) => void
-  updateOrCreateAtTime: (value: T, time: Rational, index?: number) => void
-  insert: (index: number, keyframe: Keyframe<T>) => void
-  update: <K extends keyof Keyframe<T>>(index: number, key: K, value: Keyframe<T>[K]) => void
+export class NodePropList<
+  T extends {
+    readonly index: number
+    next: any
+    prev: any
+  },
+> {
+  array: Ref<T[]>
+  insert: (index: number, item: T) => void
+  update: <K extends keyof T>(index: number, key: K, value: T[K]) => void
   delete: (index: number) => void
-  splitAt: (time: Rational) =>
-    | {
-        sliceTo: Keyframe<T> | undefined
-        sliceToIndex: number
-        isOnKeyframe: boolean
-        splitValue: T
-      }
-    | undefined
-  toJSON: () => Schema.Animation<T> | undefined
-  dispose: () => void
-  [Symbol.dispose]: () => void
+  pushInitial: (item: T) => void
+  toJSON<J>(this: DLL<{ toJSON: () => J }>): J[] | undefined
 }
 
-export interface Keyframe<T> {
-  value: T
-  dt: Rational | Schema.Rational
-  easing: Schema.EasingOption | undefined
+export interface EffectList extends NodePropList<EffectListItem>, Array<EffectListItem> {}
 
-  prev: Keyframe<T> | undefined
-  next: Keyframe<T> | undefined
-
-  readonly index: number
-  readonly time: Rational
-
-  toJSON: () => Schema.Keyframe<T>
+export interface EffectListItem extends Schema.EffectListItem {
+  index: number
+  prev: EffectListItem | undefined
+  next: EffectListItem | undefined
+  asset: VideoEffectAsset | undefined
+  toJSON: () => Schema.EffectListItem
 }

@@ -56,7 +56,7 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     switch (init.type) {
       case 'asset:media:image':
       case 'asset:media:av': {
-        const options = { store: this, source, isBuiltIn: isBuiltIn }
+        const options = { store: this, source, isBuiltIn }
         asset = init.type === 'asset:media:av' ? new MediaAsset(init, options) : new ImageAsset(init, options)
         this.getOrCreateFile(asset, source ?? ('uri' in init ? init.uri : undefined))
           .then(asset.setBlob.bind(asset))
@@ -135,7 +135,7 @@ export class FileSystemAssetStore extends EventTarget implements pub.VideoEditor
     if (asset) this.#emit(new AssetDeleteEvent(asset))
   }
 
-  async createMediaAsset(source: Blob | string): Promise<pub.MediaAsset> {
+  async createMediaAsset(source: Blob | string): Promise<pub.MediaAsset | pub.ImageAsset> {
     const init = await getMediaAssetInfo(this.generateId(), source)
     return this.create(init, { source })
   }

@@ -92,7 +92,6 @@ class StorageWritableSink {
   }
 }
 
-/* eslint-disable @typescript-eslint/class-methods-use-this -- exposed singleton */
 class FileStorageWorker {
   getSink(key: string, options: StorageWorkerFileInfo): StorageWritableSink & Comlink.ProxyMarked {
     return Comlink.proxy(new StorageWritableSink(key, options))
@@ -167,7 +166,6 @@ class FileStorageWorker {
     ])
   }
 }
-/* eslint-enable @typescript-eslint/class-methods-use-this */
 
 const fileStorageWorker = new FileStorageWorker()
 

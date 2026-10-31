@@ -9,8 +9,6 @@ const makeBase = <T extends Schema.AnyNode['type']>(
   type,
   name: '',
   enabled: true,
-  effects: [],
-  color: undefined,
   metadata: {},
 })
 

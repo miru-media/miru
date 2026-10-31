@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/class-methods-use-this -- matching interface */
 import type { Session } from '@ng-org/web'
 import type { AssetLoader, Schema } from 'webgl-video-editor'
 

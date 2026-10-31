@@ -20,14 +20,12 @@ export class AudioClip extends BaseClip<Schema.AudioClip> implements pub.AudioCl
     return linkItem && this.doc.nodes.get(linkItem.id)
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isMediaClip(): this is AudioClip {
     return true
   }
   isAudio(): this is AudioClip {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.AudioClip {
     const { volume } = this

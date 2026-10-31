@@ -63,10 +63,11 @@ export declare class Renderer {
   waitSync(): void
   waitAsync(intervalMs?: number): Promise<void>
   drawAndTransfer(
-    options: RendererDrawOptions & {
+    options: Omit<RendererDrawOptions, 'framebuffer'> & {
       context: Context2D | ImageBitmapRenderingContext
     },
   ): Promise<void>
+  transferBitmap(context: ImageBitmapRenderingContext): Promise<void> | void
   getImageData(framebuffer: WebGLFramebuffer, size: Size): Promise<ImageData>
   toBlob(options?: ImageEncodeOptions): Promise<Blob>
   deleteTexture(texture: WebGLTexture): void

@@ -1,6 +1,6 @@
 import { computed, effect, ref } from 'fine-jsx'
 
-import { ACCEPT_VIDEO_FILE_TYPES } from '#constants'
+import { ACCEPT_VISUAL_FILE_TYPE } from '#constants'
 import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 
@@ -17,7 +17,8 @@ export const AssetBinVideo = () => {
   const getVideoAssets = (): MediaAsset[] =>
     Array.from(editor.doc.assets.values()).filter(
       (asset): asset is MediaAsset =>
-        asset.type === 'asset:media:av' && (!!asset.video || asset.mimeType.startsWith('video/')),
+        (asset.type === 'asset:media:av' && (!!asset.video || asset.mimeType.startsWith('video/'))) ||
+        asset.type === 'asset:media:image',
     )
 
   const assets = ref<MediaAsset[]>(getVideoAssets())
@@ -94,7 +95,7 @@ export const AssetBinVideo = () => {
       <input
         ref={fileInput}
         type="file"
-        accept={ACCEPT_VIDEO_FILE_TYPES}
+        accept={ACCEPT_VISUAL_FILE_TYPE}
         class={styles.srOnly}
         tabIndex={-1}
         aria-hidden="true"
@@ -120,9 +121,7 @@ export const AssetBinVideo = () => {
             <button
               type="button"
               class={[styles.assetBinAsset, styles.assetBinSanitize]}
-              onClick={() => {
-                activeVideo.value = asset
-              }}
+              onClick={() => (activeVideo.value = asset)}
             >
               <img src={asset.thumbnailUri} alt="" class={styles.assetBinThumbnail} />
               <span class={styles.assetBinName}>{asset.name}</span>
@@ -130,7 +129,11 @@ export const AssetBinVideo = () => {
           ))
         }}
       </div>
-      {() => activeVideo.value && <AssetBinVideoPreview activeVideo={activeVideo} />}
+      {() =>
+        activeVideo.value && (
+          <AssetBinVideoPreview asset={activeVideo.value} onClose={() => (activeVideo.value = undefined)} />
+        )
+      }
     </div>
   )
 }

@@ -9,15 +9,51 @@ import { NodeView } from '../node-view.ts'
 
 import type { ExportDocument } from './exporter-document.ts'
 
-export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> {
+export class ExportClip<T extends pub.AnyClip = pub.AnyVideoClip> extends NodeView<ExportDocument, T> {
   renderClip = this.docView.renderView._getNode(this.original)
-  readonly videoEffect: VideoEffectAsset | undefined
 
-  declare translate: { x: number; y: number }
-  declare rotate: number
-  declare scale: { x: number; y: number }
-  declare volume: number
-  declare mute: boolean
+  get isReady(): boolean {
+    return this.original.isReady && this.renderClip?.isReady !== false
+  }
+
+  async whenReady(signal: AbortSignal): Promise<void> {
+    if (this.isReady) return
+
+    await new Promise<void>((resolve, reject) => {
+      const onAbort = (): void => {
+        stop()
+        reject(new Error('aborted', { cause: signal.reason }))
+      }
+      signal.addEventListener('abort', onAbort)
+
+      const stop = effect(() => {
+        if (!this.isReady) return
+        stop()
+        resolve()
+        signal.removeEventListener('abort', onAbort)
+      })
+    })
+  }
+
+  init(): void {
+    // stub
+  }
+
+  isExportMediaClip(): this is ExportMediaClip {
+    return false
+  }
+
+  updateVisibility(): void {
+    const { renderClip } = this
+    if (!renderClip) return
+
+    if (this.original.isInClipTime) renderClip.pixiNode.visible ||= true
+    else renderClip.pixiNode.visible &&= false
+  }
+}
+
+export class ExportMediaClip extends ExportClip<pub.AnyMediaClip> {
+  readonly videoEffect: VideoEffectAsset | undefined
 
   videoIsReady = false
 
@@ -36,7 +72,7 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
   audioBuffer?: AudioBuffer
 
   get isReady(): boolean {
-    return this.original.isReady && this.videoIsReady && this.renderClip?.isReady !== false
+    return super.isReady && this.original.isReady && this.videoIsReady && this.renderClip?.isReady !== false
   }
 
   constructor(exportView: ExportDocument, original: pub.AnyMediaClip) {
@@ -68,25 +104,6 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
       if (audioBuffer) this.audioBuffer = audioBuffer
       else this.audioSamples = new Mb.AudioSampleSink(audio).samples(start, end)
     }
-  }
-
-  async whenReady(signal: AbortSignal): Promise<void> {
-    if (this.isReady) return
-
-    await new Promise<void>((resolve, reject) => {
-      const onAbort = (): void => {
-        stop()
-        reject(new Error('aborted', { cause: signal.reason }))
-      }
-      signal.addEventListener('abort', onAbort)
-
-      const stop = effect(() => {
-        if (!this.isReady) return
-        stop()
-        resolve()
-        signal.removeEventListener('abort', onAbort)
-      })
-    })
   }
 
   async seekVideo(): Promise<void> {
@@ -213,14 +230,8 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     return data.timestamp <= sourceTimeUs && sourceTimeUs < data.timestamp + data.duration
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isExportMediaClip(): this is ExportMediaClip {
     return true
-  }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
-
-  updateVisibility(): void {
-    updateVisibility(this)
   }
 
   dispose(): void {
@@ -228,38 +239,4 @@ export class ExportMediaClip extends NodeView<ExportDocument, pub.AnyMediaClip> 
     void this.videoSamples?.return(null)
     this.currentVideoFrame?.close()
   }
-}
-
-export class ExportNonMediaVideoClip extends NodeView<ExportDocument, pub.AnyVideoClip> {
-  renderClip = this.docView.renderView._getNode(this.original)
-
-  get isReady(): boolean {
-    return this.original.isReady
-  }
-
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
-  init(): void {
-    // stub
-  }
-
-  whenReady(): void {
-    throw new Error('TODO: load font asset')
-  }
-
-  isExportMediaClip(): this is ExportMediaClip {
-    return false
-  }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
-
-  updateVisibility(): void {
-    updateVisibility(this)
-  }
-}
-
-const updateVisibility = (exportClip: ExportMediaClip | ExportNonMediaVideoClip) => {
-  const { renderClip } = exportClip
-  if (!renderClip) return
-
-  if (exportClip.original.isInPresentationTime) renderClip.pixiNode.visible ||= true
-  else renderClip.pixiNode.visible &&= false
 }

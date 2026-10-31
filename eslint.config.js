@@ -65,6 +65,7 @@ export default defineConfig(
       ...importPlugin.flatConfigs.recommended.rules,
       ...importPlugin.flatConfigs.warnings.rules,
       ...importPlugin.flatConfigs.typescript.rules,
+      '@typescript-eslint/class-methods-use-this': 'off',
       '@typescript-eslint/no-magic-numbers': [
         'error',
         { ignore: [-2, -1, 0, 1, 2, 3, 4, 5, 10, 16, 60, 90, 180, 270, 360, 1e3, 1e6, 1e9] },

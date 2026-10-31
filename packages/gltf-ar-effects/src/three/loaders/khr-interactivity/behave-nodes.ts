@@ -28,7 +28,7 @@ export class EventReceive extends Behave.EventNode {
     super(description, graph, inputs, outputs, config)
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stub
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- stub
   init(_engine: Behave.Engine): void {}
 }
 

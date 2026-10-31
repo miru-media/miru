@@ -1,4 +1,4 @@
-import { createEffectScope, effect, ref, watch } from 'fine-jsx'
+import { createEffectScope, effect, onScopeDispose, ref, watch } from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { NonReadonly } from '#internal'
@@ -16,7 +16,9 @@ import { PlaybackClip } from './playback-clip.ts'
 import type { PlaybackDocument } from './playback-document.ts'
 
 export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<T> {
-  readonly mediaElement = createHiddenMediaElement(this.original.isAudio() ? 'audio' : 'video')
+  readonly mediaElement = createHiddenMediaElement(
+    this.original.isAudio() ? 'audio' : 'video',
+  ) as T extends pub.AudioClip ? HTMLAudioElement : HTMLVideoElement
   readonly mediaTime = ref(0)
   readonly #scope = createEffectScope()
   readonly mediaState = new MediaElementState(this.#scope, this.mediaElement)
@@ -45,26 +47,55 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
     const { renderClip } = this
 
     if (renderClip) {
+      const video = this.mediaElement as HTMLVideoElement
+      let everHadVideoFrame = false
+
       renderClip.pixiNode.eventMode = 'static'
       renderClip.pixiNode.on('pointerdown', (event) => {
         playbackView.doc.emit(new CanvasEvent('pointerdown', renderClip.original))
         event.stopPropagation()
       })
 
-      this.#scope.run(() => {
-        watch(
-          [() => this.everHadEnoughData, () => this.isPlaceholder],
-          ([everHadEnoughData, isPlaceholder], _prev) => {
-            if (!everHadEnoughData || isPlaceholder) return
+      const onFirstFrame = () => {
+        const { texture } = renderClip.pixiNode
+        everHadVideoFrame = true
+        texture.source.resource = video
+        updateTextureSource()
+        texture.update()
+      }
 
-            const { texture } = renderClip.pixiNode
+      const updateTextureSource = () => {
+        const { asset } = original
+        const { pixiNode } = renderClip
+        const rotation = asset?.video?.rotation ?? 0
+        try {
+          if (IS_FIREFOX && rotation % 180 && this.mediaElement instanceof HTMLVideoElement) {
+            const { source } = pixiNode.texture
+            const videoFrame = new VideoFrame(this.mediaElement, {
+              timestamp: this.mediaElement.currentTime * 1e6,
+            })
 
-            texture.source.resource = this.mediaElement as HTMLVideoElement
-            texture.source.update()
-            texture.update()
-          },
-        )
-      })
+            ;(source.resource as Partial<VideoFrame>).close?.()
+            source.resource = videoFrame
+            source.update()
+          } else pixiNode.texture.source.update()
+        } catch {}
+      }
+
+      if (video.readyState >= video.HAVE_CURRENT_DATA) onFirstFrame()
+
+      const rafLoop = (): void => {
+        if (everHadVideoFrame) updateTextureSource()
+        else onFirstFrame()
+
+        if (original.isInPresentationTime) {
+          this.docView.renderView.needsRender.value = true
+          if (this.docView.isPaused) this.docView.renderOnAnimationFrame()
+        }
+        rfvcHandle = video.requestVideoFrameCallback(rafLoop)
+      }
+      let rfvcHandle = video.requestVideoFrameCallback(rafLoop)
+      this.#scope.run(() => onScopeDispose(() => video.cancelVideoFrameCallback(rfvcHandle)))
     }
 
     const { doc } = original
@@ -167,33 +198,10 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
   }
 
   #onPlaybackUpdate(): void {
-    const { original, renderClip, docView } = this
+    const { original, docView } = this
     if (!original.enabled) return
 
     if (this.original.isInPlayableTime) this.mediaTime.value = this.mediaElement.currentTime
-
-    if (renderClip) {
-      const { asset } = original
-      const { pixiNode: sprite } = renderClip
-
-      if (this.shouldRender && asset) {
-        if (this.mediaState.readyState.value >= ReadyState.HAVE_CURRENT_DATA) {
-          const rotation = asset.video?.rotation ?? 0
-          try {
-            if (IS_FIREFOX && rotation % 180 && this.mediaElement instanceof HTMLVideoElement) {
-              const { source } = sprite.texture
-              const videoFrame = new VideoFrame(this.mediaElement, {
-                timestamp: this.mediaElement.currentTime * 1e6,
-              })
-
-              ;(source.resource as Partial<VideoFrame>).close?.()
-              source.resource = videoFrame
-              source.update()
-            } else sprite.texture.source.update()
-          } catch {}
-        }
-      }
-    }
 
     if (docView.isStalled) {
       if (!this.mediaIsPaused) this.pause()

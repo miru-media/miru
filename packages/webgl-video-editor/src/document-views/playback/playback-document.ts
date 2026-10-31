@@ -31,12 +31,12 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   readonly #scope = createEffectScope()
   readonly #noRender = ref(0)
-  readonly #needsRender = ref(true)
   readonly #delayedActiveClipIsStalled = ref(false)
 
   readonly #isEnded = computed(() => this.currentTime >= this.doc.duration)
   readonly #isPaused = ref(true)
   readonly #isStalled = computed(() => !this.#isPaused.value && !this.isReady)
+  #rafRenderHandle: number | undefined
 
   readonly assetFiles = new Map<string, { blob: Blob; url: string }>()
 
@@ -80,24 +80,35 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     })
 
     const listenerOptions = { signal: this._abort.signal }
-    const markAsNeedsRender = this.#markAsNeedsRender.bind(this)
-    ;(['node:move', 'node:update', 'node:delete', 'settings:update', 'playback:seek'] as const).forEach(
-      (type) => {
-        doc.on(type, markAsNeedsRender, listenerOptions)
-      },
-    )
-    effect(() => this.isReady && this.isPaused && this.#markAsNeedsRender())
+    ;(
+      [
+        'node:move',
+        'node:update',
+        'node:list-change',
+        'node:delete',
+        'settings:update',
+        'playback:seek',
+      ] as const
+    ).forEach((type) => {
+      doc.on(type, this.renderOnAnimationFrame, listenerOptions)
+    })
+    effect(() => {
+      this.isReady && this.isPaused && this.renderOnAnimationFrame()
+    })
 
     this.ticker.add(this.tick.bind(this))
 
     void this.renderView.whenRendererIsReady.then(() => {
       this.#scope.run(() => {
         const documentVisibility = useDocumentVisibility()
-        watch([() => this.#noRender.value <= 0 && documentVisibility.value], ([shouldRender]) => {
-          const { ticker } = this
-          if (shouldRender) ticker.start()
-          else ticker.stop()
-        })
+        watch(
+          [() => this.#noRender.value <= 0 && documentVisibility.value && !this.isPaused],
+          ([shouldRender]) => {
+            const { ticker } = this
+            if (shouldRender) ticker.start()
+            else ticker.stop()
+          },
+        )
       })
     })
 
@@ -142,14 +153,8 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
 
   /**
    * This method is called by the {@link Pixi.Ticker} every `requestAnimationFrame` and is used to update the
-   * `doc.currentTime`, emit the playback udpate event and render when needed.
-   *
-   * While paused, we and render inside a computed getter so that reactive values are tracked and the getter
-   * with all of its side effects are run only if a reactive dependency has changed.
-   *
-   * While playing, we always call the render method directly, but we still access the computed value which
-   * will then only track the reactive values that tell us that we're playing and return without rendering
-   * again.
+   * `doc.currentTime`, emit the playback udpate event and render while playing. It's also called on some
+   * document updates while paused.
    */
   tick(): void {
     if (this.#noRender.value) return
@@ -162,12 +167,10 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     if (shouldAdvance) {
       this.stats.begin()
       this.doc._setCurrentTime(Math.min(this.currentTime + deltaMS / 1e3, duration))
-      this._updateAndRender(false)
     }
 
-    // Always read the computed value, which checks playback status and skips rendering while playing.
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- ^
-    this._updateAndRenderReactive.value
+    this.doc.emit(UPDATE_EVENT)
+    if (this.isReady) this.renderView.render()
 
     if (shouldAdvance) {
       if (this.currentTime >= this.doc.duration) this.pause()
@@ -175,22 +178,13 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     }
   }
 
-  _updateAndRender(skipWhilePlaying: boolean): unknown {
-    if (skipWhilePlaying && !this.isPaused && this.isReady) return
-
-    this.doc.emit(UPDATE_EVENT)
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track changes to node properties
-    this.#needsRender.value
-    this.renderView.render()
-    this.#needsRender.value = false
-
-    return undefined
-  }
-
-  _updateAndRenderReactive = computed(this._updateAndRender.bind(this, true))
-
-  #markAsNeedsRender() {
-    this.#needsRender.value = true
+  readonly renderOnAnimationFrame = (): void => {
+    this.renderView.needsRender.value = true
+    if (this.#rafRenderHandle !== undefined) return
+    this.#rafRenderHandle = requestAnimationFrame(() => {
+      this.tick()
+      this.#rafRenderHandle = undefined
+    })
   }
 
   play(): void {
@@ -220,5 +214,7 @@ export class PlaybackDocument extends DocumentView<ViewTypeMap> {
     super.dispose()
     this.#scope.stop()
     this.ticker.destroy()
+
+    if (this.#rafRenderHandle !== undefined) cancelAnimationFrame(this.#rafRenderHandle)
   }
 }

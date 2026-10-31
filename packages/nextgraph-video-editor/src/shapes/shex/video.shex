@@ -65,9 +65,12 @@ ex:MiruImageAssetShape EXTRA a {
 
   ex:mimeType xsd:string ;
   ex:size xsd:integer ;
-  ex:width xsd:integer ;
-  ex:height xsd:integer ;
-  ex:rotation xsd:integer ;
+
+  ex:video {
+    ex:width xsd:integer ;
+    ex:height xsd:integer ;
+    ex:rotation xsd:integer ;
+  } ;
 
   ex:uri xsd:string OR IRI;
   ex:thumbnailUri xsd:string OR IRI? ;

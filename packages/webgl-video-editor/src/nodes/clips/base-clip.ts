@@ -162,14 +162,12 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
     super._insertKeyframeAtTime(key, value, time.clamp(Rational.ZERO, this.duration), index)
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isClip(): this is pub.AnyClip {
     return true
   }
   isTrackChild(): this is pub.AnyClip {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Pick<T, keyof Schema.BaseClip> {
     return {
@@ -184,7 +182,7 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
   _visualToJSON<T extends Extract<Schema.AnyClip, Partial<Schema.VisualProps>>>(
     this: BaseClip<T> & Schema.VisualProps,
   ): Partial<Schema.VisualProps & Pick<Schema.Base, 'effects'>> {
-    const { translateX, translateY, rotate, scaleX, scaleY, opacity, effects } = this
+    const { translateX, translateY, rotate, scaleX, scaleY, opacity } = this
     const obj: Partial<Schema.VisualProps & Pick<Schema.Base, 'effects'>> = {}
 
     if (translateX !== 0) obj.translateX = translateX
@@ -195,8 +193,8 @@ export abstract class BaseClip<T extends Schema.AnyClip = Schema.AnyClip>
 
     if (opacity !== 1) obj.opacity = opacity
 
-    if (effects.length)
-      obj.effects = effects.map(({ id, assetId, intensity }) => ({ id, assetId, intensity }))
+    const effects: Schema.EffectListItem[] | undefined = this.effects.toJSON()
+    if (effects) obj.effects = effects
 
     return obj
   }

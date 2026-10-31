@@ -22,7 +22,7 @@ export type ViewType<
  */
 export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type'], NodeView<any, any>>>> {
   readonly doc: pub.Document
-  readonly #map = new Map<string, NonNullable<ViewType<TMap, pub.AnyNode>>>()
+  protected readonly _map = new Map<string, NonNullable<ViewType<TMap, pub.AnyNode>>>()
   protected readonly _abort = new AbortController()
   isDisposed = false
 
@@ -61,7 +61,7 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
 
   #createAndAddView<T extends pub.AnyNode>(original: T): ViewType<TMap, T> | undefined {
     const view = this._createView(original)
-    if (view) this.#map.set(original.id, view)
+    if (view) this._map.set(original.id, view)
     return view
   }
 
@@ -69,7 +69,7 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
   _getNode<T extends pub.AnyNode>(original: T): ViewType<TMap, T>
   _getNode<T extends pub.AnyNode | undefined>(original: T): ViewType<TMap, T>
   _getNode<T extends pub.AnyNode | undefined>(original: T): ViewType<TMap, T> | undefined {
-    return original && (this.#map.get(original.id) as ViewType<TMap, T>)
+    return original && (this._map.get(original.id) as ViewType<TMap, T>)
   }
 
   #onCreate({ node }: pub.NodeCreateEvent): void {
@@ -90,14 +90,14 @@ export abstract class DocumentView<TMap extends Partial<Record<pub.AnyNode['type
     if (!view) return
 
     view.dispose()
-    this.#map.delete(node.id)
+    this._map.delete(node.id)
   }
 
   dispose(): void {
     if (this.isDisposed) return
     this.isDisposed = true
 
-    const viewMap = this.#map
+    const viewMap = this._map
     viewMap.forEach((view) => view.dispose())
     viewMap.clear()
     this._abort.abort()

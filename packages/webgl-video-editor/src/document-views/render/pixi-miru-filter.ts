@@ -1,4 +1,3 @@
-import type { Ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 import type { EffectOp } from 'webgl-effects'
 
@@ -16,20 +15,20 @@ export class MiruFilter extends Pixi.Filter implements Pick<Pixi.Filter, 'resour
   readonly sprites: Pixi.Sprite[]
 
   public enabled = true
-  readonly #intensity: Ref<number>
+  intensity: number
 
   readonly #getIsLoading?: () => boolean
   get isLoading(): boolean {
     return this.#getIsLoading?.() === true
   }
 
-  constructor(op: EffectOp, intensity: Ref<number>) {
+  constructor(op: EffectOp, intensity: number) {
     const expandedOp = expandOp(op)
 
     super({ glProgram: Pixi.GlProgram.from(expandedOp), resources: expandedOp.resources })
 
     this.op = op
-    this.#intensity = intensity
+    this.intensity = intensity
     this.sprites = expandedOp.sprites
     this.opIntensity = op.intensity ?? 1
     this.#getIsLoading = expandedOp.getIsLoading
@@ -42,7 +41,7 @@ export class MiruFilter extends Pixi.Filter implements Pick<Pixi.Filter, 'resour
     clearMode: boolean,
   ): void {
     if (this.isLoading) return
-    this.resources.filterUniforms.uniforms.u_intensity = this.opIntensity * this.#intensity.value
+    this.resources.filterUniforms.uniforms.u_intensity = this.opIntensity * this.intensity
 
     super.apply(filterManager, input, output, clearMode)
   }

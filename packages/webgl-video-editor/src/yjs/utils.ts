@@ -22,7 +22,7 @@ export const getOrCreateYmap = (root: Y.Doc | Y.Map<Y.Map<any>>, key: string) =>
   return subMap
 }
 
-const createYarrayOfYmaps = (values: Record<string, unknown>[]): Y.Array<Y.Map<unknown>> => {
+const createYarrayOfYmaps = (values: any[]): Y.Array<Y.Map<unknown>> => {
   const yarray = new Y.Array<Y.Map<unknown>>()
   const ymaps = values.map((obj) => new Y.Map(Object.entries(obj)))
 
@@ -37,6 +37,17 @@ export const initYjsRoot = (
   const ytree = new YTree(getOrCreateYmap(root, YTREE_YMAP_KEY), {
     insertBetween: positionSource.createBetween.bind(positionSource),
   })
+
+  // TODO: method should return undefined instead of empty string
+  ytree._getNextOrderIndex = ytree.getNextOrderIndex
+  ytree.getNextOrderIndex = function (
+    key: string,
+    children: unknown[],
+    parentKey: string,
+  ): string | undefined {
+    const index = this._getNextOrderIndex(key, children, parentKey)
+    return index === '' ? undefined : index
+  }
   const settignsYmap = getOrCreateYmap(root, 'settings')
   const linksArray =
     'getArray' in root
@@ -101,10 +112,6 @@ export const createYnodeFromJson = (init: Schema.AnyNode | Schema.AnySerializedN
     .forEach(([key, value]) => {
       let yjsValue
       switch (key) {
-        // effects are stored in YArrays although we never use more than one effect atm
-        case 'effects':
-          yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['effects']) ?? [])
-          break
         // TODO:
         case 'markers':
           yjsValue = createYarrayOfYmaps((value as Schema.AnyNode['markers']) ?? [])
@@ -119,6 +126,7 @@ export const createYnodeFromJson = (init: Schema.AnyNode | Schema.AnySerializedN
           break
         case 'gap':
         case 'animations':
+        case 'effects':
           break
 
         default:
@@ -149,6 +157,8 @@ export const createYnodeFromJson = (init: Schema.AnyNode | Schema.AnySerializedN
       )
     })
   }
+
+  ynode.set('effects', createYarrayOfYmaps(init.effects ?? []))
 
   return ynode
 }
@@ -238,16 +248,18 @@ export const findIndexByIdProp = (yarray: Y.Array<any>, id: string): number => {
   return -1
 }
 
-export const onYnodeKeyframeListChange = (node: pub.AnyNode, key: string, event: Y.YEvent<any>): void => {
+export const onYnodePropListChange = (
+  list: pub.NodePropList<any> | pub.Animation,
+  event: Y.YEvent<any>,
+): void => {
   let pos = 0
-  const animation = node.animations[key]!
 
   event.changes.delta.forEach(({ retain, insert, delete: del }) => {
     if (typeof retain === 'number') pos += retain
     else if (Array.isArray(insert)) {
-      insert.forEach((item) => animation.insert(pos, new Keyframe((item as Y.Map<any>).toJSON() as any)))
+      insert.forEach((item) => list.insert(pos, new Keyframe((item as Y.Map<any>).toJSON() as any)))
     } else if (typeof del === 'number') {
-      for (let i = 0; i < del; i++) animation.delete(pos)
+      for (let i = 0; i < del; i++) list.delete(pos)
     }
   })
 }

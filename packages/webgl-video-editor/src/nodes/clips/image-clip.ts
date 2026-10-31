@@ -10,7 +10,6 @@ export class ImageClip extends BaseClip<Schema.ImageClip> implements pub.ImageCl
   static FIELDS = super.FIELDS.concat(BaseClip.VISUAL_FIELDS satisfies pub.NodeFieldDef<pub.ImageClip>[])
 
   declare asset: pub.ImageAsset | undefined
-  declare effects: pub.ImageClip['effects']
 
   get linkedAudio(): pub.AudioClip | undefined {
     const linkItem =
@@ -18,14 +17,12 @@ export class ImageClip extends BaseClip<Schema.ImageClip> implements pub.ImageCl
     return linkItem && this.doc.nodes.get(linkItem.id)
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   isImageClip(): this is ImageClip {
     return true
   }
   isVideo(): this is ImageClip {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.ImageClip {
     const obj: Schema.ImageClip = {

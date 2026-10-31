@@ -35,12 +35,14 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
   declare stage: Pixi.Container
   declare whenRendererIsReady: Promise<void>
   readonly #isReady = ref(false)
+  readonly loadingClips = ref(0)
 
+  readonly needsRender = ref(false)
   readonly #ownsRenderer: boolean
   readonly applyVideoRotation: boolean
 
   get isReady(): boolean {
-    return this.#isReady.value
+    return this.#isReady.value && this.loadingClips.value <= 0
   }
 
   constructor(options: RenderDocumentOptions) {
@@ -115,11 +117,16 @@ export class RenderDocument extends DocumentView<ViewTypeMap> {
     if (event.from.resolution) {
       const { width, height } = this.doc.resolution
       this.renderer.resize(width, height)
+
+      this._map.forEach((renderNode) => {
+        if (renderNode.isClip()) renderNode.updateTransform()
+      })
     }
   }
 
   render() {
     this.renderer.render({ container: this.stage })
+    this.needsRender.value = false
   }
 
   /** @internal */

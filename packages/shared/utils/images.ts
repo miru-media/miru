@@ -88,6 +88,22 @@ export const canvasToBlob = async (
   })
 }
 
+export const blobToDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+
+export const canvasToDataUrl = async (
+  canvas: HTMLCanvasElement | OffscreenCanvas,
+  options?: ImageEncodeOptions,
+) =>
+  isOffscreenCanvas(canvas)
+    ? await blobToDataUrl(await canvasToBlob(canvas, options))
+    : canvas.toDataURL(options?.type, options?.quality)
+
 interface Size {
   width: number
   height: number
@@ -301,8 +317,7 @@ export const resizeImageSync = (
   size: Size,
   context: Context2D,
 ) => {
-  const { canvas } = context
-  setObjectSize(canvas, size)
+  setObjectSize(context.canvas, size)
 
   if ('data' in source) {
     context.save()

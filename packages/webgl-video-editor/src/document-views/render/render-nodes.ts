@@ -1,14 +1,13 @@
-import { computed, createEffectScope, type Ref, ref, watch } from 'fine-jsx'
+import { computed, createEffectScope, onScopeDispose, ref } from 'fine-jsx'
 import * as Pixi from 'pixi.js'
 
 import { NODE_FIELD_FLAGS } from '#constants'
 import type * as pub from '#core'
-import type { Size } from 'shared/types.ts'
 
-import { getClipTransformMatrix } from '../../utils.ts'
 import { NodeView } from '../node-view.ts'
-import { usePlaceholderImage } from '../utils.ts'
 
+import { MiruFilter } from './pixi-miru-filter.ts'
+import type { RenderClip } from './render-clip.ts'
 import type { RenderDocument } from './render-document.ts'
 import type { RenderImageClip } from './render-image-clip.ts'
 import type { RenderTextClip } from './render-text-clip.ts'
@@ -32,40 +31,104 @@ const getNextRenderNode = <T extends pub.AnyVideoNode>(renderNode: RenderNodeVie
     if (other.isVideo()) return renderNode.docView._getNode(other)
 }
 
-export const spatialOnRenderUpdate = (renderNode: AnyRenderClip): void => {
-  const { original } = renderNode
-  const { animationMap } = original
-
-  for (const animation of animationMap.values()) {
-    if (animation.flags & NODE_FIELD_FLAGS.TransformProp && animation.canInterpolate()) {
-      renderNode.updateTransform()
-      break
-    }
-  }
-
-  if (animationMap.get('opacity')) renderNode.updateOpacity()
-}
-
 export abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeView<RenderDocument, T> {
   readonly _scope = createEffectScope()
   readonly _placeholderIsLoading = ref(false)
 
-  abstract readonly _reactiveRenderProps: Ref<any> | undefined
   abstract readonly pixiNode: Pixi.Container
+  readonly pixiFilters = ref<MiruFilter[][]>([])
 
   readonly _visualIndex = computed((): number => (getPrevRenderNode(this)?.visualIndex ?? -1) + 1)
+
+  constructor(renderView: RenderDocument, original: T) {
+    super(renderView, original)
+    this._init()
+
+    const nestedFilters = (this.pixiFilters.value = original.effects.map((e) => this.#createFilter(e)))
+    ;(this as { pixiNode: Pixi.Container }).pixiNode.filters = nestedFilters.flat()
+
+    const abort = new AbortController()
+    const listenerOptions = { signal: abort.signal }
+    this.docView.doc.on('node:list-change', this.#onNestedNodeUpdate.bind(this), listenerOptions)
+
+    this._scope.run(() => onScopeDispose(() => abort.abort()))
+  }
+
+  abstract _init(): void
+
+  #createFilter(effect: pub.EffectListItem): MiruFilter[] {
+    const filterAsset = this.original.doc.assets.getAsset(effect.assetId)
+    const opFilters =
+      filterAsset?.type === 'asset:effect:video'
+        ? filterAsset.ops.map((op) => {
+            const filter = new MiruFilter(op, effect.intensity)
+            filter.sprites.forEach((sprite) => void this.docView.stage.addChild(sprite))
+            return filter
+          })
+        : []
+
+    return opFilters
+  }
 
   get visualIndex(): number {
     return this._visualIndex.value
   }
 
   get isReady(): boolean {
-    return !this._placeholderIsLoading.value
+    return (
+      !this._placeholderIsLoading.value && !this.pixiFilters.value.some((fs) => fs.some((f) => f.isLoading))
+    )
+  }
+
+  #onNestedNodeUpdate(event: pub.NodeListChangeEvent): void {
+    if (event.node.id !== this.original.id) return
+    if (event.path[0] !== 'effects') return
+
+    const { action } = event
+    const { type, index } = action
+    const { original } = this
+    const { effects } = original
+
+    const pixiFilters = this.pixiFilters.value
+
+    switch (type) {
+      case 'insert': {
+        const changed = effects[index]
+        const opFilters = this.#createFilter(changed)
+
+        this.pixiNode.filters = (this.pixiFilters.value = [
+          ...pixiFilters.slice(0, index),
+          opFilters,
+          ...pixiFilters.slice(index),
+        ]).flat()
+
+        break
+      }
+      case 'update': {
+        const changed = effects[index]
+        const { key } = action
+        if (key === 'intensity') pixiFilters[index].forEach((f) => void (f[key] = changed[key]))
+        break
+      }
+      case 'delete': {
+        pixiFilters[index].forEach((f) => f.destroy())
+        this.pixiNode.filters = (this.pixiFilters.value = [
+          ...pixiFilters.slice(0, index),
+          ...pixiFilters.slice(index + 1),
+        ]).flat()
+        break
+      }
+    }
+
+    this.onRendererUpdate()
   }
 
   onRendererUpdate(): void {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track changes to node properties
-    this._reactiveRenderProps?.value
+    // noop
+  }
+
+  isClip(): this is RenderClip<pub.AnyVideoClip> {
+    return false
   }
 
   _update<Key extends keyof T>(key: Key, _oldValue: T[Key]): void {
@@ -78,6 +141,7 @@ export abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeVie
 
   _updateSpatialVisualField<Key extends keyof T>(this: AnyRenderClip, key: Key): boolean {
     const field = this.original._fieldsByKey()[key]
+
     if (!field) return false
 
     if (field.flags & NODE_FIELD_FLAGS.TransformProp) {
@@ -104,13 +168,15 @@ export abstract class RenderNodeView<T extends pub.AnyVideoNode> extends NodeVie
 }
 
 export class RenderTimeline extends RenderNodeView<pub.Timeline> {
-  readonly _reactiveRenderProps = undefined
-  readonly pixiNode = new Pixi.Container()
+  pixiNode = new Pixi.Container()
+
+  _init(): void {
+    this.pixiNode = new Pixi.Container()
+  }
 }
 
 export class RenderTrack extends RenderNodeView<pub.VideoTrack> {
-  readonly _reactiveRenderProps = undefined
-  readonly pixiNode = new Pixi.Container()
+  pixiNode!: Pixi.Container
   get visualIndex(): number {
     const { parent } = this.original
     // tracks are rendered in reverse order
@@ -134,83 +200,12 @@ export class RenderTrack extends RenderNodeView<pub.VideoTrack> {
 
     parentPixiNode.addChildAt(pixiNode, newIndex)
   }
-}
 
-export abstract class RenderClip<
-  T extends pub.AnyVideoClip,
-  P extends Pixi.Container = Pixi.Container,
-> extends RenderNodeView<T> {
-  readonly matrix = computed((): Pixi.Matrix => getClipTransformMatrix(this, false))
-  readonly pixiNode: P
-
-  constructor(renderView: RenderDocument, original: T, pixiNode: P) {
-    super(renderView, original)
-    this.pixiNode = pixiNode
-
-    this._scope.run(() => {
-      const { original } = this
-
-      watch([() => original.asset], ([asset], _prev, onCleanup) => {
-        if (!(this.pixiNode instanceof Pixi.Sprite)) return
-
-        const { texture } = this.pixiNode
-        if (asset) return
-
-        const scope = createEffectScope()
-        onCleanup(scope.stop.bind(scope))
-        this._placeholderIsLoading.value = true
-
-        texture.source.resource = scope.run(() =>
-          usePlaceholderImage({
-            text: () => original.name,
-            color: () => original.color,
-            size: () => original.doc.resolution,
-            onLoad: () => {
-              if (this.isDisposed) return
-              texture.source.update()
-              this._placeholderIsLoading.value = false
-            },
-          }),
-        )
-        texture.update()
-      })
-    })
+  _init(): void {
+    this.pixiNode = new Pixi.Container()
   }
 
-  updateVisual(): void {
-    this.updateTransform()
-    this.updateOpacity()
-  }
-
-  updateTransform(): void {
-    this.pixiNode.setFromMatrix(this.matrix.value)
-  }
-
-  updateOpacity(): void {
-    this.pixiNode.alpha = this.original.opacity
-  }
-
-  getSize(): Size | undefined {
-    const { asset } = this.original
-    if (!asset) return this.docView.doc.resolution
-
-    switch (asset.type) {
-      case 'asset:media:image':
-        return asset
-      case 'asset:media:av': {
-        if (!asset.video) return
-
-        const { width, height, rotation } = asset.video
-        return rotation === 90 || rotation === 270 ? { width: height, height: width } : { width, height }
-      }
-      case 'asset:font':
-      case 'asset:effect:video':
-        return undefined
-    }
-  }
-
-  _update<Key extends keyof T>(key: Key, _oldValue: T[Key]): void {
-    super._update(key, _oldValue)
-    if (key === 'opacity') this.pixiNode.alpha = this.original.opacity
+  onRendererUpdate(): void {
+    // stub
   }
 }

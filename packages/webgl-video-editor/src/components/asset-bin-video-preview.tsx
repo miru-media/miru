@@ -1,43 +1,32 @@
-import { computed, effect, ref, type Ref } from 'fine-jsx'
+import { computed, effect, ref } from 'fine-jsx'
 
+import type { ImageAsset, MediaAsset } from '#assets'
 import { useAsyncCallback, useI18n } from 'shared/utils'
 
-import type { MediaAsset } from '../assets/media-asset.ts'
 import styles from '../css/index.module.css'
 
 import { useEditor } from './utils.ts'
 
-export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | undefined> }) => {
-  const { activeVideo } = props
+export const AssetBinVideoPreview = (props: { asset: MediaAsset | ImageAsset; onClose: () => void }) => {
+  const { asset, onClose } = props
   const dialogRef = ref<HTMLDialogElement>()
   const editor = useEditor()
   const { t } = useI18n()
 
-  const videoSrc = computed(() => {
-    if (!activeVideo.value) return ''
-    return activeVideo.value.blobUrl || (activeVideo.value.uri ?? '')
-  })
-
-  effect(() => {
-    if (!dialogRef.value) return
-    if (activeVideo.value && !dialogRef.value.open) {
-      dialogRef.value.showModal()
-    } else if (!activeVideo.value && dialogRef.value.open) {
-      dialogRef.value.close()
+  effect((onCleanup) => {
+    const dialog = dialogRef.value
+    if (!dialog) return
+    if (!dialog.open) {
+      dialog.showModal()
+      onCleanup(dialog.close.bind(dialog))
     }
   })
 
-  const closeDialogue = () => {
-    activeVideo.value = undefined
-  }
-
   const createClip = () => {
-    if (!activeVideo.value || !dialogRef.value) return
     try {
-      const asset = activeVideo.value
       const clip = editor.addMediaClip(asset)
       editor.select(clip)
-      dialogRef.value.close()
+      dialogRef.value?.close()
       editor.activeAssetBin = null
     } catch {
       // eslint-disable-next-line no-alert -- TODO
@@ -46,11 +35,10 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
   }
 
   const isVideoInUse = computed(() => {
-    if (!activeVideo.value) return true
     let activeClip = false
     editor.doc.nodes.forEach((node) => {
       if (!node.isClip()) return
-      if (node.mediaRef?.id === activeVideo.value?.id) activeClip = true
+      if (node.mediaRef?.id === asset.id) activeClip = true
     })
     return activeClip
   })
@@ -60,9 +48,9 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
   )
 
   const [deleteVideo, isDeleting] = useAsyncCallback(async () => {
-    if (!activeVideo.value || isVideoInUse.value || !dialogRef.value) return
+    if (isVideoInUse.value || !dialogRef.value) return
     try {
-      await editor.doc.assets.delete(activeVideo.value.id)
+      await editor.doc.assets.delete(asset.id)
       dialogRef.value.close()
     } catch {
       // eslint-disable-next-line no-alert -- TODO
@@ -70,20 +58,28 @@ export const AssetBinVideoPreview = (props: { activeVideo: Ref<MediaAsset | unde
     }
   })
 
-  const dialogLabel = computed(() => activeVideo.value?.name ?? '')
+  const previewElementProps = {
+    src: () => asset.blobUrl || (asset.uri ?? ''),
+    ariaLabel: () => asset.name ?? '',
+    class: styles.assetBinPreviewElement,
+  }
 
   return (
     <dialog
-      class={styles.assetBinDialogue}
+      class={styles.assetBinPreview}
       ref={dialogRef}
       closedby="any"
-      onClose={closeDialogue}
-      aria-label={dialogLabel}
+      onClose={onClose}
+      aria-label={asset.name ?? ''}
     >
-      <video src={videoSrc} aria-label={() => activeVideo.value?.name} controls autoplay playsInline />
-      <span>{() => activeVideo.value?.name ?? ''}</span>
+      {asset.type === 'asset:media:av' ? (
+        <video {...previewElementProps} controls autoplay playsInline />
+      ) : (
+        <img {...previewElementProps} />
+      )}
+      <span>{() => asset.name ?? ''}</span>
       <div class={styles.dialogueButtonContainer}>
-        <button onClick={closeDialogue} class={[styles.ctaButton]}>
+        <button onClick={onClose} class={[styles.ctaButton]}>
           {t('close')}
           <IconMsCloseRounded />
         </button>

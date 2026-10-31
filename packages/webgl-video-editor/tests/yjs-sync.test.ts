@@ -22,6 +22,7 @@ const clipInit = makeVideoClip({
   id: 'test-clip',
   name: 'test clip',
   mediaRef: { id: 'unknown', type: 'asset:media:av' },
+  effects: [{ assetId: 'test-effect-asset', intensity: 1 }],
   transition: undefined,
 })
 const trackInit = makeVideoTrack('test-track', [clipInit])
@@ -91,11 +92,11 @@ test('syncs node keyframe changes', () => {
   const ydoc2 = new Y.Doc()
   Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(sync.ydoc))
   const yjsRoot2 = initYjsRoot(ydoc2)
-  const sync2 = new YjsSync(yjsRoot2.ydoc)
+  using sync2 = new YjsSync(yjsRoot2.ydoc)
 
   sync.doc.resolution = { width: 50, height: 100 }
-  const editDoc = new EditDocument(sync.doc)
-  const editClip = editDoc.nodes.get<VideoClip>(clipInit.id)
+  using editDoc = new EditDocument(sync.doc)
+  using editClip = editDoc.nodes.get<VideoClip>(clipInit.id)
 
   editClip._toggleKeyframesAt(['rotate', 'translateX'], Rational.ZERO)
 

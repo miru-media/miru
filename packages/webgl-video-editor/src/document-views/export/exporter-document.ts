@@ -11,7 +11,7 @@ import { DocumentView, type ViewType } from '../document-view.ts'
 import { RenderDocument, type RenderDocumentOptions } from '../render/index.ts'
 
 import { AVEncoder } from './av-encoder.ts'
-import { ExportMediaClip, ExportNonMediaVideoClip } from './export-clip.ts'
+import { ExportClip, ExportMediaClip } from './export-clip.ts'
 
 interface AvAssetEntry {
   asset: MediaAsset
@@ -26,9 +26,10 @@ interface AvAssetEntry {
 }
 
 interface ViewTypeMap {
-  'clip:video': ExportMediaClip | ExportNonMediaVideoClip
+  'clip:video': ExportMediaClip | ExportClip
   'clip:audio': ExportMediaClip
-  'clip:text': ExportNonMediaVideoClip
+  'clip:image': ExportClip
+  'clip:text': ExportClip
 }
 
 let decoderAudioContext: OfflineAudioContext | undefined
@@ -38,7 +39,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
   range: { start: number; end: number }
   duration: number
   mute: boolean
-  clips: (ExportMediaClip | ExportNonMediaVideoClip)[] = []
+  clips: (ExportMediaClip | ExportClip)[] = []
   sources = new Map<string, AvAssetEntry>()
   avEncoder!: AVEncoder
   hasAudio = false
@@ -94,7 +95,7 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
           return
         }
 
-        const child = doc.createNode(trackChild)
+        const child = doc.createNode(trackChild.toJSON())
         child.move({ parentId: track.id, index })
         child.gap = trackChild.gap.add(skippedDuration)
         skippedDuration = Rational.ZERO
@@ -110,14 +111,14 @@ export class ExportDocument extends DocumentView<ViewTypeMap> {
     let view
 
     if (original.isMediaClip() && original.asset) view = new ExportMediaClip(this, original)
-    else if (original.isVideo()) view = new ExportNonMediaVideoClip(this, original)
+    else if (original.isVideo()) view = new ExportClip(this, original)
 
     if (view) this.#prepareClip(view)
 
     return view as ViewType<ViewTypeMap, T> | undefined
   }
 
-  #prepareClip(exportClip: ExportMediaClip | ExportNonMediaVideoClip): void {
+  #prepareClip(exportClip: ExportMediaClip | ExportClip): void {
     this.clips.push(exportClip)
 
     if (!exportClip.original.isMediaClip()) return

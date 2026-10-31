@@ -125,7 +125,6 @@ export class FileSystemStorage {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- TODO: per-instance directory?
   async get(key: string, name?: string, options?: FilePropertyBag): Promise<File> {
     const file = await (await getFileHandle(key)).getFile()
     return new File([file], name ?? file.name, options)

@@ -22,7 +22,6 @@ export class TextClip extends BaseClip<Schema.TextClip> implements pub.TextClip 
     { key: 'stroke', flags: textStylePropFlags | NODE_FIELD_FLAGS.Animatable | NODE_FIELD_FLAGS.Color },
   ] satisfies pub.NodeFieldDef<pub.TextClip>[])
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style -- TODO: check font face is ready
   get isReady(): boolean {
     return true
@@ -34,7 +33,6 @@ export class TextClip extends BaseClip<Schema.TextClip> implements pub.TextClip 
   isVideo(): this is TextClip {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.TextClip {
     const obj: Schema.TextClip = {

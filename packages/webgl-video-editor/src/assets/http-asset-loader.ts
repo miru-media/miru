@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/class-methods-use-this -- matching interface */
 import type { AssetLoader, Schema } from '#core'
 
 export class HttpAssetLoader implements AssetLoader {

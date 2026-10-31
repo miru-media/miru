@@ -94,10 +94,9 @@ export interface RendererOptions {
 
 export interface RendererDrawOptions {
   framebuffer?: WebGLFramebuffer | null
-  x?: number
-  y?: number
   width?: number
   height?: number
+  viewport?: { x: number; y: number; width: number; height: number }
   clear?: boolean
 }
 

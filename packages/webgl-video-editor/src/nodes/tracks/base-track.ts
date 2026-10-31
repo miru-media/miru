@@ -33,7 +33,6 @@ export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.An
     return this._link.value
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   protected _init(): void {
     this._link = ref()
   }
@@ -41,7 +40,6 @@ export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.An
   isTrack(): this is pub.AnyTrack {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   delete(): void {
     const { link } = this

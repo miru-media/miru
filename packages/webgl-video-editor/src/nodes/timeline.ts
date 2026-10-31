@@ -10,7 +10,6 @@ export class Timeline extends ParentNode<Schema.Timeline, never, pub.AnyTrack> i
     super(doc, { id: 'timeline', type: 'timeline' })
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this -- -- */
   _init(): void {
     // noop
   }
@@ -23,7 +22,6 @@ export class Timeline extends ParentNode<Schema.Timeline, never, pub.AnyTrack> i
   isAudio(): this is Timeline {
     return true
   }
-  /* eslint-enable @typescript-eslint/class-methods-use-this */
 
   toJSON(): Schema.Timeline {
     return super.toJSON()

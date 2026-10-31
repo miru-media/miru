@@ -10,12 +10,12 @@ export class NodeView<TDocView, T extends pub.AnyNode> {
     this.original = original
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- noop */
+  /* eslint-disable @typescript-eslint/no-empty-function -- noop */
   /** @internal */
   _move(_parent: NodeView<TDocView, pub.AnyNode> | undefined, _originalIndex: number): void {}
   /** @internal */
   _update(_key: keyof T, _oldValue: T[typeof _key]): void {}
-  /* eslint-enable @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function */
+  /* eslint-enable @typescript-eslint/no-empty-function */
 
   dispose(): void {
     this.isDisposed = true

@@ -46,8 +46,8 @@ export class LandmarksFaceNode extends Behave.EventNode {
     this.faceId = faceId
   }
 
-  /* eslint-disable @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function -- stubs */
+  /* eslint-disable @typescript-eslint/no-empty-function -- stubs */
   init(_engine: Behave.Engine): void {}
   dispose(_engine: Behave.Engine): void {}
-  /* eslint-enable @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function */
+  /* eslint-enable @typescript-eslint/no-empty-function */
 }
