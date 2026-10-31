@@ -14,7 +14,7 @@ import {
 import { throttle } from 'throttle-debounce'
 
 import type { I18nOptions, Size } from '../types.ts'
-import { SUPPORTS_FULLSCREEN } from '../userAgent.ts'
+import { SUPPORTS_FULLSCREEN } from '../user-agent.ts'
 
 import { win } from './window.ts'
 

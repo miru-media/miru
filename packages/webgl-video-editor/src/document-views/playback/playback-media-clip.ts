@@ -2,7 +2,7 @@ import { createEffectScope, effect, onScopeDispose, ref, watch } from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { NonReadonly } from '#internal'
-import { IS_FIREFOX } from 'shared/userAgent.ts'
+import { IS_FIREFOX } from 'shared/user-agent.ts'
 import { useEventListener } from 'shared/utils/composables.ts'
 import { clamp, createHiddenMediaElement } from 'shared/utils/index.ts'
 import { ReadyState } from 'shared/video/constants.ts'

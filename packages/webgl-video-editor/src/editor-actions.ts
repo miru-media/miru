@@ -6,7 +6,6 @@ import { Rational } from 'shared/utils/math.ts'
 import { useEditor } from './components/utils.ts'
 
 const RETURN_TRUE = (): true => true
-const GAPPED = true as boolean
 
 const getClipAtTime = (track: pub.AnyTrack, time: number): pub.AnyClip | undefined => {
   for (let clip = track.head; clip; clip = clip.next) {
@@ -76,13 +75,9 @@ export const EDITOR_SELECTION_ACTIONS: pub.VideoEditorAction[] = [
 
         nodes.forEach((node) => {
           const { next, parent } = node
-          const newGapDuration =
-            GAPPED && node.isClip() && next
-              ? node.gap.add(node.duration).add(node.next?.gap ?? Rational.ZERO)
-              : Rational.ZERO
+          next?.setGap(node.prev?.id, node.gap.add(next.gap))
 
           node.delete()
-          if (next) next.gap = newGapDuration
           if (!parent?.head) parent?.delete()
         })
       } else {

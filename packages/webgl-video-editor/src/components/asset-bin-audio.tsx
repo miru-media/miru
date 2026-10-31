@@ -1,6 +1,7 @@
 import { computed, effect, ref } from 'fine-jsx'
 
 import { ACCEPT_AUDIO_FILE_TYPES } from '#constants'
+import type { InputEvent } from 'shared/types'
 import { useI18n } from 'shared/utils'
 
 import type { MediaAsset } from '../assets/media-asset.ts'
@@ -44,22 +45,21 @@ export const AssetBinAudio = () => {
   })
 
   const addFiles = async (files: File[]) => {
-    for (const file of files) {
-      try {
-        // eslint-disable-next-line no-await-in-loop -- TODO
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
         await editor.createMediaAsset(file)
-      } catch {
-        // eslint-disable-next-line no-alert -- TODO
-        alert(t('error_cannot_play_type'))
-      }
-    }
+      }),
+    )
+
+    if (results.some((result) => result.status === 'rejected'))
+      // eslint-disable-next-line no-alert -- TODO
+      alert(t('error_cannot_play_type'))
   }
 
   const onInputAudioFile = async (event: InputEvent) => {
-    const file = (event.target as HTMLInputElement).files?.[0]
-    if (!file) return
-    await addFiles([file])
-    ;(event.target as HTMLInputElement).value = ''
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ''
+    await addFiles(files)
   }
 
   const onClickUpload = async () => {
@@ -73,7 +73,7 @@ export const AssetBinAudio = () => {
   }
 
   const onSearchInput = (event: InputEvent) => {
-    assetSearchQuery.value = (event.target as HTMLInputElement).value
+    assetSearchQuery.value = event.target.value
   }
 
   return (
@@ -90,6 +90,7 @@ export const AssetBinAudio = () => {
       <input
         ref={fileInput}
         type="file"
+        multiple
         accept={ACCEPT_AUDIO_FILE_TYPES}
         class={styles.srOnly}
         tabIndex={-1}

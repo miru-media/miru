@@ -11,6 +11,7 @@ import { isElement } from 'shared/utils'
 import IntroModal from './info-modal.vue'
 import { state } from './state.ts'
 import { ARROW_KEY_DELTA_S } from 'shared/video/constants.ts'
+import { IS_LIKE_MAC } from 'shared/user-agent.ts'
 
 const { sync, editor: editorProp } = defineProps<{
   sync?: VideoEditorDocumentSync
@@ -23,6 +24,8 @@ const editorRef = ref<VideoEditor>()
 if (!import.meta.env.SSR) {
   // Keyboard shortcuts
   useEventListener(window, 'keydown', (event: KeyboardEvent) => {
+    if (event.altKey || (event.ctrlKey && event.metaKey)) return
+
     const target = event.composedPath()[0]
     const editor = editorRef.value
 
@@ -35,7 +38,7 @@ if (!import.meta.env.SSR) {
 
     const { sync: sync } = editor
 
-    if (event.ctrlKey) {
+    if (IS_LIKE_MAC ? event.metaKey : event.ctrlKey) {
       switch (event.code) {
         case 'KeyZ': {
           if (event.shiftKey) sync?.redo()
@@ -61,6 +64,7 @@ if (!import.meta.env.SSR) {
         event.preventDefault()
         break
 
+      case 'Backspace':
       case 'Delete':
         editor.action('delete')
         break

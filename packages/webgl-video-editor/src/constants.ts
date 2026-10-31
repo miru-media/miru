@@ -1,4 +1,4 @@
-import { IS_FIREFOX } from 'shared/userAgent.ts'
+import { IS_FIREFOX } from 'shared/user-agent.ts'
 import type { NodeFieldFlags } from 'webgl-video-editor'
 
 export * from './public-constants.ts'

@@ -1,5 +1,5 @@
 import type { InputEvent } from 'shared/types'
-import { SUPPORTS_FULLSCREEN } from 'shared/userAgent.ts'
+import { SUPPORTS_FULLSCREEN } from 'shared/user-agent.ts'
 import { useI18n } from 'shared/utils'
 import { formatTime } from 'shared/video/utils.ts'
 

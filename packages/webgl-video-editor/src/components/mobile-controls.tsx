@@ -1,5 +1,5 @@
 import { Button } from 'shared/components/button.tsx'
-import { SUPPORTS_FULLSCREEN } from 'shared/userAgent.ts'
+import { SUPPORTS_FULLSCREEN } from 'shared/user-agent.ts'
 import { useI18n } from 'shared/utils'
 
 import styles from '../css/index.module.css'

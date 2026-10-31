@@ -3,7 +3,7 @@ import { computed, effect, type MaybeRefOrGetter, onScopeDispose, ref, toValue, 
 import type { Size } from 'shared/types'
 import { promiseWithResolvers, useEventListener, win } from 'shared/utils'
 
-import { IS_LIKE_MAC, IS_SAFARI_16 } from '../userAgent.ts'
+import { IS_LIKE_MAC, IS_SAFARI_16 } from '../user-agent.ts'
 
 import { EXPORT_VIDEO_CODECS, ReadyState } from './constants.ts'
 

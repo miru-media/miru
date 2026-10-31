@@ -1,14 +1,12 @@
-@scope (.host) {
-  :scope {
-    --clip-height-primary: 3.75rem;
-    --clip-height: 2.125rem;
-    --clip-resize-handle-width: 0.75rem;
-    --clip-selected-color-accent: var(--yellow);
-    --clip-selected-color-text: var(--black);
+.host {
+  --clip-height-primary: 3.75rem;
+  --clip-height: 2.125rem;
+  --clip-resize-handle-width: 0.75rem;
+  --clip-selected-color-accent: var(--yellow);
+  --clip-selected-color-text: var(--black);
 
-    :where(.mobile) {
-      --clip-height-primary: 3.125rem;
-    }
+  :where(.mobile) {
+    --clip-height-primary: 3.125rem;
   }
 }
 
