@@ -22,6 +22,27 @@ export const remap0 = (value: number, inputTo: number, outputTo: number) => (val
 export const clamp = (value: number, min: number, max: number) =>
   value < min ? min : value > max ? max : value
 
+interface Point {
+  x: number
+  y: number
+}
+
+const DEG_TO_RAD = Math.PI / 180
+
+export const rotate = (point: Point, degrees: number): Point => {
+  if (degrees === 0) return point
+
+  const { x, y } = point
+  const radians = degrees * DEG_TO_RAD
+  const cos = Math.cos(radians)
+  const sin = Math.sin(radians)
+
+  return {
+    x: x * cos - y * sin,
+    y: y * cos + x * sin,
+  }
+}
+
 export const greatestCommonDivisor = (a: number, b: number) => {
   const absA = Math.abs(a)
   const absB = Math.abs(b)

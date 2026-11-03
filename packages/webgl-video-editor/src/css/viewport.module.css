@@ -39,3 +39,17 @@
     stroke-width: 1.25rem;
   }
 }
+
+.transformEdges {
+  pointer-events: all;
+  stroke-width: 1rem;
+}
+
+.transformResizeCorner {
+  width: 0.675rem;
+  height: 0.675rem;
+  pointer-events: all;
+  fill: white;
+  stroke: var(--yellow);
+  transform: translate(-0.3375rem, -0.3375rem);
+}
