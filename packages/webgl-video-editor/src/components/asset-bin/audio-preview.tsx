@@ -1,16 +1,15 @@
 import { computed, ref } from 'fine-jsx'
 
+import type { MediaAsset } from '#assets'
+import styles from '#index.module.css'
 import { Button } from 'shared/components/button'
 import { useAsyncCallback, useI18n } from 'shared/utils'
 import { formatTime } from 'shared/video/utils'
 
-import type { MediaAsset } from '../assets/media-asset.ts'
-import styles from '../css/index.module.css'
+import { useEditor } from '../utils.ts'
 
-import { useEditor } from './utils.ts'
-
-export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
-  const { asset } = props
+export const AudioPreview = (props: { asset: MediaAsset; [index: string]: unknown }) => {
+  const { asset, ...restProps } = props
   const editor = useEditor()
   const { t } = useI18n()
   const audioSrc: string = asset.blobUrl || (asset.uri ?? '')
@@ -61,7 +60,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
   }
 
   return (
-    <div class={styles.assetBinAudioAssetContainer}>
+    <div {...restProps} class={[restProps.class, styles.assetBinAudioAssetContainer]}>
       <div class={styles.assetBinAudioAssetHeader}>
         <div class={styles.assetBinAudioAssetMeta}>
           <button
@@ -69,7 +68,7 @@ export const AssetBinAudioPreview = (props: { asset: MediaAsset }) => {
             aria-label={() => (isPlaying.value ? t('Pause') : t('Play'))}
             onClick={togglePlayback}
           >
-            <div class={styles.assetBinAudioThumbnail}>
+            <div class={styles.assetBinAudioThumbnail} data-asset-drag-thumbnail>
               {asset.thumbnailUri && <img src={asset.thumbnailUri} alt={asset.name} />}
             </div>
             <div class={styles.assetBinAudioThumbnailOverlay}>

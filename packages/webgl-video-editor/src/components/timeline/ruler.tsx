@@ -1,11 +1,10 @@
 import { computed, ref, type Ref, toValue, watch } from 'fine-jsx'
 
+import styles from '#index.module.css'
 import { useI18n } from 'shared/utils'
 import { formatDuration } from 'shared/video/utils'
 
-import styles from '../css/index.module.css'
-
-import { useEditor } from './utils.ts'
+import { useEditor } from '../utils.ts'
 
 const RULER_INTERVAL_MULTIPLIER = 128
 

@@ -1,18 +1,17 @@
 import { computed, effect, h, onScopeDispose, ref } from 'fine-jsx'
 import { useEffectThumbnails } from 'webgl-media-editor'
 
+import styles from '#index.module.css'
 import { Effect } from 'reactive-effects/effect'
 import sampleImage from 'shared/assets/320px-bianchi.jpg'
 import type { Size } from 'shared/types'
 import { fit, useI18n } from 'shared/utils/index.ts'
 import { getImageSize } from 'shared/video/utils.ts'
 
-import styles from '../css/index.module.css'
-import { EffectListItem } from '../effects/effect-list.ts'
+import { EffectListItem } from '../../effects/effect-list.ts'
+import { useEditor } from '../utils.ts'
 
-import { useEditor } from './utils.ts'
-
-export const AssetBinFilters = () => {
+export const Filters = () => {
   const editor = useEditor()
   const { t } = useI18n()
 

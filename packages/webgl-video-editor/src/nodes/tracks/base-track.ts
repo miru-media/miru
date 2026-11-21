@@ -37,6 +37,13 @@ export abstract class BaseTrack<T extends Schema.AnyTrack, TChild extends pub.An
     this._link = ref()
   }
 
+  _positionChildAt(node: TChild, index: number): void {
+    if (node.isVideo() !== this.isVideo())
+      throw new Error(`Mismatching track and child types ${this.type}, ${node.type}.`)
+
+    super._positionChildAt(node, index)
+  }
+
   isTrack(): this is pub.AnyTrack {
     return true
   }

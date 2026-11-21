@@ -115,6 +115,14 @@ export class MediaAsset extends BaseFileAsset<Schema.MediaAsset> implements pub.
     this.audio = init.audio
     this.video = init.video
   }
+
+  isVideo(): this is MediaAsset & { video: NonNullable<MediaAsset['video']> } {
+    return !!this.raw.video
+  }
+
+  isAudio(): this is MediaAsset & { audio: NonNullable<MediaAsset['audio']> } {
+    return !!this.raw.audio
+  }
 }
 
 export class ImageAsset extends BaseFileAsset<Schema.ImageAsset> implements pub.ImageAsset {
@@ -126,5 +134,9 @@ export class ImageAsset extends BaseFileAsset<Schema.ImageAsset> implements pub.
   ) {
     super(init, options)
     this.video = init.video
+  }
+
+  isVideo(): this is ImageAsset {
+    return true
   }
 }

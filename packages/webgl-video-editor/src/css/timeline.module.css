@@ -92,8 +92,25 @@
   min-width: calc(100% - var(--timeline-padding-left) - var(--timeline-padding-right));
   height: fit-content;
   min-height: calc(var(--clip-height) * 2.5);
-  padding-bottom: max(4rem, env(safe-padding-inset-bottom, 0px));
   margin: 0 var(--timeline-padding-right) 0 var(--timeline-padding-left);
+}
+
+.timelineDropzoneIndicator {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: white;
+  animation: 0.75s ease-in-out infinite alternate timeline-dropzone-indicator;
+}
+
+@keyframes timeline-dropzone-indicator {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.25;
+  }
 }
 
 .track {
@@ -104,9 +121,17 @@
     --clip-height: var(--clip-height-primary);
     --clip-border-width: var(--clip-border-width-primary);
   }
+}
 
-  .clip {
-    position: sticky;
+/* For drag and drop */
+.track,
+.clipDragTrackSpace {
+  &::before {
+    position: absolute;
+    right: calc(0px - var(--timeline-padding-right));
+    left: calc(0px - var(--timeline-padding-left));
+    height: 100%;
+    content: '';
   }
 }
 
@@ -183,4 +208,20 @@
     background-color: var(--yellow-dark);
     border-radius: 999px;
   }
+
+  &[data-end] {
+    height: max(4rem, env(safe-padding-inset-bottom, 0px));
+  }
+}
+
+.assetDragCursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 0.25rem;
+  height: calc(var(--clip-height) * 1.5);
+  pointer-events: none;
+  background: var(--yellow);
+  transform: translate(calc(var(--asset-drag-x) - 50%), calc(var(--asset-drag-y) - 50%));
 }

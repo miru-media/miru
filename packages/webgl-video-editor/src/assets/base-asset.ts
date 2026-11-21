@@ -22,6 +22,13 @@ export abstract class BaseAsset<T extends Schema.AnyAsset = any> {
     return this.raw
   }
 
+  isVideo(): this is (pub.MediaAsset & { video: NonNullable<pub.MediaAsset['video']> }) | pub.ImageAsset {
+    return false
+  }
+  isAudio(): this is pub.MediaAsset & { audio: NonNullable<pub.MediaAsset['audio']> } {
+    return false
+  }
+
   dispose(): void {
     this.store = undefined as never
   }

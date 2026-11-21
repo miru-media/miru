@@ -8,4 +8,6 @@ export declare const ACCEPT_AUDIO_FILE_TYPES: string
 export declare const EXPORT_VIDEO_CODECS: string[]
 
 export const EDITOR_SELECTION_ACTIONS: VideoEditorAction[]
-export const EDITOR_SELECTION_ACTIONS_By_ID: Record<string, VideoEditorAction>
+export const EDITOR_SELECTION_ACTIONS_BY_ID: Record<string, VideoEditorAction>
+
+export const DEFAULT_STILL_CLIP_DURATION_S: number

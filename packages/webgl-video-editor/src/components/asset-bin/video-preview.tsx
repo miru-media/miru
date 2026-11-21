@@ -1,13 +1,12 @@
 import { computed, effect, ref } from 'fine-jsx'
 
 import type { ImageAsset, MediaAsset } from '#assets'
+import styles from '#index.module.css'
 import { useAsyncCallback, useI18n } from 'shared/utils'
 
-import styles from '../css/index.module.css'
+import { useEditor } from '../utils.ts'
 
-import { useEditor } from './utils.ts'
-
-export const AssetBinVideoPreview = (props: { asset: MediaAsset | ImageAsset; onClose: () => void }) => {
+export const VideoPreview = (props: { asset: MediaAsset | ImageAsset; onClose: () => void }) => {
   const { asset, onClose } = props
   const dialogRef = ref<HTMLDialogElement>()
   const editor = useEditor()

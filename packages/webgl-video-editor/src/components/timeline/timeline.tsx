@@ -9,10 +9,13 @@ import type { InputEvent } from 'shared/types'
 import { useElementSize, useI18n } from 'shared/utils'
 import { useScrubber } from 'shared/video/use-scrubber.ts'
 
+import { useEditor } from '../utils.ts'
+
+import { AssetDragClipIndicator } from './asset-drag-clip-indicator.jsx'
+import { AssetDragTimelineIndicator } from './asset-drag-timeline-indicator.jsx'
 import { Playhead } from './playhead.jsx'
 import { Ruler } from './ruler.jsx'
 import { Track } from './track.jsx'
-import { useEditor } from './utils.ts'
 
 const TIMELINE_OFFSET_DESKTOP_PX = 24
 const WHEEL_ZOOM_DELTA_MODE_SCALE: Record<number, number> = {
@@ -190,7 +193,7 @@ export const Timeline = ({
                     <input
                       type="file"
                       class={styles.srOnly}
-                      accept={ACCEPT_VISUAL_FILE_TYPE + ACCEPT_AUDIO_FILE_TYPES}
+                      accept={`${ACCEPT_VISUAL_FILE_TYPE},${ACCEPT_AUDIO_FILE_TYPES}`}
                       multiple
                       onInput={(event: InputEvent) => onInputClipFile(event)}
                     />
@@ -215,7 +218,15 @@ export const Timeline = ({
                             editor.drag.targetTrack.before &&
                             styles.active,
                         ]}
-                      />
+                      >
+                        {() => {
+                          const { target } = editor.assetDrag
+                          return (
+                            target?.before === true &&
+                            target.beforeTrackId === track.id && <AssetDragClipIndicator />
+                          )
+                        }}
+                      </div>
                       <Track data-track-id={track.id} track={track} />
                     </>
                   ),
@@ -232,11 +243,24 @@ export const Timeline = ({
                         editor.drag.targetTrack.before &&
                         styles.active,
                     ]}
-                  />,
+                  >
+                    {() => {
+                      const { target } = editor.assetDrag
+                      return (
+                        target?.before === true && target.beforeTrackId === '' && <AssetDragClipIndicator />
+                      )
+                    }}
+                  </div>,
                 ])
             )
           }
+
+          <AssetDragTimelineIndicator />
         </div>
+        {() =>
+          editor.assetDrag.asset &&
+          !editor.assetDrag.timelineHasDrag && <div class={styles.timelineDropzoneIndicator} />
+        }
       </div>
 
       {() => editor.isMobileWorkspace && <Playhead />}

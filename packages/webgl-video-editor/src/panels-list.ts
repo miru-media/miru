@@ -1,45 +1,42 @@
 import { computed, ref } from 'fine-jsx'
 
-import { AssetBin } from '#constants'
+import { AssetBin as AssetBinType } from '#constants'
 import type { VideoEditor } from '#core'
 
-import { AssetBinAudio } from './components/asset-bin-audio.jsx'
-import { AssetBinFilters } from './components/asset-bin-filters.jsx'
-import { AssetBinFonts } from './components/asset-bin-fonts.jsx'
-import { AssetBinVideo } from './components/asset-bin-video.jsx'
+import * as AssetBin from './components/asset-bin/index.ts'
 
 const TRUE_REF = ref(true)
 
 export const getPanelList = (editor: VideoEditor) =>
   [
     {
-      id: AssetBin.audio,
+      id: AssetBinType.audio,
       titleI18nKey: 'music',
-      PanelBody: AssetBinAudio,
+      PanelBody: AssetBin.Audio,
       Icon: IconMsMusicNoteRounded,
       isForSelection: false,
       isPermitted: TRUE_REF,
     },
     {
-      id: AssetBin.video,
+      id: AssetBinType.video,
       titleI18nKey: 'media',
-      PanelBody: AssetBinVideo,
+      PanelBody: AssetBin.Video,
       Icon: IconMsFolderOpenOutlineRounded,
       isForSelection: false,
       isPermitted: TRUE_REF,
     },
     {
-      id: AssetBin.fonts,
+      id: AssetBinType.fonts,
       titleI18nKey: 'fonts',
-      PanelBody: AssetBinFonts,
+      PanelBody: AssetBin.Fonts,
       Icon: IconMsTextFieldsRounded,
       isForSelection: false,
       isPermitted: TRUE_REF,
     },
     {
-      id: AssetBin.filters,
+      id: AssetBinType.filters,
       titleI18nKey: 'filters',
-      PanelBody: AssetBinFilters,
+      PanelBody: AssetBin.Filters,
       Icon: IconMsFilterVintageOutline,
       isForSelection: true,
       isPermitted: computed(() => {

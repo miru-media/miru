@@ -8,7 +8,15 @@ import type { I18nOptions } from 'shared/types'
 import { provideI18n } from 'shared/utils'
 import { assertEncoderConfigIsSupported, hasVideoDecoder } from 'shared/video/utils'
 
-import { EXPORT_VIDEO_CODECS } from '../constants.ts'
+import {
+  AssetBin,
+  AUDIO_EXTENSIONS,
+  AUDIO_MIME_TYPES,
+  EXPORT_VIDEO_CODECS,
+  IMAGE_MIME_TYPES,
+  VIDEO_EXTENSIONS,
+  VIDEO_MIME_TYPES,
+} from '../constants.ts'
 import styles from '../css/index.module.css'
 import { getPanelList } from '../panels-list.ts'
 
@@ -19,9 +27,15 @@ import { MobileControls } from './mobile-controls.jsx'
 import { MobileToolbar } from './mobile-toolbar.jsx'
 import { PanelToolbar } from './panel-toolbar.jsx'
 import { PlaybackControlsOverlay } from './playback-controls-overlay.jsx'
-import { Timeline } from './timeline.jsx'
+import { Timeline } from './timeline/timeline.jsx'
 import { TransformControls } from './transform-controls.jsx'
-import { type ImportMediaBin, provideEditor, provideImportMediaFiles } from './utils.ts'
+import {
+  type ImportMediaBin,
+  importMediaFiles,
+  provideEditor,
+  provideImportMediaFiles,
+  useDomDropzone,
+} from './utils.ts'
 
 export const VideoEditorUI = (props: {
   editor: VideoEditor
@@ -53,7 +67,45 @@ export const VideoEditorUI = (props: {
       .catch(() => undefined)
   else alert(t('error_no_webcodecs'))
 
-  const { playback } = editor
+  const acceptMimes = new Set([...VIDEO_MIME_TYPES, ...IMAGE_MIME_TYPES, ...AUDIO_MIME_TYPES])
+  const acceptExts = new Set([...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS])
+  useDomDropzone(editor._editor._workspaceContainer, {
+    filter: (item) =>
+      item.kind === 'file' &&
+      /^(?:(?:image\/(?:png|jpeg)|video|audio)|application\/(?:ogg|octet-stream))/u.test(item.type),
+    onDrop(_event, items) {
+      const accepted = items
+        .map((f) => f.getAsFile()!)
+        .filter(
+          ({ type, name }) => acceptMimes.has(type) || acceptExts.has(name.slice(name.lastIndexOf('.'))),
+        )
+      void importMediaFiles(editor, accepted, t).then((results) => {
+        const newAssets = results.filter((r) => r.status === 'fulfilled').map((r) => r.value)
+        if (!newAssets.length) return
+
+        switch (editor.activeAssetBin) {
+          case AssetBin.video:
+            if (newAssets.some((asset) => asset.video)) return
+            break
+          case AssetBin.audio:
+            if (newAssets.some((asset) => asset.type === 'asset:media:av' && !!asset.audio)) return
+            break
+          default:
+        }
+
+        const firstAsset = newAssets[0]
+
+        switch (firstAsset.type) {
+          case 'asset:media:av':
+            if (firstAsset.video) editor.activeAssetBin = AssetBin.video
+            else if (firstAsset.audio) editor.activeAssetBin = AssetBin.audio
+            break
+          case 'asset:media:image':
+            editor.activeAssetBin = AssetBin.video
+        }
+      })
+    },
+  })
 
   const getSlot = (name: string, className = styles.slot) =>
     props.children?.[name] && <div class={className}>{props.children[name]}</div>
@@ -104,7 +156,7 @@ export const VideoEditorUI = (props: {
         <div ref={editor._editor._viewport} class={styles.workspaceViewport}>
           {h(editor.canvas, { class: styles.viewportCanvas })}
           <TransformControls />
-          <LoadingOverlay loading={() => !playback.isReady} />
+          <LoadingOverlay loading={() => !editor.playback.isReady} />
         </div>
         {() => !editor.isMobileWorkspace && <PlaybackControlsOverlay />}
         {() => editor.isMobileWorkspace && <MobileControls />}

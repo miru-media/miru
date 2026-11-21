@@ -1,8 +1,17 @@
-import { computed, inject, provide } from 'fine-jsx'
+import {
+  computed,
+  inject,
+  type MaybeRefOrGetter,
+  onScopeDispose,
+  provide,
+  type Ref,
+  ref,
+  toValue,
+} from 'fine-jsx'
 
 import type * as pub from '#core'
 import type { AnyClip } from '#core'
-import { Rational } from 'shared/utils/math.ts'
+import { Rational, useEventListener } from 'shared/utils/index.ts'
 
 import type { VideoEditor } from '../video-editor.ts'
 
@@ -39,7 +48,7 @@ export const getClipAtTime = (track: pub.AnyTrack, time: number): pub.AnyClip | 
   }
 }
 
-export const useTrackChildEdges = (editor: VideoEditor, node: pub.AnyClip) =>
+export const useClipEdges = (editor: VideoEditor, node: Pick<pub.AnyClip, 'time'>) =>
   computed(() => {
     const { start, duration } = node.time
     const left = editor.secondsToPixels(start)
@@ -107,3 +116,86 @@ export const getNodeAtTargetPosition = <T extends pub.AnyNode>(
 
 export const nodesAreLinked = (a: pub.Linkable, b: pub.Linkable): boolean =>
   a.id === b.id || !!(b.link && a.link?.id === b.link.id)
+
+export const useDomDropzone = (
+  target: MaybeRefOrGetter<Element | undefined>,
+  options: {
+    filter?: (item: DataTransferItem) => boolean
+    onDragOver?: (event: DragEvent, items: DataTransferItem[]) => void
+    onEnter?: (event: DragEvent, items: DataTransferItem[]) => void
+    onLeave?: (event: DragEvent, items: DataTransferItem[]) => void
+    onDrop: (event: DragEvent, items: DataTransferItem[]) => void
+    onDragEnd?: (event: DragEvent) => void
+  },
+): { items: Ref<DataTransferItem[] | undefined>; isActive: Ref<boolean>; hasDrag: Ref<boolean> } => {
+  const hasDrag = ref(false)
+  const items = ref<DataTransferItem[]>()
+  const isActive = computed(() => (items.value?.length ?? 0) !== 0)
+  const filterItems = (item: DataTransferItem) => (options.filter ? options.filter(item) : true)
+  const updateItems = (event: DragEvent) => {
+    const { dataTransfer } = event
+    const newItems = dataTransfer ? [...dataTransfer.items].filter(filterItems) : []
+    return (items.value = newItems.length ? newItems : undefined)
+  }
+  const clearItems = (): void => {
+    items.value = undefined
+    hasDrag.value = false
+  }
+  const onEnd = (event: DragEvent): void => {
+    if (items.value) options.onDragEnd?.(event)
+    clearItems()
+    hasDrag.value = false
+  }
+
+  useEventListener(window, 'dragenter', (event: DragEvent) => {
+    event.preventDefault()
+    updateItems(event)
+  })
+  useEventListener(target, 'dragover', (event: DragEvent) => {
+    event.preventDefault()
+    items.value && options.onDragOver?.(event, items.value)
+  })
+  useEventListener(window, 'dragover', (event: DragEvent) => {
+    if (!items.value) return
+
+    const contains = toValue(target)?.contains(event.target as Element)
+
+    if (contains) {
+      if (!hasDrag.value) {
+        options.onEnter?.(event, items.value)
+        hasDrag.value = true
+      }
+    } else if (hasDrag.value) {
+      options.onLeave?.(event, items.value)
+      hasDrag.value = false
+    }
+  })
+  useEventListener(target, 'drop', (event: DragEvent) => {
+    event.preventDefault()
+    const items = updateItems(event)
+
+    if (!items) return
+    if (items.length > 0) options.onDrop(event, items)
+
+    onEnd(event)
+  })
+
+  useEventListener(window, 'dragend', onEnd)
+  onScopeDispose(clearItems)
+
+  return { items, isActive, hasDrag }
+}
+
+export const importMediaFiles = async (
+  editor: pub.VideoEditor,
+  files: File[],
+  translate: (s: string) => string,
+) => {
+  const results = await Promise.allSettled(files.map((file) => editor.createMediaAsset(file)))
+
+  if (results.some((result) => result.status === 'rejected'))
+    // eslint-disable-next-line no-alert -- TODO
+    alert(translate('error_cannot_play_type'))
+
+  return results
+}

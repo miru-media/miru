@@ -287,6 +287,8 @@ interface BaseAsset<T extends string = string> extends Schema.BaseAsset<T> {
   store: VideoEditorAssetStore
   isBuiltIn: boolean
   toJSON: () => Schema.BaseFileAsset<T>
+  isVideo: () => this is (MediaAsset & { video: NonNullable<MediaAsset['video']> }) | ImageAsset
+  isAudio: () => this is MediaAsset & { audio: NonNullable<MediaAsset['audio']> }
   dispose: () => void
   [Symbol.dispose]: () => void
 }
@@ -429,12 +431,17 @@ export interface VideoEditor {
    */
   addTrack: (type: 'video' | 'audio') => AnyTrack
 
+  createClipInitWithAsset: (
+    asset: MediaAsset | ImageAsset,
+    trackType: 'audio' | 'video',
+  ) => Schema.AnyMediaClip | Schema.ImageClip
+
   /**
    * Add a new clip at the end of the most appropriate track.
    *
    * @param asset The media asset attached to the clip.
    */
-  addMediaClip: (asset: MediaAsset) => AnyClip
+  addMediaClip: (asset: MediaAsset, track?: AnyTrack) => AnyClip
 
   /** Change the media of the selected clip */
   replaceClipAsset: (asset: MediaAsset) => void

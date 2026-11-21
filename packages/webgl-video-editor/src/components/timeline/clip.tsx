@@ -7,12 +7,11 @@ import { computed, ref } from 'fine-jsx'
 
 import { CLIP_COLORS } from '#constants'
 import type { AnyClip } from '#core'
+import styles from '#index.module.css'
 import { stringHashCode, useI18n } from 'shared/utils'
 
-import styles from '../css/index.module.css'
-import type { VideoEditor } from '../video-editor.ts'
-
-import { nodesAreLinked, useTrackChildEdges } from './utils.ts'
+import type { VideoEditor } from '../../video-editor.ts'
+import { nodesAreLinked, useClipEdges } from '../utils.ts'
 
 const GAPPED = true as boolean
 const EASING_ENTRIES = [
@@ -76,7 +75,23 @@ export const Clip = ({
       CLIP_COLORS[Math.abs(stringHashCode(clip.asset?.id ?? clip.id)) % CLIP_COLORS.length],
   )
 
-  const boxEdges = useTrackChildEdges(editor, clip)
+  const boxEdges_ = useClipEdges(editor, clip)
+  const boxEdges = computed(() => {
+    const assetDragTarget = editor.assetDrag.target
+    if (
+      !assetDragTarget ||
+      assetDragTarget.before ||
+      assetDragTarget.trackId !== clip.parent?.id ||
+      assetDragTarget.index > clip.index
+    )
+      return boxEdges_.value
+
+    const { time, duration } = assetDragTarget
+    const deltaPx = editor.secondsToPixels(Math.max(0, time + duration - clip.time.start))
+    const { left, right } = boxEdges_.value
+
+    return { left: left + deltaPx, right: right + deltaPx }
+  })
 
   const selectClip = () => editor.select(clip, false)
   const selectGap = (event: Event): void => {

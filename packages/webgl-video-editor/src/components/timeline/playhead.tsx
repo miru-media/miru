@@ -1,11 +1,10 @@
 import { computed, ref } from 'fine-jsx'
 
+import styles from '#index.module.css'
 import { useElementSize } from 'shared/utils'
 import { splitTime } from 'shared/video/utils'
 
-import styles from '../css/index.module.css'
-
-import { useEditor } from './utils.ts'
+import { useEditor } from '../utils.ts'
 
 export const Playhead = (): JSX.Element => {
   const editor = useEditor()

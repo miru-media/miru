@@ -8,11 +8,10 @@ import {
   FONT_WEIGHT_NORMAL,
 } from '#constants'
 import type { AnyTrack } from '#core'
+import styles from '#index.module.css'
 import { Rational, useI18n } from 'shared/utils'
 
-import styles from '../css/index.module.css'
-
-import { useEditor } from './utils.ts'
+import { useEditor } from '../utils.ts'
 
 const ALIGNMENTS = [
   { value: 'left', Icon: IconMsFormatAlignLeftRounded, labelKey: 'asset_bin_fonts_align_left' },
@@ -20,7 +19,7 @@ const ALIGNMENTS = [
   { value: 'right', Icon: IconMsFormatAlignRightRounded, labelKey: 'asset_bin_fonts_align_right' },
 ] as const
 
-export const AssetBinFonts = () => {
+export const Fonts = () => {
   const editor = useEditor()
   const { t } = useI18n()
 

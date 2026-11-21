@@ -53,7 +53,9 @@ export abstract class RenderClip<T extends pub.AnyVideoClip> extends RenderNodeV
       watch([() => this.isReady], ([ready], _prev, onCleanup) => {
         if (!ready) {
           this.docView.loadingClips.value += 1
-          onCleanup(() => (this.docView.loadingClips.value -= 1))
+          onCleanup(() => {
+            if (!this.isDisposed) this.docView.loadingClips.value -= 1
+          })
         }
       })
     })

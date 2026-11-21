@@ -10,9 +10,10 @@ import { useElementSize, useFullscreen } from 'shared/utils/composables.ts'
 import { getWebgl2Context } from 'shared/utils/images.ts'
 import { Rational } from 'shared/utils/math'
 
+import { AssetDragContext } from './components/asset-drag-context.ts'
 import { useClipDragResize } from './components/interactions/clip-drag-resize.ts'
 import { useTrackDropzone } from './components/interactions/track-dropzone.ts'
-import type { AssetBin } from './constants.ts'
+import { type AssetBin, DEFAULT_STILL_CLIP_DURATION_S } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
 import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
@@ -48,6 +49,7 @@ export class VideoEditor implements pub.VideoEditor {
   readonly _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
 
   readonly timelineZoom = new TimelineZoom(this._workspaceSize, () => this.doc)
+  readonly assetDrag = new AssetDragContext(this)
 
   get drag() {
     return this.doc.clipDrag
@@ -192,21 +194,28 @@ export class VideoEditor implements pub.VideoEditor {
     return await this.doc.assets.createMediaAsset(source)
   }
 
-  addMediaClip(asset: pub.MediaAsset | pub.ImageAsset): pub.AnyClip {
-    return this._transact(() => {
-      const { type } = asset
-      const newClipDurationS = type === 'asset:media:av' ? asset.duration : 2
-      const track = this.getOrCreateTrackForMedia(asset)
+  createClipInitWithAsset(
+    asset: pub.MediaAsset | pub.ImageAsset,
+    trackType: 'audio' | 'video',
+  ): Schema.AnyMediaClip | Schema.ImageClip {
+    const { type } = asset
+    const newClipDurationS = type === 'asset:media:av' ? asset.duration : DEFAULT_STILL_CLIP_DURATION_S
 
-      const init: Schema.AnyClip = {
-        id: this.generateId(),
-        type: type === 'asset:media:image' ? 'clip:image' : `clip:${track.isVideo() ? 'video' : 'audio'}`,
-        name: asset.name,
-        color: asset.color,
-        mediaRef: { id: asset.id, type: asset.type },
-        sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
-        duration: Rational.fromDecimal(newClipDurationS, this.doc.frameRate),
-      }
+    return {
+      id: this.generateId(),
+      type: type === 'asset:media:image' ? 'clip:image' : `clip:${trackType}`,
+      name: asset.name,
+      color: asset.color,
+      mediaRef: { id: asset.id, type: asset.type },
+      sourceStart: Rational.fromDecimal(0, this.doc.frameRate),
+      duration: Rational.fromDecimal(newClipDurationS, this.doc.frameRate),
+    }
+  }
+
+  addMediaClip(asset: pub.MediaAsset | pub.ImageAsset, track_?: pub.AnyTrack): pub.AnyClip {
+    return this._transact(() => {
+      const track = track_ ?? this.getOrCreateTrackForMedia(asset)
+      const init = this.createClipInitWithAsset(asset, track.isVideo() ? 'video' : 'audio')
 
       const clip = this.doc.createNode(init)
       clip.move({ parentId: track.id, index: track.children.length })
@@ -445,6 +454,7 @@ export class VideoEditor implements pub.VideoEditor {
 
     this.playback.renderView.dispose()
     this.playback.dispose()
+    this.assetDrag.dispose()
     if (this.#ownsDoc) this.doc.dispose()
   }
 

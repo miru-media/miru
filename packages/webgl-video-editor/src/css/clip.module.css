@@ -183,6 +183,13 @@
   }
 }
 
+.assetDragClipIndicator {
+  composes: clipBoxBase;
+  pointer-events: none;
+  background: var(--white-2);
+  border: solid 0.125rem var(--clip-selected-color-accent);
+}
+
 .clipKeyframe {
   position: absolute;
   top: -0.5em;
@@ -199,6 +206,10 @@
   gap: 0.125rem;
   width: 0;
   margin-top: 0.625rem;
+
+  &:empty {
+    display: none;
+  }
 }
 
 .clipAnimation {
