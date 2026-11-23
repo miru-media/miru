@@ -51,7 +51,7 @@ export const AudioPreview = (props: { asset: MediaAsset; [index: string]: unknow
   const createClip = () => {
     try {
       const clip = editor.addMediaClip(asset)
-      editor.select(clip)
+      editor.selection.addNode(clip.id)
       editor.activeAssetBin = null
     } catch {
       // eslint-disable-next-line no-alert -- TODO

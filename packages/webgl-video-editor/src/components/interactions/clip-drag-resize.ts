@@ -19,8 +19,12 @@ export const useClipDragResize = (editor: VideoEditor): void => {
   const resize = editor._editor.doc.clipResize
 
   const getSelectedClip = (): EditView.AnyClip | undefined => {
-    const { selection, doc } = editor._editor
-    if (selection?.isNode && selection.isClip()) return doc._getNode(selection)
+    const { doc } = editor._editor
+    const { selection } = editor
+    if (selection.items.length !== 1) return
+
+    const node = selection.nodes.at(0)
+    if (node?.isClip()) return doc._getNode(node)
   }
 
   const onResizeStart = (): void => {

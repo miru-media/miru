@@ -5,7 +5,7 @@ import { Renderer as EffectRenderer } from 'webgl-effects'
 import type * as pub from '#core'
 import type * as Schema from '#schema'
 import type { Size } from 'shared/types'
-import { IS_FIREFOX } from 'shared/user-agent.ts'
+import { IS_FIREFOX, IS_LIKE_MAC } from 'shared/user-agent.ts'
 import { useElementSize, useFullscreen } from 'shared/utils/composables.ts'
 import { getWebgl2Context } from 'shared/utils/images.ts'
 import { Rational } from 'shared/utils/math'
@@ -15,15 +15,18 @@ import { useClipDragResize } from './components/interactions/clip-drag-resize.ts
 import { useTrackDropzone } from './components/interactions/track-dropzone.ts'
 import { type AssetBin, DEFAULT_STILL_CLIP_DURATION_S } from './constants.ts'
 import { EditDocument } from './document-views/edit/edit-document.ts'
-import type { EditView } from './document-views/edit/edit-nodes.ts'
 import { PlaybackDocument } from './document-views/playback/playback-document.ts'
 import { RenderDocument } from './document-views/render/index.ts'
 import { Document } from './document.ts'
 import { EDITOR_SELECTION_ACTIONS_BY_ID } from './editor-actions.ts'
 import type { NodeDeleteEvent } from './events.ts'
+import { Selection } from './selection.ts'
 import { TimelineZoom } from './utils.ts'
 
 const MOBILE_SCREEN_CUTOFF_PX = 1000
+
+const MODIFIER_PROP = IS_LIKE_MAC ? 'metaKey' : 'ctrlKey'
+const MODIFIER_KEY = IS_LIKE_MAC ? 'Meta' : 'Control'
 
 export class VideoEditor implements pub.VideoEditor {
   readonly #uid = uid()
@@ -32,11 +35,7 @@ export class VideoEditor implements pub.VideoEditor {
   readonly _editor = this
   readonly sync?: pub.VideoEditorDocumentSync
 
-  readonly #selection = ref<pub.AnyClip | pub.GapSelection>()
-  readonly #linkedSelection = computed(() => {
-    const { selection } = this
-    return selection?.isNode && selection.isClip() ? (selection.link?.nodes ?? []) : []
-  })
+  readonly selection: Selection
   readonly _timelineContainer = ref<HTMLElement>()
   readonly _timelineSize = useElementSize(this._timelineContainer)
   readonly _viewportContainer = ref<HTMLElement>()
@@ -55,6 +54,13 @@ export class VideoEditor implements pub.VideoEditor {
   }
   get resize() {
     return this.doc.clipResize
+  }
+
+  readonly #abort = new AbortController()
+  readonly #hasModifierKey = ref(false)
+
+  get hasModifierKey(): boolean {
+    return this.#hasModifierKey.value
   }
 
   effectRenderer: EffectRenderer
@@ -114,14 +120,6 @@ export class VideoEditor implements pub.VideoEditor {
     return this.#exportProgress.value
   }
 
-  get selection(): EditView.AnyTrackChild | pub.GapSelection | undefined {
-    const selection = this.#selection.value
-    return selection?.isNode ? this.doc._getNode(selection) : selection
-  }
-  get linkedSelection(): EditView.AnyClip[] {
-    return this.#linkedSelection.value
-  }
-
   get tracks(): pub.AnyTrack[] {
     return this.doc.timeline.children
   }
@@ -146,6 +144,7 @@ export class VideoEditor implements pub.VideoEditor {
     this.#ownsDoc = !sync
     this.sync = sync
     this.doc = doc
+    this.selection = new Selection(doc)
 
     useClipDragResize(this)
     useTrackDropzone(this)
@@ -160,22 +159,42 @@ export class VideoEditor implements pub.VideoEditor {
     this.effectRenderer = new EffectRenderer({ gl: getWebgl2Context(document.createElement('canvas')) })
 
     this.doc.on('node:delete', (event: NodeDeleteEvent) => {
-      const { selection } = this
-      if (!selection) return
       const deletedId = event.node.id
-
-      if (
-        // unselect the deleted node
-        (selection.isNode && deletedId === selection.id) ||
-        // unselect the gaps around the deleted node
-        !((selection.isNode && selection.prev?.id === deletedId) || selection.next?.id === deletedId)
-      )
-        this.select(undefined)
+      this.selection.removeNode(deletedId)
+      this.selection.removeGap(deletedId)
     })
 
-    this.doc.on('canvas:pointerdown', ({ node }) => this.select(node))
+    this.doc.on('canvas:pointerdown', ({ node }) => {
+      const { selection } = this
+      if (!this.hasModifierKey) selection.clear()
+      selection.addNode(node.id)
+    })
 
     this._viewportSize = useElementSize(this.canvas)
+
+    {
+      const { signal } = this.#abort
+      window.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key === MODIFIER_KEY || event[MODIFIER_PROP]) this.#hasModifierKey.value ||= true
+        },
+        { signal, capture: true },
+      )
+      window.addEventListener(
+        'pointerdown',
+        (event) => void (this.#hasModifierKey.value ||= event[MODIFIER_PROP]),
+        { signal, capture: true },
+      )
+      window.addEventListener(
+        'keyup',
+        (event) => {
+          if (event.key === MODIFIER_KEY || !event[MODIFIER_PROP]) this.#hasModifierKey.value &&= false
+        },
+        { signal, capture: true },
+      )
+      window.addEventListener('blur', () => void (this.#hasModifierKey.value = false), { signal })
+    }
   }
 
   generateId(): string {
@@ -242,19 +261,20 @@ export class VideoEditor implements pub.VideoEditor {
   }
 
   replaceClipAsset(asset: pub.MediaAsset): void {
-    const clip = this.#selection.value
-    if (!clip?.isNode || !clip.isClip()) return
-
     this._transact(() => {
-      clip.duration = Rational.min(Rational.fromDecimal(asset.duration, clip.duration.rate), clip.duration)
-      clip.mediaRef = { id: asset.id, type: asset.type }
+      this.selection.nodes.forEach((node) => {
+        if (!node.isClip()) return
+
+        node.duration = Rational.min(Rational.fromDecimal(asset.duration, node.duration.rate), node.duration)
+        node.mediaRef = { id: asset.id, type: asset.type }
+      })
     })
   }
 
   splitClip(clip: pub.AnyClip, time: number): [pub.AnyClip, pub.AnyClip] | undefined {
     if (!clip.parent) return
 
-    const { parent, gap: startGap } = clip
+    const { parent, index: clipIndex, gap: startGap } = clip
     const clipTime = clip.timeRational
     const { frameRate } = this.doc
     const endGap = clip.next?.gap
@@ -312,14 +332,17 @@ export class VideoEditor implements pub.VideoEditor {
       keyframes: endAnimations,
     })
 
-    startClip.move({ parentId: parent.id, index: clip.index })
-    endClip.move({ parentId: parent.id, index: clip.index + 1 })
+    startClip.move({ parentId: parent.id, index: clipIndex })
+    endClip.move({ parentId: parent.id, index: clipIndex + 1 })
+    clip.delete()
 
     startClip.gap = startGap
+
     if (endClip.next && endGap) endClip.next.gap = endGap
 
-    this.#select(startClip, false)
-    clip.delete()
+    this.selection.clear()
+    this.selection.addNode(startClip.id)
+    this.selection.addNode(endClip.id)
 
     return [startClip, endClip]
   }
@@ -376,39 +399,6 @@ export class VideoEditor implements pub.VideoEditor {
     this.doc.seekTo(time)
   }
 
-  select(item: pub.AnyClip | pub.GapSelection | undefined, seek = item?.isNode ?? true): void {
-    this.#select(item, seek)
-  }
-  #select(item: pub.AnyClip | pub.GapSelection | undefined, seek: boolean): void {
-    const { doc } = this
-
-    if (!item) {
-      this.#selection.value = undefined
-      return
-    }
-
-    const node = doc._getNode(item.isNode ? item : item.node)
-    this.#selection.value = item.isNode
-      ? node
-      : {
-          node,
-          isNode: false,
-          get prev() {
-            return node.prev
-          },
-          get next() {
-            return node.next
-          },
-        }
-
-    if (item.isNode && seek) {
-      const { start, end } = node.time
-
-      if (doc.currentTime < start) doc.seekTo(start)
-      else if (doc.currentTime >= end) doc.seekTo(end - 1 / doc.frameRate)
-    }
-  }
-
   _transact<T>(fn: () => T): T {
     return this.sync ? this.sync.transact(fn) : fn()
   }
@@ -456,6 +446,8 @@ export class VideoEditor implements pub.VideoEditor {
     this.playback.renderView.dispose()
     this.playback.dispose()
     this.assetDrag.dispose()
+    this.selection.dispose()
+    this.#abort.abort()
     if (this.#ownsDoc) this.doc.dispose()
   }
 

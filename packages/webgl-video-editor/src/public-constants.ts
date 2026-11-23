@@ -22,3 +22,11 @@ export const ACCEPT_AUDIO_FILE_TYPES = `${AUDIO_MIME_TYPES.join(',')},${AUDIO_EX
 export { EDITOR_SELECTION_ACTIONS, EDITOR_SELECTION_ACTIONS_BY_ID } from './editor-actions.ts'
 
 export const DEFAULT_STILL_CLIP_DURATION_S = 2
+
+export const AssetBin = {
+  video: 'assets-video',
+  audio: 'assets-audio',
+  fonts: 'assets-fonts',
+  filters: 'assets-filters',
+} as const
+export type AssetBin = (typeof AssetBin)[keyof typeof AssetBin] | null

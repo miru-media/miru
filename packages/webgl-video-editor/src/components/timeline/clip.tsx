@@ -11,7 +11,7 @@ import styles from '#index.module.css'
 import { stringHashCode, useI18n } from 'shared/utils'
 
 import type { VideoEditor } from '../../video-editor.ts'
-import { nodesAreLinked, useClipEdges } from '../utils.ts'
+import { useClipEdges } from '../utils.ts'
 
 const GAPPED = true as boolean
 const EASING_ENTRIES = [
@@ -93,9 +93,17 @@ export const Clip = ({
     return { left: left + deltaPx, right: right + deltaPx }
   })
 
-  const selectClip = () => editor.select(clip, false)
-  const selectGap = (event: Event): void => {
-    editor.select({ node: clip, isNode: false }, false)
+  const maybeClearSelection = () => {
+    if (!editor.hasModifierKey) editor.selection.clear()
+  }
+
+  const selectClip = () => {
+    maybeClearSelection()
+    editor.selection.addNode(clip.id, false)
+  }
+  const selectGap = (event: FocusEvent | MouseEvent): void => {
+    maybeClearSelection()
+    editor.selection.addGap(clip.id)
     event.stopPropagation()
   }
 
@@ -127,12 +135,7 @@ export const Clip = ({
         onClick={selectGap}
         onFocus={selectGap}
         hidden={() => clip.gap.value <= 0}
-        class={() => [
-          styles.clipGap,
-          editor.selection?.isNode === false &&
-            nodesAreLinked(editor.selection.node, clip) &&
-            styles.isSelected,
-        ]}
+        class={() => [styles.clipGap, editor.selection.linkedGapIds.has(clip.id) && styles.isSelected]}
         style={() => `
         --clip-box-left: ${editor.secondsToPixels(clip.prev?.time.end ?? 0)}px;
         --clip-box-right: ${editor.secondsToPixels(clip.time.start)}px;`}
@@ -149,10 +152,6 @@ export const Clip = ({
           isSelected() && [styles.isSelected, editor.drag.isActive() && styles.isDragging],
           clip.isMediaClip() && !editor.playback._getNode(clip)?.everHadEnoughData && styles.isLoading,
           (GAPPED || clip.prev) && styles.canResizeLeft,
-          clip.next &&
-            editor.selection?.isNode &&
-            editor.selection.id === clip.next.id &&
-            styles.nextIsSelected,
         ]}
         onFocus={selectClip}
       >

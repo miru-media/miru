@@ -141,8 +141,12 @@ export const Timeline = ({
 
   const onPointerdownScroller = (event: Event): void => {
     const target = event.target as HTMLElement
-    if (editor._timelineContainer.value?.contains(target) && !target.closest('[data-clip-id]'))
-      editor.select(undefined)
+    if (
+      editor._timelineContainer.value?.contains(target) &&
+      !target.closest('[data-clip-id]') &&
+      !editor.hasModifierKey
+    )
+      editor.selection.clear()
   }
 
   effect((onCleanup) => {

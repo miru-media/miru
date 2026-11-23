@@ -6,7 +6,9 @@ import type * as pub from '#core'
 import { toVue } from '../document-views/vue/utils.ts'
 import { VueDocument } from '../document-views/vue/vue-document.ts'
 
-type EditorStaticProps = '_editor' | 'doc' | 'sync' | 'canvas' | 'effectRenderer'
+import { VueSelection } from './selection.ts'
+
+type EditorStaticProps = '_editor' | 'doc' | 'sync' | 'canvas' | 'effectRenderer' | 'selection'
 type EditorMethodProps =
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- needed
   keyof { [P in keyof pub.VideoEditor as pub.VideoEditor[P] extends Function ? P : never]: unknown }
@@ -27,6 +29,7 @@ type VueVideoEditorRaw = {
 export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.VideoEditor => {
   const fineJsxScope = createEffectScope()
   const docView = new VueDocument(editor)
+  const selection = new VueSelection(docView, editor.selection)
 
   return fineJsxScope.run(() =>
     Vue.reactive<VueVideoEditorRaw>({
@@ -37,13 +40,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       effectRenderer: Vue.markRaw(editor.effectRenderer),
       currentTime: toVue(() => editor.currentTime),
       tracks: toVue(() => docView.timeline.children),
-      selection: toVue(() => {
-        const { selection } = editor
-        if (!selection) return
-
-        const node = docView._getNode(selection.isNode ? selection : selection.node)
-        return selection.isNode ? node : { ...selection, node }
-      }),
+      selection,
       effects: toVue(() => editor.effects),
       exportProgress: toVue(() => editor.exportProgress),
       viewportContainerSize: toVue(() => editor.viewportContainerSize),
@@ -64,8 +61,6 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
       seekTo: editor.seekTo.bind(editor),
       createClipInitWithAsset: editor.createClipInitWithAsset.bind(editor),
       addMediaClip: (asset: pub.MediaAsset) => docView._getNode(editor.addMediaClip(asset)),
-      select: (item: pub.AnyClip | pub.GapSelection | undefined) =>
-        editor.select(item?.isNode ? editor.doc.nodes.get<pub.AnyClip>(item.id) : item),
       async createMediaAsset(source: string | Blob) {
         return await editor.createMediaAsset(source)
       },
@@ -85,6 +80,7 @@ export const editorToVue = (editor: pub.VideoEditor, ownsEditor: boolean): pub.V
 
       dispose(): void {
         fineJsxScope.stop()
+        selection.dispose()
         if (ownsEditor) editor.dispose()
       },
       [Symbol.dispose](): void {

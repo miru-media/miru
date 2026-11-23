@@ -18,10 +18,7 @@ export const Filters = () => {
   const EMPTY_SIZE: Size = { width: 1, height: 1 }
   const MAX_THUMBNAIL_SIZE: Size = { width: 200, height: 200 }
 
-  const clip = computed(() => {
-    const { selection } = editor
-    return selection?.isNode && selection.isVideo() ? selection : undefined
-  })
+  const clips = computed(() => editor.selection.nodes.filter((node) => node.isVideo()))
 
   const renderer = editor.effectRenderer
   const sourceTexture = renderer.createTexture()
@@ -46,8 +43,11 @@ export const Filters = () => {
   }
 
   const imgSrc = computed(() => {
-    const _clip = clip.value
-    return (!_clip || _clip.isTextClip() ? '' : (_clip.asset?.thumbnailUri ?? '')) || sampleImage
+    if (clips.value.length !== 1) return sampleImage
+    const firstClip = clips.value.at(0)
+    if (!firstClip || firstClip.isTextClip()) return sampleImage
+
+    return (firstClip.asset?.thumbnailUri ?? '') || sampleImage
   })
 
   effect((onCleanup) => {
@@ -65,27 +65,28 @@ export const Filters = () => {
     loading: isLoading,
   })
 
-  const currentEffect = computed(() => clip.value?.effects[0])
+  const currentEffect = computed(() => clips.value.at(0)?.effects[0])
 
   const onChange = (assetId: string | undefined, intensity: number) => {
-    const clipEffects = clip.value?.effects
-    if (!clipEffects) return
+    clips.value.forEach((clip) => {
+      const clipEffects = clip.effects
 
-    let prev = currentEffect.value
+      let prev = currentEffect.value
 
-    if (prev && assetId !== prev.assetId) {
-      clipEffects.delete(prev.index)
-      prev = undefined
-    }
+      if (prev && assetId !== prev.assetId) {
+        clipEffects.delete(prev.index)
+        prev = undefined
+      }
 
-    if (assetId) {
-      if (prev) {
-        clipEffects.update(prev.index, 'assetId', assetId)
-        clipEffects.update(prev.index, 'intensity', intensity)
-      } else clipEffects.insert(0, new EffectListItem({ assetId, intensity }))
-    } else if (prev) {
-      clipEffects.delete(prev.index)
-    }
+      if (assetId) {
+        if (prev) {
+          clipEffects.update(prev.index, 'assetId', assetId)
+          clipEffects.update(prev.index, 'intensity', intensity)
+        } else clipEffects.insert(0, new EffectListItem({ assetId, intensity }))
+      } else if (prev) {
+        clipEffects.delete(prev.index)
+      }
+    })
   }
 
   return (

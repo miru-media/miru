@@ -22,10 +22,11 @@ const ALIGNMENTS = [
 export const Fonts = () => {
   const editor = useEditor()
   const { t } = useI18n()
+  const textIsSelected = computed(() => editor.selection.nodes.some((node) => node.isTextClip()))
 
-  const activeTextClip = computed(() => {
-    const { selection } = editor
-    return selection?.isNode && selection.isTextClip() ? selection : undefined
+  const singleSelectedTextClip = computed(() => {
+    const textClips = editor.selection.nodes.filter((node) => node.isTextClip())
+    return textClips.length === 1 ? textClips[0] : undefined
   })
 
   const createClip = () => {
@@ -61,7 +62,7 @@ export const Fonts = () => {
         })
 
         clip.move({ parentId: targetTrack.id, index: targetTrack.children.length })
-        editor.select(clip)
+        editor.selection.addNode(clip.id)
       })
     } catch {
       // eslint-disable-next-line no-alert -- TODO
@@ -70,20 +71,20 @@ export const Fonts = () => {
   }
 
   const onTextContentChange = (event: InputEvent) => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     clip.content = (event.target as HTMLInputElement).value
   }
 
   const onFontFamilyChange = (event: InputEvent) => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     const { value } = event.target as HTMLSelectElement
     clip.fontFamily = value
   }
 
   const onFontSizeChange = (event: InputEvent) => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     const value = Number((event.target as HTMLInputElement).value)
     if (!Number.isFinite(value) || value <= 0) return
@@ -91,25 +92,25 @@ export const Fonts = () => {
   }
 
   const onFontWeightToggle = () => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     clip.fontWeight = clip.fontWeight >= FONT_WEIGHT_BOLD ? FONT_WEIGHT_NORMAL : FONT_WEIGHT_BOLD
   }
 
   const onFontstyleToggle = () => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     clip.fontStyle = clip.fontStyle === 'italic' ? 'normal' : 'italic'
   }
 
   const onTextAlignChange = (align: 'left' | 'center' | 'right') => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     clip.align = align
   }
 
   const onFillColorChange = (event: InputEvent) => {
-    const clip = activeTextClip.value
+    const clip = singleSelectedTextClip.value
     if (!clip) return
     const color = (event.target as HTMLInputElement).value
     editor._transact(() => {
@@ -126,28 +127,30 @@ export const Fonts = () => {
       </button>
 
       {() => {
-        const clip = activeTextClip.value
-        if (!clip) return
+        if (!textIsSelected.value) return
 
-        const getFillColor = () => clip.fill ?? DEFAULT_FILL_COLOR
+        const clip = singleSelectedTextClip.value
+        const getFillColor = () => (clip ? (clip.fill ?? DEFAULT_FILL_COLOR) : '')
 
         return (
           <>
-            <div style="width:100%">
-              <h3 class={styles.textBodyBold}>{t('fonts')}</h3>
-              <textarea
-                value={() => clip.content}
-                onInput={onTextContentChange}
-                aria-label={t('asset_bin_fonts_content')}
-                placeholder={t('asset_bin_fonts_content')}
-                rows={1}
-                class={styles.panelInput}
-              />
-            </div>
+            {clip && (
+              <div style="width:100%">
+                <h3 class={styles.textBodyBold}>{t('fonts')}</h3>
+                <textarea
+                  value={() => clip.content}
+                  onInput={onTextContentChange}
+                  aria-label={t('asset_bin_fonts_content')}
+                  placeholder={t('asset_bin_fonts_content')}
+                  rows={1}
+                  class={styles.panelInput}
+                />
+              </div>
+            )}
 
             <h3 class={styles.textBodyBold}>{t('asset_bin_fonts_text_settings')}</h3>
             <select
-              value={() => clip.fontFamily}
+              value={() => clip?.fontFamily ?? ''}
               onInput={onFontFamilyChange}
               aria-label={t('asset_bin_fonts_select_family')}
               class={styles.dropdownTrigger}
@@ -164,7 +167,7 @@ export const Fonts = () => {
                   type="number"
                   min="1"
                   step="1"
-                  value={() => String(clip.fontSize)}
+                  value={() => (clip ? String(clip.fontSize) : '')}
                   onInput={onFontSizeChange}
                   aria-label={t('asset_bin_fonts_size')}
                 />
@@ -174,18 +177,18 @@ export const Fonts = () => {
                 <button
                   type="button"
                   onClick={onFontWeightToggle}
-                  class={[clip.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive]}
+                  class={[clip?.fontWeight === FONT_WEIGHT_BOLD && styles.assetBinFontsStyleButtonActive]}
                   aria-label={t('asset_bin_fonts_bold')}
-                  aria-pressed={clip.fontWeight === FONT_WEIGHT_BOLD}
+                  aria-pressed={clip?.fontWeight === FONT_WEIGHT_BOLD}
                 >
                   <IconMsFormatBoldRounded />
                 </button>
                 <button
                   type="button"
                   onClick={onFontstyleToggle}
-                  class={[clip.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
+                  class={[clip?.fontStyle === 'italic' && styles.assetBinFontsStyleButtonActive]}
                   aria-label={t('asset_bin_fonts_italic')}
-                  aria-pressed={clip.fontStyle === 'italic'}
+                  aria-pressed={clip?.fontStyle === 'italic'}
                 >
                   <IconMsFormatItalicRounded />
                 </button>
@@ -197,9 +200,9 @@ export const Fonts = () => {
                 <button
                   type="button"
                   onClick={() => onTextAlignChange(value)}
-                  class={() => clip.align === value && styles.assetBinFontsStyleButtonActive}
+                  class={() => clip?.align === value && styles.assetBinFontsStyleButtonActive}
                   aria-label={t(labelKey)}
-                  aria-pressed={() => clip.align === value}
+                  aria-pressed={() => clip?.align === value}
                 >
                   <Icon />
                 </button>

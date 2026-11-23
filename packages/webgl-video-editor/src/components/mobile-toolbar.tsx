@@ -14,12 +14,12 @@ export const MobileToolbar = ({ onClickHelp }: { onClickHelp?: () => unknown }) 
   return (
     <div class={styles.mobileToolbar}>
       {() =>
-        editor.selection ? (
+        editor.selection.items.length ? (
           <>
             <button
               aria-label={t('back')}
               class={styles.mobileToolbarBackButton}
-              onClick={editor.select.bind(editor, undefined)}
+              onClick={editor.selection.clear.bind(editor.selection)}
             >
               <IconMsArrowBackRounded />
             </button>
@@ -38,9 +38,7 @@ export const MobileToolbar = ({ onClickHelp }: { onClickHelp?: () => unknown }) 
             ))}
 
             {() =>
-              editor.selection?.isNode &&
-              editor.selection.isVideo() &&
-              editor.selection.isMediaClip() && (
+              editor.selection.nodes.every((node) => node.isVideo()) && (
                 <button
                   class={styles.mobileToolbarButton}
                   aria-expanded={editor.activeAssetBin === AssetBin.filters}
@@ -53,8 +51,7 @@ export const MobileToolbar = ({ onClickHelp }: { onClickHelp?: () => unknown }) 
               )
             }
             {() =>
-              editor.selection?.isNode &&
-              editor.selection.isTextClip() && (
+              editor.selection.nodes.every((node) => node.isTextClip()) && (
                 <button
                   class={styles.mobileToolbarButton}
                   aria-expanded={editor.activeAssetBin === AssetBin.fonts}

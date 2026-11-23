@@ -11,3 +11,12 @@ export const EDITOR_SELECTION_ACTIONS: VideoEditorAction[]
 export const EDITOR_SELECTION_ACTIONS_BY_ID: Record<string, VideoEditorAction>
 
 export const DEFAULT_STILL_CLIP_DURATION_S: number
+
+export const AssetBin: {
+  video: 'assets-video'
+  audio: 'assets-audio'
+  fonts: 'assets-fonts'
+  filters: 'assets-filters'
+}
+
+export type AssetBin = (typeof AssetBin)[keyof typeof AssetBin] | null
