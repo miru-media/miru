@@ -31,8 +31,11 @@ export const TransformControls = () => {
   const svgElement = ref<SVGSVGElement>()
 
   const selectedTransformableClip = computed<EditView.AnyVideoClip | undefined>(() => {
-    const { selection } = editor
-    if (selection?.isNode && selection.isVideo() && selection.isClip()) return selection
+    const { nodes } = editor.selection
+    if (nodes.length !== 1) return
+
+    const node = nodes[0]
+    return node.isVideo() && node.isClip() ? node : undefined
   })
   const clipSize = computed(() => {
     const renderClip = editor.playback.renderView._getNode(selectedTransformableClip.value)

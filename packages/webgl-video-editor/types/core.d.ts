@@ -1,8 +1,4 @@
 import type { Ref } from 'fine-jsx'
-import type { Renderer } from 'webgl-effects'
-
-import type { AssetBin } from '../src/constants.ts'
-import type { VideoEditor as VideoEditorInternal } from '../src/video-editor.ts'
 
 import type { Animation } from './animation'
 import type * as events from './events.d.ts'
@@ -342,148 +338,9 @@ export interface GapSelection {
   prev?: AnyClip | undefined
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- false positive
-export class VideoEditor {
-  constructor(options?: { sync?: VideoEditorDocumentSync; assets?: VideoEditorAssetStore })
-}
+export type SelectionItem = AnyClip | GapSelection
 
-export interface VideoEditor {
-  /** @internal */
-  _editor: VideoEditorInternal
-
-  doc: Document
-  sync?: VideoEditorDocumentSync
-
-  /** The canvas that the video is rendered to */
-  canvas: HTMLCanvasElement
-
-  /** The current playback time of the video timeline */
-  currentTime: number
-
-  /** The webgl-effects that are loaded into the editor */
-  effects: Map<string, VideoEffectAsset>
-
-  /** The currently selected video clip on the timeline. */
-  selection?: AnyClip | GapSelection
-
-  /** The audio and video tracks which contain clips */
-  tracks: AnyTrack[]
-
-  /** The state of the asset bin ui */
-  activeAssetBin: AssetBin
-
-  /** The webgl-effects Renderer instance */
-  readonly effectRenderer: Renderer
-
-  /** Progress from 0 to 1 while exporting */
-  readonly exportProgress: number
-
-  readonly viewportContainerSize: { width: number; height: number }
-  readonly viewportSize: { width: number; height: number }
-  readonly isMobileWorkspace: boolean
-
-  readonly canvasZoom: number
-
-  playback: {
-    /** Playback is paused */
-    readonly isPaused: boolean
-
-    readonly isReady: boolean
-
-    /** Play the video at the current time or from the start if the video is ended. */
-    play: () => void
-
-    /** Play the video. */
-    pause: () => void
-
-    /** @internal */
-    stats: any
-  }
-
-  secondsToPixels: (seconds: number) => number
-  pixelsToSeconds: (pixels: number) => number
-
-  timelineZoom: {
-    secondsPerPixel: number
-    zeroToOne: number
-    readonly min: number
-    readonly max: number
-    inc: () => void
-    dec: () => void
-    secondsToPixels: (seconds: number) => number
-    pixelsToSeconds: (pixels: number) => number
-  }
-
-  /** Select the given track item */
-  select: (node: AnyClip | GapSelection | undefined) => void
-
-  /**
-   * Seek to the given time of the video.
-   *
-   * @param time The seek time in seconds.
-   */
-  seekTo: (time: number) => void
-
-  /**
-   * Add a new track to the timeline.
-   *
-   * @param type The track the clip will be added to.
-   */
-  addTrack: (type: 'video' | 'audio') => AnyTrack
-
-  createClipInitWithAsset: (
-    asset: MediaAsset | ImageAsset,
-    trackType: 'audio' | 'video',
-  ) => Schema.AnyMediaClip | Schema.ImageClip
-
-  /**
-   * Add a new clip at the end of the most appropriate track.
-   *
-   * @param asset The media asset attached to the clip.
-   */
-  addMediaClip: (asset: MediaAsset, track?: AnyTrack) => AnyClip
-
-  /** Change the media of the selected clip */
-  replaceClipAsset: (asset: MediaAsset) => void
-
-  /**
-   * Create a new media asset with the given source File or URI
-   *
-   * @param source A Blob or URI string of the clip media.
-   */
-  createMediaAsset: (source: Blob | string) => Promise<MediaAsset | ImageAsset>
-
-  /**
-   * Split a clip by replacing it with two new clips which end and start at the given time.
-   *
-   * Does nothing and returns undefined if the time is outside the clip.
-   *
-   * @returns The newly created clip or `undefined.`.
-   */
-  splitClip: (clip: AnyClip, time: number) => [AnyClip, AnyClip] | undefined
-
-  /** Perform an action on the current selection */
-  action: (id: string) => void
-
-  generateId: () => string
-
-  getPartId: (part: string) => string
-
-  /** Adds assets and tracks from the provided JSON object */
-  importJson: (newContent: Schema.SerializedDocument) => void
-
-  /**
-   * Render and encode the video composition.
-   *
-   * @returns A promise that resolves to a `Blob`.
-   */
-  export: (options?: { signal?: AbortSignal }) => Promise<Blob>
-
-  /** Release resources of the video editor and allow it to be garbage collected. */
-  dispose: () => void
-  [Symbol.dispose]: () => void
-}
-
+export type * from './video-editor.d.ts'
 export type VideoEditorChangeEvent = CustomEvent<Schema.SerializedDocument>
 export type VideoEditorChangeLoadingEvent = CustomEvent<boolean>
 
@@ -493,6 +350,30 @@ export interface VideoEditorAction {
   canPerform: (editor: VideoEditor) => boolean
   Icon: () => JSX.Element
   exec: (editor: VideoEditor) => unknown
+}
+
+export interface Selection {
+  /** An array of the selected nodes */
+  nodes: AnyClip[]
+  /** An array of the selected gaps */
+  gaps: GapSelection[]
+  /** An array of the selected nodes and gaps */
+  items: SelectionItem[]
+  /** Add the clip with the given ID to the selection */
+  addNode: (id: string) => void
+  /** Add the gap before the clip with the given ID to the selection */
+  addGap: (id: string) => void
+  /** Remove a node from the selection */
+  removeNode: (id: string) => void
+  /** Remove a gap from the selection */
+  removeGap: (id: string) => void
+  /** Check if a node is selected */
+  hasNode: (id: string) => boolean
+  /** Check if the gap before a node is selected */
+  hasGap: (id: string) => boolean
+  /** Clear the selction */
+  clear: () => void
+  dispose: () => void
 }
 
 export interface VideoEditorDocumentSync extends EventTarget {

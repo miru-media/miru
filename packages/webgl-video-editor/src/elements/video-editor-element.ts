@@ -57,7 +57,6 @@ export class VideoEditorElement extends HTMLElementOrStub implements pub.VideoEd
 
   declare secondsToPixels: pub.VideoEditor['secondsToPixels']
   declare pixelsToSeconds: pub.VideoEditor['pixelsToSeconds']
-  declare select: pub.VideoEditor['select']
   declare seekTo: pub.VideoEditor['seekTo']
   declare addTrack: pub.VideoEditor['addTrack']
   declare addMediaClip: pub.VideoEditor['addMediaClip']
@@ -181,7 +180,6 @@ for (const key of [
 for (const key of [
   'secondsToPixels',
   'pixelsToSeconds',
-  'select',
   'seekTo',
   'addTrack',
   'addMediaClip',

@@ -24,7 +24,7 @@ export const VideoPreview = (props: { asset: MediaAsset | ImageAsset; onClose: (
   const createClip = () => {
     try {
       const clip = editor.addMediaClip(asset)
-      editor.select(clip)
+      editor.selection.addNode(clip.id)
       dialogRef.value?.close()
       editor.activeAssetBin = null
     } catch {

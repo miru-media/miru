@@ -121,10 +121,6 @@
   .clip.isSelected & {
     transform: translate(0%, -50%);
   }
-
-  .clip.nextIsSelected & {
-    transform: translate(-100%, -50%);
-  }
 }
 
 .clipControls {

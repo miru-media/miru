@@ -78,18 +78,18 @@ export const ClipProperties = () => {
     <>
       {() => {
         const { selection } = editor
+        if (selection.nodes.length !== 1) return
 
-        if (!selection?.isNode || !selection.isClip()) return
+        const node = selection.nodes[0]
 
         return (
           <section class={styles.workspaceProperties}>
             <div class={styles.panelBody}>
-              {() => selection.isVideo() && <VideoClipProperties {...{ clip: selection }} />}
-              {() => selection.isAudio() && <AudioClipProperties {...{ clip: selection }} />}
+              {() => node.isVideo() && <VideoClipProperties {...{ clip: node }} />}
+              {() => node.isAudio() && <AudioClipProperties {...{ clip: node }} />}
               {/* TODO: improve linking UX */}
               {() => {
-                const linkedAudio =
-                  selection.isVideo() && selection.isMediaClip() ? selection.linkedAudio : undefined
+                const linkedAudio = node.isVideo() && node.isMediaClip() ? node.linkedAudio : undefined
 
                 return (
                   linkedAudio?.mediaRef && (

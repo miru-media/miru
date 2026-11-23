@@ -143,10 +143,10 @@ export class PlaybackMediaClip<T extends pub.AnyMediaClip> extends PlaybackClip<
         MEDIA_SYNC_INTERVAL_MS,
         { active: () => !this.shouldPlay.value },
       )
-    })
 
-    useEventListener(this.mediaElement, 'canplay', this.#seekToWithinClip.bind(this))
-    useEventListener(this.mediaElement, 'suspend', this.#seekToWithinClip.bind(this))
+      useEventListener(this.mediaElement, 'canplay', this.#seekToWithinClip.bind(this))
+      useEventListener(this.mediaElement, 'suspend', this.#seekToWithinClip.bind(this))
+    })
   }
 
   _update(key: keyof pub.AnyClip): void {

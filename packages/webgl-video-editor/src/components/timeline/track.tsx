@@ -1,7 +1,7 @@
 import type * as pub from '#core'
 import styles from '#index.module.css'
 
-import { nodesAreLinked, useEditor } from '../utils.js'
+import { useEditor } from '../utils.js'
 
 import { AssetDragClipIndicator } from './asset-drag-clip-indicator.jsx'
 import { Clip } from './clip.jsx'
@@ -27,10 +27,7 @@ export const Track = ({
       <>
         {() => [
           ...track.children.map((node) => {
-            const isSelected = () => {
-              const { selection } = editor
-              return !!(selection?.isNode && nodesAreLinked(node, selection))
-            }
+            const isSelected = (): boolean => editor.selection.linkedNodeIds.has(node.id)
 
             return <Clip {...{ editor, node, isSelected }} />
           }),

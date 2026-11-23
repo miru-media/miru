@@ -287,7 +287,7 @@ export class AssetDragContext {
       doc.createLink({ id: editor.generateId(), nodes: [clip, audioClip] })
     }
 
-    editor.select(clip)
+    editor.selection.addNode(clip.id)
   }
 
   #onDropDeactivate(event: DropEvent): void {

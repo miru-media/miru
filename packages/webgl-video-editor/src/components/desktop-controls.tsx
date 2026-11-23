@@ -44,7 +44,7 @@ export const DesktopControls = () => {
           <button
             aria-label={t(action.localeKey)}
             title={t(action.localeKey)}
-            disabled={() => !editor.selection || !action.canPerform(editor)}
+            disabled={() => !editor.selection.items.length || !action.canPerform(editor)}
             class={styles.desktopControlsButton}
             onClick={() => editor.action(action.id)}
           >

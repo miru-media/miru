@@ -2,6 +2,7 @@ import { h } from 'fine-jsx/jsx-runtime'
 
 import type * as pub from '#core'
 import { Rational } from 'shared/utils/math.ts'
+import { rangeContainsTime } from 'shared/video/utils.ts'
 
 import { useEditor } from './components/utils.ts'
 
@@ -15,18 +16,28 @@ const getClipAtTime = (track: pub.AnyTrack, time: number): pub.AnyClip | undefin
   }
 }
 
-const getSplitTarget = (editor: pub.VideoEditor): pub.AnyClip | undefined => {
+const getSplitTargets = (editor: pub.VideoEditor): pub.AnyClip[] => {
   const { currentTime } = editor.doc
   const { selection } = editor
-  const trackOfSelectedClip = selection && (selection.isNode ? selection : selection.node).parent
 
-  // first search the track that contains a selected clip
-  return trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
+  if (selection.items.length === 1) {
+    const item = selection.items[0]
+    const trackOfSelectedClip = (item.isNode ? item : item.node).parent
+
+    // first search the track that contains a selected clip
+    const result = trackOfSelectedClip && getClipAtTime(trackOfSelectedClip, currentTime)
+    return result ? [result] : []
+  }
+
+  return selection.nodes.filter((node) => rangeContainsTime(node.time, currentTime))
 }
 
 const getLinkFromSelection = (editor: pub.VideoEditor) => {
-  const { selection } = editor._editor
-  return selection?.isNode && selection.isClip() ? selection.link : undefined
+  const { nodes } = editor.selection
+  if (!nodes.length) return
+  const firstLink = nodes[0].link
+
+  return firstLink && nodes.every((node) => node.link?.id === firstLink.id) ? firstLink : undefined
 }
 
 export const EDITOR_SELECTION_ACTIONS: pub.VideoEditorAction[] = [
@@ -34,14 +45,14 @@ export const EDITOR_SELECTION_ACTIONS: pub.VideoEditorAction[] = [
     id: 'split',
     localeKey: 'split',
     Icon: IconMsSplitSceneOutlineRounded,
-    canPerform: (editor) => !!getSplitTarget(editor),
+    canPerform: (editor) => !!getSplitTargets(editor).length,
     exec: (editor) => {
-      const targetClip = getSplitTarget(editor)
-      if (!targetClip) return
+      const targetClips = getSplitTargets(editor)
+      if (!targetClips.length) return
 
       const { doc } = editor
 
-      const linkedClips = targetClip.link?.nodes ?? [targetClip]
+      const linkedClips = targetClips.flatMap((clip) => clip.link?.nodes ?? clip)
       const startNodes: typeof linkedClips = []
       const endNodes: typeof linkedClips = []
 
@@ -65,35 +76,39 @@ export const EDITOR_SELECTION_ACTIONS: pub.VideoEditorAction[] = [
     Icon: IconMsDeleteOutlineRounded,
     canPerform: RETURN_TRUE,
     exec: (editor) => {
-      const { selection, doc } = editor._editor
-      if (!selection) return
+      const { doc, selection } = editor._editor
+      const { nodes, gaps } = selection
 
-      if (selection.isNode) {
-        const { link } = selection
+      // delete gaps before deleting nodes changes children the gap map IDs
+      gaps.forEach((item) => {
+        const linkedNodes = (item.node.link?.nodes ?? [item.node]).map((node) =>
+          doc.nodes.get<pub.AnyClip>(node.id),
+        )
+        const minGap = linkedNodes.reduce(
+          (acc, node) => (node.gap.value === 0 ? acc : Rational.min(acc, node.gap)),
+          item.node.gap,
+        )
+        linkedNodes.forEach((node) => {
+          node.gap = Rational.max(node.gap.subtract(minGap), Rational.ZERO)
+        })
+      })
 
-        const nodes = link?.nodes.slice() ?? [selection]
+      nodes.forEach((item) => {
+        const { link } = item
 
-        nodes.forEach((node) => {
+        const linkedNodes = link?.nodes.slice() ?? [item]
+
+        linkedNodes.forEach((linkedNode) => {
+          const node = doc.nodes.get<pub.AnyClip>(linkedNode.id)
           const { next, parent } = node
           next?.setGap(node.prev?.id, node.gap.add(next.gap))
 
           node.delete()
           if (!parent?.head) parent?.delete()
         })
-      } else {
-        const linkedNodes = (selection.node.link?.nodes ?? [selection.node]).map((node) =>
-          doc.nodes.get<pub.AnyClip>(node.id),
-        )
-        const minGap = linkedNodes.reduce(
-          (acc, node) => (node.gap.value === 0 ? acc : Rational.min(acc, node.gap)),
-          selection.node.gap,
-        )
-        linkedNodes.forEach((node) => {
-          node.gap = Rational.max(node.gap.subtract(minGap), Rational.ZERO)
-        })
-      }
+      })
 
-      editor.select(undefined)
+      selection.clear()
     },
   },
   ...(import.meta.env.DEV
