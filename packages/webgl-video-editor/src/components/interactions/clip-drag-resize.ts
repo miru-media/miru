@@ -53,6 +53,7 @@ export const useClipDragResize = (editor: VideoEditor): void => {
     if (!context) return
 
     const interactable = interact('[data-interactive-clip-id]', {
+      unique: true,
       context,
       getRect(element) {
         const clip = resize.isActive() ? resize.clips[ClipPos.Cur] : getSelectedClip()

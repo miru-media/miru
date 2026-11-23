@@ -12,7 +12,6 @@ import { useScrubber } from 'shared/video/use-scrubber.ts'
 import { useEditor } from '../utils.ts'
 
 import { AssetDragClipIndicator } from './asset-drag-clip-indicator.jsx'
-import { AssetDragTimelineIndicator } from './asset-drag-timeline-indicator.jsx'
 import { Playhead } from './playhead.jsx'
 import { Ruler } from './ruler.jsx'
 import { Track } from './track.jsx'
@@ -151,6 +150,7 @@ export const Timeline = ({
     if (!gestureElement) return
 
     const interactable = interact(gestureElement, {
+      unique: true,
       gesture: {
         listeners: {
           move: (event: GestureEvent) => changeSpp(editor.timelineZoom.secondsPerPixel / (1 + event.ds)),
@@ -184,7 +184,11 @@ export const Timeline = ({
           {() => !editor.isMobileWorkspace && <Playhead />}
         </div>
 
-        <div class={styles.trackList} ref={editor._timelineContainer}>
+        <div
+          class={styles.trackList}
+          ref={editor._timelineContainer}
+          data-timeline-id={editor.doc.timeline.id}
+        >
           {() =>
             doc.isEmpty ? (
               <>
@@ -254,8 +258,6 @@ export const Timeline = ({
                 ])
             )
           }
-
-          <AssetDragTimelineIndicator />
         </div>
         {() =>
           editor.assetDrag.asset &&

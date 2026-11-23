@@ -15,6 +15,7 @@ export const useTrackDropzone = (editor: VideoEditor) => {
     interact.dynamicDrop(true)
 
     const dropzone = interact('[data-track-id], [data-before-track-id]', {
+      unique: true,
       context: container,
       getRect(element) {
         const left = 0

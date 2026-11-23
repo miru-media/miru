@@ -89,6 +89,7 @@ export const TransformControls = () => {
     }
 
     const interactable = interact(element, {
+      unique: true,
       getRect() {
         const { translateX, translateY } = clipProps.value
         const { width, height } = clipSize.value

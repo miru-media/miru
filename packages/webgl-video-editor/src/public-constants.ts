@@ -1,7 +1,5 @@
 export { EXPORT_VIDEO_CODECS } from 'shared/video/constants.ts'
 
-export const ASSET_REF_MIME_TYPE = 'application/prs.miru.asset'
-
 export const VIDEO_MIME_TYPES = ['webm', 'matroska', 'x-matroska', 'mp4', 'mov', 'quicktime'].map(
   (s) => `video/${s}`,
 )

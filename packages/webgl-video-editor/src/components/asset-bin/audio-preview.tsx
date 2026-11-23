@@ -69,7 +69,7 @@ export const AudioPreview = (props: { asset: MediaAsset; [index: string]: unknow
             onClick={togglePlayback}
           >
             <div class={styles.assetBinAudioThumbnail} data-asset-drag-thumbnail>
-              {asset.thumbnailUri && <img src={asset.thumbnailUri} alt={asset.name} />}
+              {asset.thumbnailUri && <img src={asset.thumbnailUri} alt={asset.name} draggable={false} />}
             </div>
             <div class={styles.assetBinAudioThumbnailOverlay}>
               {() => (isPlaying.value ? <IconMsPauseRounded /> : <IconMsPlayArrowRounded />)}

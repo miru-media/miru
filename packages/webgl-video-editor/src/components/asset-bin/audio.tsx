@@ -59,7 +59,7 @@ export const Audio = () => {
         aria-label={t('asset_bin_music_search_placeholder')}
         {...assetList.searchProps}
       />
-      <div class={styles.assetBinAudioPreviewContainer} onDragStart={editor.assetDrag.onDelegatedDragStart}>
+      <div class={styles.assetBinAudioPreviewContainer}>
         {() => {
           if (assetList.assets.value.length === 0) {
             return <p class={styles.textBodySmall}>{t('asset_bin_music_empty')}</p>
@@ -67,7 +67,7 @@ export const Audio = () => {
             return <p class={styles.textBodySmall}>{t('asset_bin_music_search_empty')}</p>
           }
           return assetList.filtered.value.map((asset) => (
-            <AudioPreview asset={asset} data-asset-id={asset.id} draggable />
+            <AudioPreview asset={asset} data-asset-id={asset.id} />
           ))
         }}
       </div>

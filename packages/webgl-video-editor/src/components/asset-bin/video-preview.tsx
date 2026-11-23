@@ -61,6 +61,7 @@ export const VideoPreview = (props: { asset: MediaAsset | ImageAsset; onClose: (
     src: () => asset.blobUrl || (asset.uri ?? ''),
     ariaLabel: () => asset.name ?? '',
     class: styles.assetBinPreviewElement,
+    draggable: false,
   }
 
   return (

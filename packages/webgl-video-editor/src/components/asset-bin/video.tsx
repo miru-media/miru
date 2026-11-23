@@ -5,13 +5,12 @@ import { ACCEPT_VISUAL_FILE_TYPE } from '#constants'
 import styles from '#index.module.css'
 import { useI18n } from 'shared/utils'
 
-import { useEditor, useImportMediaFiles } from '../utils.ts'
+import { useImportMediaFiles } from '../utils.ts'
 
 import { useAssetList } from './utils.ts'
 import { VideoPreview } from './video-preview.jsx'
 
 export const Video = () => {
-  const editor = useEditor()
   const fileInput = ref<HTMLInputElement>()
 
   const importMediaFiles = useImportMediaFiles()
@@ -57,7 +56,7 @@ export const Video = () => {
         {...assetList.searchProps}
       />
 
-      <div class={styles.assetBinAssetsContainer} onDragstart={editor.assetDrag.onDelegatedDragStart}>
+      <div class={styles.assetBinAssetsContainer}>
         {() => {
           if (assetList.assets.value.length === 0) {
             return <p class={styles.textBodySmall}>{t('asset_bin_media_empty')}</p>
@@ -70,10 +69,9 @@ export const Video = () => {
               class={[styles.assetBinAsset, styles.assetBinSanitize]}
               onClick={() => (activeVideo.value = asset)}
               data-asset-id={asset.id}
-              draggable
-              {...{ [editor.assetDrag.THUMBNAIL_ATTR]: '' }}
+              onContextmenu={(event: Event) => event.preventDefault()}
             >
-              <img src={asset.thumbnailUri} alt="" class={styles.assetBinThumbnail} />
+              <img src={asset.thumbnailUri} alt="" class={styles.assetBinThumbnail} draggable={false} />
               <span class={styles.assetBinName}>{asset.name}</span>
             </button>
           ))

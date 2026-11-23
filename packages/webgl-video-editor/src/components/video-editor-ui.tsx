@@ -20,6 +20,7 @@ import {
 import styles from '../css/index.module.css'
 import { getPanelList } from '../panels-list.ts'
 
+import { AssetDragCursor } from './asset-drag-cursor.jsx'
 import { ClipProperties } from './clip-properties.jsx'
 import { Debug } from './debug.jsx'
 import { DesktopControls } from './desktop-controls.jsx'
@@ -189,6 +190,7 @@ export const VideoEditorUI = (props: {
           </div>
         )
       }
+      <AssetDragCursor />
     </div>
   )
 }

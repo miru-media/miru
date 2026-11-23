@@ -49,7 +49,6 @@ export class VideoEditor implements pub.VideoEditor {
   readonly _zoom = computed(() => this.viewportSize.width / this.doc.resolution.width)
 
   readonly timelineZoom = new TimelineZoom(this._workspaceSize, () => this.doc)
-  readonly assetDrag = new AssetDragContext(this)
 
   get drag() {
     return this.doc.clipDrag
@@ -137,6 +136,8 @@ export class VideoEditor implements pub.VideoEditor {
   get canvasZoom(): number {
     return this._zoom.value
   }
+
+  readonly assetDrag = new AssetDragContext(this)
 
   constructor(options: { sync?: pub.VideoEditorDocumentSync; assets?: pub.VideoEditorAssetStore } = {}) {
     const { sync, assets } = options

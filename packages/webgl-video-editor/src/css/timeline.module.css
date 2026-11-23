@@ -225,3 +225,17 @@
   background: var(--yellow);
   transform: translate(calc(var(--asset-drag-x) - 50%), calc(var(--asset-drag-y) - 50%));
 }
+
+.assetDragThumbnail {
+  position: relative;
+  top: 50%;
+  left: 0.5rem;
+  width: 5rem;
+  max-width: unset;
+  height: 5rem;
+  color: white;
+  object-fit: cover;
+  background-color: var(--white-2);
+  border-radius: 0.5rem;
+  opacity: 0.75;
+}

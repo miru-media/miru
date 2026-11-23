@@ -51,6 +51,16 @@ ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 
+minimumReleaseAgeExclude:
+  - '@interactjs/actions@1.10.29'
+  - '@interactjs/auto-start@1.10.29'
+  - '@interactjs/core@1.10.29'
+  - '@interactjs/interact@1.10.29'
+  - '@interactjs/modifiers@1.10.29'
+  - '@interactjs/snappers@1.10.29'
+  - '@interactjs/utils@1.10.29'
+  - '@interactjs/pointer-events@1.10.29'
+
 onlyBuiltDependencies:
   - core-js
   - esbuild
